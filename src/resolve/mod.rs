@@ -6,3 +6,5 @@ pub mod l10n;
 pub mod labels;
 pub mod numbering;
 pub mod toc;
+
+pub use l10n::{LangTag, Term, caption_separator, supplement, term};

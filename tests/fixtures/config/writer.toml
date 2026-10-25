@@ -1,0 +1,81 @@
+[document]
+lang = "fr-CA"
+toc = 4
+
+[build]
+out_dir = "public"
+targets = ["docx", "latex"]
+typst_targets = ["html", "typst"]
+
+[markdown]
+smart_punctuation = true
+sourcepos = true
+references = false
+superscript = true
+subscript = true
+
+[numbering]
+headings = "A.1"
+figures = "section"
+equations = "all"
+
+[references]
+bibliography = ["refs.bib", "more.yaml"]
+style = "apa"
+locale = "fr-FR"
+
+[math]
+html = "mathml"
+mathml_font = "system"
+katex_options = { macros = { "\\R" = "\\mathbb{R}" } }
+
+[html]
+theme = "document-theme"
+standalone = false
+
+[pdf]
+template = "templates/document.typ"
+paper = "us-letter"
+engine = "chrome"
+allow_packages = true
+system_fonts = false
+font_paths = ["fonts"]
+timestamp = "2026-10-25T12:00:00Z"
+
+[docx]
+reference_doc = "templates/reference.docx"
+math = "image"
+update_fields = false
+
+[latex]
+template = "templates/document.tex"
+top_level = "chapter"
+cite = "natbib"
+emit_bibliography = true
+code = "highlighted"
+tables = "tabular"
+booktabs = false
+cleveref = true
+figure_placement = "H"
+engine = "xelatex"
+unicode = "keep"
+cell_prompts = true
+wrap = 80
+
+[typst]
+strict = true
+package_paths = ["packages"]
+
+[notebook]
+mime_priority = ["text/plain", "image/png"]
+hide_input_tags = ["input-hidden"]
+hide_output_tags = ["output-hidden"]
+remove_cell_tags = ["omitted"]
+cell_options = false
+show_prompts = false
+
+[serve]
+host = "0.0.0.0"
+port = 4000
+open = true
+view = "pages"
