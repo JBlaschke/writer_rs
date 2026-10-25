@@ -1,0 +1,7 @@
+* text=auto eol=lf
+assets/vendor/** -text -whitespace linguist-vendored
+*.woff2 binary
+*.wasm binary
+assets/licenses/two-face*.md -text -whitespace linguist-generated
+assets/licenses/hayagriva-styles.md -whitespace linguist-generated
+assets/math/unicode-latex.toml linguist-generated

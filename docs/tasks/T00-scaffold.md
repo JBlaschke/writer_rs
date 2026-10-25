@@ -188,6 +188,13 @@ table (T51); release/site workflows (T75); a browser CI job (T25). Never edit `d
   `src/lib.rs` `use typst::World;` fails (E0432: the local module wins); in `src/typst/*.rs` `typst::` is the crate.
   Machine: Homebrew `cargo`; zsh-like tool shell (quote globs); no `timeout` (background long builds); cwd resets.
 
+## Amendments
+- **Contract change (coordinator, 2026-10-25):** vendored-assets.md §5.5 now records
+  `assets/licenses/two-face*.md -text linguist-generated`, as step 2 already requires.
+- **Contract change (coordinator, 2026-10-25):** vendored payloads and generated
+  notices use `-whitespace` attributes so Git accepts their required verbatim
+  trailing spaces, CRLF, and final blank lines.
+
 ## Notes for the coordinator
 - **vendored-assets.md §5.5 vs §5.4 #6**: the two-face listings contain CRLF, which `* text=auto eol=lf` normalises, so
   the byte-identity test fails after checkout (reproduced). This task adds `-text` to them; please amend §5.5.
