@@ -1,0 +1,20 @@
+edition = "2024"
+
+# AGENTS.md prefers compact argument groups and a soft 80-column target.
+# URLs, hash literals, and exact-output strings may exceed it; keep them intact.
+max_width = 80
+hard_tabs = false
+tab_spaces = 4
+fn_call_width = 80
+attr_fn_like_width = 80
+struct_lit_width = 60
+array_width = 80
+chain_width = 80
+short_array_element_width_threshold = 32
+
+# Rust declarations use rustfmt's normal indentation and closing delimiters,
+# rather than AGENTS.md's general 12/8-space declaration layout.
+fn_params_layout = "Compressed"
+
+# Use narrow #[rustfmt::skip] exceptions only where semantic grouping materially
+# improves readability, not to impose custom declaration indentation.

@@ -1,0 +1,13 @@
+too-many-arguments-threshold = 8
+
+[[disallowed-methods]]
+path   = "syntect::parsing::SyntaxSet::load_defaults_newlines"
+reason = "use two-face's sets, vendored-assets.md §3.3"
+
+[[disallowed-methods]]
+path   = "syntect::parsing::SyntaxSet::load_defaults_nonewlines"
+reason = "use two-face's sets, vendored-assets.md §3.3"
+
+[[disallowed-methods]]
+path   = "syntect::highlighting::ThemeSet::load_defaults"
+reason = "use two-face's sets, vendored-assets.md §3.3"

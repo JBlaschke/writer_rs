@@ -24,7 +24,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 
 | ID | Task | Milestone | Size | Depends on | Status |
 |---|---|---|---|---|---|
-| T00 | Repository scaffold, pinned dependencies, CI, vendoring, module skeleton | M0 | M | — | todo |
+| T00 | Repository scaffold, pinned dependencies, CI, vendoring, module skeleton | M0 | M | — | ready for review; CI pending |
 | T01 | Core IR, config, errors, asset registry, l10n, CodeAttrs, frontend stubs, fixtures | M0 | L | T00 | todo |
 | T03 | typst compiler embedding: World, fonts, packages, compile, renditions, MathML | M0 | L | T01 | todo |
 | T04 | DOCX package core: ZIP, parts, styles, numbering, builders, reference merge, validator | M0 | L | T01 | todo |
@@ -90,6 +90,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 10 | T74 | 1 |
 
 ## Coordinator notes (2026-10-24)
+- Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
+  are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
+  the changes are merged or that the three-OS CI matrix has run.
+- The current `python3 scripts/waves.py` audit stops at missing task definitions `T30` and
+  `T40`. Several task briefs are still being written; finish the missing definitions before
+  using this script to dispatch subsequent waves. T00 has no dependencies.
 - Tasks may run on local branches `task/Txx-slug` in separate git worktrees merged into `main`
   by the coordinator, or as pull requests against `origin` (github.com/JBlaschke/writer_rs).
   When there is no PR, "PR description" means the commit message body (template below).

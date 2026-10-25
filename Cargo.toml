@@ -1,0 +1,104 @@
+[package]
+name         = "writer"
+version      = "0.1.0"
+edition      = "2024"
+rust-version = "1.96"
+license      = "MIT"
+repository   = "https://github.com/JBlaschke/writer_rs"
+publish      = false
+
+[lib]
+name = "writer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "writer"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.104"
+thiserror = "2.0.21"
+clap = { version = "4.6.7", features = ["derive", "wrap_help"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+toml = "1.1.8"
+serde_norway = "0.9.42"
+comrak = { version = "=0.57.0", default-features = false, features = ["attributes"] }
+rust-embed = { version = "8.13.0", features = ["include-exclude"] }
+notify = "8.2"
+axum = "0.8.9"
+tokio-stream = { version = "0.1.19", features = ["sync"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+base64 = "0.23.1"
+blake3 = "1.8.7"
+mime_guess = "2.0.5"
+html-escape = "0.2.15"
+regex = "1.13.1"
+walkdir = "2.5.0"
+open = "5.4.5"
+sha1_smol = "1.0.1"
+time = { version = "0.3.55", features = ["parsing", "formatting"] }
+scraper = { version = "=0.29.0", default-features = false }
+anstyle = "=1.0.14"
+anstyle-parse = "=1.0.0"
+caseless = "0.2.2"
+syntect = { version = "=5.3.0", default-features = false, features = ["default-fancy"] }
+two-face = { version = "=0.5.2", default-features = false, features = ["syntect-fancy"] }
+hayagriva = "=0.10.1"
+math-core = "=0.9.0"
+mitex = "=0.2.4"
+codex = "=0.3.0"
+typst = "=0.15.1"
+typst-syntax = "=0.15.1"
+typst-layout = "=0.15.1"
+typst-pdf = "=0.15.1"
+typst-svg = "=0.15.1"
+typst-render = "=0.15.1"
+typst-html = "=0.15.1"
+zip = { version = "=9.0.5", default-features = false, features = ["deflate"] }
+quick-xml = "0.42.0"
+imagesize = "0.15.0"
+ureq = "3.5.0"
+
+[dependencies.minijinja]
+version  = "2.24.0"
+features = ["loader", "json", "loop_controls", "custom_syntax"]
+
+[dependencies.tokio]
+version  = "1.54.1"
+features = [
+    "rt-multi-thread", "macros", "sync", "signal", "time", "fs",
+]
+
+[dependencies.typst-kit]
+version = "=0.15.1"
+default-features = false
+features = [
+    "embedded-fonts", "scan-fonts", "system-packages", "universe-packages",
+]
+
+[dev-dependencies]
+insta = { version = "1.49.0", features = ["json", "filters", "redactions"] }
+assert_cmd = "2.2.2"
+predicates = "3.1.4"
+tempfile = "3.27.0"
+docx-rs = { version = "=0.4.22", default-features = false }
+
+[dev-dependencies.two-face-04]
+package = "two-face"
+version = "=0.4.5"
+default-features = false
+features = ["syntect-fancy"]
+
+[features]
+browser-tests = []
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+opt-level     = 3
+lto           = "thin"
+codegen-units = 1
+strip         = true

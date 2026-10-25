@@ -1,0 +1,7 @@
+# Link the Windows C runtime statically so release archives need no redistributable.
+# RUSTFLAGS replaces these settings; leave it unset for Windows builds.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
