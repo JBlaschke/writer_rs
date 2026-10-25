@@ -24,8 +24,8 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 
 | ID | Task | Milestone | Size | Depends on | Status |
 |---|---|---|---|---|---|
-| T00 | Repository scaffold, pinned dependencies, CI, vendoring, module skeleton | M0 | M | — | ready for review; CI pending |
-| T01 | Core IR, config, errors, asset registry, l10n, CodeAttrs, frontend stubs, fixtures | M0 | L | T00 | todo |
+| T00 | Repository scaffold, pinned dependencies, CI, vendoring, module skeleton | M0 | M | — | done (PR #1) |
+| T01 | Core IR, config, errors, asset registry, l10n, CodeAttrs, frontend stubs, fixtures | M0 | L | T00 | ready for review |
 | T03 | typst compiler embedding: World, fonts, packages, compile, renditions, MathML | M0 | L | T01 | todo |
 | T04 | DOCX package core: ZIP, parts, styles, numbering, builders, reference merge, validator | M0 | L | T01 | todo |
 | T10 | Front matter → DocMeta and config overrides | M1 | S | T01 | todo |
@@ -90,6 +90,10 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 10 | T74 | 1 |
 
 ## Coordinator notes (2026-10-24)
+- T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI
+  passed. T01 starts from that merged main commit (`2de291d`).
+- T01 passes local formatting, Clippy and rustdoc checks with warnings denied,
+  plus all 146 tests in both debug and release builds. Its CI is pending.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

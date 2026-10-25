@@ -1,0 +1,1725 @@
+{
+  "meta": {
+    "title": "GPU allocation",
+    "subtitle": "Reproducible results",
+    "authors": [
+      {
+        "name": "J. Blaschke",
+        "affiliation": "Research",
+        "email": "j@example.com",
+        "id": "0000-0000"
+      }
+    ],
+    "date": "2026-10-24",
+    "abstract_": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "One paragraph."
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      }
+    ],
+    "keywords": [
+      "GPU",
+      "throughput"
+    ],
+    "description": "A document exercising the complete IR.",
+    "lang": "en",
+    "vars": {
+      "venue": "internal",
+      "toc": 3,
+      "numbering": {
+        "headings": "1.1"
+      }
+    }
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Introduction"
+        }
+      ],
+      "attrs": {
+        "id": "sec-intro",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1",
+      "span": {
+        "start_line": 3,
+        "end_line": 3
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Demand doubled "
+        },
+        {
+          "type": "emph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "emph"
+            }
+          ]
+        },
+        {
+          "type": "strong",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "strong"
+            }
+          ]
+        },
+        {
+          "type": "strikeout",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "strikeout"
+            }
+          ]
+        },
+        {
+          "type": "subscript",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "subscript"
+            }
+          ]
+        },
+        {
+          "type": "superscript",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "superscript"
+            }
+          ]
+        },
+        {
+          "type": "underline",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "underline"
+            }
+          ]
+        },
+        {
+          "type": "small_caps",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "small_caps"
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "text": "sum(values)",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "math",
+          "source": "x^2",
+          "dialect": "latex"
+        },
+        {
+          "type": "math",
+          "source": "alpha^2",
+          "dialect": "typst"
+        },
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "documentation"
+            }
+          ],
+          "url": "https://example.com",
+          "title": "Reference",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Inline plot"
+            }
+          ],
+          "url": "asset:32debefb8003",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {
+              "width": "70%"
+            }
+          }
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Every run used the pinned image."
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1
+              }
+            }
+          ],
+          "label": "note-run",
+          "number": 1
+        },
+        {
+          "type": "footnote_ref",
+          "label": "note-run",
+          "number": 1
+        },
+        {
+          "type": "ref",
+          "target": "fig-throughput",
+          "supplement": null,
+          "form": "normal",
+          "resolved": {
+            "kind": "figure",
+            "number": "1",
+            "text": [
+              {
+                "type": "text",
+                "text": "Figure 1"
+              }
+            ],
+            "anchor": "fig-throughput"
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "ref",
+          "target": "sec-intro",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "page"
+            }
+          ],
+          "form": "page",
+          "resolved": {
+            "kind": "heading",
+            "number": "1",
+            "text": [
+              {
+                "type": "text",
+                "text": "page 1"
+              }
+            ],
+            "anchor": "sec-intro"
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": [
+                {
+                  "type": "text",
+                  "text": "also"
+                }
+              ]
+            }
+          ],
+          "mode": "normal",
+          "resolved": {
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "note": false
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": [
+                {
+                  "type": "text",
+                  "text": "also"
+                }
+              ]
+            }
+          ],
+          "mode": "prose",
+          "resolved": {
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "note": false
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": [
+                {
+                  "type": "text",
+                  "text": "also"
+                }
+              ]
+            }
+          ],
+          "mode": "year",
+          "resolved": {
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "note": false
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": [
+                {
+                  "type": "text",
+                  "text": "also"
+                }
+              ]
+            }
+          ],
+          "mode": "author",
+          "resolved": {
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "note": false
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": [
+                {
+                  "type": "text",
+                  "text": "also"
+                }
+              ]
+            }
+          ],
+          "mode": "full",
+          "resolved": {
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "note": false
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": [
+                {
+                  "type": "text",
+                  "text": "also"
+                }
+              ]
+            }
+          ],
+          "mode": "none",
+          "resolved": {
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "note": false
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 4
+          }
+        },
+        {
+          "type": "line_break"
+        },
+        {
+          "type": "soft_break"
+        },
+        {
+          "type": "span",
+          "attrs": {
+            "id": null,
+            "classes": [
+              "mark"
+            ],
+            "pairs": {}
+          },
+          "inlines": [
+            {
+              "type": "text",
+              "text": "highlighted"
+            }
+          ]
+        },
+        {
+          "type": "raw",
+          "format": "latex",
+          "text": "\\LaTeX{}"
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "block_quote",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Measured on the same hardware."
+            }
+          ],
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "bullet"
+      },
+      "tight": true,
+      "items": [
+        {
+          "checked": true,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Record version"
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1
+              }
+            }
+          ]
+        },
+        {
+          "checked": false,
+          "blocks": [
+            {
+              "type": "code_block",
+              "lang": "python",
+              "text": "run()",
+              "attrs": {
+                "id": null,
+                "classes": [
+                  "numbered"
+                ],
+                "pairs": {
+                  "highlight": "1",
+                  "start": "1"
+                }
+              },
+              "span": {
+                "start_line": 1,
+                "end_line": 1
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "ordered",
+        "start": 3
+      },
+      "tight": false,
+      "items": [
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Collect results"
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "definition_list",
+      "items": [
+        {
+          "term": [
+            {
+              "type": "text",
+              "text": "Throughput"
+            }
+          ],
+          "definitions": [
+            [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Work per second."
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ],
+            [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "A rate."
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ]
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Throughput per node"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Throughput per node"
+                }
+              ],
+              "url": "asset:32debefb8003",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "70%"
+                }
+              }
+            }
+          ],
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-throughput",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "table",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Throughput per node"
+        }
+      ],
+      "body": [
+        {
+          "type": "table",
+          "columns": [
+            {
+              "align": "default",
+              "width": 0.25
+            },
+            {
+              "align": "left",
+              "width": 0.25
+            },
+            {
+              "align": "center",
+              "width": 0.25
+            },
+            {
+              "align": "right",
+              "width": 0.25
+            }
+          ],
+          "head": [
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Group"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": true
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Node"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": true
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "GB/s"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": true
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Load"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": true
+                }
+              ]
+            }
+          ],
+          "body": [
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "A"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 2,
+                  "rowspan": 2,
+                  "header": false
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "42"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "90%"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "43"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "91%"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                }
+              ]
+            }
+          ],
+          "foot": [
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Summary"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 4,
+                  "rowspan": 1,
+                  "header": false
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "attrs": {
+        "id": "tbl-throughput",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Throughput per node"
+        }
+      ],
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "python",
+          "text": "print(42)\n",
+          "attrs": {
+            "id": null,
+            "classes": [
+              "numbered"
+            ],
+            "pairs": {
+              "highlight": "1",
+              "start": "1"
+            }
+          },
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "attrs": {
+        "id": "lst-example",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Throughput per node"
+        }
+      ],
+      "body": [
+        {
+          "type": "figure",
+          "kind": "image",
+          "caption": [
+            {
+              "type": "text",
+              "text": "Throughput per node"
+            }
+          ],
+          "body": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "image",
+                  "alt": [
+                    {
+                      "type": "text",
+                      "text": "Left panel"
+                    }
+                  ],
+                  "url": "asset:32debefb8003",
+                  "title": null,
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "width": "70%"
+                    }
+                  }
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1
+              }
+            }
+          ],
+          "attrs": {
+            "id": "fig-left",
+            "classes": [],
+            "pairs": {}
+          },
+          "number": "2",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        {
+          "type": "figure",
+          "kind": "image",
+          "caption": [
+            {
+              "type": "text",
+              "text": "Throughput per node"
+            }
+          ],
+          "body": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "image",
+                  "alt": [
+                    {
+                      "type": "text",
+                      "text": "Right panel"
+                    }
+                  ],
+                  "url": "asset:32debefb8003",
+                  "title": null,
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "width": "70%"
+                    }
+                  }
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1
+              }
+            }
+          ],
+          "attrs": {
+            "id": "fig-right",
+            "classes": [],
+            "pairs": {}
+          },
+          "number": "3",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-panels",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "math",
+      "source": "T(n) = \\frac{W}{n} + c",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-amdahl",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "math",
+      "source": "sum_(i=0)^n i",
+      "dialect": "typst",
+      "attrs": {
+        "id": "eq-sum",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "2",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": [
+        {
+          "type": "text",
+          "text": "Reproducibility"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Keep the compiler version fixed."
+            }
+          ],
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "div",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "columns"
+        ],
+        "pairs": {
+          "widths": "1 1"
+        }
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Container content."
+            }
+          ],
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "raw",
+      "format": "html",
+      "text": "<img src=\"asset:32debefb8003\">",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "page_break",
+      "span": {
+        "start_line": 1,
+        "end_line": 1
+      }
+    },
+    {
+      "type": "toc",
+      "depth": 3
+    },
+    {
+      "type": "bibliography"
+    },
+    {
+      "type": "cell",
+      "index": 3,
+      "id": "results",
+      "language": "python",
+      "source": "df.describe()\n",
+      "execution_count": 2,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "raw",
+                  "format": "html",
+                  "text": "<b>42</b>",
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "Cell plot"
+                        }
+                      ],
+                      "url": "asset:32debefb8003",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {
+                          "width": "70%"
+                        }
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": "python",
+                  "text": "42\n",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "numbered"
+                    ],
+                    "pairs": {
+                      "highlight": "1",
+                      "start": "1"
+                    }
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/html",
+            "text/plain"
+          ]
+        },
+        {
+          "kind": {
+            "kind": "error",
+            "ename": "ValueError",
+            "evalue": "bad input"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "raw",
+                  "format": "html",
+                  "text": "<b>42</b>",
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "Cell plot"
+                        }
+                      ],
+                      "url": "asset:32debefb8003",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {
+                          "width": "70%"
+                        }
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": "python",
+                  "text": "42\n",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "numbered"
+                    ],
+                    "pairs": {
+                      "highlight": "1",
+                      "start": "1"
+                    }
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/html",
+            "text/plain"
+          ]
+        },
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "raw",
+                  "format": "html",
+                  "text": "<b>42</b>",
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "Cell plot"
+                        }
+                      ],
+                      "url": "asset:32debefb8003",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {
+                          "width": "70%"
+                        }
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": "python",
+                  "text": "42\n",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "numbered"
+                    ],
+                    "pairs": {
+                      "highlight": "1",
+                      "start": "1"
+                    }
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/html",
+            "text/plain"
+          ]
+        },
+        {
+          "kind": {
+            "kind": "result"
+          },
+          "execution_count": 2,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "raw",
+                  "format": "html",
+                  "text": "<b>42</b>",
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "Cell plot"
+                        }
+                      ],
+                      "url": "asset:32debefb8003",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {
+                          "width": "70%"
+                        }
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": "python",
+                  "text": "42\n",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "numbered"
+                    ],
+                    "pairs": {
+                      "highlight": "1",
+                      "start": "1"
+                    }
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [
+        "results"
+      ],
+      "metadata": {
+        "writer": {
+          "echo": true
+        }
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 3
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": true,
+    "notebook": true,
+    "citations": true,
+    "footnotes": true
+  },
+  "source": {
+    "path": "/abs/document/document.md",
+    "kind": "markdown",
+    "base_dir": "/abs/document"
+  },
+  "assets": [
+    {
+      "id": "32debefb8003",
+      "mime": "image/png",
+      "origin": "inline:70"
+    }
+  ],
+  "includes": [
+    "/abs/document/included.md"
+  ],
+  "resolved": {
+    "labels": {
+      "eq-amdahl": {
+        "kind": "equation",
+        "number": "1",
+        "supplement": "Equation",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "eq-sum": {
+        "kind": "equation",
+        "number": "1",
+        "supplement": "Equation",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "fig-left": {
+        "kind": "figure",
+        "number": "1",
+        "supplement": "Figure",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "fig-panels": {
+        "kind": "other",
+        "number": "1",
+        "supplement": "Other",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "fig-right": {
+        "kind": "figure",
+        "number": "1",
+        "supplement": "Figure",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "fig-throughput": {
+        "kind": "figure",
+        "number": "1",
+        "supplement": "Figure",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "lst-example": {
+        "kind": "listing",
+        "number": "1",
+        "supplement": "Listing",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "note-run": {
+        "kind": "footnote",
+        "number": "1",
+        "supplement": "Footnote",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "sec-intro": {
+        "kind": "heading",
+        "number": "1",
+        "supplement": "Heading",
+        "text": "Introduction",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      "tbl-throughput": {
+        "kind": "table",
+        "number": "1",
+        "supplement": "Table",
+        "text": "Throughput per node",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      }
+    },
+    "toc": [
+      {
+        "level": 1,
+        "number": "1",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Introduction"
+          }
+        ],
+        "anchor": "sec-intro"
+      }
+    ],
+    "bibliography": {
+      "style": "ieee",
+      "hanging_indent": true,
+      "entries": [
+        {
+          "key": "knuth1984",
+          "prefix": [
+            {
+              "type": "text",
+              "text": "[1]"
+            }
+          ],
+          "inlines": [
+            {
+              "type": "text",
+              "text": "D. Knuth. "
+            },
+            {
+              "type": "emph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "The TeXbook"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footnotes": 1
+  }
+}

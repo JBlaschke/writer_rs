@@ -11,12 +11,14 @@ It is being built from a plan written for a fleet of independent agents:
 - [`docs/tasks/`](docs/tasks/) — one file per task and the [task board](docs/tasks/README.md).
 - [`docs/research/`](docs/research/) — the verified facts the plan rests on (typst embedding, comrak, DOCX, math, citations, LaTeX, notebooks, presenter_rs inventory).
 
-Implementation has started with T00: the Rust crate and module skeleton, pinned dependencies,
-checksummed vendored assets, embedded notices, build metadata, and CI. Document conversion and
-the CLI commands arrive in later tasks; the current binary reports that T16 is pending and
-exits with status 2.
+T00 provides the Rust crate, pinned dependencies, checksummed vendored assets,
+embedded notices, build metadata, and CI. T01 adds the shared document model,
+configuration loading and precedence, diagnostics, asset registry, localization,
+and the source fixture corpus. Document conversion and the CLI commands arrive
+in later tasks; the current binary reports that T16 is pending and exits with
+status 2.
 
-To validate the scaffold:
+To validate the current implementation:
 
 ```bash
 cargo build --locked
