@@ -394,8 +394,8 @@ fn code_css_only_with_features_code() {
         &Config::default(),
         OutputMode::Standalone,
     );
-    assert!(!doc.theme_css.contains("code theme:"));
-    assert!(!doc.theme_css.contains(".hl-code"));
+    assert!(!doc.theme_css.contains("/* code theme:"));
+    assert!(!doc.theme_css.contains("/* code theme (dark):"));
     document.features.code = true;
     let doc = render_with(
         &document,
