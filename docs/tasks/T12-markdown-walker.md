@@ -1,5 +1,10 @@
 # T12 — comrak AST → IR walker
 
+## Amendments
+- 2026-10-26 (coordinator): use T10's `strip_delimiters`/`parse_document_front_matter`
+  for warnings; T11's sequential helpers now include `check_unopened_directives`.
+  The steps and notes below reflect markdown-dialect.md §2.2/§5.3's recorded decisions.
+
 | | |
 |---|---|
 | Milestone | M1 |
@@ -45,13 +50,14 @@ pub fn parse_inlines(text: &str, config: &Config, ctx: &mut Fragment) -> Result<
 2. **Front matter** (`mod.rs`; lift presenter `mod.rs` 226–275, 415–470): `starts_with_empty_front_matter` and
    `mark_empty_front_matter` verbatim (`---`/`---` on lines 1–2: no `front_matter_delimiter`, §2.2); parse with
    `comrak_options(&config.markdown)`; `FrontMatter` → T10's function that also raises `front-matter-empty`/`-unclosed`
-   (presenter's `parse_deck_front_matter`; see Notes); `meta.vars.remove("abstract")`; `config.clone()` +
+   (`strip_delimiters` then `parse_document_front_matter`); `meta.vars.remove("abstract")`; `config.clone()` +
    `merge_front_matter(&meta)?`; options again from the merged `config.markdown`.
 3. **Pre-pass and recovery** (`parse` and `parse_blocks`; fragments set `front_matter_delimiter = None`, notebook-mapping.md
    §2.4 step 1): `colon_prepass(text, &opts)` and one `Level::Info` `directive-colon-rewritten` per returned line;
-   `comrak::parse_document` into a `comrak::Arena`; `recover_attr_blocks(..)`, continuing with its root (or T11's combined
-   pass, its open point). Keep presenter's `source_lines` (split.rs 560–575) of the **original** text: line numbers never
-   change (§3.2, §5.3); `:::raw` bodies and §9's separator test read raw lines.
+   `comrak::parse_document` into a `comrak::Arena`; `recover_attr_blocks(..)`, continuing with its root;
+   `check_unopened_directives(root, diagnostics)`. Keep presenter's `source_lines` (split.rs 560–575)
+   of the **original** text: line numbers never change (§3.2, §5.3); `:::raw` bodies and §9's
+   separator test read raw lines.
 4. **`walker.rs` skeleton.** A `Walker` with `&mut Fragment`, `&Config`, source lines, the footnote map and walk state;
    methods under 80 lines (PLAN §6). Spans (§4.9): adapt `node_span` (render.rs 1967) to
    `SourceSpan { start_line, end_line, cell: ctx.cell, file: ctx.file.map(Path::to_path_buf) }`, `end_line = end.line - 1`
@@ -187,10 +193,10 @@ options, attribute recovery, directive info, colon pre-pass (T11); YAML (T10); `
 - **T1B seams.** T1B owns only `refs.rs`/`include.rs` (PLAN §3.2), yet its scanner and `:::include` must be called from this
   task's files, and no spec allows those edits. This task leaves `include_directive` (drop + `tracing::warn!`; §10 has no "not
   yet" code) and a scanner comment; please allow T1B's two edits there.
-- **Front-matter warnings.** §2.2 keeps `front-matter-empty`/`-unclosed` (presenter's `parse_deck_front_matter`) but exports
-  only `split_front_matter`/`parse_front_matter`; T10 should export the warning-raising function too.
-- **§5.3 diagnostics.** `colon_prepass` takes no `Diagnostics`, so this task raises `directive-colon-rewritten` and the "still
-  opens nothing" `invalid-directive` (AST-based); T11 must not raise them as well.
+- **Front-matter warnings.** T10 exports `strip_delimiters` and `parse_document_front_matter`; the latter raises
+  `front-matter-empty`, `front-matter-unclosed`, and `front-matter-author-list`.
+- **§5.3 diagnostics.** This task raises `directive-colon-rewritten` from the returned line list and calls T11's
+  `check_unopened_directives` for unopened-line warnings; do not duplicate that lint in the walker.
 - **First footnote reference.** §6 says `ref_num == 1`, but comrak counts in tree order, so a reference inside a definition
   can be walked first; "first in walk order" keeps ir.md §2 invariant 4.
 - **Decided here, spec silent:** `:::figure kind=` breaking invariant 2 → `invalid-directive-arg`, `Other`; every unbound

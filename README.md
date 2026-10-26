@@ -17,9 +17,11 @@ configuration loading and precedence, diagnostics, asset registry, localization,
 and the source fixture corpus. T03 embeds the Typst compiler for PDFs, equation
 and image renditions, MathML, fonts, and package loading. T04 provides
 deterministic DOCX packages, styles, numbering, reference-document merging,
-and structural validation. Full content mapping and the CLI commands arrive
-in later tasks; the current binary reports that T16 is pending and exits with
-status 2.
+and structural validation. T10/T11 add front matter, Markdown options,
+attribute recovery and directive helpers, with R9 corpus snapshots. T14
+resolves assets for standalone HTML, sites and versioned serve URLs. The
+Markdown walker, full content mapping and CLI commands arrive in later tasks;
+the current binary reports that T16 is pending and exits with status 2.
 
 To validate the current implementation:
 

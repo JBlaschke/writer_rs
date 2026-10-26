@@ -1,0 +1,18 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-15:5
+  paragraph @1:1-1:6
+    text Text("before") @1:1-1:6
+  paragraph @3:1-3:11
+    text Text("::pagebreak") @3:1-3:11
+  paragraph @5:1-5:8
+    text Text("\\newpage") @5:1-5:8
+  html_block HtmlBlock(NodeHtmlBlock { block_type: 2, literal: "<!-- pagebreak -->\n" }) @7:1-7:18
+  paragraph @9:1-9:16
+    text Text("--- {.pagebreak}") @9:1-9:16
+  thematic_break @11:1-11:3
+  thematic_break @13:1-13:5
+  paragraph @15:1-15:5
+    text Text("after") @15:1-15:5

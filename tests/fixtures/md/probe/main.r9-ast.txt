@@ -1,0 +1,166 @@
+document @1:1-101:16
+  frontmatter FrontMatter("---\ntitle: Probe document\nauthor: J. Blaschke\n---\n\n") @1:1-4:3
+  heading Heading(NodeHeading { level: 1, setext: false, closed: false }) attrs=Attributes { id: Some("intro"), classes: ["wide"], pairs: [("key", "value")] } @6:1-6:39
+    text Text("Introduction") @6:3-6:14
+  heading Heading(NodeHeading { level: 2, setext: true, closed: false }) attrs=Attributes { id: Some("setext"), classes: ["s"], pairs: [] } @8:1-9:27
+    text Text("Setext heading") @8:1-8:14
+  paragraph @11:1-17:6
+    text Text("A paragraph with ") @11:1-11:17
+    emph @11:18-11:23
+      text Text("emph") @11:19-11:22
+    text Text(", ") @11:24-11:25
+    strong @11:26-11:35
+      text Text("strong") @11:28-11:33
+    text Text(", ") @11:36-11:37
+    strikethrough @11:38-11:47
+      text Text("strike") @11:40-11:45
+    text Text(", H") @11:48-11:50
+    subscript @11:51-11:53
+      text Text("2") @11:52-11:52
+    text Text("O, x") @11:54-11:57
+    superscript @11:58-11:60
+      text Text("2") @11:59-11:59
+    text Text(", ") @11:61-11:62
+    code Code(NodeCode { num_backticks: 1, literal: "code" }) attrs=Attributes { id: None, classes: ["lang"], pairs: [("k", "v")] } @11:63-11:79
+    text Text(",") @11:80-11:80
+    softbreak @11:81-11:81
+    text Text("a ") @12:1-12:2
+    link Link(NodeLink { url: "https://example.com", title: "Title" }) attrs=Attributes { id: None, classes: ["btn"], pairs: [("target", "_blank")] } @12:3-12:57
+      text Text("link") @12:4-12:7
+    text Text(", an inline ") @12:58-12:69
+    image Image(NodeLink { url: "a.png", title: "" }) attrs=Attributes { id: None, classes: [], pairs: [("width", "50%")] } @12:70-12:93
+      text Text("img") @12:72-12:74
+    text Text(",") @12:94-12:94
+    softbreak @12:95-12:95
+    text Text("a footnote") @13:1-13:10
+    footnote_reference FootnoteReference(NodeFootnoteReference { name: "one", texts: [("^", 1), ("one", 3)], ref_num: 1, ix: 1 }) @13:11-13:16
+    text Text(", inline math ") @13:17-13:30
+    math Math(NodeMath { dollar_math: true, display_math: false, literal: "E=mc^2" }) @13:31-13:38
+    text Text(" and display inline ") @13:39-13:58
+    math Math(NodeMath { dollar_math: true, display_math: true, literal: "a+b" }) @13:59-13:65
+    text Text(" and a literal $5.") @13:66-13:84
+    softbreak @13:85-13:85
+    text Text("Hard break here") @14:1-14:15
+    linebreak @14:16-14:17
+    text Text("and two-space break here") @15:1-15:24
+    linebreak @15:25-15:27
+    text Text("then soft") @16:1-16:9
+    softbreak @16:10-16:10
+    text Text("break.") @17:1-17:6
+  list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @19:1-26:11
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @19:1-19:11
+      paragraph @19:3-19:11
+        text Text("tight one") @19:3-19:11
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @20:1-22:12
+      paragraph @20:3-20:11
+        text Text("tight two") @20:3-20:11
+      list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: true, is_task_list: false }) @21:3-22:12
+        item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @21:3-21:12
+          paragraph @21:5-21:12
+            text Text("nested a") @21:5-21:12
+        item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @22:3-22:12
+          paragraph @22:5-22:12
+            text Text("nested b") @22:5-22:12
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @24:1-24:11
+      paragraph @24:3-24:11
+        text Text("loose one") @24:3-24:11
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @26:1-27:0
+      paragraph @26:3-26:11
+        text Text("loose two") @26:3-26:11
+  list List(NodeList { list_type: Ordered, marker_offset: 0, padding: 3, start: 3, delimiter: Period, bullet_char: 0, tight: true, is_task_list: false }) @28:1-30:18
+    item Item(NodeList { list_type: Ordered, marker_offset: 0, padding: 3, start: 3, delimiter: Period, bullet_char: 0, tight: false, is_task_list: false }) @28:1-28:8
+      paragraph @28:4-28:8
+        text Text("third") @28:4-28:8
+    item Item(NodeList { list_type: Ordered, marker_offset: 0, padding: 3, start: 4, delimiter: Period, bullet_char: 0, tight: false, is_task_list: false }) @29:1-31:0
+      paragraph @29:4-29:9
+        text Text("fourth") @29:4-29:9
+      list List(NodeList { list_type: Ordered, marker_offset: 0, padding: 3, start: 1, delimiter: Paren, bullet_char: 0, tight: true, is_task_list: false }) @30:4-30:18
+        item Item(NodeList { list_type: Ordered, marker_offset: 0, padding: 3, start: 1, delimiter: Paren, bullet_char: 0, tight: false, is_task_list: false }) @30:4-30:18
+          paragraph @30:7-30:18
+            text Text("nested paren") @30:7-30:18
+  list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: true, is_task_list: true }) @32:1-34:10
+    taskitem TaskItem(NodeTaskItem { symbol: None, symbol_sourcepos: 32:4-32:4 }) @32:1-32:10
+      paragraph @32:7-32:10
+        text Text("todo") @32:7-32:10
+    taskitem TaskItem(NodeTaskItem { symbol: Some('x'), symbol_sourcepos: 33:4-33:4 }) @33:1-33:10
+      paragraph @33:7-33:10
+        text Text("done") @33:7-33:10
+    taskitem TaskItem(NodeTaskItem { symbol: Some('X'), symbol_sourcepos: 34:4-34:4 }) @34:1-35:0
+      paragraph @34:7-34:10
+        text Text("DONE") @34:7-34:10
+  block_quote @36:1-38:25
+    paragraph @36:3-36:18
+      text Text("quoted paragraph") @36:3-36:18
+    paragraph @38:3-38:25
+      text Text("second quoted paragraph") @38:3-38:25
+  alert Alert(NodeAlert { alert_type: Note, title: Some("Custom title"), multiline: false, fence_length: 1, fence_offset: 0 }) @40:1-41:28
+    paragraph @41:3-41:28
+      text Text("Note body with ") @41:3-41:17
+      strong @41:18-41:27
+        text Text("strong") @41:20-41:25
+      text Text(".") @41:28-41:28
+  alert Alert(NodeAlert { alert_type: Warning, title: None, multiline: false, fence_length: 1, fence_offset: 0 }) @43:1-44:29
+    paragraph @44:3-44:29
+      text Text("lowercase warning, no title") @44:3-44:29
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "python", literal: "print(\"hi\")\n", closed: true }) attrs=Attributes { id: Some("code1"), classes: ["numbered"], pairs: [("lines", "1-3")] } @46:1-48:3
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "", literal: "no info fence\n", closed: true }) @50:1-52:3
+  paragraph @54:1-56:2
+    math Math(NodeMath { dollar_math: true, display_math: true, literal: "\n\\int_0^1 x\\,dx\n" }) @54:1-56:2
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "math", literal: "\\sum_i i\n", closed: true }) @58:1-60:3
+  table Table(NodeTable { alignments: [Left, Center, Right, None], num_columns: 4, num_rows: 2, num_nonempty_cells: 8 }) @62:1-64:32
+    table_row TableRow(true) @62:1-62:32
+      table_cell @62:2-62:7
+        text Text("Left") @62:3-62:6
+      table_cell @62:9-62:16
+        text Text("Center") @62:10-62:15
+      table_cell @62:18-62:24
+        text Text("Right") @62:19-62:23
+      table_cell @62:26-62:31
+        text Text("None") @62:27-62:30
+    table_row TableRow(false) @64:1-64:32
+      table_cell @64:2-64:7
+        text Text("a") @64:3-64:3
+      table_cell @64:9-64:16
+        text Text("b") @64:10-64:10
+      table_cell @64:18-64:24
+        text Text("c") @64:19-64:19
+      table_cell @64:26-64:31
+        text Text("d") @64:27-64:27
+  description_list @66:1-75:0
+    description_item DescriptionItem(NodeDescriptionItem { marker_offset: 0, padding: 2, tight: false }) @66:1-68:22
+      description_term @66:1-66:8
+        paragraph @66:1-66:8
+          text Text("Term one") @66:1-66:8
+      description_details @68:1-68:22
+        paragraph @68:3-68:22
+          text Text("Details for term one") @68:3-68:22
+    description_item DescriptionItem(NodeDescriptionItem { marker_offset: 0, padding: 2, tight: false }) @70:1-74:17
+      description_term @70:1-70:8
+        paragraph @70:1-70:8
+          text Text("Term two") @70:1-70:8
+      description_details @72:1-74:17
+        paragraph @72:3-72:22
+          text Text("Details for term two") @72:3-72:22
+        paragraph @74:5-74:17
+          text Text("More details.") @74:5-74:17
+  thematic_break @80:1-80:3
+  html_block HtmlBlock(NodeHtmlBlock { block_type: 6, literal: "<div class=\"raw\">\nraw html block\n</div>\n" }) @82:1-84:6
+  html_block HtmlBlock(NodeHtmlBlock { block_type: 2, literal: "<!-- an html comment -->\n" }) @86:1-86:24
+  block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "callout note title=\"Hi there\" .big #c1" }) @88:1-92:3
+    paragraph @89:1-89:13
+      text Text("Callout body.") @89:1-89:13
+    list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: true, is_task_list: false }) @91:1-91:13
+      item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @91:1-91:3
+        paragraph @91:3-91:3
+          text Text("with a list") @91:3-91:13
+  block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "{.callout .warning id=w1 title=\"Pandoc form\"}" }) @94:1-96:3
+    paragraph @95:1-95:25
+      text Text("Pandoc-style info string.") @95:1-95:25
+  block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "include part2.ipynb" }) @98:1-99:3
+  paragraph @101:1-101:16
+    text Text("Final paragraph.") @101:1-101:16
+  footnote_definition FootnoteDefinition(NodeFootnoteDefinition { name: "one", total_references: 1 }) @76:1-78:37
+    paragraph @76:9-76:26
+      text Text("The footnote text.") @76:9-76:26
+    paragraph @78:5-78:37
+      text Text("Second paragraph of the footnote.") @78:5-78:37

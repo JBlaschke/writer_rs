@@ -124,3 +124,34 @@ and feature, and rustdoc all pass with warnings denied.
 
 T04 adds plain-text placeholder emitters with owner diagnostics. Full DOCX
 content mapping remains with T40–T42; the CLI remains the T16 placeholder.
+
+## T10/T11/T14 Markdown and asset acceptance (2026-10-26)
+
+Measured at `4711b50` plus this batch's working tree on macOS arm64 with Rust
+1.99.1. These are incremental suite runs with cached dependencies, wrapped in
+`/usr/bin/time -p`; the suite also includes the existing compiler and DOCX tests.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 5.09 s | 15.99 s | 29.22 s | 438 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 69 s | 78.91 s | 729.42 s | 437 passed |
+
+The existing debug-only assertion accounts for the count difference; the DOCX
+fixture generator remains intentionally ignored. The front-matter parser's
+47 tests include 5,456 generated documents and config-merge checks; its two
+doctests run normally. The five probe tests compare the original R9 dumps
+exactly, exercise 36 reviewed snapshots, and account for every directive-like
+fence across 51 Markdown fixtures after pre-pass and attribute recovery.
+
+Asset tests cover all three output modes, content versions, file-stamp cache
+reuse, missing files, CSS fonts and HTML tokenizer boundaries. Cross-review
+found an inherited prefix match for raw-text closing tags: `</stylex>` and
+`</scripture>` must not stop placeholder replacement. The emitter now shares
+the scanner's exact end-tag matcher, with regression coverage.
+
+Formatting, Clippy for all targets/features, and rustdoc pass with warnings
+denied for Clippy/rustdoc. The four canonical R9 fixture/dump extractions are
+byte-exact, including the main fixture's intentional two-space Markdown hard
+break. This fixture is the sole expected trailing-whitespace finding when
+checking the staged diff. Dependency files and module declarations are unchanged.
+The Markdown walker remains T12's stub; the CLI remains T16's placeholder.

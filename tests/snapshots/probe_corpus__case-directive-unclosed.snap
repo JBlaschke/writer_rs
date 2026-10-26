@@ -1,0 +1,12 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-6:4
+  block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "unclosed" }) @1:1-6:4
+    paragraph @2:1-2:19
+      text Text("swallowed paragraph") @2:1-2:19
+    heading Heading(NodeHeading { level: 1, setext: false, closed: false }) @4:1-4:16
+      text Text("Heading inside") @4:3-4:16
+    paragraph @6:1-6:4
+      text Text("para") @6:1-6:4

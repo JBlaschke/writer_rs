@@ -1,0 +1,9 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-15:3
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "python extra words here", literal: "body\n", closed: true }) @1:1-3:3
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "", literal: "body\n", closed: true }) attrs=Attributes { id: None, classes: ["numbered"], pairs: [] } @5:1-7:3
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 126, fence_length: 3, fence_offset: 0, info: "rust", literal: "body\n", closed: true }) attrs=Attributes { id: Some("r"), classes: [], pairs: [] } @9:1-11:3
+  code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "python title=\"A: B\"", literal: "body\n", closed: true }) @13:1-15:3

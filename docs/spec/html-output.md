@@ -555,6 +555,13 @@ HTML), plus T14's `pub(crate) fn html_count_attr(html: &str, attr: &str) -> usiz
 raw-text elements that have `attr`, bare or valued (built on `HtmlScan::start_tags` like presenter's `has_math_markup`;
 `html_attr_values` drops bare attributes).
 
+> **Contract change (coordinator, 2026-10-26):** T14 caches file content versions by absolute
+> path, length and modification time, hashing on a cache miss. Equal length and mtime reuse
+> the version even if bytes changed; this is the accepted cache caveat. A deleted file raises
+> `MissingAsset` in serve mode too. Standalone and serve drop an author's placeholder query
+> while preserving its fragment; site keeps both. Serve writes the single `?v=` itself, so
+> T23 must not lift presenter's later `version_file_assets` pass.
+
 ### 6.2 What each mode contains
 - **Standalone:** one file, no request at load time except remote URLs the author wrote and absolute `@import`s
   (warning); KaTeX (JS, CSS, 20 woff2 as `data:`) only when `Emitted.math.katex`, Latin Modern Math (+≈ 518 KB) only
@@ -699,7 +706,7 @@ Cargo (no `onig`, R6 §A.1; exact pins as vendored-assets.md §7.3):
 
 ## Open points (a task may decide locally)
 - T13: `String` vs `fmt::Write`, how footnote bodies are collected (output fixed by §1.11).
-- T14: caching `content_version` per `(path, len, mtime)` between serve rebuilds.
+- T14 (decided): cache `content_version` per `(path, len, mtime)` between serve rebuilds (§6.1).
 - T15: message wording; whether `context_json` and `render` share one builder. T19: entry file names and split, token
   values, colours, font stacks.
 

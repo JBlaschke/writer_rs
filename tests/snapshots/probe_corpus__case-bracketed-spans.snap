@@ -1,0 +1,7 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-1:56
+  paragraph @1:1-1:56
+    text Text("A [span text]{.cls #s1} and [other]{k=v} and [x]{} here.") @1:1-1:56

@@ -1,0 +1,25 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-9:3
+  block_quote @1:1-1:22
+    block_quote @1:2-1:22
+      alert Alert(NodeAlert { alert_type: Tip, title: Some("Multi title"), multiline: false, fence_length: 1, fence_offset: 0 }) @1:3-1:22
+  paragraph @2:1-2:8
+    text Text("para one") @2:1-2:8
+  list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: true, is_task_list: false }) @4:1-4:6
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @4:1-4:6
+      paragraph @4:3-4:6
+        text Text("list") @4:3-4:6
+  block_quote @5:1-5:3
+    block_quote @5:2-5:3
+      block_quote @5:3-5:3
+  block_quote @7:1-7:3
+    block_quote @7:2-7:3
+      block_quote @7:3-7:3
+  paragraph @8:1-8:21
+    text Text("plain multiline quote") @8:1-8:21
+  block_quote @9:1-9:3
+    block_quote @9:2-9:3
+      block_quote @9:3-9:3

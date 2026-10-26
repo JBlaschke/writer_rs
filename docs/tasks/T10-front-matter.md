@@ -1,5 +1,10 @@
 # T10 — Front matter → DocMeta and config overrides
 
+## Amendments
+- 2026-10-26 (coordinator): markdown-dialect.md §2.2 records this brief's local decisions
+  for keywords, author maps, empty tables and boolean numbering, and all exported helpers.
+  config.md §3 clarifies that the frontend parses the abstract after T10 stores its text.
+
 | | |
 |---|---|
 | Milestone | M1 |

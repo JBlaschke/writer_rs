@@ -1,0 +1,7 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-1:53
+  paragraph @1:1-1:53
+    text Text("\"quotes\" and 'single' -- dash --- emdash ... ellipsis") @1:1-1:53
