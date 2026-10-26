@@ -346,6 +346,11 @@ pub const MARKUP_CLASSES: &[&str] = &["title-block", "title", "subtitle", "autho
   "output-stream", "stdout", "stderr", "output-error", "output-display", "output-result"];
 ```
 
+> **Contract change (coordinator, 2026-10-26):** class-coverage tests distinguish
+> emitter-owned classes from classes supplied by fixture `Attrs.classes` (for
+> example `mark` and `columns`). The latter need not appear in `MARKUP_CLASSES`;
+> the constant remains the exact 70-name vocabulary above.
+
 ## 2. Escaping and determinism — T13, T15
 
 ### 2.1 Escaping

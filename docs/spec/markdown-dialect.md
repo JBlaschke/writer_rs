@@ -616,9 +616,13 @@ ignores them. Codes raised by this dialect:
 
 Raised by resolve on this dialect's shapes (owned by references.md): `unresolved-reference`
 (error in `build`, warning in `serve`/`check`), `duplicate-label`, `ambiguous-label` (errors),
-`unnumbered-target` (warning), `unknown-citation-key`. Per-target lints (`unsupported-construct`,
+`unnumbered-target` (warning). Per-target lints (`unsupported-construct`,
 `math-conversion-failed`) are the emitters' (T71). `check` runs every lint above for every
 included file too (§8). `--deny-warnings` fails on warnings, never on info events.
+
+> **Contract change (coordinator, 2026-10-26):** the diagnostic list follows
+> references.md §8: unknown targets raise `unresolved-reference`, including when
+> no bibliography is configured. Resolve does not raise `unknown-citation-key`.
 
 ## 11. Fixtures (`tests/fixtures/md/`, inputs by T01 per PLAN §7; snapshots by T12/T1B)
 | fixture | exercises |

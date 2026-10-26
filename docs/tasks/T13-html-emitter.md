@@ -151,7 +151,8 @@ Allowed additions only: `#[derive(Debug, Default)]` + `impl MathHook` on `KatexO
   (no diagnostic), `footnote_inside_link`, `footnote_body_rereferences_earlier_note` (§1.11 `k` order),
   `duplicate_passthrough_keys`, `output_code_ansi_pair_not_printed` (no `data-ansi`), and `escape_five_characters`,
   `typst_math_katex_only_fallback` (warning), `unknown_language_info`, `markup_classes_cover_sample` (every class token of
-  both snapshots except `hl-*`/`language-*` is in `MARKUP_CLASSES`).
+  both snapshots except `hl-*`/`language-*` and fixture-supplied `Attrs.classes`
+  is in `MARKUP_CLASSES`).
 - `src/html/highlight.rs` `#[cfg(test)]`: `python_docstring_reopens_spans` (`lines[3]` and `lines[2]` exactly as in
   Hints), `numbered_start_highlight` (`start=5 highlight="6-7"` marks lines 2–3
   `line highlight`), `unknown_language` (`nosuchlang` → `Unknown`), `plain_class_and_plain_languages` (`.plain`,
@@ -198,3 +199,9 @@ Markdown-fixture snapshots (T16); resolve (T17); the `ansi` arm and notebook sna
 - references.md §4.3 walks every cell output candidate, the HTML emitter prints only `pick("html")`: T13 counts the
   `k` of `fnref-n-k` over emitted references only, so every backlink has a target.
 - A `span.file` missing from `includes` is unspecified (frontends never produce it): T13 writes `data-source="0"`.
+
+## Amendments
+- **2026-10-26 (coordinator):** class-coverage acceptance permits user classes
+  found in the fixture's `Attrs.classes`, in addition to syntax/language classes.
+  `MARKUP_CLASSES` remains the exact 70 emitter-owned names of html-output.md
+  §1.15; fixture classes such as `mark` and `columns` are intentionally separate.

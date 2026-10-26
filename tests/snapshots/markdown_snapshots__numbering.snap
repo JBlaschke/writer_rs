@@ -1,0 +1,557 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Numbering",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {
+      "numbering": {
+        "headings": "1.",
+        "figures": "section",
+        "equations": "labelled"
+      }
+    }
+  },
+  "blocks": [
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "before"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "before"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-zero",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 6
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "One"
+        }
+      ],
+      "attrs": {
+        "id": "sec-one",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "a"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-a",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 10,
+        "end_line": 10
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "table",
+      "caption": [
+        {
+          "type": "text",
+          "text": "t"
+        }
+      ],
+      "body": [
+        {
+          "type": "table",
+          "columns": [
+            {
+              "align": "default",
+              "width": null
+            }
+          ],
+          "head": [
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "x"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": true
+                }
+              ]
+            }
+          ],
+          "body": [
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "1"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                }
+              ]
+            }
+          ],
+          "foot": [],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 14,
+            "end_line": 16
+          }
+        }
+      ],
+      "attrs": {
+        "id": "tbl-a",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 12,
+        "end_line": 16
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": [
+        {
+          "type": "text",
+          "text": "code"
+        }
+      ],
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "rust",
+          "text": "fn main() {}",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 18,
+            "end_line": 20
+          }
+        }
+      ],
+      "attrs": {
+        "id": "lst-a",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 18,
+        "end_line": 20
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "other"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Some "
+            },
+            {
+              "type": "emph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " content."
+            }
+          ],
+          "span": {
+            "start_line": 23,
+            "end_line": 23
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-other",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 22,
+        "end_line": 24
+      }
+    },
+    {
+      "type": "math",
+      "source": "x = 1",
+      "dialect": "latex",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 26,
+        "end_line": 26
+      }
+    },
+    {
+      "type": "math",
+      "source": "y = 2",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-a",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 28,
+        "end_line": 28
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Sub"
+        }
+      ],
+      "attrs": {
+        "id": "sec-sub",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 30,
+        "end_line": 30
+      }
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Deep"
+        }
+      ],
+      "attrs": {
+        "id": "sec-deep",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 32,
+        "end_line": 32
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Interlude"
+        }
+      ],
+      "attrs": {
+        "id": "sec-interlude",
+        "classes": [
+          "unnumbered"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 34,
+        "end_line": 34
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "in interlude"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "in interlude"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 36,
+            "end_line": 36
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-int",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 36,
+        "end_line": 36
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Under interlude"
+        }
+      ],
+      "attrs": {
+        "id": "sec-under",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 38,
+        "end_line": 38
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Two"
+        }
+      ],
+      "attrs": {
+        "id": "sec-two",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 40,
+        "end_line": 40
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "c"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "c"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 42,
+            "end_line": 42
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-c",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 42,
+        "end_line": 42
+      }
+    },
+    {
+      "type": "math",
+      "source": "z = 3",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-b",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 44,
+        "end_line": 44
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "See @sec-one, @fig-zero, @eq-a, @eq-a[Eq.], @eq-a[], @sec-two[Chapter] and @sec-interlude."
+        }
+      ],
+      "span": {
+        "start_line": 46,
+        "end_line": 46
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": true,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:images/a.png"
+    }
+  ]
+}

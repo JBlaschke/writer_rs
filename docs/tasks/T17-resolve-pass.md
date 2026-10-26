@@ -184,7 +184,7 @@ T16: calling `resolve`, `dump`. T31/T32: package rules, oracle. Emitters; `check
   // its prefix (the suffix when that prefix is empty), then repr; finally the suffix unless trimmed
   ```
 - sha1_smol `1.0.1`: `Sha1::from<D: AsRef<[u8]>>(data: D) -> Sha1`; `.digest().to_string()` = 40 lowercase hex (§1.4 re-checked).
-- Reserved regex (`regex` 1.13.1, in a `std::sync::LazyLock`): `^(refs|ref-.*|writer-.*|fnref?-[0-9]+(-[0-9]+)?)$`.
+- Reserved regex (`regex` 1.13.1, in a `std::sync::LazyLock`): `^(refs|ref-.*|writer-.*|fn(?:ref)?-[0-9]+(-[0-9]+)?)$`.
 - `Diagnostic` has no hint field: append §8's hint in parentheses (wording beyond §8's templates is yours).
 - `a.png` (70 bytes, 1×1 RGBA, CRCs checked): `printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' | base64 -d > tests/fixtures/md/images/a.png`.
 - Build time: no test here runs the compiler, but the first `cargo test` builds the typst crates (T01's `l10n.rs`
@@ -198,3 +198,15 @@ T16: calling `resolve`, `dump`. T31/T32: package rules, oracle. Emitters; `check
 - No spec assigns `pub use library::Library;` in `src/cite/mod.rs` although ir.md/references.md write `cite::Library`.
 - ir.md §4's `resolve` doc comment and markdown-dialect.md §10 list `unknown-citation-key` as raised by resolve;
   references.md §8 says it never is. T17 follows references.md.
+
+## Amendments
+- **2026-10-26 (coordinator):** corrected §1.3's reserved footnote regex and
+  confirmed the base-only reservedness rule for auto ids. Suffix candidates
+  avoid explicit labels, keys and prior auto ids; this guarantees termination.
+- **2026-10-26 (coordinator):** references.md §8 owns diagnostic classification:
+  unknown targets raise `unresolved-reference`, never `unknown-citation-key`.
+  Aligned the stale lists in ir.md §4 and markdown-dialect.md §10.
+- **2026-10-26 (coordinator):** T12 is already merged. Adding `numbering.md`
+  therefore adds its two automatic Markdown snapshots; existing snapshots stay
+  unchanged. Resolver integration tests still build frontend-independent IR
+  because the reference scanner belongs to T1B.
