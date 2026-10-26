@@ -1,0 +1,25 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Footnotes and repeated references</h1>
+</header>
+<p>A named note<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup>, the same note again<sup class="footnote-ref"><a id="fnref-1-2" href="#fn-1" role="doc-noteref">1</a></sup>, and an inline note<sup class="footnote-ref"><a id="fnref-3" href="#fn-3" role="doc-noteref">3</a></sup>.</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn-1">
+<p>The first paragraph of a named note refers to another note<sup class="footnote-ref"><a id="fnref-2" href="#fn-2" role="doc-noteref">2</a></sup>.</p>
+<p>A second paragraph in the same note. <a class="footnote-back" href="#fnref-1" role="doc-backlink">↩︎</a> <a class="footnote-back" href="#fnref-1-2" role="doc-backlink">↩︎<sup>2</sup></a></p>
+</li>
+<li id="fn-2">
+<p>A nested footnote reference&#39;s content. <a class="footnote-back" href="#fnref-2" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-3">
+<p>Inline content. <a class="footnote-back" href="#fnref-3" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+</main>

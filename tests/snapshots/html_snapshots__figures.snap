@@ -1,0 +1,42 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Image attribute variants</h1>
+</header>
+<figure id="fig:x" class="figure kind-image">
+<img src="asset:000000000001" alt="Caption with emph" title="The title" style="width:50%">
+<figcaption><span class="caption-label">Figure 1:</span> Caption with <em>emph</em></figcaption>
+</figure>
+<figure id="fig:y" class="figure kind-image">
+<img src="asset:000000000001" alt="Caption" style="width:50%">
+<figcaption><span class="caption-label">Figure 2:</span> Caption</figcaption>
+</figure>
+<figure class="figure kind-image">
+<img src="asset:000000000001" alt="Caption" data-src="images/diagram.svg">
+<figcaption><span class="caption-label">Figure 3:</span> Caption</figcaption>
+</figure>
+<p><img id="fig:z" class="cls" src="asset:000000000001" alt="Caption"> trailing text</p>
+<p><img src="asset:000000000001" alt="One"> <img src="asset:000000000002" alt="Two"></p>
+<p><img class="bare" src="asset:000000000001" alt=""></p>
+<p><a class="wrap" href="https://example.org"><img src="asset:000000000001" alt="nested img"></a></p>
+<p><a class="wrap" href="https://example.org"><img class="x" src="asset:000000000001" alt="alt" style="width:10%"></a></p>
+<p><img src="asset:000000000001" alt=""></p>
+<figure id="fig-panels" class="figure kind-other">
+<figure id="fig-left" class="figure kind-image">
+<img src="asset:000000000001" alt="Left" style="width:45%">
+<figcaption><span class="caption-label">Figure 5:</span> Left</figcaption>
+</figure>
+<figure id="fig-right" class="figure kind-image">
+<img src="asset:000000000002" alt="Right" style="width:45%">
+<figcaption><span class="caption-label">Figure 6:</span> Right</figcaption>
+</figure>
+<figcaption><span class="caption-label">Figure 4:</span> Two panels</figcaption>
+</figure>
+<figure class="figure kind-image">
+<img src="asset:000000000001" alt="Invalid dimension">
+<figcaption><span class="caption-label">Figure 7:</span> Invalid dimension</figcaption>
+</figure>
+</main>

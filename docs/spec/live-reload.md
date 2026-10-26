@@ -352,7 +352,7 @@ impl PagesBuilder {
   returning `Ok((Arc::new(PageSet { build_id, pages: Vec::new() }), Diagnostics::default()))` (pages
   ok, `count` 0, so T23's tests pass without T24); T24 replaces the body.
 - Compile (T24): `Generated` → `load_typst_main(prepared, opts, world)` (§5.2); then
-  `crate::typst::compile::compile_document(world)`; no output → `Err(BuildFailure { error, diagnostics })`
+  `crate::typst::compile::compile_document(world)`; no output → `Err(BuildFailure { error: Box::new(error), diagnostics })`
   (`into_result`'s `Error::Compile`; all the compile's diagnostics, mapped by `map_diagnostic`,
   typst-dialect.md §8.2), else its warnings plus `world.include_diagnostics()`. Serve never uses
   `compile_pages` or `crate::typst::compile::PageSvg`; the wire hash is always `page_hash`.
@@ -463,7 +463,8 @@ pub struct BuildOptions { pub input: PathBuf, pub format: Option<SourceKind>, pu
                           pub cli: CliOverrides, pub mode: Mode }
 pub struct Prepared { pub document: Document, pub assets: AssetRegistry, pub config: Config,
                       pub config_path: Option<PathBuf>, pub diagnostics: Diagnostics }
-pub struct BuildFailure { pub error: Error, pub diagnostics: Diagnostics }
+pub struct BuildFailure { pub error: Box<Error>, pub diagnostics: Diagnostics }
+// Boxing keeps this result's error below Clippy's size threshold on Windows too.
 pub enum InputRole { Source, Include, Config, Asset, MissingAsset, Theme, Bibliography, PdfTemplate, ReferenceDoc, LatexTemplate }
 /// Config, frontend, resolve. Serve: lenient resolve, missing assets are warnings.
 pub fn prepare(opts: &BuildOptions) -> Result<Prepared, BuildFailure>;
@@ -475,8 +476,8 @@ pub struct WebPage { pub html: String, pub theme_css: String, pub theme: Theme, 
 /// The serve-mode (or build-mode) HTML document; typst math and equation images use `world`.
 /// When `subset_error(&prepared.diagnostics)` is `Some(d)` (typst-dialect.md §2.1: `E-TYP-*` errors
 /// fail the `html` target; the frontend returned `Ok`, for `E-TYP-SYNTAX` with `blocks: []`), it renders
-/// nothing and returns `Err(BuildFailure { error: Error::Parse { path: d.span's file, else d.path, else
-/// opts.input; line: d.span's start_line; message: d.message }, diagnostics: Diagnostics::default() })`;
+/// nothing and returns `Err(BuildFailure { error: Box::new(Error::Parse { path: d.span's file, else d.path, else
+/// opts.input; line: d.span's start_line; message: d.message }), diagnostics: Diagnostics::default() })`;
 /// serve keeps the last good page (§5.1) and reports `web` error (`kind` `parse`).
 pub fn web_page(prepared: &Prepared, opts: &BuildOptions, world: &mut WriterWorld) -> Result<WebPage, BuildFailure>;
 /// The first `Level::Error` diagnostic whose code starts with `E-TYP-` or `W-TYP-` (`--strict` /

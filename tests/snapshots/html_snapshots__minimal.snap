@@ -1,0 +1,19 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">A minimal document</h1>
+<div class="authors">
+<p class="author"><span class="author-name">Jane Doe</span></p>
+<p class="author"><span class="author-name">John Smith</span></p>
+</div>
+<section class="abstract" role="doc-abstract">
+<p class="abstract-title">Abstract</p>
+<p>A short abstract.</p>
+</section>
+</header>
+<h1 id="introduction">Introduction</h1>
+<p>This document has one heading and one paragraph.</p>
+</main>

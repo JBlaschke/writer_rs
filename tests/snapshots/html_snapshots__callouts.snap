@@ -1,0 +1,43 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Alerts and callouts</h1>
+</header>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Note</p>
+<p>A note.</p>
+</aside>
+<aside class="callout callout-tip" role="note">
+<p class="callout-title">Useful advice</p>
+<p>A tip with a title.</p>
+</aside>
+<aside class="callout callout-important" role="note">
+<p class="callout-title">Important</p>
+<p>Important information.</p>
+</aside>
+<aside class="callout callout-warning" role="note">
+<p class="callout-title">Warning</p>
+<p>A warning.</p>
+</aside>
+<aside class="callout callout-caution" role="note">
+<p class="callout-title">Caution</p>
+<p>A caution.</p>
+</aside>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Mixed case</p>
+<p>Tags are case-insensitive.</p>
+</aside>
+<blockquote>
+<p>[!UNKNOWN] An unknown alert tag remains a block quote.</p>
+</blockquote>
+<aside class="callout callout-warning" role="note">
+<p class="callout-title">Check the quota</p>
+<p>An explicit callout kind and title.</p>
+</aside>
+<blockquote>
+<p>An ordinary block quote.</p>
+</blockquote>
+</main>

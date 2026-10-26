@@ -1,0 +1,6 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+error duplicate-label [fixtures]/references.md:38 label `<sec-duplicate>` occurs multiple times in the document (first defined at [fixtures]/references.md:36)
+warning label-reserved [fixtures]/references.md:40 label `<fn-1>` is reserved for generated anchors (rename it)

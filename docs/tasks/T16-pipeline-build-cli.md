@@ -34,7 +34,7 @@ pub struct BuildOptions { pub input: PathBuf, pub format: Option<SourceKind>, pu
                           pub cli: CliOverrides, pub mode: Mode }
 pub struct Prepared { pub document: Document, pub assets: AssetRegistry, pub config: Config,
                       pub config_path: Option<PathBuf>, pub diagnostics: Diagnostics }
-pub struct BuildFailure { pub error: Error, pub diagnostics: Diagnostics }
+pub struct BuildFailure { pub error: Box<Error>, pub diagnostics: Diagnostics }
 pub enum InputRole { Source, Include, Config, Asset, MissingAsset, Theme, Bibliography, PdfTemplate, ReferenceDoc, LatexTemplate }
 pub fn prepare(opts: &BuildOptions) -> Result<Prepared, BuildFailure>;
 pub fn watch_inputs(prepared: &Prepared) -> Vec<(PathBuf, InputRole)>;
@@ -83,7 +83,7 @@ pub fn build(doc: &Document, assets: &AssetRegistry, config: &Config, out: &Path
 
 ## Steps
 1. **Types, config, parse** (`src/pipeline/mod.rs`): the §5.2 types; lift from presenter `pipeline.rs` `load_config` + `sets_out_dir` (L441–L483; also make relative `[pdf] font_paths` and `[typst] package_paths` absolute against the `writer.toml`'s directory, config.md §3), `write_file`, `read_source`, `source_info`, `absolute`, `io_error` (L886–L930). `parse_only`: kind = `opts.format` else `ir::detect_kind`; load config (CLI applied); dispatch `markdown::parse` / `notebook::parse` / `typst::frontend::parse` (ir.md §4); then `config.merge_front_matter(&document.meta)` (`Err` → `BuildFailure` with the parse diagnostics) and `apply_cli` again (config.md §4 precedence). `prepare` = `parse_only` + `resolve(&mut doc, &ResolveOptions { config, library: None /* T70: [references] wiring */, lenient: !matches!(opts.mode, Mode::Build) })` (references.md §4.1: lenient for serve and check), diagnostics appended.
-2. **`WorldSlot`** (mod.rs), exactly live-reload.md §5.3: private `world: Option<WriterWorld>`, the values it was built from (`font_paths`, `system_fonts`, `allow_packages`, `package_paths`, `from_prepare: bool`) and a private `created: u64` counter for the unit tests. Create: root = input's directory, `MainFile::Path(abs input)` for `.typ` else `MainFile::Virtual`, `today = pdf_timestamp(&config.pdf, &document.meta, env SOURCE_DATE_EPOCH, SystemTime::now())`; with `None`, `load_config(opts)` (default config on error) and today = now. Recreate/keep rules, `set_inputs(world_inputs(&prepared.config))` on keep, and on every `get` with `Some` `set_include_provider(Box::new(MarkdownIncludes { config: prepared.config.clone() }))`. A failing `pdf_timestamp`/`from_config` leaves the slot empty and returns `Err(BuildFailure { error, diagnostics: default })`.
+2. **`WorldSlot`** (mod.rs), exactly live-reload.md §5.3: private `world: Option<WriterWorld>`, the values it was built from (`font_paths`, `system_fonts`, `allow_packages`, `package_paths`, `from_prepare: bool`) and a private `created: u64` counter for the unit tests. Create: root = input's directory, `MainFile::Path(abs input)` for `.typ` else `MainFile::Virtual`, `today = pdf_timestamp(&config.pdf, &document.meta, env SOURCE_DATE_EPOCH, SystemTime::now())`; with `None`, `load_config(opts)` (default config on error) and today = now. Recreate/keep rules, `set_inputs(world_inputs(&prepared.config))` on keep, and on every `get` with `Some` `set_include_provider(Box::new(MarkdownIncludes { config: prepared.config.clone() }))`. A failing `pdf_timestamp`/`from_config` leaves the slot empty and returns `Err(BuildFailure { error: Box::new(error), diagnostics: default })`.
 3. **`MarkdownIncludes` stub** in `src/typst/includes.rs` (additive): `synthesize` returns `Err(Error::Other("including .md/.ipynb from typst arrives in T53".into()))` (typst-dialect.md §6.4). Import the trait and `Synthesized` from T03's `crate::typst::world`.
 4. **Helpers** (mod.rs): `resolve_theme` (spec `config.html.theme`; roots: `opts.cli.theme` set → [CWD]; `theme` or `html.theme` in `document.meta.vars` → [`document.source.base_dir`]; the `writer.toml` sets `[html] theme` (read its table like `sets_out_dir`) → [its directory]; else [] → `theme::resolve`). `watch_inputs`: Source, Include (`document.includes`), Config, Asset (`AssetData::File`), MissingAsset (path parsed from each `missing-asset` message, presenter's format `… (looked for <path>)`, `markdown/render.rs` L262–L271), Bibliography (+ a `.csl` style), PdfTemplate, ReferenceDoc, LatexTemplate (relative: document dir when the document set the key, else the `writer.toml` dir); Theme = `watch_dirs()` of the theme resolved against each of [config dir, document dir, CWD], else presenter's `theme_candidates` + `extends` (`serve/watch.rs` L394–L445). `subset_error`, `escalate_strict` (config.md §4 rules, idempotent; `Diagnostics` has no `iter_mut`: rebuild via `into_vec`), `not_implemented`/`is_not_implemented` (`Error::Other("<what>: not implemented yet (<task>)")`), and lifted `Clash`/`find_clash`/`same_file`/`path_after_creating_dirs`/`file_id`/`refused_clash` (L587–L885, `InputRole` `Display` extended), `escalate_missing_assets`/`missing_asset_as_error` (L932–L1013), with their presenter unit tests.
 5. **`src/pipeline/html.rs`**: one private `fn math_hook<'a>(config: &'a Config, world: &'a mut WriterWorld) -> Box<dyn MathHook + 'a>` whose body is the single line `Box::new(KatexOnly { usage: MathUsage::default() })` (T1A replaces it with `MathRenderer::new(config, world)`; mark `world` used with `let _ = &world;`). `render`: `RenderInput { document, assets: &mut prepared.assets.clone(), theme, config: &prepared.config, output, build, math }` → `html::render`. `build`: standalone = `config.html.standalone`; lifted `output_mode`/`document_path`/`SITE_INDEX`/`SITE_ASSETS_DIR`; clash check of every file against the inputs (`watch_inputs` with each Theme dir expanded as presenter's `input_files`/`theme_files`, plus `RenderedDocument.theme_files`); write; return `[file]` (standalone) or `[index.html, <out>/assets]` (site). `context`: `html::context::context_json` with `BuildInfo::build(standalone)`.
@@ -141,10 +141,34 @@ theme styling (T19, which re-blesses `html_snapshots__*.snap`). Never edit `Carg
 - Local decisions where the specs are silent: outputs are written although `prepare` raised error diagnostics
   (e.g. `unresolved-reference` in build), exit 1; a stub target exits 2 even when other targets succeeded; the
   `missing-asset` escalation runs in `build_targets`, so `dump` (lenient false, references.md §4.1) keeps missing assets as warnings.
-- `watch_inputs(prepared)` cannot see `--theme`, so its Theme entries over-approximate (every root); config.md §3's
-  "paths relative to `writer.toml`" has no owner for `[pdf] template`, `[docx] reference_doc`, `[latex] template` and
-  `bibliography` (T16 absolutizes only `out_dir`, `font_paths`, `package_paths`).
+- `watch_inputs(prepared)` cannot see `--theme`, so its Theme entries over-approximate (every root).
+  Path-valued template/reference/bibliography settings are normalized by T16 at
+  their source layer (see Amendments), so later watch/output stages need no path provenance guess.
 - typst-dialect.md §6.4 gives the no-provider error and T16's stub the same text, so live-reload.md §9's "not `no include
   provider`" cannot be told apart by message; the test checks `arrives in T53` only.
 - `src/main.rs` (T00) must call `writer::cli::run()`; `.gitignore` (T00) should cover `examples/**/dist/`; exit 3 for a
   missing Chrome (cli.md) is T77's additive change to `cli/build.rs`; PLAN §2's `58 KB` is printed `58.0 kB` (lifted `format_size`).
+
+## Amendments
+- **2026-10-26 (coordinator):** T16 starts from completed T15 (`647fce5`, PR #8)
+  under the user-authorized stacked-PR workflow. CI/merge waits do not block
+  implementation; feature branches and merge order remain explicit.
+- **2026-10-26 (coordinator):** closed the path-origin gap in the notes: T16
+  normalizes file-config PDF/DOCX/LaTeX template paths, bibliography and
+  path-valued CSL styles against the config directory. Front-matter overrides
+  resolve against the document directory, and CLI template/reference overrides
+  against the working directory. Preserve absolute values and empty built-in
+  paths. This implements config.md §3 without changing Config or Prepared shapes.
+- **2026-10-26 (coordinator):** validate output file/directory spelling using
+  effective Prepared config after front matter, before writing. A front-matter
+  site-mode override can target an existing directory; a standalone file output
+  cannot. Invalid output settings retain usage/config exit code 2.
+- **2026-10-26 (coordinator):** Windows CI measured `BuildFailure` at 128 bytes,
+  triggering `clippy::result_large_err` although macOS and Linux passed. Box its
+  `error` field, retaining diagnostics and every result signature. Explicit
+  constructions use `error: Box::new(error)`; owned pattern matches dereference
+  the box. The live-reload contract and a cross-platform size regression agree.
+- **2026-10-26 (coordinator):** the subsequent Windows run passed Clippy and
+  found a resource-origin test comparing CSL path strings with mixed native
+  and forward separators. Compare both CSL settings as `Path` values, like
+  the surrounding resource assertions. Production normalization is unchanged.

@@ -264,3 +264,47 @@ denied and all 25 theme integration tests pass locally after the fix; Windows
 CI will verify the target-specific compilation.
 This batch follows the user's stacked-PR workflow without waiting for CI or
 merging of the completed dependency branch.
+
+## T16 pipeline and CLI acceptance (2026-10-26)
+
+Measured at `647fce5` plus the T16 working tree on macOS arm64 with Rust
+1.99.1. Cached-dependency suite runs use `/usr/bin/time -p` and include the
+existing compiler, DOCX, Markdown, asset, resolver and HTML/theme coverage.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 7.84 s | 30.28 s | 61.28 s | 733 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 127 s | 144.01 s | 1315.52 s | 732 passed |
+
+The existing debug-only assertion explains the count difference; the DOCX
+fixture generator remains intentionally ignored. Formatting, Clippy for all
+targets/features and rustdoc pass, with warnings denied for Clippy/rustdoc.
+
+The pipeline's 25 unit tests exercise WorldSlot lifecycle and input refresh,
+subset/strict diagnostics, missing assets, effective config/resource paths,
+output naming and source/resource/theme clash protection. CLI coverage includes
+30 unit tests, 16 build tests and eight dump tests. Five scanner integration
+tests plus a path-parser unit test cover best-effort include discovery; three
+HTML integration tests cover 35 reviewed fixture/serve snapshots and actual
+standalone output budgets. The example's main fragment has a reviewed CLI
+snapshot too. Existing snapshots are unchanged.
+
+`cargo run --locked --offline -- build examples/basic/document.md` succeeds,
+printing `Wrote examples/basic/dist/document.html (672.6 kB)`. Its real PNG plot
+is generated locally (836 bytes). The HTML is self-contained; site mode,
+resolved/raw IR, template context and default-config dumps pass integration
+checks. Future command/target bodies remain explicit milestone stubs.
+
+Coordinator refinements normalize resource paths at the config/front-matter/
+CLI source layer and validate output directories after front matter chooses
+standalone/site mode. No dependency, Config/IR-shape or module-list changes.
+Empty diagnostic snapshots preserve Insta's canonical final blank line;
+staged whitespace checks disable only `blank-at-eof` for those generated files.
+
+Windows CI subsequently measured `BuildFailure` at 128 bytes and rejected
+pipeline results under `clippy::result_large_err`. Its `error` field is now
+boxed; result signatures and diagnostic behavior stay the same. A size
+regression runs on every platform. After this repair and the inherited T15
+Unix-helper guard, formatting, all-target/all-feature Clippy, rustdoc with
+warnings denied and the full debug suite (734 passed) pass locally. The
+updated Windows CI run remains the check of the Windows target itself.

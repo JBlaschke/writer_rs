@@ -1,0 +1,58 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Numbering</h1>
+</header>
+<figure id="fig-zero" class="figure kind-image">
+<img src="asset:000000000001" alt="before">
+<figcaption><span class="caption-label">Figure 0.1:</span> before</figcaption>
+</figure>
+<h1 id="sec-one"><span class="number">1.</span> One</h1>
+<figure id="fig-a" class="figure kind-image">
+<img src="asset:000000000001" alt="a">
+<figcaption><span class="caption-label">Figure 1.1:</span> a</figcaption>
+</figure>
+<figure id="tbl-a" class="figure kind-table">
+<figcaption><span class="caption-label">Table 1.1:</span> t</figcaption>
+<table>
+<thead>
+<tr>
+<th scope="col">x</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="lst-a" class="figure kind-listing">
+<figcaption><span class="caption-label">Listing 1.1:</span> code</figcaption>
+<pre class="hl-code"><code class="language-rust"><span class="line"><span class="hl-source hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-storage hl-type hl-function hl-rust">fn</span> </span><span class="hl-entity hl-name hl-function hl-rust">main</span></span><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-function hl-parameters hl-rust"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-rust">(</span></span><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-function hl-parameters hl-rust"><span class="hl-punctuation hl-section hl-parameters hl-end hl-rust">)</span></span></span></span><span class="hl-meta hl-function hl-rust"> </span><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-block hl-rust"><span class="hl-punctuation hl-section hl-block hl-begin hl-rust">{</span></span><span class="hl-meta hl-block hl-rust"><span class="hl-punctuation hl-section hl-block hl-end hl-rust">}</span></span></span></span></span></code></pre>
+</figure>
+<figure id="fig-other" class="figure kind-other">
+<p>Some <em>other</em> content.</p>
+<figcaption><span class="caption-label">Figure 1.2:</span> other</figcaption>
+</figure>
+<div class="equation"><span class="math display" data-math-style="display" data-tex="x = 1">x = 1</span></div>
+<div id="eq-a" class="equation numbered"><span class="math display" data-math-style="display" data-tex="y = 2">y = 2</span><span class="equation-number">(1.1)</span></div>
+<h2 id="sec-sub"><span class="number">1.1.</span> Sub</h2>
+<h3 id="sec-deep"><span class="number">1.1.1.</span> Deep</h3>
+<h1 id="sec-interlude" class="unnumbered">Interlude</h1>
+<figure id="fig-int" class="figure kind-image">
+<img src="asset:000000000001" alt="in interlude">
+<figcaption><span class="caption-label">Figure 1.3:</span> in interlude</figcaption>
+</figure>
+<h2 id="sec-under"><span class="number">1.2.</span> Under interlude</h2>
+<h1 id="sec-two"><span class="number">2.</span> Two</h1>
+<figure id="fig-c" class="figure kind-image">
+<img src="asset:000000000001" alt="c">
+<figcaption><span class="caption-label">Figure 2.1:</span> c</figcaption>
+</figure>
+<div id="eq-b" class="equation numbered"><span class="math display" data-math-style="display" data-tex="z = 3">z = 3</span><span class="equation-number">(2.1)</span></div>
+<p>See @sec-one, @fig-zero, @eq-a, @eq-a[Eq.], @eq-a[], @sec-two[Chapter] and @sec-interlude.</p>
+</main>

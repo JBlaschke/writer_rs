@@ -1,0 +1,35 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">References and citations</h1>
+</header>
+<h1 id="sec-x"><span class="number">1</span> A numbered section</h1>
+<p>See @sec-x, @sec-x[Chapter], @fig-x[Fig.], @eq-x{.page}, and @eq-x[].</p>
+<figure id="fig-x" class="figure kind-image">
+<img src="asset:000000000001" alt="A referenced figure">
+<figcaption><span class="caption-label">Figure 1:</span> A referenced figure</figcaption>
+</figure>
+<div id="eq-x" class="equation numbered"><span class="math display" data-math-style="display" data-tex="x = 1">x = 1</span><span class="equation-number">(1)</span></div>
+<h2 id="sec-unnumbered" class="unnumbered">An unnumbered heading</h2>
+<p>A reference to an unnumbered heading: @sec-unnumbered.</p>
+<h2 id="results-and-discussion"><span class="number">1.1</span> Results and discussion</h2>
+<p>See <a href="#results-and-discussion">the results</a>.</p>
+<figure id="fig-a" class="figure kind-image">
+<img src="asset:000000000001" alt="First figure">
+<figcaption><span class="caption-label">Figure 2:</span> First figure</figcaption>
+</figure>
+<figure id="fig-b" class="figure kind-image">
+<img src="asset:000000000002" alt="Second figure">
+<figcaption><span class="caption-label">Figure 3:</span> Second figure</figcaption>
+</figure>
+<p>A label group [@fig-a; @fig-b].</p>
+<p>Citations [@doe2020; @lee2019, p. 12]{.prose}, [-@knuth1984], and [see @doe2020].</p>
+<p>Write @literal for an at sign and keep the dot after @x.</p>
+<h3 id="x"><span class="number">1.1.1</span> A trailing punctuation target</h3>
+<h3 id="sec-duplicate"><span class="number">1.1.2</span> A duplicate label</h3>
+<h3 id="sec-duplicate"><span class="number">1.1.3</span> Another duplicate label</h3>
+<h3 id="fn-1"><span class="number">1.1.4</span> A reserved label</h3>
+</main>

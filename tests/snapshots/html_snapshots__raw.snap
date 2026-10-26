@@ -1,0 +1,14 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Raw passthrough formats</h1>
+</header>
+<section>Raw HTML</section>
+<div>
+<img src="asset:000000000001">
+</div>
+<p>Inline raw <em>inline HTML</em>.</p>
+</main>

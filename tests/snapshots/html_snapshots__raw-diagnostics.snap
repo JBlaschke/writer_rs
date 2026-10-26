@@ -1,0 +1,5 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+warning raw-unknown-format [fixtures]/raw.md:22 unknown raw format `weird`

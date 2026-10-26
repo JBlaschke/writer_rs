@@ -1,0 +1,17 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Attributes on document elements</h1>
+</header>
+<h1 id="sec-attrs" class="unnumbered" title="Heading title">An attributed heading</h1>
+<p><a id="link-example" class="external" href="https://example.org" title="Link title">An attributed link</a>.</p>
+<figure id="fig-attrs" class="figure kind-image wide">
+<img src="asset:000000000001" alt="An attributed image" title="Image title" style="width:50%">
+<figcaption><span class="caption-label">Figure 1:</span> An attributed image</figcaption>
+</figure>
+<p>An attributed <code id="code-inline" class="plain" title="Code title">inline code</code> span.</p>
+<h2 id="an-invalid-label">An invalid label</h2>
+</main>

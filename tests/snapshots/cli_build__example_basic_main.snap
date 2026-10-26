@@ -1,0 +1,89 @@
+---
+source: tests/cli_build.rs
+expression: "&html[start..end]"
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">GPU allocation at the institute</h1>
+<div class="authors">
+<p class="author"><span class="author-name">J. Blaschke</span></p>
+<p class="author"><span class="author-name">A. Colleague</span></p>
+</div>
+<p class="date">2026-10-24</p>
+<section class="abstract" role="doc-abstract">
+<p class="abstract-title">Abstract</p>
+<p>A small report with figures, tables, code, equations and footnotes.</p>
+</section>
+</header>
+<nav class="toc" role="doc-toc">
+<p class="toc-title">Contents</p>
+<ol>
+<li><a href="#sec-intro"><span class="number">1</span> Introduction</a>
+<ol>
+<li><a href="#sec-method"><span class="number">1.1</span> Method</a></li>
+</ol>
+</li>
+<li><a href="#sec-next"><span class="number">2</span> Next steps</a></li>
+</ol>
+</nav>
+<h1 id="sec-intro"><span class="number">1</span> Introduction</h1>
+<p>Demand doubled last year. We measured the throughput of three node counts using the same workload and software environment.<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup></p>
+<figure id="fig-throughput" class="figure kind-image">
+<img src="[data]" alt="Throughput per node" style="width:70%">
+<figcaption><span class="caption-label">Figure 1.1:</span> Throughput per node</figcaption>
+</figure>
+<figure id="tbl-results" class="figure kind-table">
+<figcaption><span class="caption-label">Table 1.1:</span> Benchmark results</figcaption>
+<table>
+<thead>
+<tr>
+<th class="align-right" scope="col">Nodes</th>
+<th class="align-right" scope="col">GB/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="align-right">1</td>
+<td class="align-right">11.2</td>
+</tr>
+<tr>
+<td class="align-right">2</td>
+<td class="align-right">20.8</td>
+</tr>
+<tr>
+<td class="align-right">3</td>
+<td class="align-right">30.1</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Reproducibility</p>
+<p>Record the compiler version alongside every measurement.</p>
+</aside>
+<aside class="callout callout-warning" role="note">
+<p class="callout-title">Check the quota first</p>
+<p>Requests above eight nodes need sign-off.</p>
+</aside>
+<h2 id="sec-method"><span class="number">1.1</span> Method</h2>
+<p>The following listing computes the mean of the recorded samples.</p>
+<figure id="lst-load" class="figure kind-listing">
+<figcaption><span class="caption-label">Listing 1.1:</span> Loading the data</figcaption>
+<pre class="hl-code numbered"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">samples</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">11<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">20<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>8</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">30<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>1</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span></span>
+<span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mean</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">sum</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">samples</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">samples</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span>
+<span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python">Mean throughput: </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mean</span></span></span><span class="hl-meta hl-format-spec hl-python"><span class="hl-constant hl-other hl-format-spec hl-python">:.1f</span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python"> GB/s<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</figure>
+<p>The model is <span class="math inline" data-math-style="inline" data-tex="T(n) = W/n + c">T(n) = W/n + c</span>, with fixed overhead <span class="math inline" data-math-style="inline" data-tex="c">c</span>.</p>
+<div id="eq-amdahl" class="equation numbered"><span class="math display" data-math-style="display" data-tex="T(n) = \frac{W}{n} + c">T(n) = \frac{W}{n} + c</span><span class="equation-number">(1.1)</span></div>
+<div class="page-break"></div>
+<h1 id="sec-next"><span class="number">2</span> Next steps</h1>
+<p>Repeat the experiment with a larger workload before requesting more nodes.</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn-1">
+<p>Every run used the same pinned software image. <a class="footnote-back" href="#fnref-1" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+</main>

@@ -1,0 +1,40 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_paths(&stable)
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A minimal document</title>
+
+<meta name="author" content="Jane Doe"><meta name="author" content="John Smith">
+
+
+
+<link id="writer-theme" rel="stylesheet" href="/__writer/theme.css?v=[version]">
+
+</head>
+<body>
+
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">A minimal document</h1>
+<div class="authors">
+<p class="author"><span class="author-name">Jane Doe</span></p>
+<p class="author"><span class="author-name">John Smith</span></p>
+</div>
+<section class="abstract" role="doc-abstract">
+<p class="abstract-title">Abstract</p>
+<p>A short abstract.</p>
+</section>
+</header>
+<h1 id="introduction" data-sourcepos="8-8" data-source="0">Introduction</h1>
+<p data-sourcepos="10-10" data-source="0">This document has one heading and one paragraph.</p>
+</main>
+
+<script src="/__writer/live-reload.js"></script>
+
+</body>
+</html>
