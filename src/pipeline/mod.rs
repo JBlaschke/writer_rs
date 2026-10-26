@@ -88,15 +88,15 @@ pub struct Prepared {
 /// A stopped preparation and every diagnostic collected before it failed.
 #[derive(Debug)]
 pub struct BuildFailure {
-    /// The operation that failed.
-    pub error: Error,
+    /// The operation that failed, boxed to keep results small on every target.
+    pub error: Box<Error>,
     /// Findings collected before the failure.
     pub diagnostics: Diagnostics,
 }
 
 impl From<Error> for BuildFailure {
     fn from(error: Error) -> Self {
-        Self { error, diagnostics: Diagnostics::default() }
+        Self { error: Box::new(error), diagnostics: Diagnostics::default() }
     }
 }
 
@@ -205,7 +205,10 @@ pub fn parse_only(
         }
     }?;
     if let Err(error) = config.merge_front_matter(&parsed.document.meta) {
-        return Err(BuildFailure { error, diagnostics: parsed.diagnostics });
+        return Err(BuildFailure {
+            error: Box::new(error),
+            diagnostics: parsed.diagnostics,
+        });
     }
     normalize_resources(&mut config, &source.base_dir);
     apply_cli(&mut config, &opts.cli)?;
@@ -1032,7 +1035,7 @@ fn escalate_missing_assets(
             Some(diagnostic)
         })
         .collect();
-    Err(BuildFailure { error, diagnostics: rest })
+    Err(BuildFailure { error: Box::new(error), diagnostics: rest })
 }
 
 /// The first `missing-asset` diagnostic as [`Error::MissingAsset`]
@@ -1146,6 +1149,11 @@ mod tests {
     use crate::config::HeadingNumbering;
     use crate::ir::{DocMeta, SourceSpan};
 
+    #[test]
+    fn build_failure_stays_below_clippy_result_size_threshold() {
+        assert!(std::mem::size_of::<BuildFailure>() < 128);
+    }
+
     fn project(files: &[(&str, &str)]) -> tempfile::TempDir {
         let dir = tempfile::tempdir().unwrap();
         for (path, contents) in files {
@@ -1236,7 +1244,7 @@ mod tests {
         let Err(failure) = worlds.get(Some(&prepared), &opts) else {
             panic!("invalid timestamp accepted");
         };
-        assert!(matches!(failure.error, Error::Config(_)));
+        assert!(matches!(*failure.error, Error::Config(_)));
         assert!(failure.diagnostics.is_empty());
         assert!(worlds.current().is_none());
     }
@@ -1310,7 +1318,7 @@ mod tests {
             panic!("subset error rendered");
         };
         assert!(
-            matches!(failure.error, Error::Parse { path, line: Some(3), .. } if path == Path::new("inner.typ"))
+            matches!(*failure.error, Error::Parse { path, line: Some(3), .. } if path == Path::new("inner.typ"))
         );
         assert!(failure.diagnostics.is_empty());
     }
@@ -1512,7 +1520,7 @@ mod tests {
         let report =
             build_targets(&opts, &[Target::Html], &mut WorldSlot::new());
         let failure = report.prepared.unwrap_err();
-        let Error::MissingAsset { path, span } = failure.error else {
+        let Error::MissingAsset { path, span } = *failure.error else {
             panic!("missing asset was not escalated");
         };
         assert!(path.ends_with("figures/none.png"));

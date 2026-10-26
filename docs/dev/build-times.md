@@ -300,3 +300,11 @@ CLI source layer and validate output directories after front matter chooses
 standalone/site mode. No dependency, Config/IR-shape or module-list changes.
 Empty diagnostic snapshots preserve Insta's canonical final blank line;
 staged whitespace checks disable only `blank-at-eof` for those generated files.
+
+Windows CI subsequently measured `BuildFailure` at 128 bytes and rejected
+pipeline results under `clippy::result_large_err`. Its `error` field is now
+boxed; result signatures and diagnostic behavior stay the same. A size
+regression runs on every platform. After this repair and the inherited T15
+Unix-helper guard, formatting, all-target/all-feature Clippy, rustdoc with
+warnings denied and the full debug suite (734 passed) pass locally. The
+updated Windows CI run remains the check of the Windows target itself.

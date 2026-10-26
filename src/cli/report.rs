@@ -521,6 +521,7 @@ pub fn report_build_failure(
     failure: BuildFailure, input: &Path, global: &GlobalArgs,
 ) -> anyhow::Error {
     let BuildFailure { error, diagnostics } = failure;
+    let error = *error;
     if !matches!(error, Error::MissingAsset { .. }) {
         report_diagnostics(&diagnostics, global);
         return super::locate(error, input);
