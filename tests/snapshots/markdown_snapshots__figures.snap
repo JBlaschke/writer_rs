@@ -1,0 +1,568 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Image attribute variants",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Caption with "
+        },
+        {
+          "type": "emph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "emph"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Caption with "
+                },
+                {
+                  "type": "emph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "emph"
+                    }
+                  ]
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": "The title",
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "50%"
+                }
+              }
+            }
+          ],
+          "span": {
+            "start_line": 6,
+            "end_line": 6
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig:x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 6
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Caption"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "50%"
+                }
+              }
+            }
+          ],
+          "span": {
+            "start_line": 8,
+            "end_line": 8
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig:y",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Caption"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "src": "images/diagram.svg"
+                }
+              }
+            }
+          ],
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 10,
+        "end_line": 10
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Caption"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": "fig:z",
+            "classes": [
+              "cls"
+            ],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " trailing text"
+        }
+      ],
+      "span": {
+        "start_line": 12,
+        "end_line": 12
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "One"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Two"
+            }
+          ],
+          "url": "asset:000000000002",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 14,
+        "end_line": 14
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [
+              "bare"
+            ],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 16,
+        "end_line": 16
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "nested img"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [
+              "wrap"
+            ],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 18,
+        "end_line": 18
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "alt"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [
+                  "x"
+                ],
+                "pairs": {
+                  "width": "10%"
+                }
+              }
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [
+              "wrap"
+            ],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 20,
+        "end_line": 20
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 22,
+        "end_line": 22
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Two panels"
+        }
+      ],
+      "body": [
+        {
+          "type": "figure",
+          "kind": "image",
+          "caption": [
+            {
+              "type": "text",
+              "text": "Left"
+            }
+          ],
+          "body": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "image",
+                  "alt": [
+                    {
+                      "type": "text",
+                      "text": "Left"
+                    }
+                  ],
+                  "url": "asset:000000000001",
+                  "title": null,
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "width": "45%"
+                    }
+                  }
+                }
+              ],
+              "span": {
+                "start_line": 25,
+                "end_line": 25
+              }
+            }
+          ],
+          "attrs": {
+            "id": "fig-left",
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 25,
+            "end_line": 25
+          }
+        },
+        {
+          "type": "figure",
+          "kind": "image",
+          "caption": [
+            {
+              "type": "text",
+              "text": "Right"
+            }
+          ],
+          "body": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "image",
+                  "alt": [
+                    {
+                      "type": "text",
+                      "text": "Right"
+                    }
+                  ],
+                  "url": "asset:000000000002",
+                  "title": null,
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "width": "45%"
+                    }
+                  }
+                }
+              ],
+              "span": {
+                "start_line": 27,
+                "end_line": 27
+              }
+            }
+          ],
+          "attrs": {
+            "id": "fig-right",
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 27,
+            "end_line": 27
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-panels",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 24,
+        "end_line": 28
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Invalid dimension"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Invalid dimension"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 30,
+            "end_line": 30
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 30,
+        "end_line": 30
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:images/plot.png"
+    },
+    {
+      "id": "000000000002",
+      "mime": "image/svg+xml",
+      "origin": "file:images/diagram.svg"
+    }
+  ]
+}

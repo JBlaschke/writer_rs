@@ -1,5 +1,10 @@
 # T01 — Core IR, config, errors, asset registry, l10n, CodeAttrs, frontend stubs, fixtures
 
+## Amendments
+- 2026-10-26 (coordinator, during T12): the invariant checker accepts query/fragment suffixes
+  after a valid asset id, matching the existing frontend/emitter contracts (ir.md §3).
+  Added regression coverage in `tests/ir_roundtrip.rs`; no IR shape changes.
+
 | | |
 |---|---|
 | Milestone | M0 |

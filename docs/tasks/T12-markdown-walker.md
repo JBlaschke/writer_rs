@@ -4,6 +4,13 @@
 - 2026-10-26 (coordinator): use T10's `strip_delimiters`/`parse_document_front_matter`
   for warnings; T11's sequential helpers now include `check_unopened_directives`.
   The steps and notes below reflect markdown-dialect.md §2.2/§5.3's recorded decisions.
+- 2026-10-26 (coordinator): §4.3 clarifies that copied figure captions own their footnotes
+  and dimension numbers use ASCII digits. The shared IR checker now accepts query/fragment
+  suffixes after a valid asset id (ir.md §3); its regression tests are additive outside T12.
+  T1B may add its scanner at the marked hooks and replace `include_directive`'s body under
+  PLAN §3.2's additive-edit rule.
+- 2026-10-26 (coordinator): §4.1 groups comrak's termless description-item continuations
+  into the preceding IR term's definitions; explicit terms remain separate.
 
 | | |
 |---|---|
@@ -84,7 +91,7 @@ pub fn parse_inlines(text: &str, config: &Config, ctx: &mut Fragment) -> Result<
    … `percent_decode` `pub(crate)`; `missing_asset_path` `pub`, its ``{what} `{url}` not found (looked for {path})`` message
    frozen), `RenderCtx` → `Fragment` (same field names), one `DirListings::enter()` guard per parse. Existing file →
    `asset:<id>` (query/fragment kept); missing → `missing-asset`, URL kept, or `Error::MissingAsset` when
-   `ctx.missing_asset_is_error`. `width`/`height` not matching `^\d+(\.\d+)?(%|px|pt|cm|mm|in|em)?$` → dropped,
+   `ctx.missing_asset_is_error`. `width`/`height` not matching `^[0-9]+(\.[0-9]+)?(%|px|pt|cm|mm|in|em)?$` → dropped,
    `invalid-dimension`. Implicit figure: a paragraph whose only child is an `Image` with non-empty alt or an `#id` (in a
    `:::figure` body: `#id` only) →
    `Figure { kind: Image, caption: alt or None, attrs: { id, classes }, body: [Paragraph [Image { alt, url, title, attrs: { pairs } }]] }`.

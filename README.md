@@ -18,10 +18,12 @@ and the source fixture corpus. T03 embeds the Typst compiler for PDFs, equation
 and image renditions, MathML, fonts, and package loading. T04 provides
 deterministic DOCX packages, styles, numbering, reference-document merging,
 and structural validation. T10/T11 add front matter, Markdown options,
-attribute recovery and directive helpers, with R9 corpus snapshots. T14
-resolves assets for standalone HTML, sites and versioned serve URLs. The
-Markdown walker, full content mapping and CLI commands arrive in later tasks;
-the current binary reports that T16 is pending and exits with status 2.
+attribute recovery and directive helpers, with R9 corpus snapshots. T12 now
+parses Markdown into unresolved document IR, including figures, tables,
+equations, directives and footnotes, with shared fragment APIs. T14 resolves
+assets for standalone HTML, sites and versioned serve URLs. Reference/include
+expansion, output content mapping and CLI commands arrive in later tasks; the
+current binary reports that T16 is pending and exits with status 2.
 
 To validate the current implementation:
 

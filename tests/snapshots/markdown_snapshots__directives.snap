@@ -1,0 +1,242 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Document directives",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": [
+        {
+          "type": "text",
+          "text": "Outer container"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Outer content."
+            }
+          ],
+          "span": {
+            "start_line": 7,
+            "end_line": 7
+          }
+        },
+        {
+          "type": "callout",
+          "kind": "tip",
+          "title": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Nested content with a longer outer fence."
+                }
+              ],
+              "span": {
+                "start_line": 10,
+                "end_line": 10
+              }
+            }
+          ],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 9,
+            "end_line": 11
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 12
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "A container figure"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Figure content"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 15,
+            "end_line": 15
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-container",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 14,
+        "end_line": 16
+      }
+    },
+    {
+      "type": "page_break",
+      "span": {
+        "start_line": 18,
+        "end_line": 19
+      }
+    },
+    {
+      "type": "toc",
+      "depth": 2,
+      "span": {
+        "start_line": 21,
+        "end_line": 22
+      }
+    },
+    {
+      "type": "bibliography",
+      "span": {
+        "start_line": 24,
+        "end_line": 25
+      }
+    },
+    {
+      "type": "raw",
+      "format": "latex",
+      "text": "\\smallskip\n",
+      "span": {
+        "start_line": 27,
+        "end_line": 29
+      }
+    },
+    {
+      "type": "div",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "mystery",
+          ".custom"
+        ],
+        "pairs": {}
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "An unknown directive is retained as a generic container."
+            }
+          ],
+          "span": {
+            "start_line": 32,
+            "end_line": 32
+          }
+        }
+      ],
+      "span": {
+        "start_line": 31,
+        "end_line": 33
+      }
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": [
+        {
+          "type": "text",
+          "text": "An unclosed directive"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "The document deliberately ends inside this directive."
+            }
+          ],
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 45,
+        "end_line": 46
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:images/plot.png"
+    }
+  ]
+}

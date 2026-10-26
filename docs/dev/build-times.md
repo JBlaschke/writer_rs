@@ -155,3 +155,38 @@ byte-exact, including the main fixture's intentional two-space Markdown hard
 break. This fixture is the sole expected trailing-whitespace finding when
 checking the staged diff. Dependency files and module declarations are unchanged.
 The Markdown walker remains T12's stub; the CLI remains T16's placeholder.
+
+## T12 Markdown frontend acceptance (2026-10-26)
+
+Measured at `cf331a0` plus the T12 working tree on macOS arm64 with Rust
+1.99.1. These incremental suite runs use cached dependencies and
+`/usr/bin/time -p`; all existing compiler, DOCX and asset tests are included.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 6.01 s | 17.71 s | 34.34 s | 478 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 71 s | 81.79 s | 771.93 s | 477 passed |
+
+The count difference remains the existing debug-only assertion, and the DOCX
+fixture generator remains intentionally ignored. Formatting, Clippy for all
+targets/features, and rustdoc pass, with warnings denied for Clippy/rustdoc.
+
+The 34 walker tests cover the mapping table and diagnostics, including the six
+lifted asset-helper tests. Six integration tests cover 16 pairs of reviewed
+fixture IR/diagnostic snapshots, determinism, path/span completeness, invariants,
+asset URL suffixes and all 35 R9 probe inputs through the new frontend.
+
+Review and regression tests resolved caption footnote duplication, named note
+spans inside anonymous notes, quoted braces in caption attributes, misplaced
+equation labels and comrak's termless definition continuations. The existing
+shared IR checker now accepts query/fragment suffixes after a valid asset id;
+malformed ids still fail. The spec and affected briefs record these coordinator
+refinements. Dependency files, IR shapes and module declarations are unchanged.
+
+Markdown now produces unresolved IR through `parse`, `parse_blocks` and
+`parse_inlines`. References and include expansion remain the T1B hooks; the CLI
+remains the T16 placeholder, so no CLI build check applies yet.
+
+The six empty diagnostic snapshots retain Insta's canonical final blank line.
+Staged whitespace checks report only those generated EOF lines and pass with
+`blank-at-eof` disabled; code and non-empty snapshots have no whitespace findings.

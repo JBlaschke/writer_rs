@@ -1,0 +1,5 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/figures.md:30: warning: invalid image width `huge`; use a number with %, px, pt, cm, mm, in or em [invalid-dimension]

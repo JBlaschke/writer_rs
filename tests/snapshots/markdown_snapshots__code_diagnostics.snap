@@ -1,0 +1,9 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/code.md:43: warning: `start=0` is ignored: expected an integer greater than or equal to 1 [invalid-code-attr]
+[fixtures]/code.md:43: warning: `highlight=3-1` is ignored: expected positive line numbers or increasing ranges, e.g. `1-3,5` [invalid-code-attr]
+[fixtures]/code.md:43: warning: `lines=a` is ignored: expected positive line numbers or increasing ranges, e.g. `1-3,5` [invalid-code-attr]
+[fixtures]/code.md:47: warning: `start=x` is ignored: expected an integer greater than or equal to 1 [invalid-code-attr]
+[fixtures]/code.md:47: warning: `highlight=1,,2` is ignored: expected positive line numbers or increasing ranges, e.g. `1-3,5` [invalid-code-attr]

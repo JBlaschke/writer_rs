@@ -1,0 +1,191 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Attributes on document elements",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An attributed heading"
+        }
+      ],
+      "attrs": {
+        "id": "sec-attrs",
+        "classes": [
+          "unnumbered"
+        ],
+        "pairs": {
+          "title": "Heading title"
+        }
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 6
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "An attributed link"
+            }
+          ],
+          "url": "https://example.org",
+          "title": "Link title",
+          "attrs": {
+            "id": "link-example",
+            "classes": [
+              "external"
+            ],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "An attributed image"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "An attributed image"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": "Image title",
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "50%"
+                }
+              }
+            }
+          ],
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-attrs",
+        "classes": [
+          "wide"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 10,
+        "end_line": 10
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An attributed "
+        },
+        {
+          "type": "code",
+          "text": "inline code",
+          "attrs": {
+            "id": "code-inline",
+            "classes": [
+              "plain"
+            ],
+            "pairs": {
+              "title": "Code title"
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": " span."
+        }
+      ],
+      "span": {
+        "start_line": 12,
+        "end_line": 12
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An invalid label"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 14,
+        "end_line": 14
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:images/plot.png"
+    }
+  ]
+}

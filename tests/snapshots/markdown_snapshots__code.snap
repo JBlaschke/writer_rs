@@ -1,0 +1,295 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Code attributes and listing figures",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "code_block",
+      "lang": "python",
+      "text": "print(\"first\")\nprint(\"highlighted\")",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "numbered"
+        ],
+        "pairs": {
+          "highlight": "11",
+          "start": "10"
+        }
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 9
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "rust",
+      "text": "fn main() {}",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "plain"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 11,
+        "end_line": 13
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "python",
+      "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {
+          "highlight": "1-3,5"
+        }
+      },
+      "span": {
+        "start_line": 15,
+        "end_line": 21
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "python",
+      "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {
+          "lines": "1-3|5"
+        }
+      },
+      "span": {
+        "start_line": 23,
+        "end_line": 29
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": [
+        {
+          "type": "text",
+          "text": "A labelled listing"
+        }
+      ],
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "python",
+          "text": "print(\"a listing\")",
+          "attrs": {
+            "id": null,
+            "classes": [
+              "custom"
+            ],
+            "pairs": {
+              "escape": "false",
+              "include": "include/part-b.md",
+              "trim": "true"
+            }
+          },
+          "span": {
+            "start_line": 31,
+            "end_line": 33
+          }
+        }
+      ],
+      "attrs": {
+        "id": "lst-x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 31,
+        "end_line": 33
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": [
+        {
+          "type": "text",
+          "text": "A caption without an explicit label"
+        }
+      ],
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "python",
+          "text": "print(\"captioned\")",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 35,
+            "end_line": 37
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 35,
+        "end_line": 37
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": null,
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "python",
+          "text": "print(\"labelled\")",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 39,
+            "end_line": 41
+          }
+        }
+      ],
+      "attrs": {
+        "id": "lst-uncaptioned",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 39,
+        "end_line": 41
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "python",
+      "text": "print(\"invalid attributes are retained but ignored\")",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {
+          "highlight": "3-1",
+          "lines": "a",
+          "start": "0"
+        }
+      },
+      "span": {
+        "start_line": 43,
+        "end_line": 45
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "python",
+      "text": "print(\"more invalid values\")",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {
+          "highlight": "1,,2",
+          "start": "x"
+        }
+      },
+      "span": {
+        "start_line": 47,
+        "end_line": 49
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "rust",
+      "text": "let value = 1;",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 51,
+        "end_line": 53
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An indented code block follows."
+        }
+      ],
+      "span": {
+        "start_line": 55,
+        "end_line": 55
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": null,
+      "text": "plain indented code",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 57,
+        "end_line": 57
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": null,
+      "text": "A fence without a language.",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 59,
+        "end_line": 61
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": true,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

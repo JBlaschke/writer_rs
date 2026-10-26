@@ -1,0 +1,112 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Presenter compatibility",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A document heading"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 6
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A slide shorthand"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [
+          "fit",
+          "r-fit-text"
+        ],
+        "pairs": {
+          "aria-label": "Accessible title",
+          "data-state": "keep"
+        }
+      },
+      "span": {
+        "start_line": 14,
+        "end_line": 14
+      }
+    },
+    {
+      "type": "div",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "fragment"
+        ],
+        "pairs": {}
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A fragment becomes ordinary document content."
+            }
+          ],
+          "span": {
+            "start_line": 21,
+            "end_line": 21
+          }
+        }
+      ],
+      "span": {
+        "start_line": 20,
+        "end_line": 22
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

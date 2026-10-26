@@ -1,0 +1,6 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/tables.md:18: warning: `Table:` caption has no adjacent table [table-caption-orphan]
+[fixtures]/tables.md:22: warning: use a separate `Table:` paragraph for a table caption [table-caption-pandoc-colon]

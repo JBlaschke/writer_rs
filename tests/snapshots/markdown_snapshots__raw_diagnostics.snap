@@ -1,0 +1,5 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/raw.md:22: warning: unknown raw format `weird` [raw-unknown-format]

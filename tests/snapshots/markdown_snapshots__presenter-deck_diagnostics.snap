@@ -1,0 +1,9 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/presenter-deck.md:10: info: presenter separator is omitted [presenter-separator]
+[fixtures]/presenter-deck.md:12: info: presenter separator is omitted [presenter-separator]
+[fixtures]/presenter-deck.md:14: warning: presenter heading attribute `background` is omitted [presenter-attr-dropped]
+[fixtures]/presenter-deck.md:14: warning: presenter heading attribute `layout` is omitted [presenter-attr-dropped]
+[fixtures]/presenter-deck.md:14: warning: presenter heading attribute `transition` is omitted [presenter-attr-dropped]

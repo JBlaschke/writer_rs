@@ -571,6 +571,11 @@ The API, placeholder grammar (`asset:` + exactly 12 `[0-9a-f]`) and determinism 
 presenter's (its ir.md §3): in site mode emitted file names hash the **bytes**; text content
 is never rewritten, only attribute values; unresolvable placeholders are a build error.
 
+> **Contract change (coordinator, 2026-10-26):** an asset URL may append an author's query
+> and/or fragment to the 12-hex placeholder, as markdown-dialect.md §4.3 and T14's emitter
+> require. The invariant checker validates the id before `?`/`#`; it must not reject those
+> suffixes. Placeholder ids and IR shapes are unchanged.
+
 ## 4. Frontend and pass interfaces
 
 ```rust
