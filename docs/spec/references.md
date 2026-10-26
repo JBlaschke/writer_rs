@@ -52,7 +52,7 @@ A `Footnote.label` is a label iff that kind is `Some(SourceKind::Typst)`.
 - Labels are global across includes. A second definition is `duplicate-label` (error) at the
   second site with a note naming the first; the first wins.
 - Reserved for generated anchors (§6): `refs`, and labels starting with `ref-`, `writer-`,
-  `fn-<digits>` or `fnref-<digits>` (regex `^(refs|ref-.*|writer-.*|fnref?-[0-9]+(-[0-9]+)?)$`).
+  `fn-<digits>` or `fnref-<digits>` (regex `^(refs|ref-.*|writer-.*|fn(?:ref)?-[0-9]+(-[0-9]+)?)$`).
   An explicit label matching it is the warning `label-reserved` (kept; HTML ids may clash).
 - Every `Heading` without `attrs.id` (also `.unnumbered`/`.notoc`/abstract headings) gets an
   **auto identifier**, written into `attrs.id` and registered as an ordinary `Heading` label
@@ -61,9 +61,16 @@ A `Footnote.label` is a label iff that kind is `Some(SourceKind::Typst)`.
   `(c.is_alphanumeric() && typst_syntax::is_id_continue(c)) || matches!(c, '_' | '-' | '.')`, drop
   the rest; join the whitespace-separated words with `-`; drop everything before the first
   `char::is_alphabetic` character; empty → `section`. If the result is an explicit label, a
-  library key, reserved, or an earlier auto id, append `-1`, `-2`, … (first free). Examples
+  library key, reserved, or an earlier auto id, append `-1`, `-2`, … (first free among explicit labels,
+  keys and earlier auto ids; reservedness is checked only on the base). Examples
   (pandoc 3.12.1 agrees): `1.2 GPU Allocation: Results!` → `gpu-allocation-results`; `A & B` →
   `a-b`; `a·b` → `ab`; `Intro` twice → `intro`, `intro-1`; `42` → `section`.
+
+> **Contract change (coordinator, 2026-10-26):** the reserved regex now matches
+> `fn-1` and `fnref-1` as intended; the former `fnref?` typo matched `fnre-1`
+> instead. Auto-id suffix candidates avoid explicit labels, library keys and
+> earlier auto ids, while reservedness applies only to the initial base. This
+> makes repeated headings such as "Writer" terminate as `writer`, then `writer-1`.
 
 ### 1.4 `resolve::anchor` — DOCX bookmark names and LaTeX `\label` keys
 ```rust

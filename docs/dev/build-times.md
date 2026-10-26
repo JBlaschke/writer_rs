@@ -190,3 +190,41 @@ remains the T16 placeholder, so no CLI build check applies yet.
 The six empty diagnostic snapshots retain Insta's canonical final blank line.
 Staged whitespace checks report only those generated EOF lines and pass with
 `blank-at-eof` disabled; code and non-empty snapshots have no whitespace findings.
+
+## T13/T17 HTML and resolve acceptance (2026-10-26)
+
+Measured at `f6852ff` plus this batch's working tree on macOS arm64 with Rust
+1.99.1. These incremental runs use cached dependencies and `/usr/bin/time -p`;
+all existing compiler, DOCX, Markdown and asset tests are included.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 6.01 s | 18.55 s | 33.15 s | 550 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 81 s | 93.00 s | 869.60 s | 549 passed |
+
+The existing debug-only assertion explains the count difference; the DOCX
+fixture generator remains intentionally ignored. Formatting, Clippy across all
+targets/features, and rustdoc pass, with warnings denied for Clippy/rustdoc.
+
+HTML has 43 integration tests, two reviewed fragment snapshots and seven shared
+highlighter tests. Resolver tests exercise the numbering tables, global labels,
+auto ids, localized reference text, file-scoped and global notes, TOC assembly,
+and counters/notes across alternative notebook outputs. An integration test
+runs the new numbering fixture through Markdown parsing, resolve and HTML
+emission. Its SHA-256 is exactly
+`d15719d560e44e199a5d06c281fa4fcdb297a27e745851d248b554d59ae4031f`.
+The two new Markdown snapshots capture the unresolved parser output; existing
+snapshots are unchanged.
+
+Cross-review and regressions cover label numbers after citation expansion,
+global Typst note references alongside same-spelling Markdown names, finished
+nested reference supplements, and recursive note removal in TOC copies. The
+spec and task amendments also record reserved-name regex/auto-id termination
+corrections, unknown-target diagnostic ownership and fixture-supplied classes
+in HTML class coverage. Dependency files, public IR shapes and module
+declarations are unchanged, apart from T17's documented citation re-export.
+
+Citation rendering remains the T70 stub, reference/include scanning the T1B
+hooks, and the CLI the T16 placeholder. No CLI build check applies yet. The
+new empty diagnostic snapshot retains Insta's canonical final blank line;
+staged whitespace checks pass with only `blank-at-eof` disabled.

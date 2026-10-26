@@ -592,12 +592,16 @@ pub fn parse(source: &SourceInfo, text: &str, config: &Config) -> crate::error::
 // src/resolve/mod.rs (T17; citations T70)
 pub struct ResolveOptions<'a> { pub config: &'a Config, pub library: Option<&'a cite::Library>, pub lenient: bool }
 /// Numbers, references, footnotes, TOC, citations. Never fails; problems are diagnostics
-/// (`unresolved-reference`, `duplicate-label`, `ambiguous-label`, `unnumbered-target`,
-/// `unknown-citation-key`). In every mode a failing ref or cite becomes the `[?target]`
-/// placeholder (references.md §4.7); `lenient` (serve, check) only makes
-/// `unresolved-reference` a warning instead of an error.
+/// (`unresolved-reference`, `duplicate-label`, `ambiguous-label`, `unnumbered-target`).
+/// In every mode a failing ref or cite becomes the `[?target]` placeholder
+/// (references.md §4.7); `lenient` (serve, check) only makes `unresolved-reference`
+/// a warning instead of an error.
 pub fn resolve(document: &mut Document, opts: &ResolveOptions) -> Diagnostics;
 ```
+
+> **Contract change (coordinator, 2026-10-26):** resolve follows references.md §8:
+> targets that are neither labels nor library keys raise `unresolved-reference`.
+> `unknown-citation-key` is not raised by this pass.
 
 > **Contract change (coordinator, 2026-10-24):** `markdown::parse` is owned by T12 (stub: T01,
 > PLAN §3.2), not T11. The `resolve` comment follows references.md §4.1 and §4.7: placeholders
