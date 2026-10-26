@@ -130,7 +130,7 @@ pub fn compile_theme_css(theme: &Theme, features: &Features, registry: &mut Asse
     content="{{ theme.vars.accent }}">`; `styles/child.css` with `url(logo.svg)` (via `assets/`); `assets/logo.svg`; `scripts/child.js`.
 13. Tests: lift presenter's `tests/theme_resolve.rs` and `tests/render.rs` (→ `tests/html_render.rs`) minus layout,
     highlight-style, reveal, plugin, markdown-filter and video tests; add the criteria below. Document: T01's
-    `ir/sample-document.json` with `asset:3f9a1c2b7e0d` replaced by the placeholder of bytes the test registers; hook
+    `ir/sample-document.json` with `asset:32debefb8003` replaced by the placeholder of bytes the test registers; hook
     `KatexOnly { usage: MathUsage::default() }` or a test-local `FakeMath(MathUsage)`; variants are temp copies of the
     fixture, helpers called from a child `document.html` extending `@default/document.html` (block `body_end`).
 
@@ -198,3 +198,20 @@ README and `tests/theme_tokens.rs` (T19), `pipeline::resolve_theme`, `dump --con
 - `theme.code_theme` comes from `code_themes()?` (as presenter's context read `highlight_style_file()?`), so a broken
   `code_theme` fails every HTML build, not only documents with code; only the CSS depends on `features.code`.
 - `config::{unknown_key_hint, with_unknown_key_hint}` are not in config.md §4; step 1 falls back to a private copy.
+
+## Amendments
+- **2026-10-26 (coordinator):** the user authorized stacked feature PRs while CI
+  and merging proceed. T15 starts from completed T13/T17 (`9b315d0`) without
+  waiting for PR #7 to merge; its changes remain in a separate feature PR.
+- **2026-10-26 (coordinator):** confirmed lifted `BuildInfo` field order (`id`
+  before `version`) and CSS entry newline handling (append only when missing);
+  updated html-output.md to agree. Corrected the stale example asset id to the
+  canonical sample-document.json placeholder.
+- **2026-10-26 (coordinator):** keep the lifted helper error boundary: a failing
+  template `style()` call is `Error::Template` containing its underlying CSS
+  detail; direct stylesheet compilation remains `Error::Style`. The spec now
+  states the distinction.
+- **2026-10-26 (coordinator):** review refinements to lifted code retain guarded
+  manifest reads during diagnostics, decode static template string literals for
+  reachability, and record guarded CSS asset version-cache reads in serve mode.
+  The read-recording seam is crate-private and preserves cache hits.

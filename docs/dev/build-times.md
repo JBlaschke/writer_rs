@@ -228,3 +228,39 @@ Citation rendering remains the T70 stub, reference/include scanning the T1B
 hooks, and the CLI the T16 placeholder. No CLI build check applies yet. The
 new empty diagnostic snapshot retains Insta's canonical final blank line;
 staged whitespace checks pass with only `blank-at-eof` disabled.
+
+## T15 theme and HTML page acceptance (2026-10-26)
+
+Measured at `9b315d0` plus the T15 working tree on macOS arm64 with Rust
+1.99.1. Cached-dependency runs use `/usr/bin/time -p` and include all existing
+compiler, DOCX, Markdown, asset, resolver and fragment tests.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 8.78 s | 26.03 s | 52.61 s | 645 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 94 s | 106.92 s | 952.97 s | 644 passed |
+
+The existing debug-only assertion and ignored DOCX fixture generator remain
+unchanged. Formatting, Clippy for all targets/features and rustdoc pass, with
+warnings denied for Clippy/rustdoc. After the debug suite, a test-only regex
+construction was moved outside its loop for Clippy; the full release suite
+covers that final form.
+
+The lifted theme/render modules and tests now cover document templates and
+code themes. New integration coverage comprises 25 theme and 23 HTML page
+tests plus one reviewed context snapshot. All three output modes cover helper
+assets, CSS, scripts, math, source positions and deterministic files. Review
+regressions guard manifest diagnostic reads, decode escaped template names
+for reachability, and record CSS asset cache hits in the serve watch set.
+
+The default manifest/templates and child-theme fixture are present. Theme
+styling remains T19, the math client remains T1A's placeholder, and CLI/pipeline
+integration remains T16. Dependency files and public IR shapes are unchanged.
+
+Windows CI subsequently found that the `problem_summary` integration-test
+helper was compiled without its Unix-only caller. It now has the same
+`#[cfg(unix)]` guard as that symbolic-link test. Focused Clippy with warnings
+denied and all 25 theme integration tests pass locally after the fix; Windows
+CI will verify the target-specific compilation.
+This batch follows the user's stacked-PR workflow without waiting for CI or
+merging of the completed dependency branch.

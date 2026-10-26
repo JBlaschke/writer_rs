@@ -1,0 +1,1925 @@
+---
+source: tests/html_render.rs
+expression: ctx
+---
+{
+  "document": {
+    "meta": {
+      "title": "GPU allocation",
+      "subtitle": "Reproducible results",
+      "authors": [
+        {
+          "name": "J. Blaschke",
+          "affiliation": "Research",
+          "email": "j@example.com",
+          "id": "0000-0000"
+        }
+      ],
+      "date": "2026-10-24",
+      "abstract_": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "One paragraph."
+            }
+          ],
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      ],
+      "keywords": [
+        "GPU",
+        "throughput"
+      ],
+      "description": "A document exercising the complete IR.",
+      "lang": "en",
+      "vars": {
+        "venue": "internal",
+        "toc": 3,
+        "numbering": {
+          "headings": "1.1"
+        }
+      }
+    },
+    "blocks": [
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Introduction"
+          }
+        ],
+        "attrs": {
+          "id": "sec-intro",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1",
+        "span": {
+          "start_line": 3,
+          "end_line": 3
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Demand doubled "
+          },
+          {
+            "type": "emph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "emph"
+              }
+            ]
+          },
+          {
+            "type": "strong",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "strong"
+              }
+            ]
+          },
+          {
+            "type": "strikeout",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "strikeout"
+              }
+            ]
+          },
+          {
+            "type": "subscript",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "subscript"
+              }
+            ]
+          },
+          {
+            "type": "superscript",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "superscript"
+              }
+            ]
+          },
+          {
+            "type": "underline",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "underline"
+              }
+            ]
+          },
+          {
+            "type": "small_caps",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "small_caps"
+              }
+            ]
+          },
+          {
+            "type": "code",
+            "text": "sum(values)",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            }
+          },
+          {
+            "type": "math",
+            "source": "x^2",
+            "dialect": "latex"
+          },
+          {
+            "type": "math",
+            "source": "alpha^2",
+            "dialect": "typst"
+          },
+          {
+            "type": "link",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "documentation"
+              }
+            ],
+            "url": "https://example.com",
+            "title": "Reference",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            }
+          },
+          {
+            "type": "image",
+            "alt": [
+              {
+                "type": "text",
+                "text": "Inline plot"
+              }
+            ],
+            "url": "asset:460c4d8bad9f",
+            "title": null,
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "width": "70%"
+              }
+            }
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Every run used the pinned image."
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ],
+            "label": "note-run",
+            "number": 1
+          },
+          {
+            "type": "footnote_ref",
+            "label": "note-run",
+            "number": 1
+          },
+          {
+            "type": "ref",
+            "target": "fig-throughput",
+            "supplement": null,
+            "form": "normal",
+            "resolved": {
+              "kind": "figure",
+              "number": "1",
+              "text": [
+                {
+                  "type": "text",
+                  "text": "Figure 1"
+                }
+              ],
+              "anchor": "fig-throughput"
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "ref",
+            "target": "sec-intro",
+            "supplement": [
+              {
+                "type": "text",
+                "text": "page"
+              }
+            ],
+            "form": "page",
+            "resolved": {
+              "kind": "heading",
+              "number": "1",
+              "text": [
+                {
+                  "type": "text",
+                  "text": "page 1"
+                }
+              ],
+              "anchor": "sec-intro"
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": [
+                  {
+                    "type": "text",
+                    "text": "see"
+                  }
+                ],
+                "suffix": [
+                  {
+                    "type": "text",
+                    "text": "also"
+                  }
+                ]
+              }
+            ],
+            "mode": "normal",
+            "resolved": {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "[1]"
+                }
+              ],
+              "note": false
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": [
+                  {
+                    "type": "text",
+                    "text": "see"
+                  }
+                ],
+                "suffix": [
+                  {
+                    "type": "text",
+                    "text": "also"
+                  }
+                ]
+              }
+            ],
+            "mode": "prose",
+            "resolved": {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "[1]"
+                }
+              ],
+              "note": false
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": [
+                  {
+                    "type": "text",
+                    "text": "see"
+                  }
+                ],
+                "suffix": [
+                  {
+                    "type": "text",
+                    "text": "also"
+                  }
+                ]
+              }
+            ],
+            "mode": "year",
+            "resolved": {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "[1]"
+                }
+              ],
+              "note": false
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": [
+                  {
+                    "type": "text",
+                    "text": "see"
+                  }
+                ],
+                "suffix": [
+                  {
+                    "type": "text",
+                    "text": "also"
+                  }
+                ]
+              }
+            ],
+            "mode": "author",
+            "resolved": {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "[1]"
+                }
+              ],
+              "note": false
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": [
+                  {
+                    "type": "text",
+                    "text": "see"
+                  }
+                ],
+                "suffix": [
+                  {
+                    "type": "text",
+                    "text": "also"
+                  }
+                ]
+              }
+            ],
+            "mode": "full",
+            "resolved": {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "[1]"
+                }
+              ],
+              "note": false
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": [
+                  {
+                    "type": "text",
+                    "text": "see"
+                  }
+                ],
+                "suffix": [
+                  {
+                    "type": "text",
+                    "text": "also"
+                  }
+                ]
+              }
+            ],
+            "mode": "none",
+            "resolved": {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "[1]"
+                }
+              ],
+              "note": false
+            },
+            "span": {
+              "start_line": 4,
+              "end_line": 4
+            }
+          },
+          {
+            "type": "line_break"
+          },
+          {
+            "type": "soft_break"
+          },
+          {
+            "type": "span",
+            "attrs": {
+              "id": null,
+              "classes": [
+                "mark"
+              ],
+              "pairs": {}
+            },
+            "inlines": [
+              {
+                "type": "text",
+                "text": "highlighted"
+              }
+            ]
+          },
+          {
+            "type": "raw",
+            "format": "latex",
+            "text": "\\LaTeX{}"
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "block_quote",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Measured on the same hardware."
+              }
+            ],
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "list",
+        "kind": {
+          "kind": "bullet"
+        },
+        "tight": true,
+        "items": [
+          {
+            "checked": true,
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Record version"
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ]
+          },
+          {
+            "checked": false,
+            "blocks": [
+              {
+                "type": "code_block",
+                "lang": "python",
+                "text": "run()",
+                "attrs": {
+                  "id": null,
+                  "classes": [
+                    "numbered"
+                  ],
+                  "pairs": {
+                    "highlight": "1",
+                    "start": "1"
+                  }
+                },
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ]
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "list",
+        "kind": {
+          "kind": "ordered",
+          "start": 3
+        },
+        "tight": false,
+        "items": [
+          {
+            "checked": null,
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Collect results"
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ]
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "definition_list",
+        "items": [
+          {
+            "term": [
+              {
+                "type": "text",
+                "text": "Throughput"
+              }
+            ],
+            "definitions": [
+              [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Work per second."
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "A rate."
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "figure",
+        "kind": "image",
+        "caption": [
+          {
+            "type": "text",
+            "text": "Throughput per node"
+          }
+        ],
+        "body": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "image",
+                "alt": [
+                  {
+                    "type": "text",
+                    "text": "Throughput per node"
+                  }
+                ],
+                "url": "asset:460c4d8bad9f",
+                "title": null,
+                "attrs": {
+                  "id": null,
+                  "classes": [],
+                  "pairs": {
+                    "width": "70%"
+                  }
+                }
+              }
+            ],
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "attrs": {
+          "id": "fig-throughput",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "figure",
+        "kind": "table",
+        "caption": [
+          {
+            "type": "text",
+            "text": "Throughput per node"
+          }
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "default",
+                "width": 0.25
+              },
+              {
+                "align": "left",
+                "width": 0.25
+              },
+              {
+                "align": "center",
+                "width": 0.25
+              },
+              {
+                "align": "right",
+                "width": 0.25
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "Group"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "Node"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "GB/s"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "Load"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "A"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 2,
+                    "rowspan": 2,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "42"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "90%"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "43"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "91%"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "Summary"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 4,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            },
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "attrs": {
+          "id": "tbl-throughput",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "figure",
+        "kind": "listing",
+        "caption": [
+          {
+            "type": "text",
+            "text": "Throughput per node"
+          }
+        ],
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(42)\n",
+            "attrs": {
+              "id": null,
+              "classes": [
+                "numbered"
+              ],
+              "pairs": {
+                "highlight": "1",
+                "start": "1"
+              }
+            },
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "attrs": {
+          "id": "lst-example",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "figure",
+        "kind": "other",
+        "caption": [
+          {
+            "type": "text",
+            "text": "Throughput per node"
+          }
+        ],
+        "body": [
+          {
+            "type": "figure",
+            "kind": "image",
+            "caption": [
+              {
+                "type": "text",
+                "text": "Throughput per node"
+              }
+            ],
+            "body": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "image",
+                    "alt": [
+                      {
+                        "type": "text",
+                        "text": "Left panel"
+                      }
+                    ],
+                    "url": "asset:460c4d8bad9f",
+                    "title": null,
+                    "attrs": {
+                      "id": null,
+                      "classes": [],
+                      "pairs": {
+                        "width": "70%"
+                      }
+                    }
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ],
+            "attrs": {
+              "id": "fig-left",
+              "classes": [],
+              "pairs": {}
+            },
+            "number": "2",
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          },
+          {
+            "type": "figure",
+            "kind": "image",
+            "caption": [
+              {
+                "type": "text",
+                "text": "Throughput per node"
+              }
+            ],
+            "body": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "image",
+                    "alt": [
+                      {
+                        "type": "text",
+                        "text": "Right panel"
+                      }
+                    ],
+                    "url": "asset:460c4d8bad9f",
+                    "title": null,
+                    "attrs": {
+                      "id": null,
+                      "classes": [],
+                      "pairs": {
+                        "width": "70%"
+                      }
+                    }
+                  }
+                ],
+                "span": {
+                  "start_line": 1,
+                  "end_line": 1
+                }
+              }
+            ],
+            "attrs": {
+              "id": "fig-right",
+              "classes": [],
+              "pairs": {}
+            },
+            "number": "3",
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "attrs": {
+          "id": "fig-panels",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "math",
+        "source": "T(n) = \\frac{W}{n} + c",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-amdahl",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "math",
+        "source": "sum_(i=0)^n i",
+        "dialect": "typst",
+        "attrs": {
+          "id": "eq-sum",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "2",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "note",
+        "title": [
+          {
+            "type": "text",
+            "text": "Reproducibility"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Keep the compiler version fixed."
+              }
+            ],
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        },
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "div",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "columns"
+          ],
+          "pairs": {
+            "widths": "1 1"
+          }
+        },
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Container content."
+              }
+            ],
+            "span": {
+              "start_line": 1,
+              "end_line": 1
+            }
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "raw",
+        "format": "html",
+        "text": "<img src=\"asset:460c4d8bad9f\">",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "thematic_break",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "page_break",
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      },
+      {
+        "type": "toc",
+        "depth": 3
+      },
+      {
+        "type": "bibliography"
+      },
+      {
+        "type": "cell",
+        "index": 3,
+        "id": "results",
+        "language": "python",
+        "source": "df.describe()\n",
+        "execution_count": 2,
+        "show_input": true,
+        "show_output": true,
+        "outputs": [
+          {
+            "kind": {
+              "kind": "stream",
+              "name": "stdout"
+            },
+            "execution_count": null,
+            "candidates": [
+              {
+                "mime": "text/html",
+                "blocks": [
+                  {
+                    "type": "raw",
+                    "format": "html",
+                    "text": "<b>42</b>",
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "image/png",
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "inlines": [
+                      {
+                        "type": "image",
+                        "alt": [
+                          {
+                            "type": "text",
+                            "text": "Cell plot"
+                          }
+                        ],
+                        "url": "asset:460c4d8bad9f",
+                        "title": null,
+                        "attrs": {
+                          "id": null,
+                          "classes": [],
+                          "pairs": {
+                            "width": "70%"
+                          }
+                        }
+                      }
+                    ],
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "text/plain",
+                "blocks": [
+                  {
+                    "type": "code_block",
+                    "lang": "python",
+                    "text": "42\n",
+                    "attrs": {
+                      "id": null,
+                      "classes": [
+                        "numbered"
+                      ],
+                      "pairs": {
+                        "highlight": "1",
+                        "start": "1"
+                      }
+                    },
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "mimes": [
+              "image/png",
+              "text/html",
+              "text/plain"
+            ]
+          },
+          {
+            "kind": {
+              "kind": "error",
+              "ename": "ValueError",
+              "evalue": "bad input"
+            },
+            "execution_count": null,
+            "candidates": [
+              {
+                "mime": "text/html",
+                "blocks": [
+                  {
+                    "type": "raw",
+                    "format": "html",
+                    "text": "<b>42</b>",
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "image/png",
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "inlines": [
+                      {
+                        "type": "image",
+                        "alt": [
+                          {
+                            "type": "text",
+                            "text": "Cell plot"
+                          }
+                        ],
+                        "url": "asset:460c4d8bad9f",
+                        "title": null,
+                        "attrs": {
+                          "id": null,
+                          "classes": [],
+                          "pairs": {
+                            "width": "70%"
+                          }
+                        }
+                      }
+                    ],
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "text/plain",
+                "blocks": [
+                  {
+                    "type": "code_block",
+                    "lang": "python",
+                    "text": "42\n",
+                    "attrs": {
+                      "id": null,
+                      "classes": [
+                        "numbered"
+                      ],
+                      "pairs": {
+                        "highlight": "1",
+                        "start": "1"
+                      }
+                    },
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "mimes": [
+              "image/png",
+              "text/html",
+              "text/plain"
+            ]
+          },
+          {
+            "kind": {
+              "kind": "display"
+            },
+            "execution_count": null,
+            "candidates": [
+              {
+                "mime": "text/html",
+                "blocks": [
+                  {
+                    "type": "raw",
+                    "format": "html",
+                    "text": "<b>42</b>",
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "image/png",
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "inlines": [
+                      {
+                        "type": "image",
+                        "alt": [
+                          {
+                            "type": "text",
+                            "text": "Cell plot"
+                          }
+                        ],
+                        "url": "asset:460c4d8bad9f",
+                        "title": null,
+                        "attrs": {
+                          "id": null,
+                          "classes": [],
+                          "pairs": {
+                            "width": "70%"
+                          }
+                        }
+                      }
+                    ],
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "text/plain",
+                "blocks": [
+                  {
+                    "type": "code_block",
+                    "lang": "python",
+                    "text": "42\n",
+                    "attrs": {
+                      "id": null,
+                      "classes": [
+                        "numbered"
+                      ],
+                      "pairs": {
+                        "highlight": "1",
+                        "start": "1"
+                      }
+                    },
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "mimes": [
+              "image/png",
+              "text/html",
+              "text/plain"
+            ]
+          },
+          {
+            "kind": {
+              "kind": "result"
+            },
+            "execution_count": 2,
+            "candidates": [
+              {
+                "mime": "text/html",
+                "blocks": [
+                  {
+                    "type": "raw",
+                    "format": "html",
+                    "text": "<b>42</b>",
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "image/png",
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "inlines": [
+                      {
+                        "type": "image",
+                        "alt": [
+                          {
+                            "type": "text",
+                            "text": "Cell plot"
+                          }
+                        ],
+                        "url": "asset:460c4d8bad9f",
+                        "title": null,
+                        "attrs": {
+                          "id": null,
+                          "classes": [],
+                          "pairs": {
+                            "width": "70%"
+                          }
+                        }
+                      }
+                    ],
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "mime": "text/plain",
+                "blocks": [
+                  {
+                    "type": "code_block",
+                    "lang": "python",
+                    "text": "42\n",
+                    "attrs": {
+                      "id": null,
+                      "classes": [
+                        "numbered"
+                      ],
+                      "pairs": {
+                        "highlight": "1",
+                        "start": "1"
+                      }
+                    },
+                    "span": {
+                      "start_line": 1,
+                      "end_line": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "mimes": [
+              "image/png",
+              "text/html",
+              "text/plain"
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        },
+        "tags": [
+          "results"
+        ],
+        "metadata": {
+          "writer": {
+            "echo": true
+          }
+        },
+        "span": {
+          "start_line": 1,
+          "end_line": 1,
+          "cell": 3
+        }
+      }
+    ],
+    "features": {
+      "math": true,
+      "code": true,
+      "notebook": true,
+      "citations": true,
+      "footnotes": true
+    },
+    "source": {
+      "path": "/abs/document/document.md",
+      "kind": "markdown",
+      "base_dir": "/abs/document"
+    },
+    "assets": [
+      {
+        "id": "460c4d8bad9f",
+        "mime": "image/png",
+        "origin": "inline:70"
+      }
+    ],
+    "includes": [
+      "/abs/document/included.md"
+    ],
+    "resolved": {
+      "labels": {
+        "eq-amdahl": {
+          "kind": "equation",
+          "number": "1",
+          "supplement": "Equation",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "eq-sum": {
+          "kind": "equation",
+          "number": "1",
+          "supplement": "Equation",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "fig-left": {
+          "kind": "figure",
+          "number": "1",
+          "supplement": "Figure",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "fig-panels": {
+          "kind": "other",
+          "number": "1",
+          "supplement": "Other",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "fig-right": {
+          "kind": "figure",
+          "number": "1",
+          "supplement": "Figure",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "fig-throughput": {
+          "kind": "figure",
+          "number": "1",
+          "supplement": "Figure",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "lst-example": {
+          "kind": "listing",
+          "number": "1",
+          "supplement": "Listing",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "note-run": {
+          "kind": "footnote",
+          "number": "1",
+          "supplement": "Footnote",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "sec-intro": {
+          "kind": "heading",
+          "number": "1",
+          "supplement": "Heading",
+          "text": "Introduction",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        },
+        "tbl-throughput": {
+          "kind": "table",
+          "number": "1",
+          "supplement": "Table",
+          "text": "Throughput per node",
+          "span": {
+            "start_line": 1,
+            "end_line": 1
+          }
+        }
+      },
+      "toc": [
+        {
+          "level": 1,
+          "number": "1",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Introduction"
+            }
+          ],
+          "anchor": "sec-intro"
+        }
+      ],
+      "bibliography": {
+        "style": "ieee",
+        "hanging_indent": true,
+        "entries": [
+          {
+            "key": "knuth1984",
+            "prefix": [
+              {
+                "type": "text",
+                "text": "[1]"
+              }
+            ],
+            "inlines": [
+              {
+                "type": "text",
+                "text": "D. Knuth. "
+              },
+              {
+                "type": "emph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "The TeXbook"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "footnotes": 1
+    }
+  },
+  "meta": {
+    "title": "GPU allocation",
+    "subtitle": "Reproducible results",
+    "authors": [
+      {
+        "name": "J. Blaschke",
+        "affiliation": "Research",
+        "email": "j@example.com",
+        "id": "0000-0000"
+      }
+    ],
+    "date": "2026-10-24",
+    "abstract_": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "One paragraph."
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      }
+    ],
+    "keywords": [
+      "GPU",
+      "throughput"
+    ],
+    "description": "A document exercising the complete IR.",
+    "lang": "en",
+    "vars": {
+      "venue": "internal",
+      "toc": 3,
+      "numbering": {
+        "headings": "1.1"
+      }
+    }
+  },
+  "features": {
+    "math": true,
+    "code": true,
+    "notebook": true,
+    "citations": true,
+    "footnotes": true
+  },
+  "config": {
+    "document": {
+      "lang": "en",
+      "toc": false
+    },
+    "build": {
+      "out_dir": "dist",
+      "targets": [
+        "html"
+      ],
+      "typst_targets": [
+        "pdf"
+      ]
+    },
+    "markdown": {
+      "smart_punctuation": false,
+      "sourcepos": false,
+      "references": true,
+      "superscript": false,
+      "subscript": false
+    },
+    "numbering": {
+      "headings": false,
+      "figures": "document",
+      "equations": "labelled"
+    },
+    "references": {
+      "bibliography": [],
+      "style": "ieee",
+      "locale": ""
+    },
+    "math": {
+      "html": "katex",
+      "mathml_font": "embed",
+      "katex_options": {}
+    },
+    "html": {
+      "theme": "default",
+      "standalone": true
+    },
+    "pdf": {
+      "template": "",
+      "paper": "a4",
+      "engine": "typst",
+      "allow_packages": false,
+      "system_fonts": true,
+      "font_paths": [],
+      "timestamp": ""
+    },
+    "docx": {
+      "reference_doc": "",
+      "math": "omml",
+      "update_fields": true
+    },
+    "latex": {
+      "template": "",
+      "top_level": "section",
+      "cite": "biblatex",
+      "emit_bibliography": false,
+      "code": "verbatim",
+      "tables": "longtable",
+      "booktabs": true,
+      "cleveref": false,
+      "figure_placement": "htbp",
+      "engine": "pdflatex",
+      "unicode": "auto",
+      "cell_prompts": false,
+      "wrap": 0
+    },
+    "typst": {
+      "strict": false,
+      "package_paths": []
+    },
+    "notebook": {
+      "mime_priority": [
+        "text/html",
+        "image/svg+xml",
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "text/markdown",
+        "text/latex",
+        "application/json",
+        "text/plain"
+      ],
+      "hide_input_tags": [
+        "hide-input",
+        "remove-input"
+      ],
+      "hide_output_tags": [
+        "hide-output",
+        "remove-output"
+      ],
+      "remove_cell_tags": [
+        "remove-cell",
+        "hide-cell",
+        "skip"
+      ],
+      "cell_options": true,
+      "show_prompts": true
+    },
+    "serve": {
+      "host": "127.0.0.1",
+      "port": 3000,
+      "open": false,
+      "view": ""
+    }
+  },
+  "html": {
+    "main": "<main data-writer-document>\n<header class=\"title-block\">\n<h1 class=\"title\">GPU allocation</h1>\n<p class=\"subtitle\">Reproducible results</p>\n<div class=\"authors\">\n<p class=\"author\"><span class=\"author-name\">J. Blaschke</span> <span class=\"author-affiliation\">Research</span> <a class=\"author-email\" href=\"mailto:j@example.com\">j@example.com</a> <span class=\"author-id\">0000-0000</span></p>\n</div>\n<p class=\"date\">2026-10-24</p>\n<section class=\"abstract\" role=\"doc-abstract\">\n<p class=\"abstract-title\">Abstract</p>\n<p>One paragraph.</p>\n</section>\n</header>\n<h1 id=\"sec-intro\"><span class=\"number\">1</span> Introduction</h1>\n<p>Demand doubled <em>emph</em><strong>strong</strong><del>strikeout</del><sub>subscript</sub><sup>superscript</sup><u>underline</u><span class=\"smallcaps\">small_caps</span><code>sum(values)</code><span class=\"math inline\" data-math-style=\"inline\" data-tex=\"x^2\">x^2</span><span class=\"math inline math-source\" data-tex=\"alpha^2\"><code>alpha^2</code></span><a href=\"https://example.com\" title=\"Reference\">documentation</a><img src=\"asset:460c4d8bad9f\" alt=\"Inline plot\" style=\"width:70%\"><sup class=\"footnote-ref\"><a id=\"fnref-1\" href=\"#fn-1\" role=\"doc-noteref\">1</a></sup><sup class=\"footnote-ref\"><a id=\"fnref-1-2\" href=\"#fn-1\" role=\"doc-noteref\">1</a></sup><a class=\"ref\" href=\"#fig-throughput\">Figure 1</a><a class=\"ref\" href=\"#sec-intro\">page 1</a><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><br>\n <span class=\"mark\">highlighted</span></p>\n<blockquote>\n<p>Measured on the same hardware.</p>\n</blockquote>\n<ul class=\"task-list\">\n<li class=\"task-list-item\"><input type=\"checkbox\" disabled checked> Record version</li>\n<li class=\"task-list-item\"><input type=\"checkbox\" disabled>\n<pre class=\"hl-code numbered\"><code class=\"language-python\"><span class=\"line highlight\"><span class=\"hl-source hl-python\"><span class=\"hl-meta hl-function-call hl-python\"><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-variable hl-function hl-python\"><span class=\"hl-meta hl-generic-name hl-python\">run</span></span></span></span><span class=\"hl-meta hl-function-call hl-arguments hl-python\"><span class=\"hl-punctuation hl-section hl-arguments hl-begin hl-python\">(</span><span class=\"hl-punctuation hl-section hl-arguments hl-end hl-python\">)</span></span></span></span></code></pre>\n</li>\n</ul>\n<ol start=\"3\">\n<li>\n<p>Collect results</p>\n</li>\n</ol>\n<dl>\n<dt>Throughput</dt>\n<dd>\n<p>Work per second.</p>\n</dd>\n<dd>\n<p>A rate.</p>\n</dd>\n</dl>\n<figure id=\"fig-throughput\" class=\"figure kind-image\">\n<img src=\"asset:460c4d8bad9f\" alt=\"Throughput per node\" style=\"width:70%\">\n<figcaption><span class=\"caption-label\">Figure 1:</span> Throughput per node</figcaption>\n</figure>\n<figure id=\"tbl-throughput\" class=\"figure kind-table\">\n<figcaption><span class=\"caption-label\">Table 1:</span> Throughput per node</figcaption>\n<table>\n<colgroup>\n<col style=\"width:25%\">\n<col style=\"width:25%\">\n<col style=\"width:25%\">\n<col style=\"width:25%\">\n</colgroup>\n<thead>\n<tr>\n<th scope=\"col\">Group</th>\n<th class=\"align-left\" scope=\"col\">Node</th>\n<th class=\"align-center\" scope=\"col\">GB/s</th>\n<th class=\"align-right\" scope=\"col\">Load</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td colspan=\"2\" rowspan=\"2\">A</td>\n<td class=\"align-center\">42</td>\n<td class=\"align-right\">90%</td>\n</tr>\n<tr>\n<td class=\"align-center\">43</td>\n<td class=\"align-right\">91%</td>\n</tr>\n</tbody>\n<tfoot>\n<tr>\n<td colspan=\"4\">Summary</td>\n</tr>\n</tfoot>\n</table>\n</figure>\n<figure id=\"lst-example\" class=\"figure kind-listing\">\n<figcaption><span class=\"caption-label\">Listing 1:</span> Throughput per node</figcaption>\n<pre class=\"hl-code numbered\"><code class=\"language-python\"><span class=\"line highlight\"><span class=\"hl-source hl-python\"><span class=\"hl-meta hl-function-call hl-python\"><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-variable hl-function hl-python\"><span class=\"hl-support hl-function hl-builtin hl-python\">print</span></span></span></span><span class=\"hl-meta hl-function-call hl-arguments hl-python\"><span class=\"hl-punctuation hl-section hl-arguments hl-begin hl-python\">(</span><span class=\"hl-constant hl-numeric hl-integer hl-decimal hl-python\">42</span><span class=\"hl-punctuation hl-section hl-arguments hl-end hl-python\">)</span></span></span></span></code></pre>\n</figure>\n<figure id=\"fig-panels\" class=\"figure kind-other\">\n<figure id=\"fig-left\" class=\"figure kind-image\">\n<img src=\"asset:460c4d8bad9f\" alt=\"Left panel\" style=\"width:70%\">\n<figcaption><span class=\"caption-label\">Figure 2:</span> Throughput per node</figcaption>\n</figure>\n<figure id=\"fig-right\" class=\"figure kind-image\">\n<img src=\"asset:460c4d8bad9f\" alt=\"Right panel\" style=\"width:70%\">\n<figcaption><span class=\"caption-label\">Figure 3:</span> Throughput per node</figcaption>\n</figure>\n<figcaption><span class=\"caption-label\">Other 1:</span> Throughput per node</figcaption>\n</figure>\n<div id=\"eq-amdahl\" class=\"equation numbered\"><span class=\"math display\" data-math-style=\"display\" data-tex=\"T(n) = \\frac{W}{n} + c\">T(n) = \\frac{W}{n} + c</span><span class=\"equation-number\">(1)</span></div>\n<div id=\"eq-sum\" class=\"equation numbered\"><span class=\"math display math-source\" data-tex=\"sum_(i=0)^n i\"><code>sum_(i=0)^n i</code></span><span class=\"equation-number\">(2)</span></div>\n<aside class=\"callout callout-note\" role=\"note\">\n<p class=\"callout-title\">Reproducibility</p>\n<p>Keep the compiler version fixed.</p>\n</aside>\n<div class=\"columns\" style=\"grid-template-columns:1 1\">\n<p>Container content.</p>\n</div>\n<img src=\"asset:460c4d8bad9f\">\n<hr>\n<div class=\"page-break\"></div>\n<nav class=\"toc\" role=\"doc-toc\">\n<p class=\"toc-title\">Contents</p>\n<ol>\n<li><a href=\"#sec-intro\"><span class=\"number\">1</span> Introduction</a></li>\n</ol>\n</nav>\n<section id=\"refs\" class=\"references csl-bib-body hanging-indent\" role=\"doc-bibliography\">\n<h1 class=\"references-title\">Bibliography</h1>\n<div id=\"ref-knuth1984\" class=\"csl-entry\"><div class=\"csl-left-margin\">[1]</div><div class=\"csl-right-inline\">D. Knuth. <em>The TeXbook</em></div></div>\n</section>\n<div class=\"cell\" data-cell=\"3\">\n<div class=\"cell-input\">\n<div class=\"cell-prompt\">In [2]:</div>\n<pre class=\"hl-code\"><code class=\"language-python\"><span class=\"line\"><span class=\"hl-source hl-python\"><span class=\"hl-meta hl-function-call hl-python\"><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-meta hl-generic-name hl-python\">df</span></span><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-punctuation hl-accessor hl-dot hl-python\">.</span></span><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-variable hl-function hl-python\"><span class=\"hl-meta hl-generic-name hl-python\">describe</span></span></span></span><span class=\"hl-meta hl-function-call hl-arguments hl-python\"><span class=\"hl-punctuation hl-section hl-arguments hl-begin hl-python\">(</span><span class=\"hl-punctuation hl-section hl-arguments hl-end hl-python\">)</span></span></span></span></code></pre>\n</div>\n<div class=\"cell-outputs\">\n<div class=\"output output-stream stdout\" data-mime=\"text/html\">\n<b>42</b>\n</div>\n<div class=\"output output-error\" data-mime=\"text/html\">\n<b>42</b>\n</div>\n<div class=\"output output-display\" data-mime=\"text/html\">\n<b>42</b>\n</div>\n<div class=\"output output-result\" data-mime=\"text/html\">\n<div class=\"cell-prompt\">Out [2]:</div>\n<b>42</b>\n</div>\n</div>\n</div>\n<section class=\"footnotes\" role=\"doc-endnotes\">\n<hr>\n<ol>\n<li id=\"fn-1\">\n<p>Every run used the pinned image. <a class=\"footnote-back\" href=\"#fnref-1\" role=\"doc-backlink\">↩︎</a> <a class=\"footnote-back\" href=\"#fnref-1-2\" role=\"doc-backlink\">↩︎<sup>2</sup></a></p>\n</li>\n</ol>\n</section>\n</main>\n",
+    "title_block": "<header class=\"title-block\">\n<h1 class=\"title\">GPU allocation</h1>\n<p class=\"subtitle\">Reproducible results</p>\n<div class=\"authors\">\n<p class=\"author\"><span class=\"author-name\">J. Blaschke</span> <span class=\"author-affiliation\">Research</span> <a class=\"author-email\" href=\"mailto:j@example.com\">j@example.com</a> <span class=\"author-id\">0000-0000</span></p>\n</div>\n<p class=\"date\">2026-10-24</p>\n<section class=\"abstract\" role=\"doc-abstract\">\n<p class=\"abstract-title\">Abstract</p>\n<p>One paragraph.</p>\n</section>\n</header>\n",
+    "body": "<h1 id=\"sec-intro\"><span class=\"number\">1</span> Introduction</h1>\n<p>Demand doubled <em>emph</em><strong>strong</strong><del>strikeout</del><sub>subscript</sub><sup>superscript</sup><u>underline</u><span class=\"smallcaps\">small_caps</span><code>sum(values)</code><span class=\"math inline\" data-math-style=\"inline\" data-tex=\"x^2\">x^2</span><span class=\"math inline math-source\" data-tex=\"alpha^2\"><code>alpha^2</code></span><a href=\"https://example.com\" title=\"Reference\">documentation</a><img src=\"asset:460c4d8bad9f\" alt=\"Inline plot\" style=\"width:70%\"><sup class=\"footnote-ref\"><a id=\"fnref-1\" href=\"#fn-1\" role=\"doc-noteref\">1</a></sup><sup class=\"footnote-ref\"><a id=\"fnref-1-2\" href=\"#fn-1\" role=\"doc-noteref\">1</a></sup><a class=\"ref\" href=\"#fig-throughput\">Figure 1</a><a class=\"ref\" href=\"#sec-intro\">page 1</a><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><span class=\"citation\" data-cites=\"knuth1984\">[1]</span><br>\n <span class=\"mark\">highlighted</span></p>\n<blockquote>\n<p>Measured on the same hardware.</p>\n</blockquote>\n<ul class=\"task-list\">\n<li class=\"task-list-item\"><input type=\"checkbox\" disabled checked> Record version</li>\n<li class=\"task-list-item\"><input type=\"checkbox\" disabled>\n<pre class=\"hl-code numbered\"><code class=\"language-python\"><span class=\"line highlight\"><span class=\"hl-source hl-python\"><span class=\"hl-meta hl-function-call hl-python\"><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-variable hl-function hl-python\"><span class=\"hl-meta hl-generic-name hl-python\">run</span></span></span></span><span class=\"hl-meta hl-function-call hl-arguments hl-python\"><span class=\"hl-punctuation hl-section hl-arguments hl-begin hl-python\">(</span><span class=\"hl-punctuation hl-section hl-arguments hl-end hl-python\">)</span></span></span></span></code></pre>\n</li>\n</ul>\n<ol start=\"3\">\n<li>\n<p>Collect results</p>\n</li>\n</ol>\n<dl>\n<dt>Throughput</dt>\n<dd>\n<p>Work per second.</p>\n</dd>\n<dd>\n<p>A rate.</p>\n</dd>\n</dl>\n<figure id=\"fig-throughput\" class=\"figure kind-image\">\n<img src=\"asset:460c4d8bad9f\" alt=\"Throughput per node\" style=\"width:70%\">\n<figcaption><span class=\"caption-label\">Figure 1:</span> Throughput per node</figcaption>\n</figure>\n<figure id=\"tbl-throughput\" class=\"figure kind-table\">\n<figcaption><span class=\"caption-label\">Table 1:</span> Throughput per node</figcaption>\n<table>\n<colgroup>\n<col style=\"width:25%\">\n<col style=\"width:25%\">\n<col style=\"width:25%\">\n<col style=\"width:25%\">\n</colgroup>\n<thead>\n<tr>\n<th scope=\"col\">Group</th>\n<th class=\"align-left\" scope=\"col\">Node</th>\n<th class=\"align-center\" scope=\"col\">GB/s</th>\n<th class=\"align-right\" scope=\"col\">Load</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td colspan=\"2\" rowspan=\"2\">A</td>\n<td class=\"align-center\">42</td>\n<td class=\"align-right\">90%</td>\n</tr>\n<tr>\n<td class=\"align-center\">43</td>\n<td class=\"align-right\">91%</td>\n</tr>\n</tbody>\n<tfoot>\n<tr>\n<td colspan=\"4\">Summary</td>\n</tr>\n</tfoot>\n</table>\n</figure>\n<figure id=\"lst-example\" class=\"figure kind-listing\">\n<figcaption><span class=\"caption-label\">Listing 1:</span> Throughput per node</figcaption>\n<pre class=\"hl-code numbered\"><code class=\"language-python\"><span class=\"line highlight\"><span class=\"hl-source hl-python\"><span class=\"hl-meta hl-function-call hl-python\"><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-variable hl-function hl-python\"><span class=\"hl-support hl-function hl-builtin hl-python\">print</span></span></span></span><span class=\"hl-meta hl-function-call hl-arguments hl-python\"><span class=\"hl-punctuation hl-section hl-arguments hl-begin hl-python\">(</span><span class=\"hl-constant hl-numeric hl-integer hl-decimal hl-python\">42</span><span class=\"hl-punctuation hl-section hl-arguments hl-end hl-python\">)</span></span></span></span></code></pre>\n</figure>\n<figure id=\"fig-panels\" class=\"figure kind-other\">\n<figure id=\"fig-left\" class=\"figure kind-image\">\n<img src=\"asset:460c4d8bad9f\" alt=\"Left panel\" style=\"width:70%\">\n<figcaption><span class=\"caption-label\">Figure 2:</span> Throughput per node</figcaption>\n</figure>\n<figure id=\"fig-right\" class=\"figure kind-image\">\n<img src=\"asset:460c4d8bad9f\" alt=\"Right panel\" style=\"width:70%\">\n<figcaption><span class=\"caption-label\">Figure 3:</span> Throughput per node</figcaption>\n</figure>\n<figcaption><span class=\"caption-label\">Other 1:</span> Throughput per node</figcaption>\n</figure>\n<div id=\"eq-amdahl\" class=\"equation numbered\"><span class=\"math display\" data-math-style=\"display\" data-tex=\"T(n) = \\frac{W}{n} + c\">T(n) = \\frac{W}{n} + c</span><span class=\"equation-number\">(1)</span></div>\n<div id=\"eq-sum\" class=\"equation numbered\"><span class=\"math display math-source\" data-tex=\"sum_(i=0)^n i\"><code>sum_(i=0)^n i</code></span><span class=\"equation-number\">(2)</span></div>\n<aside class=\"callout callout-note\" role=\"note\">\n<p class=\"callout-title\">Reproducibility</p>\n<p>Keep the compiler version fixed.</p>\n</aside>\n<div class=\"columns\" style=\"grid-template-columns:1 1\">\n<p>Container content.</p>\n</div>\n<img src=\"asset:460c4d8bad9f\">\n<hr>\n<div class=\"page-break\"></div>\n<nav class=\"toc\" role=\"doc-toc\">\n<p class=\"toc-title\">Contents</p>\n<ol>\n<li><a href=\"#sec-intro\"><span class=\"number\">1</span> Introduction</a></li>\n</ol>\n</nav>\n<section id=\"refs\" class=\"references csl-bib-body hanging-indent\" role=\"doc-bibliography\">\n<h1 class=\"references-title\">Bibliography</h1>\n<div id=\"ref-knuth1984\" class=\"csl-entry\"><div class=\"csl-left-margin\">[1]</div><div class=\"csl-right-inline\">D. Knuth. <em>The TeXbook</em></div></div>\n</section>\n<div class=\"cell\" data-cell=\"3\">\n<div class=\"cell-input\">\n<div class=\"cell-prompt\">In [2]:</div>\n<pre class=\"hl-code\"><code class=\"language-python\"><span class=\"line\"><span class=\"hl-source hl-python\"><span class=\"hl-meta hl-function-call hl-python\"><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-meta hl-generic-name hl-python\">df</span></span><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-punctuation hl-accessor hl-dot hl-python\">.</span></span><span class=\"hl-meta hl-qualified-name hl-python\"><span class=\"hl-variable hl-function hl-python\"><span class=\"hl-meta hl-generic-name hl-python\">describe</span></span></span></span><span class=\"hl-meta hl-function-call hl-arguments hl-python\"><span class=\"hl-punctuation hl-section hl-arguments hl-begin hl-python\">(</span><span class=\"hl-punctuation hl-section hl-arguments hl-end hl-python\">)</span></span></span></span></code></pre>\n</div>\n<div class=\"cell-outputs\">\n<div class=\"output output-stream stdout\" data-mime=\"text/html\">\n<b>42</b>\n</div>\n<div class=\"output output-error\" data-mime=\"text/html\">\n<b>42</b>\n</div>\n<div class=\"output output-display\" data-mime=\"text/html\">\n<b>42</b>\n</div>\n<div class=\"output output-result\" data-mime=\"text/html\">\n<div class=\"cell-prompt\">Out [2]:</div>\n<b>42</b>\n</div>\n</div>\n</div>\n",
+    "footnotes": "<section class=\"footnotes\" role=\"doc-endnotes\">\n<hr>\n<ol>\n<li id=\"fn-1\">\n<p>Every run used the pinned image. <a class=\"footnote-back\" href=\"#fnref-1\" role=\"doc-backlink\">↩︎</a> <a class=\"footnote-back\" href=\"#fnref-1-2\" role=\"doc-backlink\">↩︎<sup>2</sup></a></p>\n</li>\n</ol>\n</section>\n",
+    "toc": "<nav class=\"toc\" role=\"doc-toc\">\n<p class=\"toc-title\">Contents</p>\n<ol>\n<li><a href=\"#sec-intro\"><span class=\"number\">1</span> Introduction</a></li>\n</ol>\n</nav>\n"
+  },
+  "math": {
+    "katex": true,
+    "mathml": false,
+    "typst_mathml": false,
+    "image": false
+  },
+  "title": "GPU allocation",
+  "lang": "en",
+  "theme": {
+    "name": "child-theme",
+    "chain": [
+      "child-theme",
+      "default"
+    ],
+    "code_theme": "Nord",
+    "code_theme_dark": "OneHalfDark",
+    "vars": {
+      "accent": "#aa3300"
+    },
+    "scripts": [
+      "@child-theme/scripts/child.js"
+    ]
+  },
+  "build": {
+    "mode": "build",
+    "standalone": true,
+    "live_reload": false,
+    "id": 0,
+    "version": "[VERSION]"
+  }
+}

@@ -1,0 +1,9 @@
+name = "default"
+
+[styles]
+entries = []
+code_theme = "InspiredGitHub"
+code_theme_dark = "OneHalfDark"
+
+[scripts]
+entries = []
