@@ -1,7 +1,8 @@
 name = "default"
+description = "Readable document typography with light, dark and print styles"
 
 [styles]
-entries = []
+entries = ["styles/theme.css", "styles/notebook.css", "styles/print.css"]
 code_theme = "InspiredGitHub"
 code_theme_dark = "OneHalfDark"
 

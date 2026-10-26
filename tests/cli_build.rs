@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use assert_cmd::Command;
 use predicates::str::contains;
 use regex::Regex;
+use scraper::{Html, Selector};
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -59,7 +60,9 @@ fn example_builds_standalone() {
         "{stdout}"
     );
     let html = std::fs::read_to_string(out).unwrap();
-    assert_eq!(html.matches("data-writer-document").count(), 1);
+    let page = Html::parse_document(&html);
+    let document = Selector::parse("[data-writer-document]").unwrap();
+    assert_eq!(page.select(&document).count(), 1);
     assert!(!html.contains("asset:"));
     assert!(!html.contains("/__writer/"));
     let start = html.find("<main data-writer-document").unwrap();

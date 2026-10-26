@@ -205,3 +205,30 @@ view (T22, T24), theme lints (T1C), `eject theme` (T72), SCSS (T79), sidenotes, 
   standalone page fails (T16's `example_builds_standalone`); use T14's `html_count_attr`, which skips `<style>`.
 - §9 has T19 re-bless T16 snapshots its "entries change": T16 snapshots `html.main` and a serve page linking the
   stylesheet, so only template edits change them (`html_snapshots__serve_minimal.snap`).
+
+## Amendments
+
+- **2026-10-26 (coordinator):** under the user's stacked-PR workflow, start from
+  completed T16 (`22723f2`, PR #9), with PR #9 as the base until it merges.
+  T15/T16 inputs are present; the older "on main" gate does not require waiting.
+- **2026-10-26 (coordinator):** add `tests/common/theme_css.rs` to ownership so
+  both new integration suites share the lifted CSS inspection helpers.
+- **2026-10-26 (coordinator):** narrowly adapt three older integration suites:
+  `theme_resolve` now expects the default entries before child entries and finds
+  the disk reread entry by origin; `html_render` distinguishes generated code
+  themes from the default `.hl-code` fallback; `cli_build` counts document-root
+  elements with the HTML parser instead of counting a selector in inline CSS.
+  Templates and snapshots remain unchanged.
+- **2026-10-26 (coordinator):** carry the Windows CI repairs from PRs #8/#9
+  into this branch (`afe0fa9`). T13/T17 are merged in PR #7.
+- **2026-10-26 (coordinator):** browser checks use the available in-app browser:
+  normal dark preference and temporary forced light/print media variants of
+  the generated HTML. Chrome is not connected, so paginated print preview and
+  margin-box page numbers remain unverified. Forced dark/print exposed pale
+  metadata and syntax on light highlights; supplemental print rules reset
+  colour tokens and use monochrome syntax while retaining line highlights.
+  The required print block remains verbatim.
+- **2026-10-26 (coordinator):** a 240-character unbroken code token still
+  overflowed a print block despite `white-space: pre-wrap`. Print-only code
+  lines now have `width: 100%` and `overflow-wrap: anywhere`; the same browser
+  fixture wraps without clipping. Screen code retains horizontal scrolling.

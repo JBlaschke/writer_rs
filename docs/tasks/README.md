@@ -33,13 +33,13 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T10 | Front matter → DocMeta and config overrides | M1 | S | T01 | done (PR #5) |
 | T11 | Markdown foundations: comrak options, attributes, recovery, directives, colon pre-pass | M1 | M | T01 | done (PR #5) |
 | T12 | comrak AST → IR walker | M1 | L | T10, T11, T14 | done (PR #6) |
-| T13 | HTML emitter and syntect highlighting | M1 | L | T01 | ready for review |
+| T13 | HTML emitter and syntect highlighting | M1 | L | T01 | done (PR #7) |
 | T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | done (PR #5) |
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | ready for review |
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | ready for review |
-| T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | ready for review |
+| T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
-| T19 | Default HTML theme v1 | M1 | M | T15, T16 | todo |
+| T19 | Default HTML theme v1 | M1 | M | T15, T16 | ready for review |
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | todo |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | todo |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
@@ -109,9 +109,9 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   passed. T13 and T17 start from that merged main commit (`f6852ff`). Their
   dependency T01 is done; reference/include parsing stays with T1B and the CLI T16.
 - T13/T17 pass local formatting, Clippy, rustdoc, 550 debug and 549 release
-  tests. [PR #7](https://github.com/JBlaschke/writer_rs/pull/7) is awaiting CI and
-  merge. Reference syntax/includes, citation rendering and CLI integration retain
-  their task owners.
+  tests. [PR #7](https://github.com/JBlaschke/writer_rs/pull/7) merged on
+  2026-10-26 (`c2b1cf5`). Reference syntax/includes, citation rendering and CLI
+  integration retain their task owners.
 - The user authorized continuing without CI/merge waits on 2026-10-26. T15
   starts from completed T13/T17 (`9b315d0`) on `codex/theme-rendering`; open its
   PR against `codex/html-and-resolution` while PR #7 is open, or against `main`
@@ -125,6 +125,16 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 - T16 passes local formatting, Clippy, rustdoc, 733 debug and 732 release
   tests. The basic example builds a standalone HTML file; site/build/dump, world
   lifecycle and 36 new reviewed snapshots pass. T19 follows on this implementation.
+- T16 is [PR #9](https://github.com/JBlaschke/writer_rs/pull/9), based on PR #8.
+  T19 starts from completed T16 (`22723f2`) on `codex/default-html-theme`.
+- Windows CI fixes are pushed to PR #8 (`dae7357`, Unix-only test helper) and
+  PR #9 (`afe0fa9`, compact boxed build errors). The updated full local debug
+  suite passes 734 tests. T19 includes both repairs; PR #8 now targets `main`.
+- T19 passes formatting, Clippy, rustdoc, 768 debug and 767 release tests.
+  Its 34 new tests cover stylesheet/token/README contracts and the CLI showcase.
+  Entries total 13,402 bytes; templates and snapshots are unchanged. In-app
+  browser checks cover light/dark, narrow layouts and forced print rules;
+  Chrome's paginated print preview remains unverified.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

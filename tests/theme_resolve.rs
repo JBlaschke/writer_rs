@@ -144,7 +144,14 @@ fn builtin_default_resolves_without_search_roots() {
     let (light, dark) = theme.code_themes().unwrap();
     assert_eq!(light.unwrap().label, "InspiredGitHub");
     assert_eq!(dark.unwrap().label, "OneHalfDark");
-    assert!(theme.style_entries().unwrap().is_empty());
+    assert_eq!(
+        origins(&theme.style_entries().unwrap()),
+        [
+            ("default", "styles/theme.css"),
+            ("default", "styles/notebook.css"),
+            ("default", "styles/print.css"),
+        ]
+    );
     assert!(theme.script_entries().unwrap().is_empty());
     assert!(theme.problems().is_empty());
 }
@@ -162,7 +169,12 @@ fn child_theme_chain_and_lookup() {
     }
     assert_eq!(
         origins(&theme.style_entries().unwrap()),
-        [("child-theme", "styles/child.css")]
+        [
+            ("default", "styles/theme.css"),
+            ("default", "styles/notebook.css"),
+            ("default", "styles/print.css"),
+            ("child-theme", "styles/child.css"),
+        ]
     );
     assert_eq!(
         origins(&theme.script_entries().unwrap()),
@@ -383,7 +395,12 @@ fn disk_themes_are_read_fresh_and_recorded() {
         ));
     }
     write_files(&tmp.path().join("t"), &[("styles/a.css", "after")]);
-    assert_eq!(theme.style_entries().unwrap()[0].bytes, b"after");
+    let entries = theme.style_entries().unwrap();
+    let entry = entries
+        .iter()
+        .find(|entry| entry.theme == "t" && entry.rel_path == "styles/a.css")
+        .unwrap();
+    assert_eq!(entry.bytes, b"after");
     assert!(recording_reads(|| ()).1.is_empty());
 }
 
