@@ -168,3 +168,7 @@ theme styling (T19, which re-blesses `html_snapshots__*.snap`). Never edit `Carg
   `error` field, retaining diagnostics and every result signature. Explicit
   constructions use `error: Box::new(error)`; owned pattern matches dereference
   the box. The live-reload contract and a cross-platform size regression agree.
+- **2026-10-26 (coordinator):** the subsequent Windows run passed Clippy and
+  found a resource-origin test comparing CSL path strings with mixed native
+  and forward separators. Compare both CSL settings as `Path` values, like
+  the surrounding resource assertions. Production normalization is unchanged.
