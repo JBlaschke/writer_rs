@@ -102,3 +102,25 @@ Formatting, Clippy across all targets/features with warnings denied, and
 rustdoc with warnings denied also pass. Dependency files and the module graph
 are unchanged. The CLI still exits with its T16 placeholder; these checks
 exercise the compiler library APIs directly.
+
+## T04 DOCX acceptance (2026-10-26)
+
+Measured at `bdcd3f0` plus the T04 working tree on macOS arm64 with Rust
+1.99.1. These are incremental suite runs with cached dependencies, wrapped in
+`/usr/bin/time -p`; the complete suite includes T03's compiler tests.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 5.12 s | 13.82 s | 24.64 s | 293 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 58.97 s | 65.56 s | 636.27 s | 292 passed |
+
+The debug-only property-builder assertion test explains the count difference.
+The reference fixture generator is intentionally ignored in ordinary runs;
+it was run explicitly and passed, and the regular byte-for-byte fixture check
+passes in both build modes. The eleven DOCX package tests took 0.03 s in debug,
+and the four reference integration tests took 0.01 s. Generated packages pass
+V01–V20 and the independent docx-rs reader. Formatting, Clippy for every target
+and feature, and rustdoc all pass with warnings denied.
+
+T04 adds plain-text placeholder emitters with owner diagnostics. Full DOCX
+content mapping remains with T40–T42; the CLI remains the T16 placeholder.
