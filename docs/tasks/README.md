@@ -6,8 +6,9 @@ sections it lists. Specs in `../spec/` are contracts: implement them, do not rei
 Research notes in `../research/` are reference material for the "Verified API hints".
 
 ## How to pick up a task
-1. Check the status table below and the dependency column. Only take a task whose
-   dependencies are **done** (merged to `main`).
+1. Check the status table below and the dependency column. Dependencies normally must be **done** (merged to `main`). The user authorized
+   stacked feature PRs on 2026-10-26: a completed, locally checked dependency
+   branch may be used while CI and merging proceed independently.
 2. Tell the coordinator (or set the status to `in progress (<handle>)` in a tiny PR when the
    coordinator asks for that).
 3. Branch `task/Txx-slug`. Edit only the files your task owns (PLAN.md §3.2 is the map);
@@ -33,7 +34,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T12 | comrak AST → IR walker | M1 | L | T10, T11, T14 | done (PR #6) |
 | T13 | HTML emitter and syntect highlighting | M1 | L | T01 | ready for review |
 | T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | done (PR #5) |
-| T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | todo |
+| T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | ready for review |
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | todo |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | ready for review |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
@@ -107,8 +108,16 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   passed. T13 and T17 start from that merged main commit (`f6852ff`). Their
   dependency T01 is done; reference/include parsing stays with T1B and the CLI T16.
 - T13/T17 pass local formatting, Clippy, rustdoc, 550 debug and 549 release
-  tests. Their CI is pending. T15 can start after this batch merges; reference
-  syntax/includes, citation rendering and CLI integration retain their task owners.
+  tests. [PR #7](https://github.com/JBlaschke/writer_rs/pull/7) is awaiting CI and
+  merge. Reference syntax/includes, citation rendering and CLI integration retain
+  their task owners.
+- The user authorized continuing without CI/merge waits on 2026-10-26. T15
+  starts from completed T13/T17 (`9b315d0`) on `codex/theme-rendering`; open its
+  PR against `codex/html-and-resolution` while PR #7 is open, or against `main`
+  after that dependency merges. Each feature keeps its own PR and merge order.
+- T15 passes local formatting, Clippy, rustdoc, 645 debug and 644 release tests.
+  Its 25 theme and 23 page-rendering tests cover the lifted APIs and new context
+  snapshot. CI/merge proceeds independently; T16 follows on this implementation.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

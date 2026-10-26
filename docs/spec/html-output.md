@@ -453,12 +453,16 @@ pub fn recording_reads<R>(f: impl FnOnce() -> R) -> (R, BTreeSet<PathBuf>);   //
   "title": "GPU allocation", "lang": "en",   // meta.title, else the source stem; meta.lang, else config.document.lang, else "en"
   "theme": { "name": "mytheme", "chain": ["mytheme", "default"], "code_theme": "InspiredGitHub",
              "code_theme_dark": "OneHalfDark", "vars": { "accent": "#2a76dd" }, "scripts": ["@default/scripts/x.js"] },
-  "build": { "mode": "build", "standalone": true, "live_reload": false, "version": "0.1.0", "id": 0 }
+  "build": { "mode": "build", "standalone": true, "live_reload": false, "id": 0, "version": "0.1.0" }
 }
 ```
 `html.*` keep their `asset:` placeholders (resolved after rendering; `dump --context` shows them). `theme.scripts` are
 `@<theme>/<path>` helper paths, chain parent-first. Templates insert `html.*` with `|safe`. Filters: minijinja
 built-ins, `attrs` (a map → ` k="v"` pairs, escaped, `none` skipped), `json` (`tojson`); no `markdown` filter or `now`.
+
+> **Contract change (coordinator, 2026-10-26):** `build` retains the lifted
+> `BuildInfo` serialization order: `id` precedes `version`. The context example
+> now matches that struct order.
 
 ### 4.2 Helpers (all return HTML marked safe)
 | helper | standalone | site | serve |
@@ -513,7 +517,7 @@ pub fn serve_stylesheet(theme: &Theme, key: &str, css: &str) -> Result<String>; 
 
 ## 5. Styles — T15 (`src/html/styles.rs`, lifted `render/styles.rs` without the reveal fallback)
 - **Compiled theme stylesheet** = the entries' absolute `@import`s (hoisted, below); per entry of the chain,
-  parent-first, `/* @<theme>/<path> */\n` + its text (UTF-8, one BOM removed, `url()`s rewritten) + `\n`; then, only
+  parent-first, `/* @<theme>/<path> */\n` + its text (UTF-8, one BOM removed, `url()`s rewritten), ensuring a final `\n`; then, only
   with `features.code`, for a light code theme `/* code theme: <label> */\n` + `code_theme_css(light)` + `\n`, and for a
   dark one `/* code theme (dark): <label> */\n@media (prefers-color-scheme: dark) {\n` + `code_theme_css(dark)` + `}\n`.
   When both are set the light CSS is wrapped too, in `@media not all and (prefers-color-scheme: dark) {\n` … `}\n`: 115
@@ -535,6 +539,11 @@ pub fn serve_stylesheet(theme: &Theme, key: &str, css: &str) -> Result<String>; 
 ```rust
 pub fn compile_theme_css(theme: &Theme, features: &Features, registry: &mut AssetRegistry) -> Result<String>;   // + serve variant (Targets::ServeUrls, lifted)
 ```
+
+> **Contract change (coordinator, 2026-10-26):** each stylesheet entry retains
+> its existing trailing newline, adding one only when missing, as in the lifted
+> compiler. The new document model and helper implementation otherwise use the
+> same stylesheet assembly.
 
 ## 6. Emission modes and size budget — T14 (`src/assets/{mod,emit}.rs`), T15, T16
 
@@ -744,9 +753,14 @@ Cargo (no `onig`, R6 §A.1; exact pins as vendored-assets.md §7.3):
   (`math.mathml` or `math.typst_mathml`) and `mathml_font = "embed"`, which includes typst math under the default
   `html = "katex"` (typst equations always render as MathML, math.md §4.5). This supersedes vendored-assets.md §2.1's
   "only when `features.math` and `html = "katex"`" and "only for `html = "mathml"`".
-- **Theme `url()`s are strict:** an unresolvable `url()` in a theme entry or helper stylesheet is `Error::Style`
-  (§5, lifted). vendored-assets.md §2.1's "everywhere else an unresolvable URL is `missing-asset`" applies only to
+- **Theme `url()`s are strict:** an unresolvable `url()` in a theme entry or direct helper stylesheet
+  compilation is `Error::Style` (§5). A template `style()` call wraps that failure
+  in `Error::Template`, retaining the stylesheet detail, as in the lifted helper boundary. vendored-assets.md §2.1's "everywhere else an unresolvable URL is `missing-asset`" applies only to
   document assets (ir.md §3); vendor CSS stays lenient.
+> **Contract change (coordinator, 2026-10-26):** stylesheet failures keep their
+> `Error::Style` form in direct CSS APIs and become `Error::Template` when raised
+> through a template helper. This preserves the lifted template error context.
+
 - **One highlighter:** docx-output.md's coloured runs and latex-output.md §6's `\Wr*` tokens use
   `html::highlight::{SYNTAXES, resolve_syntax}` (aliases and plain rules included; `Unknown` = `Plain`), not
   `find_syntax_by_token(lang)` directly, so `console` or `jsx` highlight alike in every output.

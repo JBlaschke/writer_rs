@@ -574,6 +574,10 @@ regenerates this table from the task files' dependency lines before each wave.
    sections are what to copy; where a note's recommendation differs from a spec, the spec wins.
 2. Create a branch `task/Txx-short-name` from `main`. Rebase before opening the PR. (If the
    coordinator runs tasks as local worktrees, "PR description" means the commit message body.)
+   **User-authorized workflow (2026-10-26):** continue on completed, locally checked
+   dependency branches while CI runs. Open one PR per feature branch/milestone,
+   targeting its dependency branch until that branch merges, then `main`. Record
+   the merge order; CI and merging do not block the next ready implementation.
 3. Only edit the files listed under *Files you own* (§3.2 is the map). If you must touch
    another file, make the change additive (new function, new test, one new match arm) and call
    it out in the PR description. Never change `src/ir.rs`, `Cargo.toml` or `docs/spec/*`

@@ -1,0 +1,12 @@
+name = "child-theme"
+extends = "default"
+
+[styles]
+entries = ["styles/child.css"]
+code_theme = "Nord"
+
+[scripts]
+entries = ["scripts/child.js"]
+
+[vars]
+accent = "#aa3300"
