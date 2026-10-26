@@ -1,0 +1,60 @@
+@page { size: A4; margin: 20mm 18mm; @bottom-center { content: counter(page); font: 9pt system-ui; } }
+@page :first { @bottom-center { content: none; } }
+@media print {
+  html { font-size: 11pt; } body, [data-writer-document] { max-width: none; } body { background: #fff; color: #000; }
+  h1, h2, h3 { break-after: avoid; } .page-break { display: block; break-after: page; }
+  figure, table, pre, .callout, .equation, .cell, li { break-inside: avoid; }
+  p { orphans: 3; widows: 3; } a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 85%; }
+  nav.toc, .no-print { display: none; } pre { white-space: pre-wrap; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+@media print {
+    :root {
+        color-scheme: light;
+        --w-text: #23262b;
+        --w-bg: #fffefb;
+        --w-muted: #5c626d;
+        --w-accent: #366b76;
+        --w-link: #235c93;
+        --w-border: #c8c9c3;
+        --w-code-bg: #f2f1ec;
+        --w-code-highlight: #fff0b3;
+        --w-callout-note: #326b9a;
+        --w-callout-tip: #2c7758;
+        --w-callout-important: #7954a1;
+        --w-callout-warning: #946118;
+        --w-callout-caution: #b24438;
+        --w-callout-other: #5c626d;
+        --w-error: #cc0000;
+        --w-error-bg: #fcedeb;
+    }
+
+    [data-writer-document] { padding: 0; }
+    .cell-prompt {
+        position: static;
+        width: auto;
+        margin-bottom: .25rem;
+        text-align: left;
+    }
+
+    pre.hl-code {
+        color: var(--w-text);
+        background-color: var(--w-code-bg);
+    }
+
+    pre.hl-code .line {
+        width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    /* Syntax themes load last and may use deeply nested selectors. */
+    pre.hl-code [class*="hl-"] {
+        color: inherit !important;
+        background-color: transparent !important;
+    }
+
+    .output.stderr > pre, pre.output-error {
+        background-color: var(--w-error-bg);
+    }
+}

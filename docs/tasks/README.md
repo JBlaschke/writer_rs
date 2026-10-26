@@ -39,7 +39,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | done (PR #9) |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
-| T19 | Default HTML theme v1 | M1 | M | T15, T16 | todo |
+| T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | todo |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | todo |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
@@ -125,10 +125,20 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 - T16 passes local formatting, Clippy, rustdoc, 733 debug and 732 release
   tests. The basic example builds a standalone HTML file; site/build/dump, world
   lifecycle and 36 new reviewed snapshots pass. T19 follows on this implementation.
-- T16 passed CI and merged in PR #9 (`ed9d4d2`). T19 passed CI in PR #10 but
-  merged into its feature-branch base; [PR #11](https://github.com/JBlaschke/writer_rs/pull/11)
-  carries it to `main`. T31 starts independently from merged T16, depends only
-  on completed T03 and records its existing spec in a new task brief.
+- T16 passed CI and merged in PR #9 (`ed9d4d2`). T19 started from completed
+  T16 (`22723f2`) on `codex/default-html-theme`.
+- Windows CI repairs in PRs #8/#9 guard the Unix-only test helper, box build
+  errors and compare CSL paths by components. The first two repairs passed
+  734 local debug tests; the path assertions then passed all 26 pipeline tests.
+- T19 passes formatting, Clippy, rustdoc, 768 debug and 767 release tests.
+  Its 34 new tests cover stylesheet/token/README contracts and the CLI showcase.
+  Entries total 13,402 bytes; templates and snapshots are unchanged. In-app
+  browser checks cover light/dark, narrow layouts and forced print rules;
+  Chrome's paginated print preview remains unverified.
+- T19 passed CI in PR #10 and merged into its feature-branch base. The
+  follow-up [PR #11](https://github.com/JBlaschke/writer_rs/pull/11) brought it
+  onto `main` (`4c0fe16`). T31 started independently from merged T16, depends
+  only on completed T03 and records its existing spec in a new task brief.
 - Future feature PRs target `main`, including those developed on checked,
   unmerged dependencies. Their descriptions list the dependencies and merge
   order; feature commits or branch comparisons keep reviews focused while

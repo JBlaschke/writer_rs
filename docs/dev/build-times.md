@@ -309,6 +309,45 @@ Unix-helper guard, formatting, all-target/all-feature Clippy, rustdoc with
 warnings denied and the full debug suite (734 passed) pass locally. The
 updated Windows CI run remains the check of the Windows target itself.
 
+## T19 default theme acceptance (2026-10-26)
+
+Measured at `afe0fa9` plus the T19 working tree on macOS arm64 with Rust
+1.99.1. Cached-dependency suite runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 4.30 s | 28.45 s | 47.35 s | 768 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 128 s | 145.97 s | 1372.33 s | 767 passed |
+
+The existing debug-only assertion explains the count difference; the DOCX
+fixture generator remains intentionally ignored. Formatting, all-target/
+all-feature Clippy and rustdoc pass with warnings denied. The basic example
+builds a self-contained HTML page; HTML fixture and size budgets pass.
+
+The three ordered CSS entries total 13,402 bytes against the 24,576-byte
+budget. New coverage comprises 21 default-theme layout/build tests and 13
+token/README/contrast tests. All 70 emitter classes and the directive, Typst,
+notebook and ANSI extensions have selectors. Theme templates, dependency
+files, production Rust sources and snapshots are unchanged in this feature.
+Three older integration suites now account for inherited stylesheet entries,
+fallback code styles and selectors inside inline CSS.
+
+Browser QA used the in-app browser at 1200 and 375 px widths on the basic
+example and the Markdown showcase. Temporary generated-page variants force
+light or dark/print media rules without changing OS preferences. Notebook
+and prefixed/unprefixed bibliography markup were added to the scratch page
+for CSS checks; the notebook frontend is still T18's task. Checks cover
+title/TOC/figures/tables/callouts, code line spacing, responsive columns,
+checkboxes, gutter prompts, bibliography indentation and no page overflow.
+
+Forced dark/print checks found pale metadata and syntax on light highlighted
+lines. Supplemental print rules restore the light tokens, use monochrome
+syntax, retain ANSI and error tints, and move prompts into normal flow. An
+unbroken 240-character code token now wraps without horizontal clipping.
+The required print block remains verbatim. Chrome is not connected, so
+paginated print preview and margin-box page numbers remain unverified.
+The math client remains T1A's placeholder; this task styles its markup.
+
 ## T31 bundled Typst document package acceptance (2026-10-26)
 
 Measured at `ed9d4d2` plus the T31 working tree on macOS arm64 with Rust
