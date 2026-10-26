@@ -36,7 +36,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T13 | HTML emitter and syntect highlighting | M1 | L | T01 | done (PR #7) |
 | T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | done (PR #5) |
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | done (PR #8) |
-| T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | ready for review |
+| T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | done (PR #9) |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | ready for review |
@@ -135,6 +135,10 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   Entries total 13,402 bytes; templates and snapshots are unchanged. In-app
   browser checks cover light/dark, narrow layouts and forced print rules;
   Chrome's paginated print preview remains unverified.
+- PR #9 passed CI and merged into `main` (`ed9d4d2`). PR #10 passed CI and
+  merged into its base `codex/build-and-dump` (`4289bb6`), so T19 is not yet on
+  `main`. The follow-up branch `codex/default-theme-main` brings the same theme
+  changes to `main`; later work can continue from this checked implementation.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.
