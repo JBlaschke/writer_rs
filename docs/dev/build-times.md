@@ -256,5 +256,11 @@ for reachability, and record CSS asset cache hits in the serve watch set.
 The default manifest/templates and child-theme fixture are present. Theme
 styling remains T19, the math client remains T1A's placeholder, and CLI/pipeline
 integration remains T16. Dependency files and public IR shapes are unchanged.
+
+Windows CI subsequently found that the `problem_summary` integration-test
+helper was compiled without its Unix-only caller. It now has the same
+`#[cfg(unix)]` guard as that symbolic-link test. Focused Clippy with warnings
+denied and all 25 theme integration tests pass locally after the fix; Windows
+CI will verify the target-specific compilation.
 This batch follows the user's stacked-PR workflow without waiting for CI or
 merging of the completed dependency branch.
