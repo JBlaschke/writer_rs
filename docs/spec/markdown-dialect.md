@@ -124,10 +124,11 @@ Lifted from presenter (`markdown/frontmatter.rs`, R8 §3.2) with the key table o
   `reference_doc`, `latex_template`, `paper`) and the table maps (`markdown:`, `math:`,
   `numbering:`, `references:`, `html:`, `pdf:`, `docx:`, `latex:`, `typst:`, `notebook:`) are
   stored in `DocMeta.vars` and consumed by `Config::merge_front_matter` (config.md §3); an empty
-  value for a table map counts as an empty mapping, any other non-mapping value is an
-  `Error::FrontMatter`. Everything else goes to `vars` verbatim.
-- T10 exports presenter's two functions (names and shapes from R8 §3.2), which T18 calls for
-  notebook metadata layer 4 (notebook-mapping.md §2.2):
+  table value (`html:`) is stored as `null` and counts as an empty mapping. `numbering` also accepts a boolean
+  (config.md §3); other non-mapping table values are `Error::FrontMatter`. Everything else
+  goes to `vars` verbatim.
+- T10 exports the following functions (R8 §3.2). T18 uses the split/parser pair for notebook
+  metadata layer 4 and `meta_from_json` for layers 2–3 (notebook-mapping.md §2.2):
   ```rust
   // src/markdown/frontmatter.rs (T10)
   /// A `---` block starting on line 1 of `text`: (yaml without the delimiters, the rest, lines consumed).
@@ -135,6 +136,10 @@ Lifted from presenter (`markdown/frontmatter.rs`, R8 §3.2) with the key table o
   /// The YAML of a front-matter block → `DocMeta` by the rules of this section
   /// (`abstract_` stays `None`; the abstract text is `vars["abstract"]`).
   pub fn parse_front_matter(yaml: &str) -> Result<DocMeta>;
+  pub fn strip_delimiters(literal: &str) -> &str;
+  pub fn parse_document_front_matter(yaml: &str, closing: usize, diagnostics: &mut Diagnostics) -> Result<DocMeta>;
+  pub fn swallowed_heading(yaml: &str) -> Option<(usize, &str)>;
+  pub fn meta_from_json(value: &serde_json::Value) -> Result<DocMeta>;
   ```
 
 > **Contract change (coordinator, 2026-10-24):** §2.2 now names T10's exported front-matter
@@ -144,6 +149,13 @@ Lifted from presenter (`markdown/frontmatter.rs`, R8 §3.2) with the key table o
 > `parse_front_matter` leaves it in `vars["abstract"]`, and T12's `markdown::parse` (T18's
 > `notebook::parse_with` for notebooks) parses it with `parse_blocks` and removes the var. T10
 > cannot call `parse_blocks` (T12 depends on T10). No PLAN §5 dependency changes.
+
+> **Contract change (coordinator, 2026-10-26):** T10's key rules are explicit: a scalar
+> `keywords` value becomes one keyword; `authors` must be a list, and author maps require
+> `name` and reject unknown keys. Empty table values are stored as `null`; `numbering` accepts
+> a boolean as well as a map. The additional exported helpers above retain presenter's
+> shapes; `parse_document_front_matter` raises the three front-matter warnings, whereas
+> `parse_front_matter` and `meta_from_json` have no diagnostics sink. No IR changes.
 
 ### 2.3 Fragments (shared entry points)
 ```rust
@@ -383,6 +395,16 @@ why diagnostics use start lines. Each rewritten line is the info-level `directiv
 A line matching `^\s{0,3}:{3,}` that still opens or closes nothing after the pre-pass (indented
 code, a list item, a quote) is the warning `invalid-directive` naming the fix.
 
+> **Contract change (coordinator, 2026-10-26):** T11 runs the pre-pass and attribute recovery
+> in sequence. T12/T18 call `colon_prepass` → emit one info diagnostic per returned line →
+> `parse_document` → `recover_attr_blocks` → `check_unopened_directives`. The last helper
+> emits `invalid-directive` for unopened lines in paragraphs/headings in any container or
+> indented code, skipping fenced code and HTML. Its spans contain lines only; callers add
+> file/cell context. T11 also exports `attrs::ir_attrs(parsed, span, diagnostics)` for label
+> validation and `code::check_code_attrs(attrs, span, diagnostics)` for ignored code values.
+> Their stable codes are `LABEL_INVALID`, `INVALID_CODE_ATTR`, `INVALID_DIRECTIVE`, and
+> `DIRECTIVE_COLON_REWRITTEN`. `recover::fence_attrs` remains public for T12's code fences.
+
 ### 5.4 Leaf form
 There are no leaf directives in comrak; the leaf form is an empty container: `:::pagebreak` +
 `:::`, `:::toc depth=2` + `:::`, `:::include analysis.ipynb` + `:::`, `:::bibliography` + `:::`
@@ -615,8 +637,7 @@ snapshot `tests/snapshots/markdown_snapshots__<name>.snap` written by
 fixtures are the same files (T1C asserts the codes of §10 per fixture).
 
 ## Open points (a task may decide locally)
-- T11: whether `colon_prepass` and `recover_attr_blocks` share one re-parse loop or run in
-  sequence (observable behaviour is fixed by §3.2 and §5.3).
+- T11 (decided): `colon_prepass` and `recover_attr_blocks` run in sequence (§5.3).
 - T12: the exact wording of messages.
 - T1B: whether the scanner runs on comrak `Text` nodes or on IR `Inline::Text` (the rules of
   §7.2 are stated so that both give the same result).

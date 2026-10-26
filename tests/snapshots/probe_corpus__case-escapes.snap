@@ -1,0 +1,26 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-2:12
+  paragraph @1:1-2:12
+    escaped @1:1-1:2
+      text Text("*") @1:2-1:2
+    text Text("not emph") @1:3-1:10
+    escaped @1:11-1:12
+      text Text("*") @1:12-1:12
+    text Text(", ") @1:13-1:14
+    escaped @1:15-1:16
+      text Text("$") @1:16-1:16
+    text Text("5, ") @1:17-1:19
+    escaped @1:20-1:21
+      text Text("\\") @1:21-1:21
+    text Text("back, ") @1:22-1:27
+    escaped @1:28-1:29
+      text Text("#") @1:29-1:29
+    text Text(" not heading, a") @1:30-1:44
+    linebreak @1:45-1:46
+    text Text("hard, 5 ") @2:1-2:8
+    escaped @2:9-2:10
+      text Text("<") @2:10-2:10
+    text Text(" 6") @2:11-2:12

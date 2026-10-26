@@ -140,7 +140,7 @@ explain each of their keys and may not add or rename keys without a contract cha
 |---|---|
 | `title`, `subtitle`, `date`, `description`, `lang`, `keywords` (string or list) | `DocMeta.*` |
 | `author` (string) / `authors` (list of strings, or list of `{name, affiliation, email, id}`) | `DocMeta.authors` (`author:` as a list is accepted with a `front-matter-author-list` warning: presenter rejects it) |
-| `abstract` (string, Markdown) | `DocMeta.abstract_` (parsed) |
+| `abstract` (string, Markdown) | `DocMeta.abstract_` (parsed by the frontend; T10 first stores the text in `vars["abstract"]`) |
 | `toc` (bool or int) | `[document] toc` |
 | `numbering` (bool → headings; or map with `headings`, `figures`, `equations`) | `[numbering]` |
 | `bibliography` (path or list), `cite_style` / `csl`, `cite_locale` | `[references] bibliography`, `style`, `locale` |
@@ -151,6 +151,10 @@ explain each of their keys and may not add or rename keys without a contract cha
 | `paper` | `[pdf] paper` |
 | `markdown:`, `math:`, `numbering:`, `references:`, `html:`, `pdf:`, `docx:`, `latex:`, `typst:`, `notebook:` (maps) | override the same `writer.toml` tables for this document |
 | anything else | `DocMeta.vars` |
+
+> **Contract change (coordinator, 2026-10-26):** the `abstract` row now identifies the
+> frontend as its parser. T10 stores only its text; T12/T18 parse it after applying the
+> document's config, as markdown-dialect.md §2.2 already requires.
 
 The typst backend uses the same vocabulary with kebab-case keys as named arguments of
 `writer-doc.with(...)` (`cite-style`, `cite-locale`, `reference-doc`, `numbering: (headings: "1.1",

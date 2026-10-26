@@ -1,0 +1,10 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-8:5
+  heading Heading(NodeHeading { level: 2, setext: true, closed: false }) @1:1-2:2
+    text Text("Para then") @1:1-1:9
+  thematic_break @4:1-4:3
+  thematic_break @6:1-6:3
+  thematic_break @8:1-8:5

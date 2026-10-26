@@ -1,0 +1,24 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-15:8
+  alert Alert(NodeAlert { alert_type: Note, title: None, multiline: false, fence_length: 1, fence_offset: 0 }) @1:1-2:10
+    paragraph @2:3-2:10
+      text Text("no title") @2:3-2:10
+  alert Alert(NodeAlert { alert_type: Important, title: Some("Mixed case"), multiline: false, fence_length: 1, fence_offset: 0 }) @4:1-4:25
+  alert Alert(NodeAlert { alert_type: Note, title: Some("Title only, no body"), multiline: false, fence_length: 1, fence_offset: 0 }) @6:1-6:29
+  block_quote @8:1-9:14
+    alert Alert(NodeAlert { alert_type: Note, title: None, multiline: false, fence_length: 1, fence_offset: 0 }) @8:2-9:14
+      paragraph @9:4-9:14
+        text Text("two markers") @9:4-9:14
+  block_quote @11:1-12:19
+    paragraph @11:3-12:19
+      text Text("[!UNKNOWN]") @11:3-11:12
+      softbreak @11:13-11:13
+      text Text("not an alert type") @12:3-12:19
+  list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: true, is_task_list: false }) @14:1-15:8
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @14:1-15:8
+      alert Alert(NodeAlert { alert_type: Tip, title: Some("in list"), multiline: false, fence_length: 1, fence_offset: 0 }) @14:3-15:8
+        paragraph @15:5-15:8
+          text Text("body") @15:5-15:8

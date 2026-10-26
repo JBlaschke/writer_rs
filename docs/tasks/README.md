@@ -27,12 +27,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T00 | Repository scaffold, pinned dependencies, CI, vendoring, module skeleton | M0 | M | — | done (PR #1) |
 | T01 | Core IR, config, errors, asset registry, l10n, CodeAttrs, frontend stubs, fixtures | M0 | L | T00 | done (PR #2) |
 | T03 | typst compiler embedding: World, fonts, packages, compile, renditions, MathML | M0 | L | T01 | done (PR #3) |
-| T04 | DOCX package core: ZIP, parts, styles, numbering, builders, reference merge, validator | M0 | L | T01 | ready for review |
-| T10 | Front matter → DocMeta and config overrides | M1 | S | T01 | todo |
-| T11 | Markdown foundations: comrak options, attributes, recovery, directives, colon pre-pass | M1 | M | T01 | todo |
+| T04 | DOCX package core: ZIP, parts, styles, numbering, builders, reference merge, validator | M0 | L | T01 | done (PR #4) |
+| T10 | Front matter → DocMeta and config overrides | M1 | S | T01 | ready for review |
+| T11 | Markdown foundations: comrak options, attributes, recovery, directives, colon pre-pass | M1 | M | T01 | ready for review |
 | T12 | comrak AST → IR walker | M1 | L | T10, T11, T14 | todo |
 | T13 | HTML emitter and syntect highlighting | M1 | L | T01 | todo |
-| T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | todo |
+| T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | ready for review |
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | todo |
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | todo |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | todo |
@@ -96,9 +96,13 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   passed. T03 starts from that merged main commit (`2c9ad24`).
 - T03 merged in [PR #3](https://github.com/JBlaschke/writer_rs/pull/3); all CI
   passed. T04 starts from that merged main commit (`bdcd3f0`).
-- T04 passes local formatting, Clippy and rustdoc checks with warnings denied,
-  plus 293 debug and 292 release tests. The difference is a debug-only assertion
-  test. Its CI is pending.
+- T04 merged in [PR #4](https://github.com/JBlaschke/writer_rs/pull/4); all CI
+  passed. T10, T11 and T14 start from that merged main commit (`4711b50`).
+  Their only dependency is the merged T01. T12 waits until this batch merges.
+- T10/T11/T14 pass local formatting, Clippy and rustdoc, plus 438 debug and
+  437 release tests. The difference remains the existing debug-only assertion.
+  Their CI is pending; the sequential helper contracts and serve cache choices
+  are recorded in the specs and affected briefs.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

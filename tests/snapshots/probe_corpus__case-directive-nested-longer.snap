@@ -1,0 +1,14 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-10:5
+  block_directive BlockDirective(NodeBlockDirective { fence_length: 4, fence_offset: 0, info: "columns widths=\"1fr 2fr\"" }) @1:1-8:4
+    block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "column" }) @2:1-4:3
+      paragraph @3:1-3:4
+        text Text("left") @3:1-3:4
+    block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "column" }) @5:1-7:3
+      paragraph @6:1-6:5
+        text Text("right") @6:1-6:5
+  paragraph @10:1-10:5
+    text Text("after") @10:1-10:5

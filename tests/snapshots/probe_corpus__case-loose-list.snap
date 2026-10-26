@@ -1,0 +1,16 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-9:10
+  list List(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @1:1-9:10
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @1:1-7:17
+      paragraph @1:3-1:10
+        text Text("item one") @1:3-1:10
+      code_block CodeBlock(NodeCodeBlock { fenced: true, fence_char: 96, fence_length: 3, fence_offset: 0, info: "py", literal: "code\n", closed: true }) @3:3-5:5
+      block_quote @7:3-7:17
+        paragraph @7:5-7:17
+          text Text("quote in item") @7:5-7:17
+    item Item(NodeList { list_type: Bullet, marker_offset: 0, padding: 2, start: 1, delimiter: Period, bullet_char: 45, tight: false, is_task_list: false }) @9:1-9:10
+      paragraph @9:3-9:10
+        text Text("item two") @9:3-9:10

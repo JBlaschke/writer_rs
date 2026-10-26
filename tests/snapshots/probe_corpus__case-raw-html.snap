@@ -1,0 +1,15 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-9:13
+  html_block HtmlBlock(NodeHtmlBlock { block_type: 6, literal: "<figure>\n<img src=\"x.png\">\n</figure>\n" }) @1:1-3:9
+  paragraph @5:1-5:53
+    text Text("Inline ") @5:1-5:7
+    html_inline HtmlInline("<span class=\"x\">") @5:8-5:23
+    text Text("hi") @5:24-5:25
+    html_inline HtmlInline("</span>") @5:26-5:32
+    text Text(" and ") @5:33-5:37
+    html_inline HtmlInline("<!-- c -->") @5:38-5:47
+    text Text(" here.") @5:48-5:53
+  html_block HtmlBlock(NodeHtmlBlock { block_type: 7, literal: "<custom-tag>\ntype 7 block\n</custom-tag>\n" }) @7:1-9:13

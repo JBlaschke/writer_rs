@@ -3,7 +3,41 @@
 
 use std::ops::RangeInclusive;
 
-use crate::ir::Attrs;
+use crate::error::{Diagnostic, Diagnostics};
+use crate::ir::{Attrs, SourceSpan};
+
+/// Diagnostic code for a code attribute ignored because its value is invalid.
+pub const INVALID_CODE_ATTR: &str = "invalid-code-attr";
+
+/// Warns once for each malformed `start`, `highlight` or `lines` value that
+/// [`CodeAttrs::from_attrs`] ignores. Unknown pairs remain available to emitters.
+pub fn check_code_attrs(
+    attrs: &Attrs, span: Option<&SourceSpan>, diagnostics: &mut Diagnostics,
+) {
+    for key in ["start", "highlight", "lines"] {
+        let Some(value) = attrs.pairs.get(key) else {
+            continue;
+        };
+        let valid = if key == "start" {
+            value.parse::<u64>().ok().is_some_and(|number| number >= 1)
+        } else {
+            parse_ranges(value).is_some()
+        };
+        if !valid {
+            let expected = if key == "start" {
+                "an integer greater than or equal to 1"
+            } else {
+                "positive line numbers or increasing ranges, e.g. `1-3,5`"
+            };
+            let mut diagnostic = Diagnostic::warning(
+                INVALID_CODE_ATTR,
+                format!("`{key}={value}` is ignored: expected {expected}"),
+            );
+            diagnostic.span = span.cloned();
+            diagnostics.push(diagnostic);
+        }
+    }
+}
 
 /// Shared rendering options for fenced code and notebook input cells.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -175,5 +209,71 @@ mod tests {
         assert!(!code.is_highlighted(10));
         assert!(code.is_highlighted(11));
         assert!(!code.is_highlighted(12));
+    }
+}
+
+#[cfg(test)]
+mod check_tests {
+    use super::*;
+
+    #[test]
+    fn check_code_attrs_agrees_with_from_attrs() {
+        let default = CodeAttrs::from_attrs(&Attrs::default());
+        let span =
+            SourceSpan { start_line: 4, end_line: 7, cell: None, file: None };
+        for (key, value, valid) in [
+            ("start", "2", true),
+            ("start", "+2", true),
+            ("highlight", "1-3,5", true),
+            ("highlight", "7", true),
+            ("highlight", "1-3|5", true),
+            ("lines", "1-3|5", true),
+            ("start", "0", false),
+            ("start", "-1", false),
+            ("start", "x", false),
+            ("start", "1.5", false),
+            ("highlight", "x", false),
+            ("highlight", "1-", false),
+            ("highlight", "3-1", false),
+            ("lines", "a|b", false),
+        ] {
+            let attrs = Attrs {
+                pairs: [(key.into(), value.into())].into(),
+                ..Attrs::default()
+            };
+            let mut diagnostics = Diagnostics::new();
+            check_code_attrs(&attrs, Some(&span), &mut diagnostics);
+            let code = CodeAttrs::from_attrs(&attrs);
+            assert_eq!(code != default, valid, "{key}={value}");
+            let found: Vec<_> = diagnostics.iter().collect();
+            assert_eq!(found.len(), usize::from(!valid), "{key}={value}");
+            if let Some(diagnostic) = found.first() {
+                assert_eq!(diagnostic.code, INVALID_CODE_ATTR);
+                assert_eq!(diagnostic.span.as_ref(), Some(&span));
+                assert!(diagnostic.message.contains(value));
+            }
+        }
+    }
+
+    #[test]
+    fn invalid_code_values_are_reported_independently() {
+        let attrs = Attrs {
+            pairs: [
+                ("start".into(), "0".into()),
+                ("lines".into(), "x".into()),
+                ("highlight".into(), "1-".into()),
+                ("other".into(), "anything".into()),
+            ]
+            .into(),
+            ..Attrs::default()
+        };
+        let mut diagnostics = Diagnostics::new();
+        check_code_attrs(&attrs, None, &mut diagnostics);
+        assert_eq!(diagnostics.iter().count(), 3);
+        assert!(
+            diagnostics
+                .iter()
+                .all(|d| d.code == INVALID_CODE_ATTR && d.span.is_none())
+        );
     }
 }

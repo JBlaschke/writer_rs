@@ -1,0 +1,25 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-9:29
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) attrs=Attributes { id: None, classes: [], pairs: [("k", "v")] } @1:1-1:26
+    text Text("Two blocks {.a}") @1:4-1:18
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) @2:1-2:19
+    text Text("Middle {.a} text") @2:4-2:19
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) attrs=Attributes { id: None, classes: [], pairs: [] } @3:1-3:11
+    text Text("Empty") @3:4-3:8
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) @4:1-4:15
+    text Text("Bare key {k}") @4:4-4:15
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) @5:1-5:19
+    text Text("Comma {a=1, b=2}") @5:4-5:19
+  heading Heading(NodeHeading { level: 2, setext: false, closed: true }) attrs=Attributes { id: Some("c"), classes: [], pairs: [] } @6:1-6:24
+    text Text("Closed hashes") @6:4-6:16
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) attrs=Attributes { id: Some("with space"), classes: ["x"], pairs: [] } @7:1-7:31
+    text Text("Quoted id") @7:4-7:12
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) attrs=Attributes { id: None, classes: [], pairs: [("k", "a:b"), ("data-x", "1.5%")] } @8:1-8:34
+    text Text("Colon value") @8:4-8:14
+  heading Heading(NodeHeading { level: 2, setext: false, closed: false }) attrs=Attributes { id: Some("law"), classes: ["x"], pairs: [] } @9:1-9:29
+    text Text("The ") @9:4-9:7
+    math Math(NodeMath { dollar_math: true, display_math: false, literal: "E=mc^2" }) @9:8-9:15
+    text Text(" law") @9:16-9:19

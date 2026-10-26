@@ -1,5 +1,10 @@
 # T14 — Asset emitter with versioned serve URLs
 
+## Amendments
+- 2026-10-26 (coordinator): html-output.md §6.1 records the cache choice and equal-stamp
+  caveat, missing-file errors in serve, query/fragment handling, and that T23 must not
+  append another version query. These are the behaviors specified in this brief.
+
 | | |
 |---|---|
 | Milestone | M1 |

@@ -1,0 +1,20 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-3:56
+  paragraph @1:1-3:56
+    text Text("see @fig:x and (@tbl:y) and [@cite2020; @other] and -@sec:intro.") @1:1-1:64
+    softbreak @1:65-1:65
+    text Text("@fig:x") @2:1-2:6
+    softbreak @2:7-2:7
+    text Text("mail ") @3:1-3:5
+    link Link(NodeLink { url: "mailto:me@example.com", title: "" }) @3:6-3:19
+      text Text("me@example.com") @3:6-3:19
+    text Text(" or ") @3:20-3:23
+    link Link(NodeLink { url: "http://www.example.com", title: "" }) @3:24-3:38
+      text Text("www.example.com") @3:24-3:38
+    text Text(" or ") @3:39-3:42
+    link Link(NodeLink { url: "https://x.y/z", title: "" }) @3:43-3:55
+      text Text("https://x.y/z") @3:43-3:55
+    text Text(".") @3:56-3:56

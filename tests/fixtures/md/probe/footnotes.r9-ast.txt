@@ -1,0 +1,22 @@
+document @1:1-11:15
+  paragraph @1:1-1:33
+    text Text("First") @1:1-1:5
+    footnote_reference FootnoteReference(NodeFootnoteReference { name: "b", texts: [("^", 1), ("b", 1)], ref_num: 1, ix: 1 }) @1:6-1:9
+    text Text(" then") @1:10-1:14
+    footnote_reference FootnoteReference(NodeFootnoteReference { name: "a", texts: [("^", 1), ("a", 1)], ref_num: 1, ix: 2 }) @1:15-1:18
+    text Text(" and again") @1:19-1:28
+    footnote_reference FootnoteReference(NodeFootnoteReference { name: "b", texts: [("^", 1), ("b", 1)], ref_num: 2, ix: 1 }) @1:29-1:32
+    text Text(".") @1:33-1:33
+  footnote_definition FootnoteDefinition(NodeFootnoteDefinition { name: "a", total_references: 1 }) @3:1-3:13
+    paragraph @3:7-3:13
+      text Text("Note A.") @3:7-3:13
+  footnote_definition FootnoteDefinition(NodeFootnoteDefinition { name: "b", total_references: 2 }) @5:1-7:26
+    paragraph @5:7-5:13
+      text Text("Note B.") @5:7-5:13
+    paragraph @7:5-7:26
+      text Text("Second paragraph of B.") @7:5-7:26
+  footnote_definition FootnoteDefinition(NodeFootnoteDefinition { name: "unused", total_references: 0 }) @9:1-9:27
+    paragraph @9:12-9:27
+      text Text("never referenced") @9:12-9:27
+  paragraph @11:1-11:15
+    text Text("Last paragraph.") @11:1-11:15

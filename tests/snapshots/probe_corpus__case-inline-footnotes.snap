@@ -1,0 +1,19 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-3:12
+  paragraph @1:1-1:42
+    text Text("Hi") @1:1-1:2
+    footnote_reference FootnoteReference(NodeFootnoteReference { name: "__inline_1", texts: [], ref_num: 1, ix: 1 }) @1:3-1:31
+    text Text(" there") @1:32-1:37
+    footnote_reference FootnoteReference(NodeFootnoteReference { name: "n", texts: [("^", 1), ("n", 1)], ref_num: 1, ix: 2 }) @1:38-1:41
+    text Text(".") @1:42-1:42
+  footnote_definition FootnoteDefinition(NodeFootnoteDefinition { name: "n", total_references: 1 }) @3:1-3:12
+    paragraph @3:7-3:12
+      text Text("Named.") @3:7-3:12
+  footnote_definition FootnoteDefinition(NodeFootnoteDefinition { name: "__inline_1", total_references: 1 }) @1:1-1:0
+    paragraph @1:1-1:0
+      text Text("An inline note with ") @1:1-1:20
+      emph @1:21-1:26
+        text Text("emph") @1:22-1:25

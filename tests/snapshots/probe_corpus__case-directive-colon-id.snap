@@ -1,0 +1,14 @@
+---
+source: tests/probe_corpus.rs
+expression: "dump_document(&text, &options)"
+---
+document @1:1-7:5
+  paragraph @1:1-2:13
+    text Text(":::figure #fig:wrapped") @1:1-1:22
+    softbreak @1:23-1:23
+    image Image(NodeLink { url: "plot.png", title: "" }) @2:1-2:13
+  paragraph @4:1-4:22
+    text Text("The caption paragraph.") @4:1-4:22
+  block_directive BlockDirective(NodeBlockDirective { fence_length: 3, fence_offset: 0, info: "" }) @5:1-7:5
+    paragraph @7:1-7:5
+      text Text("after") @7:1-7:5

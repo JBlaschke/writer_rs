@@ -1,5 +1,11 @@
 # T11 — Markdown foundations: comrak options, attributes, recovery, directives, colon pre-pass
 
+## Amendments
+- 2026-10-26 (coordinator): markdown-dialect.md §5.3 records sequential pre-pass/recovery,
+  helper ownership and line-only diagnostics. T12 calls `check_unopened_directives`;
+  it does not duplicate that check. Code-attribute lint shares T01's range parser,
+  including its pipe alias for either range attribute (the §4.6 `CodeAttrs` contract).
+
 | | |
 |---|---|
 | Milestone | M1 |
