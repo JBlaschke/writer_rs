@@ -1428,8 +1428,8 @@ mod tests {
             [root.join("project.bib")]
         );
         assert_eq!(
-            plain.config.references.style,
-            root.join("project.csl").to_str().unwrap()
+            Path::new(&plain.config.references.style),
+            root.join("project.csl")
         );
         assert_eq!(plain.config.pdf.font_paths, [root.join("fonts")]);
         assert_eq!(plain.config.typst.package_paths, [root.join("packages")]);
@@ -1446,8 +1446,8 @@ mod tests {
             [root.join("doc/front.bib")]
         );
         assert_eq!(
-            front.config.references.style,
-            root.join("doc/front.csl").to_str().unwrap()
+            Path::new(&front.config.references.style),
+            root.join("doc/front.csl")
         );
         opts.cli.template = Some("cli.typ".into());
         opts.cli.reference_doc = Some("cli.docx".into());

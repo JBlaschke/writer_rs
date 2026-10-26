@@ -35,7 +35,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T12 | comrak AST → IR walker | M1 | L | T10, T11, T14 | done (PR #6) |
 | T13 | HTML emitter and syntect highlighting | M1 | L | T01 | done (PR #7) |
 | T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | done (PR #5) |
-| T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | ready for review |
+| T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | done (PR #8) |
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | ready for review |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
@@ -119,9 +119,9 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 - T15 passes local formatting, Clippy, rustdoc, 645 debug and 644 release tests.
   Its 25 theme and 23 page-rendering tests cover the lifted APIs and new context
   snapshot. CI/merge proceeds independently; T16 follows on this implementation.
-- T15 is [PR #8](https://github.com/JBlaschke/writer_rs/pull/8), based on PR #7.
-  T16 starts from completed T15 (`647fce5`) on `codex/build-and-dump`; keep its
-  PR separate and merge dependencies before dependents.
+- T15 merged in [PR #8](https://github.com/JBlaschke/writer_rs/pull/8) after CI
+  passed (`7ed1de7`). T16 started from T15 (`647fce5`) on
+  `codex/build-and-dump`; its PR #9 now targets `main`.
 - T16 passes local formatting, Clippy, rustdoc, 733 debug and 732 release
   tests. The basic example builds a standalone HTML file; site/build/dump, world
   lifecycle and 36 new reviewed snapshots pass. T19 follows on this implementation.
