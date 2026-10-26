@@ -1,0 +1,24 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Math sources and labels</h1>
+</header>
+<p>Inline <span class="math inline" data-math-style="inline" data-tex="\frac{a}{b}">\frac{a}{b}</span>.</p>
+<div id="eq-sum" class="equation numbered"><span class="math display" data-math-style="display" data-tex="\sum_{i=0}^{n} i">\sum_{i=0}^{n} i</span><span class="equation-number">(1)</span></div>
+<p>See @eq-sum.</p>
+<div id="eq-aligned" class="equation numbered"><span class="math display" data-math-style="display" data-tex="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}">\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}</span><span class="equation-number">(2)</span></div>
+<p>Accents <span class="math inline" data-math-style="inline" data-tex="\hat{x} \vec{v} \dot{y}">\hat{x} \vec{v} \dot{y}</span>.</p>
+<div class="equation"><span class="math display" data-math-style="display" data-tex="x = 1 \tag{3} \label{eq:t}">x = 1 \tag{3} \label{eq:t}</span></div>
+<p>Macros <span class="math inline" data-math-style="inline" data-tex="\RR^n + \half{x}">\RR^n + \half{x}</span>.</p>
+<p>Inline <span class="math inline" data-math-style="inline" data-tex="x + y">x + y</span> and display <span class="math inline" data-math-style="inline" data-tex="x^2">x^2</span>.</p>
+<div id="eq-x" class="equation numbered"><span class="math display" data-math-style="display" data-tex="x = y">x = y</span><span class="equation-number">(3)</span></div>
+<p><span class="math inline" data-math-style="inline" data-tex="z = 2">z = 2</span> trailing prose {#eq-misplaced}</p>
+<p>The escaped dollar price is $5.</p>
+<h1 id="energy-e-mc2">Energy <span class="math inline" data-math-style="inline" data-tex="E = mc^2">E = mc^2</span></h1>
+<ul>
+<li>Math inside a list: <span class="math inline" data-math-style="inline" data-tex="x_1">x_1</span>.</li>
+</ul>
+</main>

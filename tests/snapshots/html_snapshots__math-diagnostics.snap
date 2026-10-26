@@ -1,0 +1,5 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+warning equation-label-misplaced [fixtures]/math.md:27 place the equation and its label in a paragraph of their own

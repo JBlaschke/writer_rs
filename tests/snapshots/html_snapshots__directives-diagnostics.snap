@@ -1,0 +1,7 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+warning unclosed-directive [fixtures]/directives.md:43 directive has no closing `:::` fence
+warning invalid-directive [fixtures]/directives.md:43 a directive needs a name; its children are kept
+warning unclosed-directive [fixtures]/directives.md:45 directive has no closing `:::` fence

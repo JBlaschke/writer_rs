@@ -1,0 +1,82 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Tables and captions</h1>
+</header>
+<figure id="tbl-before" class="figure kind-table">
+<figcaption><span class="caption-label">Table 1:</span> A caption before the table</figcaption>
+<table>
+<thead>
+<tr>
+<th class="align-left" scope="col">left</th>
+<th class="align-center" scope="col">center</th>
+<th class="align-right" scope="col">right</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="align-left">one</td>
+<td class="align-center">two</td>
+<td class="align-right">three</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="tbl-after" class="figure kind-table">
+<figcaption><span class="caption-label">Table 2:</span> A caption after the table</figcaption>
+<table>
+<thead>
+<tr>
+<th scope="col">item</th>
+<th class="align-right" scope="col">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>alpha</td>
+<td class="align-right">1</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<p>Table: An orphan caption {#tbl-orphan}</p>
+<p>A paragraph separates the orphan from any table.</p>
+<table>
+<thead>
+<tr>
+<th scope="col">pandoc</th>
+<th scope="col">caption</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td>b</td>
+</tr>
+<tr>
+<td>: A pandoc caption is retained with a compatibility warning.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<figure id="tbl-wrapped" class="figure kind-table">
+<figcaption><span class="caption-label">Table 3:</span> A labelled table</figcaption>
+<table>
+<thead>
+<tr>
+<th scope="col">column</th>
+<th class="align-right" scope="col">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x</td>
+<td class="align-right">2</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</main>

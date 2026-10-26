@@ -141,10 +141,25 @@ theme styling (T19, which re-blesses `html_snapshots__*.snap`). Never edit `Carg
 - Local decisions where the specs are silent: outputs are written although `prepare` raised error diagnostics
   (e.g. `unresolved-reference` in build), exit 1; a stub target exits 2 even when other targets succeeded; the
   `missing-asset` escalation runs in `build_targets`, so `dump` (lenient false, references.md §4.1) keeps missing assets as warnings.
-- `watch_inputs(prepared)` cannot see `--theme`, so its Theme entries over-approximate (every root); config.md §3's
-  "paths relative to `writer.toml`" has no owner for `[pdf] template`, `[docx] reference_doc`, `[latex] template` and
-  `bibliography` (T16 absolutizes only `out_dir`, `font_paths`, `package_paths`).
+- `watch_inputs(prepared)` cannot see `--theme`, so its Theme entries over-approximate (every root).
+  Path-valued template/reference/bibliography settings are normalized by T16 at
+  their source layer (see Amendments), so later watch/output stages need no path provenance guess.
 - typst-dialect.md §6.4 gives the no-provider error and T16's stub the same text, so live-reload.md §9's "not `no include
   provider`" cannot be told apart by message; the test checks `arrives in T53` only.
 - `src/main.rs` (T00) must call `writer::cli::run()`; `.gitignore` (T00) should cover `examples/**/dist/`; exit 3 for a
   missing Chrome (cli.md) is T77's additive change to `cli/build.rs`; PLAN §2's `58 KB` is printed `58.0 kB` (lifted `format_size`).
+
+## Amendments
+- **2026-10-26 (coordinator):** T16 starts from completed T15 (`647fce5`, PR #8)
+  under the user-authorized stacked-PR workflow. CI/merge waits do not block
+  implementation; feature branches and merge order remain explicit.
+- **2026-10-26 (coordinator):** closed the path-origin gap in the notes: T16
+  normalizes file-config PDF/DOCX/LaTeX template paths, bibliography and
+  path-valued CSL styles against the config directory. Front-matter overrides
+  resolve against the document directory, and CLI template/reference overrides
+  against the working directory. Preserve absolute values and empty built-in
+  paths. This implements config.md §3 without changing Config or Prepared shapes.
+- **2026-10-26 (coordinator):** validate output file/directory spelling using
+  effective Prepared config after front matter, before writing. A front-matter
+  site-mode override can target an existing directory; a standalone file output
+  cannot. Invalid output settings retain usage/config exit code 2.

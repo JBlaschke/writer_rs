@@ -172,6 +172,13 @@ against that file. As in presenter, the table maps are stored in `DocMeta.vars` 
 `Config::merge_front_matter(&DocMeta)` reads them from there (idempotent, unknown keys → error
 with a hint). `yes/no/on/off` are strings (YAML 1.2 core schema via `serde_norway`).
 
+> **Contract change (coordinator, 2026-10-26):** T16 normalizes path-valued
+> configuration at each pipeline layer before the next layer overrides it.
+> File-config paths use the config directory, front-matter overrides use the
+> document directory, and CLI template/reference paths use the working directory.
+> This includes PDF/DOCX/LaTeX templates, bibliography and path-valued CSL styles,
+> while empty built-in template paths and named citation styles remain intact.
+
 ## 4. Rust shape (`src/config.rs`)
 
 ```rust

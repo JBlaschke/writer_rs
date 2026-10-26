@@ -1,0 +1,29 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Document directives</h1>
+</header>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Outer container</p>
+<p>Outer content.</p>
+<aside class="callout callout-tip" role="note">
+<p class="callout-title">Tip</p>
+<p>Nested content with a longer outer fence.</p>
+</aside>
+</aside>
+<figure id="fig-container" class="figure kind-image">
+<img src="asset:000000000001" alt="Figure content">
+<figcaption><span class="caption-label">Figure 1:</span> A container figure</figcaption>
+</figure>
+<div class="page-break"></div>
+<div class="mystery .custom">
+<p>An unknown directive is retained as a generic container.</p>
+</div>
+<aside class="callout callout-warning" role="note">
+<p class="callout-title">An unclosed directive</p>
+<p>The document deliberately ends inside this directive.</p>
+</aside>
+</main>

@@ -1,0 +1,22 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Pandoc-style directives</h1>
+</header>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">A pandoc note</p>
+<p>Pandoc class syntax.</p>
+</aside>
+<div class="page-break"></div>
+<aside class="callout callout-warning" role="note">
+<p class="callout-title">A title: with a colon</p>
+<p>A colon after the fence requires the compatibility pre-pass.</p>
+</aside>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Fig 1: x</p>
+<p>Another colon in a directive&#39;s info string.</p>
+</aside>
+</main>

@@ -6,7 +6,8 @@ sections it lists. Specs in `../spec/` are contracts: implement them, do not rei
 Research notes in `../research/` are reference material for the "Verified API hints".
 
 ## How to pick up a task
-1. Check the status table below and the dependency column. Dependencies normally must be **done** (merged to `main`). The user authorized
+1. Check the status table below and the dependency column. Dependencies normally
+   must be **done** (merged to `main`). The user authorized
    stacked feature PRs on 2026-10-26: a completed, locally checked dependency
    branch may be used while CI and merging proceed independently.
 2. Tell the coordinator (or set the status to `in progress (<handle>)` in a tiny PR when the
@@ -35,7 +36,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T13 | HTML emitter and syntect highlighting | M1 | L | T01 | ready for review |
 | T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | done (PR #5) |
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | ready for review |
-| T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | todo |
+| T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | ready for review |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | ready for review |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | todo |
@@ -118,6 +119,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 - T15 passes local formatting, Clippy, rustdoc, 645 debug and 644 release tests.
   Its 25 theme and 23 page-rendering tests cover the lifted APIs and new context
   snapshot. CI/merge proceeds independently; T16 follows on this implementation.
+- T15 is [PR #8](https://github.com/JBlaschke/writer_rs/pull/8), based on PR #7.
+  T16 starts from completed T15 (`647fce5`) on `codex/build-and-dump`; keep its
+  PR separate and merge dependencies before dependents.
+- T16 passes local formatting, Clippy, rustdoc, 733 debug and 732 release
+  tests. The basic example builds a standalone HTML file; site/build/dump, world
+  lifecycle and 36 new reviewed snapshots pass. T19 follows on this implementation.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

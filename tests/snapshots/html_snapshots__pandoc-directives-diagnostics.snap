@@ -1,0 +1,6 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+info directive-colon-rewritten [fixtures]/pandoc-directives.md:13 rewrote colons or closing colons on a directive line for comrak
+info directive-colon-rewritten [fixtures]/pandoc-directives.md:17 rewrote colons or closing colons on a directive line for comrak

@@ -1,0 +1,15 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Page breaks and insertion points</h1>
+</header>
+<div class="page-break"></div>
+<p>Before a thematic break.</p>
+<hr>
+<p>Between thematic breaks.</p>
+<hr>
+<p>After the thematic breaks.</p>
+</main>

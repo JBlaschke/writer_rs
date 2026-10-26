@@ -1,0 +1,7 @@
+[html]
+# Keep HTML and its assets in one portable file.
+standalone = true
+
+[pdf]
+# Use embedded fonts so the example behaves consistently across machines.
+system_fonts = false
