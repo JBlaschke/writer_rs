@@ -38,6 +38,7 @@ fn theme_error(result: writer::Result<Theme>) -> (String, String) {
     }
 }
 
+#[cfg(unix)]
 fn problem_summary(
     found: &[writer::error::Diagnostic], root: &Path,
 ) -> Vec<(String, String, Level)> {
