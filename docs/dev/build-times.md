@@ -308,3 +308,37 @@ regression runs on every platform. After this repair and the inherited T15
 Unix-helper guard, formatting, all-target/all-feature Clippy, rustdoc with
 warnings denied and the full debug suite (734 passed) pass locally. The
 updated Windows CI run remains the check of the Windows target itself.
+
+## T31 bundled Typst document package acceptance (2026-10-26)
+
+Measured at `ed9d4d2` plus the T31 working tree on macOS arm64 with Rust
+1.99.1. Cached-dependency suite runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 4.64 s | 29.32 s | 55.37 s | 759 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 133 s | 150.75 s | 1412.39 s | 758 passed |
+
+The existing debug-only assertion explains the count difference; the DOCX
+fixture generator remains intentionally ignored. Formatting, all-target/
+all-feature Clippy and rustdoc pass with warnings denied. The basic HTML
+example still builds (`672.6 kB` on this branch, independently of T19).
+
+Seven package files implement the frozen `@writer/doc:0.1.0` vocabulary with
+only Typst built-ins. Eighteen compiler tests use embedded fonts, disabled
+downloads and fixed dates to check rich layout and metadata, configuration
+precedence, locale dictionaries (including 100 bibliography locale entries),
+custom titles and CSL paths, numbering/oracle metadata, caption-less figure
+placement, native multiline syntax highlighting, line ranges and cell output.
+Negative cases check the bibliography path hint and positional-argument error.
+
+Seven new Rust unit tests cover byte-exact ejection, existing destinations,
+parent failures, unrelated files and Typst's platform-specific installation
+path. The existing T03 embedded-package import test now runs against real
+assets instead of skipping. Review fixes preserve regional language fallback,
+native whole-block syntax highlighting and atomic `u64` highlight bounds
+without passing them through Typst's narrower integer parser.
+
+No dependency, public IR/config or module-declaration changes. The package
+APIs are ready for T30/T32/T34/T72; PDF/export/eject CLI wiring and notebook
+inclusion remain their own milestones. No snapshots changed.

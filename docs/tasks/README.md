@@ -36,7 +36,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T13 | HTML emitter and syntect highlighting | M1 | L | T01 | done (PR #7) |
 | T14 | Asset emitter with versioned serve URLs | M1 | S | T01 | done (PR #5) |
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | done (PR #8) |
-| T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | ready for review |
+| T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | done (PR #9) |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | todo |
@@ -50,7 +50,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | todo |
-| T31 | `@writer/doc` typst package | M3 | M | T03 | todo |
+| T31 | `@writer/doc` typst package | M3 | M | T03 | ready for review |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
@@ -125,6 +125,19 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 - T16 passes local formatting, Clippy, rustdoc, 733 debug and 732 release
   tests. The basic example builds a standalone HTML file; site/build/dump, world
   lifecycle and 36 new reviewed snapshots pass. T19 follows on this implementation.
+- T16 passed CI and merged in PR #9 (`ed9d4d2`). T19 passed CI in PR #10 but
+  merged into its feature-branch base; [PR #11](https://github.com/JBlaschke/writer_rs/pull/11)
+  carries it to `main`. T31 starts independently from merged T16, depends only
+  on completed T03 and records its existing spec in a new task brief.
+- Future feature PRs target `main`, including those developed on checked,
+  unmerged dependencies. Their descriptions list the dependencies and merge
+  order; feature commits or branch comparisons keep reviews focused while
+  dependencies remain open. CI waits still do not block implementation.
+- T31 passes local formatting, Clippy, rustdoc, 759 debug and 758 release tests.
+  Eighteen compiler-backed tests and seven new package helper tests cover the
+  bundled document template, numbering/oracle, locales, listings, cells and
+  safe ejection. The basic HTML example still builds; PDF/eject CLI wiring
+  remains with T32/T72. Its only task dependency, T03, is merged.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.
