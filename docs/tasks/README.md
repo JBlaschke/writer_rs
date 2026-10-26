@@ -26,8 +26,8 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 |---|---|---|---|---|---|
 | T00 | Repository scaffold, pinned dependencies, CI, vendoring, module skeleton | M0 | M | — | done (PR #1) |
 | T01 | Core IR, config, errors, asset registry, l10n, CodeAttrs, frontend stubs, fixtures | M0 | L | T00 | done (PR #2) |
-| T03 | typst compiler embedding: World, fonts, packages, compile, renditions, MathML | M0 | L | T01 | ready for review |
-| T04 | DOCX package core: ZIP, parts, styles, numbering, builders, reference merge, validator | M0 | L | T01 | todo |
+| T03 | typst compiler embedding: World, fonts, packages, compile, renditions, MathML | M0 | L | T01 | done (PR #3) |
+| T04 | DOCX package core: ZIP, parts, styles, numbering, builders, reference merge, validator | M0 | L | T01 | ready for review |
 | T10 | Front matter → DocMeta and config overrides | M1 | S | T01 | todo |
 | T11 | Markdown foundations: comrak options, attributes, recovery, directives, colon pre-pass | M1 | M | T01 | todo |
 | T12 | comrak AST → IR walker | M1 | L | T10, T11, T14 | todo |
@@ -94,8 +94,11 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   passed. T01 starts from that merged main commit (`2de291d`).
 - T01 merged in [PR #2](https://github.com/JBlaschke/writer_rs/pull/2); all CI
   passed. T03 starts from that merged main commit (`2c9ad24`).
-- T03 passes local formatting, Clippy and rustdoc checks with warnings denied,
-  plus all 197 tests in both debug and release builds. Its CI is pending.
+- T03 merged in [PR #3](https://github.com/JBlaschke/writer_rs/pull/3); all CI
+  passed. T04 starts from that merged main commit (`bdcd3f0`).
+- T04 passes local formatting, Clippy and rustdoc checks with warnings denied,
+  plus 293 debug and 292 release tests. The difference is a debug-only assertion
+  test. Its CI is pending.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

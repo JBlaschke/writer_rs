@@ -197,3 +197,14 @@ Body mapping §4.1–4.10 and syntect runs (T40); figures, tables, captions, TOC
 - `core_timestamp`'s error must equal T03's `pdf_timestamp` message for T41's "same error" test (both wave 2); wording in step 11.
 - Local readings to confirm: `builtin()` writes only ensured styles plus the three defaults; a taken §2.3 id is uniquified like a custom one; "has footnotes" comes from a pre-walk;
   `tests/docx_package.rs` is new; vendored-assets.md §7.1/§7.3 supersede R3 §6's zip feature and R8 §7's `Zip` lift.
+
+## Amendments
+
+- Coordinator, 2026-10-26: step 11's illustrative explicit timestamp error is
+  superseded by the merged T03 wording (`invalid [pdf] timestamp ...`), as
+  docx-output.md §1.4 requires the PDF's message. Malformed epoch fallbacks
+  remain ignored under the DOCX contract.
+- Coordinator, 2026-10-26: explicit timestamps whose UTC year falls outside
+  0000–9999 return `Error::Config("[pdf] timestamp is outside the DOCX date
+  range")`; a negative UTC year cannot be represented by the four-digit
+  W3CDTF format. See the contract clarification in docx-output.md §1.4.

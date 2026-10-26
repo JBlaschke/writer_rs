@@ -119,6 +119,13 @@ matching `^\d+$` (seconds since 1970 UTC); else `Ok(None)` and both dcterms elem
 `days_from_civil`/`civil_from_days` (no date crate). T41 (both exist by its wave) adds a test that
 runs the same inputs through `core_timestamp` and `pdf_timestamp`: same instant or same error.
 
+> **Contract change (coordinator, 2026-10-26):** DOCX timestamps require a
+> four-digit UTC year (0000–9999). A valid explicit RFC 3339 timestamp that
+> converts outside that range returns `Error::Config("[pdf] timestamp is outside
+> the DOCX date range")`; for example, `0000-01-01T00:00:00+01:00` converts to a
+> negative UTC year. This representability check is specific to DOCX. Explicit
+> parse and UTC conversion failures otherwise keep T03's existing messages.
+
 ### 1.5 ZIP (zip `=9.0.5`, `default-features = false, features = ["deflate"]`: vendored-assets.md §7.1; level 6 goes through flate2/zlib-rs)
 Entry options: `last_modified_time(DateTime::default())` (1980-01-01 00:00:00),
 `system(System::Unix)`, `unix_permissions(0o644)`; PNG/JPEG media `Stored` with
