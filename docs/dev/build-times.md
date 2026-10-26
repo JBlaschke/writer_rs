@@ -80,3 +80,25 @@ The plan's wave audit currently reports missing T30 and T40 task definitions;
 the task board records this pre-existing planning gap. T00 itself has no
 dependencies. T01 is the next implementation unit; parsing and output pipelines
 remain in their explicitly documented stubs.
+
+## T03 compiler-backed acceptance (2026-10-25)
+
+Measured at `2c9ad24` plus the T03 working tree on the same macOS arm64 host
+with Rust 1.99.1. These are incremental suite runs with cached dependencies,
+not cold-build benchmarks. Both commands used `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 2.74 s | 9.02 s | 16.42 s | 197 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 47.47 s | 53.20 s | 532.66 s | 197 passed |
+
+The debug rendition suite executed its ten tests in 0.21 s; the sixteen World
+integration tests took 0.07 s. Worlds use embedded fonts, disable system font
+search, and require no network. The `writer_doc_embedded` test conditionally
+skips until T31 supplies `@writer/doc`, as T03 specifies. The embedded mitex
+package compiles and renders successfully in both build modes.
+
+Formatting, Clippy across all targets/features with warnings denied, and
+rustdoc with warnings denied also pass. Dependency files and the module graph
+are unchanged. The CLI still exits with its T16 placeholder; these checks
+exercise the compiler library APIs directly.

@@ -14,9 +14,10 @@ It is being built from a plan written for a fleet of independent agents:
 T00 provides the Rust crate, pinned dependencies, checksummed vendored assets,
 embedded notices, build metadata, and CI. T01 adds the shared document model,
 configuration loading and precedence, diagnostics, asset registry, localization,
-and the source fixture corpus. Document conversion and the CLI commands arrive
-in later tasks; the current binary reports that T16 is pending and exits with
-status 2.
+and the source fixture corpus. T03 embeds the Typst compiler for PDFs, equation
+and image renditions, MathML, fonts, and package loading. Document conversion
+and the CLI commands arrive in later tasks; the current binary reports that
+T16 is pending and exits with status 2.
 
 To validate the current implementation:
 
