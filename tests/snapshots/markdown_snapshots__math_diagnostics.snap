@@ -1,0 +1,5 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/math.md:27: warning: place the equation and its label in a paragraph of their own [equation-label-misplaced]

@@ -1,0 +1,135 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Footnotes and repeated references",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A named note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "The first paragraph of a named note refers to another note"
+                },
+                {
+                  "type": "footnote",
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "text",
+                          "text": "A nested footnote reference's content."
+                        }
+                      ],
+                      "span": {
+                        "start_line": 12,
+                        "end_line": 12
+                      }
+                    }
+                  ],
+                  "label": "b"
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ],
+              "span": {
+                "start_line": 8,
+                "end_line": 8
+              }
+            },
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "A second paragraph in the same note."
+                }
+              ],
+              "span": {
+                "start_line": 10,
+                "end_line": 10
+              }
+            }
+          ],
+          "label": "a"
+        },
+        {
+          "type": "text",
+          "text": ", the same note again"
+        },
+        {
+          "type": "footnote_ref",
+          "label": "a"
+        },
+        {
+          "type": "text",
+          "text": ", and an inline note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Inline content."
+                }
+              ],
+              "span": {
+                "start_line": 6,
+                "end_line": 6
+              }
+            }
+          ],
+          "label": null
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 6,
+        "end_line": 6
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

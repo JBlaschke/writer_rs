@@ -1,0 +1,310 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Math sources and labels",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {
+      "math": {
+        "katex_options": {
+          "macros": {
+            "\\RR": "\\mathbb{R}",
+            "\\half": "\\frac{#1}{2}"
+          }
+        }
+      }
+    }
+  },
+  "blocks": [
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Inline "
+        },
+        {
+          "type": "math",
+          "source": "\\frac{a}{b}",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 7,
+        "end_line": 7
+      }
+    },
+    {
+      "type": "math",
+      "source": "\\sum_{i=0}^{n} i",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-sum",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 9,
+        "end_line": 9
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "See @eq-sum."
+        }
+      ],
+      "span": {
+        "start_line": 11,
+        "end_line": 11
+      }
+    },
+    {
+      "type": "math",
+      "source": "\\begin{aligned} a &= b + c \\\\ &= d \\end{aligned}",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-aligned",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 13,
+        "end_line": 15
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Accents "
+        },
+        {
+          "type": "math",
+          "source": "\\hat{x} \\vec{v} \\dot{y}",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 17,
+        "end_line": 17
+      }
+    },
+    {
+      "type": "math",
+      "source": "x = 1 \\tag{3} \\label{eq:t}",
+      "dialect": "latex",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 19,
+        "end_line": 19
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Macros "
+        },
+        {
+          "type": "math",
+          "source": "\\RR^n + \\half{x}",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 21,
+        "end_line": 21
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Inline "
+        },
+        {
+          "type": "math",
+          "source": "x + y",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": " and display "
+        },
+        {
+          "type": "math",
+          "source": "x^2",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 23,
+        "end_line": 23
+      }
+    },
+    {
+      "type": "math",
+      "source": "x = y",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 25,
+        "end_line": 25
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "math",
+          "source": "z = 2",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": " trailing prose {#eq-misplaced}"
+        }
+      ],
+      "span": {
+        "start_line": 27,
+        "end_line": 27
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "The escaped dollar price is "
+        },
+        {
+          "type": "text",
+          "text": "$"
+        },
+        {
+          "type": "text",
+          "text": "5."
+        }
+      ],
+      "span": {
+        "start_line": 29,
+        "end_line": 29
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Energy "
+        },
+        {
+          "type": "math",
+          "source": "E = mc^2",
+          "dialect": "latex"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 31,
+        "end_line": 31
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "bullet"
+      },
+      "tight": true,
+      "items": [
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Math inside a list: "
+                },
+                {
+                  "type": "math",
+                  "source": "x_1",
+                  "dialect": "latex"
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ],
+              "span": {
+                "start_line": 33,
+                "end_line": 33
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 33,
+        "end_line": 33
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

@@ -47,6 +47,40 @@ fn document(blocks: Vec<Block>) -> Document {
     }
 }
 
+#[test]
+fn asset_url_invariants_validate_ids_before_url_suffixes() {
+    for (id, valid) in [
+        ("012345abcdef", true),
+        ("abc", false),
+        ("012345abcdef0", false),
+        ("012345ABCDEF", false),
+        ("012345abcdeg", false),
+    ] {
+        for suffix in ["", "?v=2", "#panel", "?v=2#panel"] {
+            let url = format!("asset:{id}{suffix}");
+            let document = document(vec![
+                Block::paragraph(vec![Inline::Image {
+                    alt: Vec::new(),
+                    url: url.clone(),
+                    title: None,
+                    attrs: Attrs::default(),
+                }]),
+                Block::Raw {
+                    format: "html".into(),
+                    text: format!("<img src=\"{url}\">"),
+                    span: None,
+                },
+            ]);
+            let problems = document.invariant_violations();
+            assert_eq!(
+                problems.len(),
+                if valid { 0 } else { 2 },
+                "{url}: {problems:?}"
+            );
+        }
+    }
+}
+
 fn block_tag(block: &Block) -> &'static str {
     match block {
         Block::Heading { .. } => "heading",

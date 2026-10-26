@@ -1361,13 +1361,16 @@ impl InvariantChecker {
     }
 
     fn asset_url(&mut self, url: &str, path: &str) {
-        if let Some(id) = url.strip_prefix("asset:")
-            && (id.len() != 12
+        if let Some(rest) = url.strip_prefix("asset:") {
+            let end = rest.find(['?', '#']).unwrap_or(rest.len());
+            let id = &rest[..end];
+            if id.len() != 12
                 || !id
                     .bytes()
-                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
-        {
-            self.problem(path, "expected asset:<12 lowercase hex digits>");
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            {
+                self.problem(path, "expected asset:<12 lowercase hex digits>");
+            }
         }
     }
 

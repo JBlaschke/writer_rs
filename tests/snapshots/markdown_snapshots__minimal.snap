@@ -1,0 +1,91 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "A minimal document",
+    "subtitle": null,
+    "authors": [
+      {
+        "name": "Jane Doe",
+        "affiliation": null,
+        "email": null,
+        "id": null
+      },
+      {
+        "name": "John Smith",
+        "affiliation": null,
+        "email": null,
+        "id": null
+      }
+    ],
+    "date": null,
+    "abstract_": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A short abstract."
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      }
+    ],
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Introduction"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "This document has one heading and one paragraph."
+        }
+      ],
+      "span": {
+        "start_line": 10,
+        "end_line": 10
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

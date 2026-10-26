@@ -1,0 +1,441 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "References and citations",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {
+      "bibliography": "../bib/refs.bib",
+      "numbering": {
+        "headings": "1.1"
+      }
+    }
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A numbered section"
+        }
+      ],
+      "attrs": {
+        "id": "sec-x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "See @sec-x, @sec-x[Chapter], @fig-x[Fig.], @eq-x{.page}, and @eq-x[]."
+        }
+      ],
+      "span": {
+        "start_line": 10,
+        "end_line": 10
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "A referenced figure"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "A referenced figure"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 12,
+            "end_line": 12
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 12,
+        "end_line": 12
+      }
+    },
+    {
+      "type": "math",
+      "source": "x = 1",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 14,
+        "end_line": 14
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An unnumbered heading"
+        }
+      ],
+      "attrs": {
+        "id": "sec-unnumbered",
+        "classes": [
+          "unnumbered"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 16,
+        "end_line": 16
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A reference to an unnumbered heading: @sec-unnumbered."
+        }
+      ],
+      "span": {
+        "start_line": 18,
+        "end_line": 18
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Results and discussion"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 20,
+        "end_line": 20
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "See "
+        },
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "the results"
+            }
+          ],
+          "url": "#results-and-discussion",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 22,
+        "end_line": 22
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "First figure"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "First figure"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 24,
+            "end_line": 24
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-a",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 24,
+        "end_line": 24
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Second figure"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Second figure"
+                }
+              ],
+              "url": "asset:000000000002",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 26,
+            "end_line": 26
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-b",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 26,
+        "end_line": 26
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A label group [@fig-a; @fig-b]."
+        }
+      ],
+      "span": {
+        "start_line": 28,
+        "end_line": 28
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Citations [@doe2020; @lee2019, p. 12]{.prose}, [-@knuth1984], and [see @doe2020]."
+        }
+      ],
+      "span": {
+        "start_line": 30,
+        "end_line": 30
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Write "
+        },
+        {
+          "type": "text",
+          "text": "@"
+        },
+        {
+          "type": "text",
+          "text": "literal for an at sign and keep the dot after @x."
+        }
+      ],
+      "span": {
+        "start_line": 32,
+        "end_line": 32
+      }
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A trailing punctuation target"
+        }
+      ],
+      "attrs": {
+        "id": "x",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 34,
+        "end_line": 34
+      }
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A duplicate label"
+        }
+      ],
+      "attrs": {
+        "id": "sec-duplicate",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 36,
+        "end_line": 36
+      }
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Another duplicate label"
+        }
+      ],
+      "attrs": {
+        "id": "sec-duplicate",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 38,
+        "end_line": 38
+      }
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A reserved label"
+        }
+      ],
+      "attrs": {
+        "id": "fn-1",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 40,
+        "end_line": 40
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:images/plot.png"
+    },
+    {
+      "id": "000000000002",
+      "mime": "image/svg+xml",
+      "origin": "file:images/diagram.svg"
+    }
+  ]
+}

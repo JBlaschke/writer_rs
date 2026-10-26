@@ -1,0 +1,6 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/pandoc-directives.md:13: info: rewrote colons or closing colons on a directive line for comrak [directive-colon-rewritten]
+[fixtures]/pandoc-directives.md:17: info: rewrote colons or closing colons on a directive line for comrak [directive-colon-rewritten]

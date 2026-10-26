@@ -1,0 +1,114 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Raw passthrough formats",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "raw",
+      "format": "html",
+      "text": "<section>Raw HTML</section>\n",
+      "span": {
+        "start_line": 6,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "raw",
+      "format": "latex",
+      "text": "\\clearpage\n",
+      "span": {
+        "start_line": 10,
+        "end_line": 12
+      }
+    },
+    {
+      "type": "raw",
+      "format": "typst",
+      "text": "#pagebreak()\n",
+      "span": {
+        "start_line": 14,
+        "end_line": 16
+      }
+    },
+    {
+      "type": "raw",
+      "format": "openxml",
+      "text": "<w:p><w:r><w:t>Raw Word text</w:t></w:r></w:p>\n",
+      "span": {
+        "start_line": 18,
+        "end_line": 20
+      }
+    },
+    {
+      "type": "raw",
+      "format": "weird",
+      "text": "An unknown format is retained.\n",
+      "span": {
+        "start_line": 22,
+        "end_line": 24
+      }
+    },
+    {
+      "type": "raw",
+      "format": "html",
+      "text": "<div>\n<img src=\"asset:000000000001\">\n</div>\n",
+      "span": {
+        "start_line": 26,
+        "end_line": 28
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Inline raw "
+        },
+        {
+          "type": "raw",
+          "format": "html",
+          "text": "<em>inline HTML</em>"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 32,
+        "end_line": 32
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:images/plot.png"
+    }
+  ]
+}

@@ -223,7 +223,7 @@ links and images `title=` is used only when there is no Markdown title.
 | `BlockQuote` | `BlockQuote { blocks }` | |
 | `Alert{alert_type, title}` | `Callout { kind, title, blocks, attrs: {} }` | `kind` = lowercase type name; `title` = `parse_inlines(title)` or `None` (§4.7) |
 | `List` > `Item` / `TaskItem{symbol}` | `List { kind, tight, items }` | §4.2 |
-| `DescriptionList` > `DescriptionItem` > `DescriptionTerm` / `DescriptionDetails` | `DefinitionList { items }` | one `DefinitionItem { term: inlines of the term's Paragraph, definitions: [details blocks] }` per item |
+| `DescriptionList` > `DescriptionItem` > `DescriptionTerm` / `DescriptionDetails` | `DefinitionList { items }` | one `DefinitionItem { term: inlines of the term's Paragraph, definitions: [details blocks] }` per term; termless continuation items extend the preceding term's definitions |
 | `CodeBlock{info:"math"}` | `Math` | §4.5 (`` ```math {#eq-x} `` carries attrs) |
 | `CodeBlock{info:"{=fmt}"}` | `Raw { format }` | §4.8 |
 | `CodeBlock{info, literal}` + attrs | `CodeBlock` or `Figure { kind: Listing }` | §4.6 |
@@ -236,6 +236,12 @@ links and images `title=` is used only when there is no Markdown title.
 | `MultilineBlockQuote`, `Subtext`, `Highlight`, `Insert`, `Underline`, `SpoileredText`, `EscapedTag`, `WikiLink`, `CommentInline`, `MultilineComment`, `Raw`, `ShortCode`, `HeexBlock/Inline` | never produced | the walker returns `Error::Other` if it meets one (a test guards the options) |
 
 ### 4.2 Lists
+
+> **Contract change (coordinator, 2026-10-26):** comrak emits an additional termless
+> `DescriptionItem` for another `: definition` under the same term. The walker appends its
+> details to the preceding `DefinitionItem`, preserving the IR's multiple definitions per
+> term instead of creating an empty term. Explicit terms remain separate.
+
 `ListKind::Bullet` for `ListType::Bullet`, `Ordered { start: list.start }` for `Ordered` (the
 delimiter `.`/`)` is not kept). `tight` is read from the `List` node, never from `Item` (always
 `false` there, R9 §19). A `TaskItem{symbol}` gives `checked: Some(symbol.is_some())`; other
@@ -259,8 +265,14 @@ against `SourceInfo.base_dir` (the including file's directory for includes); exi
 `assets.register_file(abs)` and the url becomes `asset:<id>`; missing files keep the url and
 raise `missing-asset` (error in `build`, warning in `serve`/`check`); a file found only by
 letter case is used with `asset-case-mismatch`; remote URLs are never fetched; links are never
-registered. `width`/`height` values must match `^\d+(\.\d+)?(%|px|pt|cm|mm|in|em)?$` (bare
+registered. `width`/`height` values must match `^[0-9]+(\.[0-9]+)?(%|px|pt|cm|mm|in|em)?$` (bare
 number = px); anything else is dropped with the warning `invalid-dimension`.
+
+> **Contract change (coordinator, 2026-10-26):** when implicit-figure alt text is copied to
+> the caption, footnotes belong to that caption alone. Remove `Footnote`/`FootnoteRef`
+> occurrences recursively from the body image's alt inlines to preserve ir.md §2 invariant
+> 4. Its plain-text alt is unchanged (`ir::plain_text` already omits footnotes). Dimension
+> numbers use ASCII `[0-9]`, as CSS requires, rather than Unicode-aware `\d` matching.
 
 ### 4.4 Tables and `Table:` captions
 `Table` → `columns: alignments.map(None→Default, Left, Center, Right)` with `width: None`;

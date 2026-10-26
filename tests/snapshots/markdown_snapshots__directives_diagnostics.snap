@@ -1,0 +1,7 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixtures]/directives.md:43: warning: directive has no closing `:::` fence [unclosed-directive]
+[fixtures]/directives.md:43: warning: a directive needs a name; its children are kept [invalid-directive]
+[fixtures]/directives.md:45: warning: directive has no closing `:::` fence [unclosed-directive]
