@@ -6,7 +6,7 @@ use crate::assets::emit::OutputMode;
 use crate::assets::registry::AssetRegistry;
 use crate::config::Config;
 use crate::error::{Diagnostics, Error, Result};
-use crate::html::emit::{KatexOnly, MathHook, MathUsage};
+use crate::html::emit::MathHook;
 use crate::html::{BuildInfo, RenderInput, RenderedDocument};
 use crate::theme::Theme;
 use crate::typst::world::WriterWorld;
@@ -23,8 +23,7 @@ pub const SITE_ASSETS_DIR: &str = "assets";
 fn math_hook<'a>(
     config: &'a Config, world: &'a mut WriterWorld,
 ) -> Box<dyn MathHook + 'a> {
-    let _ = (config, &world);
-    Box::new(KatexOnly { usage: MathUsage::default() })
+    Box::new(crate::html::math::MathRenderer::new(config, world))
 }
 
 /// Renders using a cloned asset registry, retaining newly generated resources.

@@ -1,0 +1,28 @@
+---
+source: tests/html_math.rs
+expression: text
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Math sources and labels</h1>
+</header>
+<p>Inline <span class="math inline" data-tex="\frac{a}{b}"><img src="asset:[id]" alt="\frac{a}{b}" style="height:12.66pt;vertical-align:-4.22pt"></span>.</p>
+<div id="eq-sum" class="equation numbered"><span class="math display" data-tex="\sum_{i=0}^{n} i"><img src="asset:[id]" alt="\sum_{i=0}^{n} i" style="height:30.74pt;vertical-align:-13.15pt"></span><span class="equation-number">(1)</span></div>
+<p>See @eq-sum.</p>
+<div id="eq-aligned" class="equation numbered"><span class="math display" data-tex="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}"><img src="asset:[id]" alt="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}" style="height:30.38pt;vertical-align:-2.4pt"></span><span class="equation-number">(2)</span></div>
+<p>Accents <span class="math inline" data-tex="\hat{x} \vec{v} \dot{y}"><img src="asset:[id]" alt="\hat{x} \vec{v} \dot{y}" style="height:10.99pt;vertical-align:-2.46pt"></span>.</p>
+<div class="equation"><span class="math display" data-tex="x = 1  "><img src="asset:[id]" alt="x = 1 \tag{3} \label{eq:t}" style="height:8.12pt;vertical-align:-0.13pt"></span></div>
+<p>Macros <span class="math inline" data-tex="\RR^n + \half{x}"><img src="asset:[id]" alt="\RR^n + \half{x}" style="height:12.57pt;vertical-align:-4.14pt"></span>.</p>
+<p>Inline <span class="math inline" data-tex="x + y"><img src="asset:[id]" alt="x + y" style="height:9.46pt;vertical-align:-2.46pt"></span> and display <span class="math inline" data-tex="x^2"><img src="asset:[id]" alt="x^2" style="height:10.07pt;vertical-align:-0.13pt"></span>.</p>
+<div id="eq-x" class="equation numbered"><span class="math display" data-tex="x = y"><img src="asset:[id]" alt="x = y" style="height:7.76pt;vertical-align:-2.46pt"></span><span class="equation-number">(3)</span></div>
+<p><span class="math inline" data-tex="z = 2"><img src="asset:[id]" alt="z = 2" style="height:8.12pt;vertical-align:-0.13pt"></span> trailing prose {#eq-misplaced}</p>
+<p>The escaped dollar price is $5.</p>
+<h1 id="energy-e-mc2">Energy <span class="math inline" data-tex="E = mc^2"><img src="asset:[id]" alt="E = mc^2" style="height:10.07pt;vertical-align:-0.13pt"></span></h1>
+<ul>
+<li>Math inside a list: <span class="math inline" data-tex="x_1"><img src="asset:[id]" alt="x_1" style="height:8.27pt;vertical-align:-2.96pt"></span>.</li>
+</ul>
+</main>
+
+--- diagnostics ---
+warning equation-label-misplaced: place the equation and its label in a paragraph of their own
+warning math-tag-ignored: \tag/\label inside math are ignored for html; label the equation with {#eq-x}

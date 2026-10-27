@@ -1,0 +1,28 @@
+---
+source: tests/html_math.rs
+expression: text
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Math sources and labels</h1>
+</header>
+<p>Inline <span class="math inline" data-tex="\frac{a}{b}"><math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><mi>a</mi><mi>b</mi></mfrac></math></span>.</p>
+<div id="eq-sum" class="equation numbered"><span class="math display" data-tex="\sum_{i=0}^{n} i"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><munderover><mo lspace="0">∑</mo><mrow><mi>i</mi><mo lspace="0" rspace="0">=</mo><mn>0</mn></mrow><mi>n</mi></munderover><mi>i</mi></math></span><span class="equation-number">(1)</span></div>
+<p>See @eq-sum.</p>
+<div id="eq-aligned" class="equation numbered"><span class="math display" data-tex="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable displaystyle="true" scriptlevel="0"><mtr><mtd style="text-align: right;justify-items: end;padding-right: 0;"><mi>a</mi></mtd><mtd style="text-align: left;justify-items: start;padding-left: 0;"><mo>=</mo><mi>b</mi><mo>+</mo><mi>c</mi></mtd></mtr><mtr><mtd style="text-align: right;justify-items: end;padding-right: 0;"></mtd><mtd style="text-align: left;justify-items: start;padding-left: 0;"><mo>=</mo><mi>d</mi></mtd></mtr></mtable></math></span><span class="equation-number">(2)</span></div>
+<p>Accents <span class="math inline" data-tex="\hat{x} \vec{v} \dot{y}"><math xmlns="http://www.w3.org/1998/Math/MathML"><mover accent="true"><mi>x</mi><mo stretchy="false">ˆ</mo></mover><mover accent="true"><mi>v</mi><mo stretchy="false">⃗</mo></mover><mover accent="true"><mi>y</mi><mo>˙</mo></mover></math></span>.</p>
+<div class="equation"><span class="math display" data-tex="x = 1  "><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>x</mi><mo>=</mo><mn>1</mn></math></span></div>
+<p>Macros <span class="math inline" data-tex="\RR^n + \half{x}"><math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>ℝ</mi><mi>n</mi></msup><mo>+</mo><mfrac><mi>x</mi><mn>2</mn></mfrac></math></span>.</p>
+<p>Inline <span class="math inline" data-tex="x + y"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>+</mo><mi>y</mi></math></span> and display <span class="math inline" data-tex="x^2"><math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>x</mi><mn>2</mn></msup></math></span>.</p>
+<div id="eq-x" class="equation numbered"><span class="math display" data-tex="x = y"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>x</mi><mo>=</mo><mi>y</mi></math></span><span class="equation-number">(3)</span></div>
+<p><span class="math inline" data-tex="z = 2"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>z</mi><mo>=</mo><mn>2</mn></math></span> trailing prose {#eq-misplaced}</p>
+<p>The escaped dollar price is $5.</p>
+<h1 id="energy-e-mc2">Energy <span class="math inline" data-tex="E = mc^2"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></math></span></h1>
+<ul>
+<li>Math inside a list: <span class="math inline" data-tex="x_1"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mn>1</mn></msub></math></span>.</li>
+</ul>
+</main>
+
+--- diagnostics ---
+warning equation-label-misplaced: place the equation and its label in a paragraph of their own
+warning math-tag-ignored: \tag/\label inside math are ignored for html; label the equation with {#eq-x}

@@ -214,7 +214,9 @@ pre.hl-code .line { display: inline-block; min-width: 100%; }
 .equation > .math.display {
     flex: 1 1 auto;
     min-width: 0;
+    padding-block: .5em;
     overflow-x: auto;
+    overflow-y: hidden;
     text-align: center;
 }
 .equation-number {
@@ -225,6 +227,10 @@ pre.hl-code .line { display: inline-block; min-width: 100%; }
 .math.inline { white-space: nowrap; }
 .math-source { font-family: var(--w-font-mono); font-size: .9em; }
 .math-error { color: var(--w-error); }
+
+@media (prefers-color-scheme: dark) {
+    .math img { filter: invert(1) hue-rotate(180deg); }
+}
 
 .callout {
     margin: 1.5em 0;

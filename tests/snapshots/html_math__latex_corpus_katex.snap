@@ -1,0 +1,42 @@
+---
+source: tests/html_math.rs
+expression: text
+---
+01-frac [display]: <span class="math display" data-math-style="display" data-tex="\frac{a}{b}">\frac{a}{b}</span>
+02-sum-limits [display]: <span class="math display" data-math-style="display" data-tex="\sum_{i=0}^{n} i">\sum_{i=0}^{n} i</span>
+03-integral-dx [display]: <span class="math display" data-math-style="display" data-tex="\int_0^1 x \, \mathrm{d}x">\int_0^1 x \, \mathrm{d}x</span>
+04-root-index [display]: <span class="math display" data-math-style="display" data-tex="\sqrt[n]{x}">\sqrt[n]{x}</span>
+05-mathbb [display]: <span class="math display" data-math-style="display" data-tex="\mathbb{R}">\mathbb{R}</span>
+06-left-right-frac [display]: <span class="math display" data-math-style="display" data-tex="\left(\frac{a}{b}\right)">\left(\frac{a}{b}\right)</span>
+07-pmatrix [display]: <span class="math display" data-math-style="display" data-tex="\begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}">\begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}</span>
+08-aligned [display]: <span class="math display" data-math-style="display" data-tex="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}">\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}</span>
+09-text-if [display]: <span class="math display" data-math-style="display" data-tex="\text{if } x &gt; 0">\text{if } x &gt; 0</span>
+10-accents [inline]: <span class="math inline" data-math-style="inline" data-tex="\hat{x} \vec{v} \dot{y}">\hat{x} \vec{v} \dot{y}</span>
+11-operatorname-argmax [display]: <span class="math display" data-math-style="display" data-tex="\operatorname{argmax}_x f(x)">\operatorname{argmax}_x f(x)</span>
+12-color [display]: <span class="math display" data-math-style="display" data-tex="\color{red}{x} \textcolor{blue}{y}">\color{red}{x} \textcolor{blue}{y}</span>
+13-boldsymbol-mathbf [display]: <span class="math display" data-math-style="display" data-tex="\boldsymbol{\alpha} \mathbf{x}">\boldsymbol{\alpha} \mathbf{x}</span>
+14-lim [display]: <span class="math display" data-math-style="display" data-tex="\lim_{x\to\infty} f(x)">\lim_{x\to\infty} f(x)</span>
+15-def-macro [display]: <span class="math display" data-math-style="display" data-tex="\def\R{\mathbb{R}} \R">\def\R{\mathbb{R}} \R</span>
+16-newcommand-no-arity [display]: <span class="math display" data-math-style="display" data-tex="\newcommand{\dd}{\mathrm{d}} \dd x">\newcommand{\dd}{\mathrm{d}} \dd x</span>
+17-newcommand-arity [display]: <span class="math display" data-math-style="display" data-tex="\newcommand{\half}[1]{\frac{#1}{2}} \half{x}">\newcommand{\half}[1]{\frac{#1}{2}} \half{x}</span>
+18-unknown-command [display]: <span class="math display" data-math-style="display" data-tex="\foo{x}">\foo{x}</span>
+19-unbalanced-brace [display]: <span class="math display" data-math-style="display" data-tex="\frac{a}{b">\frac{a}{b</span>
+20-cases [display]: <span class="math display" data-math-style="display" data-tex="\begin{cases} 1 &amp; \text{if } x&gt;0 \\ 0 &amp; \text{otherwise} \end{cases}">\begin{cases} 1 &amp; \text{if } x&gt;0 \\ 0 &amp; \text{otherwise} \end{cases}</span>
+21-middle-delimiter [display]: <span class="math display" data-math-style="display" data-tex="\left(\frac{a}{b}\middle|\frac{c}{d}\right)">\left(\frac{a}{b}\middle|\frac{c}{d}\right)</span>
+22-nary-inline [inline]: <span class="math inline" data-math-style="inline" data-tex="\sum_{i=1}^n x_i">\sum_{i=1}^n x_i</span>
+23-underbrace-overbrace [display]: <span class="math display" data-math-style="display" data-tex="\overbrace{a+b}^{n} + \underbrace{c+d}_{m}">\overbrace{a+b}^{n} + \underbrace{c+d}_{m}</span>
+24-bmatrix-vmatrix [display]: <span class="math display" data-math-style="display" data-tex="\begin{bmatrix} 1 &amp; 2 \\ 3 &amp; 4 \end{bmatrix} \begin{vmatrix} a \end{vmatrix}">\begin{bmatrix} 1 &amp; 2 \\ 3 &amp; 4 \end{bmatrix} \begin{vmatrix} a \end{vmatrix}</span>
+25-primes [inline]: <span class="math inline" data-math-style="inline" data-tex="f&#39;(x) + x&#39;&#39;">f&#39;(x) + x&#39;&#39;</span>
+26-spaces [inline]: <span class="math inline" data-math-style="inline" data-tex="a\,b\;c\quad d\qquad e">a\,b\;c\quad d\qquad e</span>
+27-tag-label [display]: <span class="math display" data-math-style="display" data-tex="x = 1  ">x = 1  </span>
+  warning math-tag-ignored: \tag/\label inside math are ignored for html; label the equation with {#eq-x}
+28-align-env [display]: <span class="math display" data-math-style="display" data-tex="\begin{aligned} a &amp;= b \\ c &amp;= d \end{aligned}">\begin{aligned} a &amp;= b \\ c &amp;= d \end{aligned}</span>
+29-unicode-source [inline]: <span class="math inline" data-math-style="inline" data-tex="α ≤ β">α ≤ β</span>
+30-empty [display]: <span class="math display" data-math-style="display" data-tex=""></span>
+31-macro-from-config [inline]: <span class="math inline" data-math-style="inline" data-tex="\RR^n + \half{x}">\RR^n + \half{x}</span>
+32-ce [inline]: <span class="math inline" data-math-style="inline" data-tex="\ce{H2O}">\ce{H2O}</span>
+33-sympy-displaystyle [display]: <span class="math display" data-math-style="display" data-tex="\displaystyle \frac{1}{2}">\displaystyle \frac{1}{2}</span>
+34-empty-base-scripts [display]: <span class="math display" data-math-style="display" data-tex="{}_1^2 X">{}_1^2 X</span>
+35-nested-fences-text [display]: <span class="math display" data-math-style="display" data-tex="\left\{ x \in \mathbb{R} \mid \text{if } x &gt; 0 \right\}">\left\{ x \in \mathbb{R} \mid \text{if } x &gt; 0 \right\}</span>
+36-left-dot-right-bar [display]: <span class="math display" data-math-style="display" data-tex="\left. \frac{df}{dx} \right|_{x=0}">\left. \frac{df}{dx} \right|_{x=0}</span>
+37-sideset [display]: <span class="math display" data-math-style="display" data-tex="\sideset{_1^2}{_3^4}\sum">\sideset{_1^2}{_3^4}\sum</span>

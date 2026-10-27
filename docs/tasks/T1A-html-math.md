@@ -200,6 +200,10 @@ font embedding (T15); `.equation`/`.math`/`.math-error` CSS (T19); the morphdom 
   image-route tests to a few equations and one World per test (the first mitex compile loads its WASM plugin).
 
 ## Notes for the coordinator
+- Implementation starts after checked T30 in PR #13 (`1ea66e3`), with a PR
+  targeting `main` and T30 listed as its unmerged dependency. CI proceeds
+  independently. The existing `md/math.md` corpus contains 12 equations;
+  tests retain all 12 rather than the original six assumed above.
 - math.md §10 names but does not spell out `03`–`07`, `09`, `11`–`17`, `20`, `23`, `24`, nor any mode. Step 2 uses
   R4 §2.4's probe inputs (`scratchpad/build/math-probe/src/main.rs`) and the spec review's (`review-math-probe`,
   fx20–fx24); modes follow `mathspec-probe` and `md/math.md`. T33, T42, T60 read these files as written.
@@ -210,3 +214,15 @@ font embedding (T15); `.equation`/`.math`/`.math-error` CSS (T19); the morphdom 
   and image both fail raises one `math-conversion-failed` naming both reasons (§2 rule 4).
 - html-output.md §1.8 says T1A updates T13/T16 snapshots, but those harnesses build `KatexOnly` themselves; only
   outputs through `src/pipeline/html.rs` (`cli_build` snapshots, `dump --context`) can change.
+
+## Amendments
+
+- Coordinator integration (2026-10-27): browser checks of the new routes
+  revealed black SVG ink on dark backgrounds and MathML overhang creating
+  vertical scrollbars. Add vertical equation padding, a scoped dark image
+  filter and its print reset to T19's styles, document them in its README,
+  and extend its existing math/print tests. No markup or token changes.
+- Existing HTML helper tests now check the real math client globals and
+  JavaScript MIME type rather than T00's placeholder comment. No existing
+  snapshots need updates; five new T1A snapshots cover all three routes and
+  the shared LaTeX corpus.

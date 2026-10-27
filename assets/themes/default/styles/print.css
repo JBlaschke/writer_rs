@@ -31,6 +31,7 @@
     }
 
     [data-writer-document] { padding: 0; }
+    .math img { filter: none; }
     .cell-prompt {
         position: static;
         width: auto;

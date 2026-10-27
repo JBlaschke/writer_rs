@@ -462,7 +462,7 @@ fn math_init_follows_math_usage() {
     assert!(doc.html.contains(
         r#"window.__writerKatexOptions = {"macros":{"\\x":"\u003c/script>"}};"#
     ));
-    assert!(doc.html.contains("/* writer math.js"));
+    assert!(doc.html.contains("window.__writerRenderMath"));
     assert!(!doc.html.contains("writer-math"));
     let doc = render_math(usage, MathmlFont::Embed, OutputMode::Serve);
     assert!(doc.html.contains("/__writer/asset/vendor/katex/katex.min.css"));
@@ -849,9 +849,11 @@ fn resolve_helper_path_forms() {
     );
     let resolve = |path: &str| html::resolve_helper_path(&theme, path).unwrap();
     assert!(resolve("vendor/katex/katex.min.js").unwrap().0.len() > 100_000);
-    assert!(
-        resolve("writer/math.js").unwrap().0.starts_with(b"/* writer math.js")
-    );
+    let (script, mime) = resolve("writer/math.js").unwrap();
+    let script = String::from_utf8(script).unwrap();
+    assert!(script.contains("__writerRenderMath"));
+    assert!(script.contains("__writerKatexOptions"));
+    assert_eq!(mime, "text/javascript");
     assert_eq!(
         resolve("vendor/katex/fonts/KaTeX_Main-Regular.woff2").unwrap().1,
         "font/woff2"

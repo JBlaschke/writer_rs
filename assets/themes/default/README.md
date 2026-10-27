@@ -61,6 +61,11 @@ inline code and the fallback for code theme `"none"`; it does not recolour a
 syntax theme. To change syntax colours, set `code_theme` and `code_theme_dark`
 in your theme's `[styles]` table.
 
+Display equations have vertical padding for MathML glyph overhang. In dark
+mode, `.math img` uses `invert(1) hue-rotate(180deg)` to keep the compiler's
+dark ink legible. Print rules reset the filter. Custom themes can override
+it to choose their equation image colours.
+
 ## Classes
 
 These classes are emitted by writer. User-supplied classes can add further
