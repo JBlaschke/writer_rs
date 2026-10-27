@@ -1,0 +1,402 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "ref",
+                    "target": "target",
+                    "supplement": null,
+                    "form": "normal",
+                    "resolved": {
+                        "kind": "heading",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "Section 1"
+                            }
+                        ],
+                        "anchor": "target"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "ref",
+                    "target": "target",
+                    "supplement": null,
+                    "form": "page",
+                    "resolved": {
+                        "kind": "heading",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "cached page text"
+                            }
+                        ],
+                        "anchor": "target"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "ref",
+                    "target": "target",
+                    "supplement": [
+                        {
+                            "type": "text",
+                            "text": "Leaf"
+                        }
+                    ],
+                    "form": "page",
+                    "resolved": {
+                        "kind": "heading",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "cached explicit page"
+                            }
+                        ],
+                        "anchor": "target"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "ref",
+                    "target": "target",
+                    "supplement": [],
+                    "form": "page",
+                    "resolved": {
+                        "kind": "heading",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "cached silent page"
+                            }
+                        ],
+                        "anchor": "target"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "link",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Internal link"
+                        }
+                    ],
+                    "url": "#target",
+                    "title": "Link title",
+                    "attrs": {
+                        "id": "link_id",
+                        "classes": [],
+                        "pairs": {}
+                    }
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "level": 1,
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Referenced heading"
+                }
+            ],
+            "attrs": {
+                "id": "target",
+                "classes": [],
+                "pairs": {}
+            },
+            "number": "1"
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "span",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "First duplicate"
+                        }
+                    ],
+                    "attrs": {
+                        "id": "duplicate",
+                        "classes": [],
+                        "pairs": {}
+                    }
+                },
+                {
+                    "type": "span",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Second duplicate"
+                        }
+                    ],
+                    "attrs": {
+                        "id": "duplicate",
+                        "classes": [],
+                        "pairs": {}
+                    }
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "ref",
+                    "target": "absent",
+                    "supplement": null,
+                    "form": "normal"
+                },
+                {
+                    "type": "cite",
+                    "items": [
+                        {
+                            "key": "a"
+                        },
+                        {
+                            "key": "b"
+                        }
+                    ],
+                    "mode": "normal"
+                },
+                {
+                    "type": "cite",
+                    "items": [
+                        {
+                            "key": "resolved"
+                        }
+                    ],
+                    "mode": "normal",
+                    "resolved": {
+                        "note": false,
+                        "inlines": [
+                            {
+                                "type": "strong",
+                                "inlines": [
+                                    {
+                                        "type": "text",
+                                        "text": "(Author 2026)"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "type": "cell",
+            "index": 0,
+            "id": "cell-0",
+            "language": "python",
+            "source": "HIDDEN INPUT",
+            "execution_count": null,
+            "show_input": false,
+            "show_output": true,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "display"
+                    },
+                    "execution_count": null,
+                    "candidates": [
+                        {
+                            "mime": "text/html",
+                            "blocks": [
+                                {
+                                    "type": "div",
+                                    "attrs": {
+                                        "id": "hidden_label",
+                                        "classes": [],
+                                        "pairs": {}
+                                    },
+                                    "blocks": [
+                                        {
+                                            "type": "raw",
+                                            "format": "html",
+                                            "text": "<b>hidden</b>"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Selected candidate"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/html",
+                        "text/plain"
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            },
+            "tags": [],
+            "metadata": null,
+            "span": null
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "ref",
+                    "target": "hidden_label",
+                    "supplement": null,
+                    "form": "normal",
+                    "resolved": {
+                        "kind": "heading",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "Hidden reference"
+                            }
+                        ],
+                        "anchor": "hidden_label"
+                    }
+                },
+                {
+                    "type": "link",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Hidden link"
+                        }
+                    ],
+                    "url": "#hidden_label",
+                    "title": "Link title",
+                    "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                    }
+                },
+                {
+                    "type": "link",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Unresolved ordinary link"
+                        }
+                    ],
+                    "url": "#absent",
+                    "title": "Link title",
+                    "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                    }
+                },
+                {
+                    "type": "ref",
+                    "target": "missing_emitted",
+                    "supplement": null,
+                    "form": "page",
+                    "resolved": {
+                        "kind": "heading",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "Missing page fallback"
+                            }
+                        ],
+                        "anchor": "missing_emitted"
+                    }
+                }
+            ]
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/refs.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [
+            {
+                "level": 1,
+                "number": "1",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Referenced heading"
+                    }
+                ],
+                "anchor": "target"
+            }
+        ],
+        "labels": {
+            "target": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "target"
+            },
+            "link_id": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "link_id"
+            },
+            "duplicate": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "duplicate"
+            },
+            "hidden_label": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "hidden_label"
+            },
+            "missing_emitted": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "missing_emitted"
+            }
+        },
+        "footnotes": 0
+    }
+}

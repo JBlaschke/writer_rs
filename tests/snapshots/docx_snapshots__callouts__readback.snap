@@ -1,0 +1,10 @@
+---
+source: tests/docx_snapshots.rs
+expression: "common_docx::read_back(&output.bytes)"
+---
+{
+  "paragraphs": 15,
+  "styles": 19,
+  "abstract_nums": 2,
+  "images": 0
+}

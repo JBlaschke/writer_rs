@@ -1,0 +1,410 @@
+{
+    "meta": {
+        "title": "Plain *title*",
+        "subtitle": "A subtitle",
+        "authors": [
+            {
+                "name": "A. Author",
+                "affiliation": "Institute",
+                "email": "a@example.com"
+            },
+            {
+                "name": "B. Author"
+            }
+        ],
+        "date": "October 2026",
+        "abstract_": [
+            {
+                "type": "heading",
+                "level": 3,
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Abstract heading"
+                    }
+                ],
+                "attrs": {
+                    "id": "abstract_heading",
+                    "classes": [],
+                    "pairs": {}
+                },
+                "number": null
+            },
+            {
+                "type": "paragraph",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Abstract body"
+                    }
+                ]
+            }
+        ],
+        "vars": {
+            "abstract-title": "Summary"
+        }
+    },
+    "blocks": [
+        {
+            "type": "heading",
+            "level": 1,
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Listed heading"
+                }
+            ],
+            "attrs": {
+                "id": "listed",
+                "classes": [],
+                "pairs": {}
+            },
+            "number": "1"
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "First body paragraph"
+                }
+            ]
+        },
+        {
+            "type": "raw",
+            "format": "openxml",
+            "text": "<w:p><w:r><w:t>RAW BLOCK</w:t></w:r></w:p>"
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Second body paragraph"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": []
+        },
+        {
+            "type": "block_quote",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Quoted paragraph"
+                        }
+                    ]
+                },
+                {
+                    "type": "div",
+                    "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {
+                            "custom-style": "Local Paragraph"
+                        }
+                    },
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Custom paragraph"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "After quote"
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "level": 2,
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Not listed"
+                }
+            ],
+            "attrs": {
+                "id": "not_listed",
+                "classes": [
+                    "notoc"
+                ],
+                "pairs": {}
+            },
+            "number": null
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "strong",
+                    "inlines": [
+                        {
+                            "type": "emph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "bold italic"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "strikeout",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "strikeout"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "underline",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "underline"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "small_caps",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "small_caps"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "subscript",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "subscript"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "superscript",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "superscript"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " "
+                },
+                {
+                    "type": "code",
+                    "text": "literal <tag>",
+                    "attrs": {
+                        "id": "inline_code",
+                        "classes": [],
+                        "pairs": {}
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": " a\tb\nc "
+                },
+                {
+                    "type": "line_break"
+                },
+                {
+                    "type": "text",
+                    "text": "new line"
+                },
+                {
+                    "type": "soft_break"
+                },
+                {
+                    "type": "span",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "custom character"
+                        }
+                    ],
+                    "attrs": {
+                        "id": "inline_span",
+                        "classes": [],
+                        "pairs": {
+                            "custom-style": "Accent Text"
+                        }
+                    }
+                },
+                {
+                    "type": "link",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "external link"
+                        }
+                    ],
+                    "url": "https://example.com/?a=1&b=2",
+                    "title": "Link title",
+                    "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                    }
+                },
+                {
+                    "type": "raw",
+                    "format": "openxml",
+                    "text": "<w:r><w:t>INLINE XML</w:t></w:r>"
+                },
+                {
+                    "type": "raw",
+                    "format": "html",
+                    "text": "<b>FOREIGN INLINE</b>"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Adjacent "
+                },
+                {
+                    "type": "text",
+                    "text": "text "
+                },
+                {
+                    "type": "text",
+                    "text": "runs"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "math",
+                    "source": "x",
+                    "dialect": "latex"
+                }
+            ]
+        },
+        {
+            "type": "raw",
+            "format": "html",
+            "text": "<p>FOREIGN BLOCK</p>"
+        },
+        {
+            "type": "thematic_break"
+        },
+        {
+            "type": "page_break"
+        },
+        {
+            "type": "raw",
+            "format": "openxml",
+            "text": "<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w=\"1000\"/></w:tblGrid><w:tr><w:tc><w:tcPr/><w:p/></w:tc></w:tr></w:tbl>"
+        },
+        {
+            "type": "raw",
+            "format": "openxml",
+            "text": "<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w=\"1000\"/></w:tblGrid><w:tr><w:tc><w:tcPr/><w:p/></w:tc></w:tr></w:tbl>"
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/blocks.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [
+            {
+                "level": 1,
+                "number": "1",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Listed heading"
+                    }
+                ],
+                "anchor": "listed"
+            }
+        ],
+        "labels": {
+            "listed": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "listed"
+            },
+            "not_listed": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "not_listed"
+            },
+            "abstract_heading": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "abstract_heading"
+            },
+            "inline_code": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "inline_code"
+            },
+            "inline_span": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "inline_span"
+            }
+        },
+        "footnotes": 0
+    }
+}

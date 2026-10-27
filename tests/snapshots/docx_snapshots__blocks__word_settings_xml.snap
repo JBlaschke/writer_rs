@@ -1,0 +1,29 @@
+---
+source: tests/docx_snapshots.rs
+expression: snapshot
+---
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:settings xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:sl="http://schemas.openxmlformats.org/schemaLibrary/2006/main" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w10="urn:schemas-microsoft-com:office:word">
+    <w:zoom w:percent="100"/>
+    <w:defaultTabStop w:val="720"/>
+    <w:characterSpacingControl w:val="doNotCompress"/>
+    <w:updateFields w:val="true"/>
+    <w:compat>
+        <w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/>
+    </w:compat>
+    <m:mathPr>
+        <m:mathFont m:val="Cambria Math"/>
+        <m:brkBin m:val="before"/>
+        <m:brkBinSub m:val="--"/>
+        <m:smallFrac m:val="off"/>
+        <m:dispDef/>
+        <m:lMargin m:val="0"/>
+        <m:rMargin m:val="0"/>
+        <m:defJc m:val="centerGroup"/>
+        <m:wrapIndent m:val="1440"/>
+        <m:intLim m:val="subSup"/>
+        <m:naryLim m:val="undOvr"/>
+    </m:mathPr>
+    <w:decimalSymbol w:val="."/>
+    <w:listSeparator w:val=","/>
+</w:settings>

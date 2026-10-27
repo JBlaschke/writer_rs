@@ -1,0 +1,187 @@
+---
+source: tests/docx_snapshots.rs
+expression: snapshot
+---
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+    <w:docDefaults>
+        <w:rPrDefault>
+            <w:rPr>
+                <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:lang w:val="de-AT"/>
+            </w:rPr>
+        </w:rPrDefault>
+        <w:pPrDefault>
+            <w:pPr>
+                <w:spacing w:after="0" w:line="264" w:lineRule="auto"/>
+            </w:pPr>
+        </w:pPrDefault>
+    </w:docDefaults>
+    <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+        <w:name w:val="Normal"/>
+        <w:qFormat/>
+    </w:style>
+    <w:style w:type="character" w:default="1" w:styleId="DefaultParagraphFont">
+        <w:name w:val="Default Paragraph Font"/>
+        <w:uiPriority w:val="1"/>
+        <w:semiHidden/>
+        <w:unhideWhenUsed/>
+    </w:style>
+    <w:style w:type="table" w:default="1" w:styleId="TableNormal">
+        <w:name w:val="Normal Table"/>
+        <w:uiPriority w:val="99"/>
+        <w:semiHidden/>
+        <w:unhideWhenUsed/>
+        <w:tblPr>
+            <w:tblInd w:w="0" w:type="dxa"/>
+            <w:tblCellMar>
+                <w:top w:w="0" w:type="dxa"/>
+                <w:left w:w="108" w:type="dxa"/>
+                <w:bottom w:w="0" w:type="dxa"/>
+                <w:right w:w="108" w:type="dxa"/>
+            </w:tblCellMar>
+        </w:tblPr>
+    </w:style>
+    <w:style w:type="character" w:styleId="BodyTextChar">
+        <w:name w:val="Body Text Char"/>
+        <w:basedOn w:val="DefaultParagraphFont"/>
+        <w:link w:val="BodyText"/>
+    </w:style>
+    <w:style w:type="paragraph" w:styleId="BodyText">
+        <w:name w:val="Body Text"/>
+        <w:basedOn w:val="Normal"/>
+        <w:link w:val="BodyTextChar"/>
+        <w:qFormat/>
+        <w:pPr>
+            <w:spacing w:before="120" w:after="120"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="Callout">
+        <w:name w:val="Callout"/>
+        <w:basedOn w:val="BodyText"/>
+        <w:pPr>
+            <w:pBdr>
+                <w:left w:val="single" w:sz="24" w:space="8" w:color="8C959F"/>
+            </w:pBdr>
+            <w:shd w:val="clear" w:color="auto" w:fill="F6F8FA"/>
+            <w:spacing w:before="60" w:after="60"/>
+            <w:ind w:left="240"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="CalloutNote">
+        <w:name w:val="Callout Note"/>
+        <w:basedOn w:val="Callout"/>
+        <w:pPr>
+            <w:pBdr>
+                <w:left w:val="single" w:sz="24" w:space="8" w:color="0969DA"/>
+            </w:pBdr>
+            <w:shd w:val="clear" w:color="auto" w:fill="DDF4FF"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="character" w:customStyle="1" w:styleId="CalloutTitle">
+        <w:name w:val="Callout Title"/>
+        <w:basedOn w:val="DefaultParagraphFont"/>
+        <w:rPr>
+            <w:b/>
+            <w:bCs/>
+        </w:rPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="CalloutTip">
+        <w:name w:val="Callout Tip"/>
+        <w:basedOn w:val="Callout"/>
+        <w:pPr>
+            <w:pBdr>
+                <w:left w:val="single" w:sz="24" w:space="8" w:color="1A7F37"/>
+            </w:pBdr>
+            <w:shd w:val="clear" w:color="auto" w:fill="DAFBE1"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="CalloutImportant">
+        <w:name w:val="Callout Important"/>
+        <w:basedOn w:val="Callout"/>
+        <w:pPr>
+            <w:pBdr>
+                <w:left w:val="single" w:sz="24" w:space="8" w:color="8250DF"/>
+            </w:pBdr>
+            <w:shd w:val="clear" w:color="auto" w:fill="FBEFFF"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="CalloutWarning">
+        <w:name w:val="Callout Warning"/>
+        <w:basedOn w:val="Callout"/>
+        <w:pPr>
+            <w:pBdr>
+                <w:left w:val="single" w:sz="24" w:space="8" w:color="9A6700"/>
+            </w:pBdr>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFF8C5"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="CalloutCaution">
+        <w:name w:val="Callout Caution"/>
+        <w:basedOn w:val="Callout"/>
+        <w:pPr>
+            <w:pBdr>
+                <w:left w:val="single" w:sz="24" w:space="8" w:color="CF222E"/>
+            </w:pBdr>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFEBE9"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="CalloutAside">
+        <w:name w:val="Callout Aside"/>
+        <w:basedOn w:val="Callout"/>
+    </w:style>
+    <w:style w:type="character" w:customStyle="1" w:styleId="VerbatimChar">
+        <w:name w:val="Verbatim Char"/>
+        <w:basedOn w:val="BodyTextChar"/>
+        <w:rPr>
+            <w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/>
+            <w:sz w:val="20"/>
+            <w:szCs w:val="20"/>
+        </w:rPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="SourceCode">
+        <w:name w:val="Source Code"/>
+        <w:basedOn w:val="Normal"/>
+        <w:link w:val="VerbatimChar"/>
+        <w:pPr>
+            <w:shd w:val="clear" w:color="auto" w:fill="F6F8FA"/>
+            <w:wordWrap w:val="off"/>
+            <w:spacing w:before="120" w:after="120"/>
+        </w:pPr>
+        <w:rPr>
+            <w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/>
+            <w:sz w:val="20"/>
+        </w:rPr>
+    </w:style>
+    <w:style w:type="character" w:customStyle="1" w:styleId="BuiltInTok">
+        <w:name w:val="BuiltInTok"/>
+        <w:basedOn w:val="VerbatimChar"/>
+        <w:rPr>
+            <w:color w:val="008000"/>
+        </w:rPr>
+    </w:style>
+    <w:style w:type="character" w:customStyle="1" w:styleId="NormalTok">
+        <w:name w:val="NormalTok"/>
+        <w:basedOn w:val="VerbatimChar"/>
+    </w:style>
+    <w:style w:type="character" w:customStyle="1" w:styleId="DecValTok">
+        <w:name w:val="DecValTok"/>
+        <w:basedOn w:val="VerbatimChar"/>
+        <w:rPr>
+            <w:color w:val="40A070"/>
+        </w:rPr>
+    </w:style>
+    <w:style w:type="paragraph" w:styleId="Footer">
+        <w:name w:val="footer"/>
+        <w:basedOn w:val="Normal"/>
+        <w:pPr>
+            <w:jc w:val="center"/>
+        </w:pPr>
+        <w:rPr>
+            <w:color w:val="59636E"/>
+            <w:sz w:val="18"/>
+        </w:rPr>
+    </w:style>
+</w:styles>

@@ -1,0 +1,95 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "code_block",
+            "lang": "rust",
+            "text": "let value = 7;\n// a comment\nprintln!(\"value\");\n",
+            "attrs": {
+                "id": "code_listing",
+                "classes": [
+                    "numbered"
+                ],
+                "pairs": {
+                    "start": "8",
+                    "highlight": "9"
+                }
+            }
+        },
+        {
+            "type": "code_block",
+            "lang": "rust",
+            "text": "plain <&>\nlast\n",
+            "attrs": {
+                "id": null,
+                "classes": [
+                    "plain"
+                ],
+                "pairs": {}
+            }
+        },
+        {
+            "type": "code_block",
+            "lang": "not-a-language",
+            "text": "unrecognised\nlanguage\n",
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            }
+        },
+        {
+            "type": "code_block",
+            "lang": "rust",
+            "text": "never highlight output\n",
+            "attrs": {
+                "id": null,
+                "classes": [
+                    "output-text"
+                ],
+                "pairs": {
+                    "ansi": "true"
+                }
+            }
+        },
+        {
+            "type": "code_block",
+            "lang": "python",
+            "text": "",
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            }
+        },
+        {
+            "type": "code_block",
+            "lang": "python",
+            "text": "from math import sqrt\nvalue = \"hello\"\n",
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            }
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/code.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [],
+        "labels": {
+            "code_listing": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "code_listing"
+            }
+        },
+        "footnotes": 0
+    }
+}

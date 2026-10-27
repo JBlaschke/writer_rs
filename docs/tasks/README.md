@@ -40,7 +40,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
-| T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | ready for review |
+| T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | done (PR #14) |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | todo |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
 | T20 | File watcher and the document watch set | M2 | M | T16 | todo |
@@ -49,12 +49,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
-| T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | ready for review |
+| T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
-| T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | todo |
+| T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | ready for review |
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | todo |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
@@ -171,8 +171,18 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.
-- The current `python3 scripts/waves.py` audit stops at missing task definition `T40`.
-  Several task briefs are still being written; finish the missing definitions before
+- T30 and T1A passed CI and merged in PRs #13/#14 (`49341bd`/`223fd42`).
+  T40 starts from merged `main` on `codex/docx-body`. Its existing frozen
+  contract is recorded in a new brief; subsequent feature PRs continue while
+  CI runs and all target `main`.
+- T40 passes formatting, Clippy, 891 debug and 890 release tests. Nineteen
+  integration tests, four helper tests and 99 reviewed package/readback
+  snapshots cover the body contracts; generated DOCX packages validate.
+  Its only dependencies are merged. T22 is being prepared independently
+  while T40 checks/CI proceed; each feature keeps its own PR against `main`.
+- The T40 brief closes the previous `scripts/waves.py` missing-definition
+  error. The audit now passes for written briefs; several later task briefs
+  are still being written. Finish those definitions before
   using this script to dispatch subsequent waves. T00 has no dependencies.
 - Tasks may run on local branches `task/Txx-slug` in separate git worktrees merged into `main`
   by the coordinator, or as pull requests against `origin` (github.com/JBlaschke/writer_rs).

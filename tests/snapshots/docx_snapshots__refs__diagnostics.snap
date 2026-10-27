@@ -1,0 +1,27 @@
+---
+source: tests/docx_snapshots.rs
+expression: output.diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "docx-unknown-anchor",
+    "message": "DOCX bookmark for \"hidden_label\" is not emitted",
+    "path": "/fixtures/refs.md",
+    "span": null
+  },
+  {
+    "level": "warning",
+    "code": "docx-unknown-anchor",
+    "message": "DOCX bookmark for \"hidden_label\" is not emitted",
+    "path": "/fixtures/refs.md",
+    "span": null
+  },
+  {
+    "level": "warning",
+    "code": "docx-unknown-anchor",
+    "message": "DOCX bookmark for \"missing_emitted\" is not emitted",
+    "path": "/fixtures/refs.md",
+    "span": null
+  }
+]

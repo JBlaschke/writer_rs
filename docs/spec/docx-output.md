@@ -64,6 +64,13 @@ impl Emitter<'_> {
     pub(crate) fn math_block(&mut self, b: &Block);                      // math.rs, T42 (§4.15, numbered frame included)
 }
 ```
+> **Coordinator clarification (2026-10-27):** `Emitter` additionally holds
+> crate-private content state for the bookmark/note prepass and paragraph/list
+> context. Construct it through `write`; cross-file renderers share that state.
+> Deferred note bodies retain borrowed IR, preserving first logical bookmark
+> ownership across parts. T04's whole-IR asset validation remains independent
+> of the emitted-content prepass.
+
 `pipeline/docx.rs` (T41): `pub fn build(doc: &Document, assets: &AssetRegistry, config: &Config, out: &Path, world: &mut WriterWorld) -> Result<Diagnostics>`
 writes `<stem>.docx` (cli.md) through `WorldRenderer::new(config, world)`. `world` is the build session's `WriterWorld`
 (one per session, typst-dialect.md §6.1): T16's `build_targets` gets it from `WorldSlot::get` and `reset()`s it after

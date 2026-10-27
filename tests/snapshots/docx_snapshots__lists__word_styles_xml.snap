@@ -1,0 +1,107 @@
+---
+source: tests/docx_snapshots.rs
+expression: snapshot
+---
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+    <w:docDefaults>
+        <w:rPrDefault>
+            <w:rPr>
+                <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:lang w:val="en"/>
+            </w:rPr>
+        </w:rPrDefault>
+        <w:pPrDefault>
+            <w:pPr>
+                <w:spacing w:after="0" w:line="264" w:lineRule="auto"/>
+            </w:pPr>
+        </w:pPrDefault>
+    </w:docDefaults>
+    <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+        <w:name w:val="Normal"/>
+        <w:qFormat/>
+    </w:style>
+    <w:style w:type="character" w:default="1" w:styleId="DefaultParagraphFont">
+        <w:name w:val="Default Paragraph Font"/>
+        <w:uiPriority w:val="1"/>
+        <w:semiHidden/>
+        <w:unhideWhenUsed/>
+    </w:style>
+    <w:style w:type="table" w:default="1" w:styleId="TableNormal">
+        <w:name w:val="Normal Table"/>
+        <w:uiPriority w:val="99"/>
+        <w:semiHidden/>
+        <w:unhideWhenUsed/>
+        <w:tblPr>
+            <w:tblInd w:w="0" w:type="dxa"/>
+            <w:tblCellMar>
+                <w:top w:w="0" w:type="dxa"/>
+                <w:left w:w="108" w:type="dxa"/>
+                <w:bottom w:w="0" w:type="dxa"/>
+                <w:right w:w="108" w:type="dxa"/>
+            </w:tblCellMar>
+        </w:tblPr>
+    </w:style>
+    <w:style w:type="character" w:styleId="BodyTextChar">
+        <w:name w:val="Body Text Char"/>
+        <w:basedOn w:val="DefaultParagraphFont"/>
+        <w:link w:val="BodyText"/>
+    </w:style>
+    <w:style w:type="paragraph" w:styleId="BodyText">
+        <w:name w:val="Body Text"/>
+        <w:basedOn w:val="Normal"/>
+        <w:link w:val="BodyTextChar"/>
+        <w:qFormat/>
+        <w:pPr>
+            <w:spacing w:before="120" w:after="120"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="FirstParagraph">
+        <w:name w:val="First Paragraph"/>
+        <w:basedOn w:val="BodyText"/>
+        <w:next w:val="BodyText"/>
+        <w:qFormat/>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="Compact">
+        <w:name w:val="Compact"/>
+        <w:basedOn w:val="BodyText"/>
+        <w:pPr>
+            <w:spacing w:before="36" w:after="36"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="Definition">
+        <w:name w:val="Definition"/>
+        <w:basedOn w:val="Normal"/>
+        <w:pPr>
+            <w:spacing w:before="0" w:after="120"/>
+            <w:ind w:left="360"/>
+        </w:pPr>
+    </w:style>
+    <w:style w:type="paragraph" w:customStyle="1" w:styleId="DefinitionTerm">
+        <w:name w:val="Definition Term"/>
+        <w:basedOn w:val="Normal"/>
+        <w:next w:val="Definition"/>
+        <w:pPr>
+            <w:keepNext/>
+            <w:keepLines/>
+            <w:spacing w:before="120" w:after="0"/>
+        </w:pPr>
+        <w:rPr>
+            <w:b/>
+            <w:bCs/>
+        </w:rPr>
+    </w:style>
+    <w:style w:type="paragraph" w:styleId="Footer">
+        <w:name w:val="footer"/>
+        <w:basedOn w:val="Normal"/>
+        <w:pPr>
+            <w:jc w:val="center"/>
+        </w:pPr>
+        <w:rPr>
+            <w:color w:val="59636E"/>
+            <w:sz w:val="18"/>
+        </w:rPr>
+    </w:style>
+</w:styles>

@@ -1,0 +1,13 @@
+---
+source: tests/docx_snapshots.rs
+expression: output.diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "unsupported-construct",
+    "message": "inline math in DOCX arrives in T42",
+    "path": null,
+    "span": null
+  }
+]
