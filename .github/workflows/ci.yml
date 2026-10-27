@@ -25,6 +25,11 @@ jobs:
               with:
                   components: rustfmt, clippy
             - uses: Swatinem/rust-cache@v2
+            - name: JavaScript syntax
+              run: |
+                  node --check assets/writer/math.js
+                  node --check assets/writer/live-reload.js
+                  node --check tests/fixtures/live-reload/qa.mjs
             - name: cargo fmt
               run: cargo fmt --check
             - name: cargo clippy

@@ -608,6 +608,7 @@ fn get_str_reads_utf8_and_reports_missing() {
             .contains(&format!("version = \"{}\"", vendor::MORPHDOM_VERSION))
     );
     assert!(!vendor::get_str("writer/math.js").unwrap().is_empty());
+    assert!(!vendor::get_str("writer/live-reload.js").unwrap().is_empty());
     let error = vendor::get_str("writer/does-not-exist.js").unwrap_err();
     assert!(error.to_string().contains("writer/does-not-exist.js"), "{error}");
     assert!(

@@ -45,7 +45,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
 | T20 | File watcher and the document watch set | M2 | M | T16 | todo |
 | T21 | Dev server: routes, events, per-view state | M2 | M | T16 | todo |
-| T22 | Live-reload client | M2 | M | T00 | todo |
+| T22 | Live-reload client | M2 | M | T00 | ready for review |
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
@@ -180,6 +180,15 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   snapshots cover the body contracts; generated DOCX packages validate.
   Its only dependencies are merged. T22 is being prepared independently
   while T40 checks/CI proceed; each feature keeps its own PR against `main`.
+- T40 is open in [PR #15](https://github.com/JBlaschke/writer_rs/pull/15)
+  (`d757100`). T22 follows on that checked commit on
+  `codex/live-reload-client`, preserving merge order T40 then T22. Its client,
+  mock server and browser QA work independently of the future Rust server.
+- T22 passes formatting, Clippy, rustdoc, 891 debug and 890 release tests,
+  JavaScript/Python syntax checks and 19 mock/Chrome browser checks. The
+  client preserves reading position, unchanged math/images and per-view
+  state; QA covers reload/reconnect paths and scripts loaded in the head.
+  Real-server and actual pages checks remain with T23/T24.
 - The T40 brief closes the previous `scripts/waves.py` missing-definition
   error. The audit now passes for written briefs; several later task briefs
   are still being written. Finish those definitions before

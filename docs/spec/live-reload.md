@@ -294,12 +294,17 @@ whose index is closest to `a.index`; none → `a.el` if it is still inside `root
 at `min(a.index, list.length - 1)`; then `scrollBy(0, target.getBoundingClientRect().top - a.top)`.
 `restoreAnchor(null)` and an empty new list do nothing (no scroll).
 
-`scrollToChanged(root, c)`: `c` null → nothing. With `c.cell != null`: the first `[data-source="<s>"]
-[data-cell="<c>"]`. With `c.line != null`: among `[data-source="<s>"][data-sourcepos]` without
+`scrollToChanged(root, c)`: `c` null → nothing. With `c.cell != null`: the first
+`[data-source="<s>"][data-cell="<c>"]` (both attributes on the same block).
+With `c.line != null`: among `[data-source="<s>"][data-sourcepos]` without
 `data-cell`, those whose range covers the line, the one with the smallest `end - start` (ties:
 the last in document order); none → the one with the largest `start <= line`; none → nothing.
 The element is scrolled with `scrollIntoView({ block: 'center' })` only when it is off screen
 (`rect.bottom < 0 || rect.top > innerHeight`).
+
+> **Coordinator clarification (2026-10-27):** notebook edit selection uses
+> both position attributes on the same block, matching §1.2 and the HTML
+> emitter. The previous line break between selectors was ambiguous.
 
 ### 3.5 CSS swap (lifted)
 `swapCss(id)` swaps `link#writer-theme` to `/__writer/theme.css?v=<id>` and re-requests every
