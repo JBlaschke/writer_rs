@@ -156,7 +156,9 @@ fn math_rules() {
     for (name, value) in [
         ("flex", "1 1 auto"),
         ("min-width", "0"),
+        ("padding-block", ".5em"),
         ("overflow-x", "auto"),
+        ("overflow-y", "hidden"),
         ("text-align", "center"),
     ] {
         base(&rules, ".equation > .math.display", name, value);
@@ -164,6 +166,25 @@ fn math_rules() {
     base(&rules, ".equation-number", "flex", "none");
     base(&rules, ".equation-number", "margin-left", "auto");
     base(&rules, ".math-error", "color", "var(--w-error)");
+    let dark = "@media (prefers-color-scheme: dark)";
+    expect(&rules, dark, ".math img", "filter", "invert(1) hue-rotate(180deg)");
+    assert_eq!(decl(&rules, "", ".math img", "filter"), None);
+    for rule in rules.iter().filter(|rule| {
+        rule.declarations
+            .get("filter")
+            .is_some_and(|value| value.contains("invert("))
+    }) {
+        assert_eq!(
+            rule.context, dark,
+            "inversion must apply only in dark mode"
+        );
+        for selector in complex_selectors(&rule.selector) {
+            assert_eq!(
+                selector, ".math img",
+                "inversion must leave other figures unchanged"
+            );
+        }
+    }
 }
 
 #[test]
@@ -393,6 +414,7 @@ fn print_resets_dark_scheme_colours_and_gutters() {
     expect(&rules, "@media print", ":root", "color-scheme", "light");
     expect(&rules, "@media print", "[data-writer-document]", "padding", "0");
     expect(&rules, "@media print", ".cell-prompt", "position", "static");
+    expect(&rules, "@media print", ".math img", "filter", "none");
 }
 
 #[test]

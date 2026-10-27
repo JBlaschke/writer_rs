@@ -412,3 +412,40 @@ a Unix symlink regression compiles the result. Virtual and Export modes
 perform no filesystem lookup. These small naming/path clarifications are
 recorded in the spec and task brief. No dependency, IR/config shape,
 module-list or pipeline changes. PDF/export CLI wiring remains T32/T34.
+
+## T1A HTML math acceptance (2026-10-27)
+
+Measured at checked T30 (`1ea66e3`) plus the T1A working tree on macOS
+arm64 with Rust 1.99.1. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 2.47 s | 16.85 s | 26.37 s | 868 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 167 s | 188.01 s | 1792.36 s | 867 passed |
+
+Formatting, all-target/all-feature Clippy and rustdoc pass with warnings
+denied. The basic example builds at 687.6 kB. Standalone KaTeX math is
+661.4 kB, below its 700,000-byte budget. The existing debug-only assertion
+and ignored DOCX generator keep their previous behavior.
+
+The 37-equation corpus has the expected three math-core syntax failures.
+Ten converter unit tests cover macro validation/retries, cached map changes,
+concurrent callers, local equation state and XML-compatible output. The
+23 integration tests cover KaTeX, embedded/system-font MathML, SVG geometry,
+Typst MathML and fallback chains, diagnostic counts/spans and CLI builds.
+Five new snapshots are reviewed; existing snapshots are unchanged.
+
+Manual QA used the in-app browser on local standalone pages. All 12
+equations in the current Markdown fixture render in each route, with no
+console warnings/errors, and all SVG images load. MathML's glyph overhang
+initially caused vertical scrollbars; vertical padding now contains it.
+The compiler's black SVG ink was invisible in dark mode; the scoped image
+filter restores contrast, with unfiltered ink under forced light/print
+styles. This checks the print rules, not paginated print preview.
+
+The 1,329-byte synchronous math client is lifted from presenter's script
+with writer globals and a rendered-element guard. The HTML pipeline now
+uses `MathRenderer`. Additive theme/README fixes and existing helper-test
+adaptations are recorded in the task brief. The three theme stylesheets
+total 13,580 bytes, within budget. No dependency, public IR/config shape or
+module-list changes. T30's PR must merge before T1A.

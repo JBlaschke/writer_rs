@@ -40,7 +40,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
-| T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | todo |
+| T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | ready for review |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | todo |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
 | T20 | File watcher and the document watch set | M2 | M | T16 | todo |
@@ -159,6 +159,15 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   fragments, split files, source maps, escaping and collision-safe names.
   Source asset paths handle symlink aliases; Virtual/Export remain pure.
   T1A follows on the checked T30 implementation while CI runs.
+- T30 is open in [PR #13](https://github.com/JBlaschke/writer_rs/pull/13)
+  (`1ea66e3`). T1A starts from that checked feature on `codex/html-math`;
+  merge T30 first. Its other dependencies are merged. Both PRs target `main`.
+- T1A passes formatting, Clippy, rustdoc, 868 debug and 867 release tests.
+  Ten converter unit tests, 23 integration tests and five reviewed snapshots
+  cover the 37-equation corpus and all HTML math routes. In-app browser QA
+  confirms all 12 Markdown equations render, SVG images remain readable in
+  dark mode and MathML ink no longer causes vertical scrollbars. Light/print
+  style checks reset the image filter; the basic example builds at 687.6 kB.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.

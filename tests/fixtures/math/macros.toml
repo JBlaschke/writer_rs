@@ -1,0 +1,2 @@
+[math]
+katex_options = { macros = { "\\RR" = "\\mathbb{R}", "\\half" = "\\frac{#1}{2}" } }
