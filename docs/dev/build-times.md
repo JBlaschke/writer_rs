@@ -381,3 +381,34 @@ without passing them through Typst's narrower integer parser.
 No dependency, public IR/config or module-declaration changes. The package
 APIs are ready for T30/T32/T34/T72; PDF/export/eject CLI wiring and notebook
 inclusion remain their own milestones. No snapshots changed.
+
+## T30 Typst emitter acceptance (2026-10-27)
+
+Measured at `b533020` plus the T30 working tree on macOS arm64 with Rust
+1.99.1. Cached-dependency suite runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 5.98 s | 34.25 s | 60.79 s | 835 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 148 s | 163.92 s | 1597.00 s | 834 passed |
+
+Formatting, all-target/all-feature Clippy and rustdoc pass with warnings
+denied. The basic HTML example builds at 686.1 kB. The existing debug-only
+assertion explains the count difference; the DOCX generator stays ignored.
+
+Ten shared LaTeX unit tests and 32 emitter integration tests on Unix
+(31 on Windows) cover preparation/macros, complete IR emission, literal
+escaping, metadata, compiler-backed references and footnotes, notebook
+output selection, fragments and split files, line maps and all asset modes.
+The reviewed sample snapshot compiles with embedded fonts, offline packages
+and a fixed date. Final focused debug/release runs also check code-only
+list items and multi-paragraph list/definition bodies.
+
+Review fixes preserve innermost spans, code-expression punctuation and
+separate cell outputs. Final footnote/export names cannot collide with
+source names that already contain a generated suffix. Source asset mode
+resolves the explicit base directory to match canonical registry paths;
+a Unix symlink regression compiles the result. Virtual and Export modes
+perform no filesystem lookup. These small naming/path clarifications are
+recorded in the spec and task brief. No dependency, IR/config shape,
+module-list or pipeline changes. PDF/export CLI wiring remains T32/T34.

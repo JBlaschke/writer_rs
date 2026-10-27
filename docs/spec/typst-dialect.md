@@ -464,12 +464,24 @@ or no unit converted at 0.75 pt/px, other units verbatim;
   `FootnoteRef` uses the `flabel` of the `Footnote` with the same number, in fragments of the one
   with the same label in the same scope (references.md §1.2).
 
+> **Contract clarification (coordinator, 2026-10-27):** final footnote labels
+> are reserved across the emitted unit. Advance `-k` until the candidate is
+> unused, including when a different source name already claimed it: `a`,
+> `a-2`, then a scoped repeat of `a` must not define `writer-fn-a-2` twice.
+> Image alt text never allocates footnote labels (references.md §4.3).
+
 ### 5.7 Determinism, position stability, source map
 `emit` is a pure function of its inputs (no clock, environment, machine path or per-build id). The
 text emitted for a top-level block depends only on that block, the `resolved.labels` entries of the
 targets it references, and the options; an edit changes the edited block's lines and shifts later
 ones, so `Source::replace` reparses only that region. `SourceMap` line *i* holds the span of the
 innermost block with a span being emitted when line *i* starts; header lines hold `None`.
+
+> **Contract clarification (coordinator, 2026-10-27):** `AssetPaths::Source`
+> resolves the explicit source base directory before relativizing File assets,
+> matching the registry's canonical file paths. This mode reads directory
+> metadata so symlink aliases such as `/tmp` produce valid relative paths.
+> Virtual and Export modes remain pure functions of their supplied inputs.
 
 ## 6. The World (T03, `src/typst/world.rs`)
 
@@ -747,6 +759,11 @@ run becomes `<stem>_<include stem>.typ` (duplicates `-2`, `-3`) via `emit_split`
 by the main file. The tree compiles with `typst compile --package-path <eject typst-package dir>`
 (T34's test: a `WriterWorld` rooted at `<out>`, no mounts). `--to typst` on a `.typ` input is an error
 (cli.md) suggesting `writer build part.md --to typst` for its `.md` includes. Output line as `latex`.
+
+> **Contract clarification (coordinator, 2026-10-27):** allocate export names
+> for referenced assets only, in asset-id order. If `-<id[..6]>` itself
+> collides with an allocated name, try `-<id[..6]>-2`, then `-3`, etc., before
+> the extension. A generated name must never overwrite another asset.
 
 `eject typst-package DIR [--install]` (T31: `typst::package::eject(dir: &Path) -> Result<Vec<PathBuf>>`,
 `install_dir() -> Result<PathBuf>`; T72 wires both eject commands in `src/cli/eject.rs`) writes

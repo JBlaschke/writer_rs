@@ -49,8 +49,8 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
-| T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | todo |
-| T31 | `@writer/doc` typst package | M3 | M | T03 | ready for review |
+| T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | ready for review |
+| T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
@@ -148,11 +148,22 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   bundled document template, numbering/oracle, locales, listings, cells and
   safe ejection. The basic HTML example still builds; PDF/eject CLI wiring
   remains with T32/T72. Its only task dependency, T03, is merged.
+- T31 passed CI and merged in [PR #12](https://github.com/JBlaschke/writer_rs/pull/12)
+  (`b533020`). Its integration with T19 passes all 793 local debug tests.
+  T30 starts from that merged `main` on `codex/typst-emitter` (2026-10-27),
+  with its frozen contracts recorded in a new brief. CI waits still do not
+  block subsequent feature branches.
+- T30 passes formatting, Clippy, rustdoc, 835 debug and 834 release tests.
+  Its 32 integration tests on Unix (31 on Windows), ten shared math unit
+  tests and reviewed sample snapshot cover complete source emission,
+  fragments, split files, source maps, escaping and collision-safe names.
+  Source asset paths handle symlink aliases; Virtual/Export remain pure.
+  T1A follows on the checked T30 implementation while CI runs.
 - Local implementation started on 2026-10-25 with T00. Local acceptance results and timings
   are in [`../dev/build-times.md`](../dev/build-times.md); the local status does not mean
   the changes are merged or that the three-OS CI matrix has run.
-- The current `python3 scripts/waves.py` audit stops at missing task definitions `T30` and
-  `T40`. Several task briefs are still being written; finish the missing definitions before
+- The current `python3 scripts/waves.py` audit stops at missing task definition `T40`.
+  Several task briefs are still being written; finish the missing definitions before
   using this script to dispatch subsequent waves. T00 has no dependencies.
 - Tasks may run on local branches `task/Txx-slug` in separate git worktrees merged into `main`
   by the coordinator, or as pull requests against `origin` (github.com/JBlaschke/writer_rs).
