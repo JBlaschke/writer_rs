@@ -1,0 +1,48 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "info",
+    "code": "notebook-presenter-metadata",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": null,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "notebook-front-matter-ignored",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 1,
+    "cell": 2
+  },
+  {
+    "level": "warning",
+    "code": "raw-cell-skipped",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 1,
+    "cell": 11
+  },
+  {
+    "level": "warning",
+    "code": "raw-cell-skipped",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 1,
+    "cell": 12
+  },
+  {
+    "level": "warning",
+    "code": "notebook-attachment-skipped",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 5,
+    "cell": 13
+  },
+  {
+    "level": "warning",
+    "code": "missing-attachment",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 5,
+    "cell": 13
+  }
+]

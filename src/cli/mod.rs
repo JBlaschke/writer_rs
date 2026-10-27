@@ -496,7 +496,8 @@ pub fn input_format(
 }
 
 /// The input format by extension, for commands without `--format` (`dump`, `serve`,
-/// `check`, `export`): an unknown extension is a [`UsageError`] (exit 2) without a flag hint.
+/// `export`): an unknown extension is a [`UsageError`] (exit 2) without a flag hint.
+/// `check` instead reports an unknown extension as an error diagnostic (exit 1).
 pub fn input_kind(path: &Path) -> anyhow::Result<SourceKind> {
     crate::ir::detect_kind(path)
         .map_err(|err| UsageError(err.to_string()).into())

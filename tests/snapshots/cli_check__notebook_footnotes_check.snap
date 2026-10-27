@@ -1,0 +1,69 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "warning",
+    "code": "missing-asset",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 5,
+    "cell": 3
+  },
+  {
+    "level": "warning",
+    "code": "footnote-unreferenced",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 9,
+    "cell": 3
+  },
+  {
+    "level": "warning",
+    "code": "footnote-duplicate",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 1,
+    "cell": 6
+  },
+  {
+    "level": "warning",
+    "code": "footnote-undefined",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 3,
+    "cell": 6
+  },
+  {
+    "level": "warning",
+    "code": "footnote-undefined",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 1,
+    "cell": 7
+  },
+  {
+    "level": "warning",
+    "code": "unclosed-directive",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 1,
+    "cell": 8
+  },
+  {
+    "level": "warning",
+    "code": "footnote-undefined",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 2,
+    "cell": 8
+  },
+  {
+    "level": "warning",
+    "code": "unclosed-directive",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 1,
+    "cell": 9
+  },
+  {
+    "level": "warning",
+    "code": "footnote-undefined",
+    "file": "tests/fixtures/ipynb/footnotes.ipynb",
+    "line": 2,
+    "cell": 9
+  }
+]

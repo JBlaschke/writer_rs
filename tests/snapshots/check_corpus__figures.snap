@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "invalid-dimension",
+    "file": "md/figures.md",
+    "line": 30,
+    "cell": null
+  }
+]

@@ -596,6 +596,17 @@ and reports them as warnings. Writer-only constructs (implicit figures, `Table:`
 `@refs`, raw fences, leaf directives, `^[…]`) are not reported: presenter renders them as
 images, paragraphs, text, code blocks, empty divs and text respectively.
 
+> **Coordinator clarification (2026-10-27):** compatibility include
+> boundaries are file/cell edges or top-level `---` thematic breaks, with
+> no other significant block between the include and either boundary.
+> Front matter, code, setext underlines and nested rules do not count.
+> Compatibility source checks cover each distinct included file and
+> Markdown/raw-Markdown notebook cell; author-list checks apply only to
+> the first Markdown cell's front matter. Promote actual colon-rewrite
+> findings once, preserving frontend configuration and source locations.
+> Optional compatibility source checks include removed Markdown/raw-Markdown
+> cells as written; normal frontend diagnostics retain their kept-cell rules.
+
 ## 10. What `check` reports — T1C (Markdown lints), T71 (per-target lints)
 Levels: `ir.md` §5's `Level` is `Info | Warning | Error`. Info-level codes are pushed as
 `Level::Info` diagnostics: `build` and `serve` print them only with `-v`, `check` lists them as

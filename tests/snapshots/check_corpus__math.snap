@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "equation-label-misplaced",
+    "file": "md/math.md",
+    "line": 27,
+    "cell": null
+  }
+]

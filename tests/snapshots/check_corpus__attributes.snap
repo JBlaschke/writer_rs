@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "error",
+    "code": "label-invalid",
+    "file": "md/attributes.md",
+    "line": 14,
+    "cell": null
+  }
+]

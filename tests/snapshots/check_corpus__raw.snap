@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "raw-unknown-format",
+    "file": "md/raw.md",
+    "line": 22,
+    "cell": null
+  }
+]

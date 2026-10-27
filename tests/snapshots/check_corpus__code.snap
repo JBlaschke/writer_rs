@@ -1,0 +1,41 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "invalid-code-attr",
+    "file": "md/code.md",
+    "line": 43,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "invalid-code-attr",
+    "file": "md/code.md",
+    "line": 43,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "invalid-code-attr",
+    "file": "md/code.md",
+    "line": 43,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "invalid-code-attr",
+    "file": "md/code.md",
+    "line": 47,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "invalid-code-attr",
+    "file": "md/code.md",
+    "line": 47,
+    "cell": null
+  }
+]

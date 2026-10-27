@@ -1,0 +1,90 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "warning",
+    "code": "output-invalid",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 4
+  },
+  {
+    "level": "warning",
+    "code": "output-file-outside",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 7
+  },
+  {
+    "level": "warning",
+    "code": "missing-asset",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 7
+  },
+  {
+    "level": "warning",
+    "code": "output-script",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 9
+  },
+  {
+    "level": "warning",
+    "code": "output-unsupported",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 10
+  },
+  {
+    "level": "warning",
+    "code": "output-script",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 11
+  },
+  {
+    "level": "warning",
+    "code": "output-unsupported",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 11
+  },
+  {
+    "level": "warning",
+    "code": "output-script",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 12
+  },
+  {
+    "level": "warning",
+    "code": "output-unsupported",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 12
+  },
+  {
+    "level": "warning",
+    "code": "output-unsupported",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 13
+  },
+  {
+    "level": "warning",
+    "code": "output-unsupported",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 16
+  },
+  {
+    "level": "warning",
+    "code": "output-include",
+    "file": "tests/fixtures/ipynb/outputs.ipynb",
+    "line": 1,
+    "cell": 17
+  }
+]
