@@ -1,0 +1,189 @@
+---
+source: tests/docx_snapshots.rs
+expression: snapshot
+---
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:footnotes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+    <w:footnote w:type="separator" w:id="-1">
+        <w:p>
+            <w:r>
+                <w:separator/>
+            </w:r>
+        </w:p>
+    </w:footnote>
+    <w:footnote w:type="continuationSeparator" w:id="0">
+        <w:p>
+            <w:r>
+                <w:continuationSeparator/>
+            </w:r>
+        </w:p>
+    </w:footnote>
+    <w:footnote w:id="1">
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteText"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:footnoteRef/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Parent note </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> NOTEREF _Fn000001 \f \h </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteBlockText"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Quoted note</w:t>
+            </w:r>
+        </w:p>
+        <w:bookmarkStart w:id="3" w:name="_note_div"/>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteText"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Label inside a note</w:t>
+            </w:r>
+        </w:p>
+        <w:bookmarkEnd w:id="3"/>
+        <w:tbl>
+            <w:tblPr/>
+            <w:tblGrid>
+                <w:gridCol w:w="1000"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr/>
+                    <w:p/>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+        <w:tbl>
+            <w:tblPr/>
+            <w:tblGrid>
+                <w:gridCol w:w="1000"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr/>
+                    <w:p/>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+    </w:footnote>
+    <w:footnote w:id="2">
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteText"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:footnoteRef/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Nested note </w:t>
+            </w:r>
+            <w:hyperlink r:id="rId1" w:tooltip="Link title" w:history="1">
+                <w:r>
+                    <w:rPr>
+                        <w:rStyle w:val="Hyperlink"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">nested external</w:t>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+    </w:footnote>
+    <w:footnote w:id="3">
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteText"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:footnoteRef/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VerbatimChar"/>
+                </w:rPr>
+                <w:t xml:space="preserve">a nonparagraph first</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteText"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Note after code</w:t>
+            </w:r>
+        </w:p>
+    </w:footnote>
+    <w:footnote w:id="4">
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FootnoteText"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:footnoteRef/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Citation note</w:t>
+            </w:r>
+        </w:p>
+    </w:footnote>
+</w:footnotes>

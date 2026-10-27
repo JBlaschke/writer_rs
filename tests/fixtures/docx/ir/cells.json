@@ -1,0 +1,264 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "cell",
+            "index": 0,
+            "id": "cell-0",
+            "language": "python",
+            "source": "print(1)\n",
+            "execution_count": 7,
+            "show_input": true,
+            "show_output": true,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "result"
+                    },
+                    "execution_count": 7,
+                    "candidates": [
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "code_block",
+                                    "lang": "python",
+                                    "text": "1\n",
+                                    "attrs": {
+                                        "id": null,
+                                        "classes": [
+                                            "output-text"
+                                        ],
+                                        "pairs": {}
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/plain"
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": "visible_cell",
+                "classes": [],
+                "pairs": {}
+            },
+            "tags": [],
+            "metadata": null,
+            "span": null
+        },
+        {
+            "type": "cell",
+            "index": 1,
+            "id": "cell-1",
+            "language": "python",
+            "source": "uncounted()\n",
+            "execution_count": null,
+            "show_input": true,
+            "show_output": true,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "display"
+                    },
+                    "execution_count": null,
+                    "candidates": [
+                        {
+                            "mime": "text/html",
+                            "blocks": [
+                                {
+                                    "type": "raw",
+                                    "format": "html",
+                                    "text": "<i>HTML CANDIDATE</i>"
+                                }
+                            ]
+                        },
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "code_block",
+                                    "lang": "python",
+                                    "text": "Chosen plain output\n",
+                                    "attrs": {
+                                        "id": null,
+                                        "classes": [],
+                                        "pairs": {}
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/html",
+                        "text/plain"
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            },
+            "tags": [],
+            "metadata": null,
+            "span": null
+        },
+        {
+            "type": "cell",
+            "index": 2,
+            "id": "cell-2",
+            "language": "python",
+            "source": "HIDDEN INPUT",
+            "execution_count": null,
+            "show_input": false,
+            "show_output": true,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "display"
+                    },
+                    "execution_count": null,
+                    "candidates": [
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Visible output"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/plain"
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            },
+            "tags": [],
+            "metadata": null,
+            "span": null
+        },
+        {
+            "type": "cell",
+            "index": 3,
+            "id": "cell-3",
+            "language": "python",
+            "source": "visible_input()\n",
+            "execution_count": 9,
+            "show_input": true,
+            "show_output": false,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "display"
+                    },
+                    "execution_count": null,
+                    "candidates": [
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "HIDDEN OUTPUT"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/plain"
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            },
+            "tags": [],
+            "metadata": null,
+            "span": null
+        },
+        {
+            "type": "cell",
+            "index": 4,
+            "id": "cell-4",
+            "language": "python",
+            "source": "REMOVED INPUT",
+            "execution_count": null,
+            "show_input": false,
+            "show_output": false,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "display"
+                    },
+                    "execution_count": null,
+                    "candidates": [
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "REMOVED OUTPUT"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/plain"
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            },
+            "tags": [],
+            "metadata": null,
+            "span": null
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/cells.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [],
+        "labels": {
+            "visible_cell": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "visible_cell"
+            }
+        },
+        "footnotes": 0
+    }
+}

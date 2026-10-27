@@ -449,3 +449,33 @@ uses `MathRenderer`. Additive theme/README fixes and existing helper-test
 adaptations are recorded in the task brief. The three theme stylesheets
 total 13,580 bytes, within budget. No dependency, public IR/config shape or
 module-list changes. T30's PR must merge before T1A.
+
+## T40 DOCX body acceptance (2026-10-27)
+
+Measured at merged PR #14 (`223fd42`) plus the T40 working tree on macOS
+arm64 with Rust 1.99.1. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 12.09 s | 47.26 s | 85.99 s | 891 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 175 s | 196.40 s | 1895.33 s | 890 passed |
+
+Formatting, all-target/all-feature Clippy and warnings-denied rustdoc pass.
+The basic HTML example still builds at 687.6 kB. The existing debug-only
+assertion and ignored DOCX fixture generator explain the suite difference.
+
+Nineteen integration tests, four helper tests and 99 reviewed snapshots
+cover every generated package part and independent docx-rs reader counts
+for seven IR fixtures and the sample document. All emitted packages pass
+the structural validator, including byte-deterministic reference reuse.
+Checks include accumulated styles, run merging, metadata, list numbering
+and tasks, syntax scopes across lines, displayed code highlights, callouts,
+notebook selection/prompts, raw XML/table boundaries, forward/page links,
+scoped and nested notes, repeated-note fields and bookmark collisions.
+
+The prepass handles cloned Page-reference supplements once and preserves
+first logical label ownership when footnote bodies render in another part.
+Crate-private emitter state and shared paragraph helpers are the additive
+integration changes. No dependency, IR/config or module-list changes.
+T41/T42 retain their rich figure/table/image/field/math stubs, and T43 owns
+the later Word/LibreOffice smoke checks. T22 follows while this PR's CI runs.

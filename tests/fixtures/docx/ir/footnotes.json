@@ -1,0 +1,237 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Main "
+                },
+                {
+                    "type": "footnote",
+                    "label": "parent_note",
+                    "number": 1,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Parent note "
+                                },
+                                {
+                                    "type": "footnote",
+                                    "label": null,
+                                    "number": 2,
+                                    "blocks": [
+                                        {
+                                            "type": "paragraph",
+                                            "inlines": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "Nested note "
+                                                },
+                                                {
+                                                    "type": "link",
+                                                    "inlines": [
+                                                        {
+                                                            "type": "text",
+                                                            "text": "nested external"
+                                                        }
+                                                    ],
+                                                    "url": "https://nested.example/",
+                                                    "title": "Link title",
+                                                    "attrs": {
+                                                        "id": null,
+                                                        "classes": [],
+                                                        "pairs": {}
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "footnote_ref",
+                                    "label": "parent_note",
+                                    "number": 1
+                                }
+                            ]
+                        },
+                        {
+                            "type": "block_quote",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Quoted note"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "div",
+                            "attrs": {
+                                "id": "note_div",
+                                "classes": [],
+                                "pairs": {}
+                            },
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Label inside a note"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "raw",
+                            "format": "openxml",
+                            "text": "<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w=\"1000\"/></w:tblGrid><w:tr><w:tc><w:tcPr/><w:p/></w:tc></w:tr></w:tbl>"
+                        },
+                        {
+                            "type": "raw",
+                            "format": "openxml",
+                            "text": "<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w=\"1000\"/></w:tblGrid><w:tr><w:tc><w:tcPr/><w:p/></w:tc></w:tr></w:tbl>"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": " and "
+                },
+                {
+                    "type": "footnote",
+                    "label": null,
+                    "number": 3,
+                    "blocks": [
+                        {
+                            "type": "code_block",
+                            "lang": null,
+                            "text": "a nonparagraph first\n",
+                            "attrs": {
+                                "id": null,
+                                "classes": [],
+                                "pairs": {}
+                            }
+                        },
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Note after code"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "footnote_ref",
+                    "label": "parent_note",
+                    "number": 1
+                },
+                {
+                    "type": "footnote_ref",
+                    "label": "",
+                    "number": 2
+                },
+                {
+                    "type": "link",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Jump into note"
+                        }
+                    ],
+                    "url": "#note_div",
+                    "title": "Link title",
+                    "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                    }
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "cite",
+                    "items": [
+                        {
+                            "key": "notes"
+                        }
+                    ],
+                    "mode": "normal",
+                    "resolved": {
+                        "note": true,
+                        "inlines": [
+                            {
+                                "type": "footnote",
+                                "label": "citation_note",
+                                "number": 4,
+                                "blocks": [
+                                    {
+                                        "type": "paragraph",
+                                        "inlines": [
+                                            {
+                                                "type": "text",
+                                                "text": "Citation note"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/footnotes.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [],
+        "labels": {
+            "parent_note": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "parent_note"
+            },
+            "note_div": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "note_div"
+            },
+            "citation_note": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "citation_note"
+            }
+        },
+        "footnotes": 4
+    }
+}

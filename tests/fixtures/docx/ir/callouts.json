@@ -1,0 +1,242 @@
+{
+    "meta": {
+        "lang": "de-AT"
+    },
+    "blocks": [
+        {
+            "type": "callout",
+            "kind": "note",
+            "title": null,
+            "attrs": {
+                "id": "callout_note",
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "note body"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "callout",
+            "kind": "tip",
+            "title": null,
+            "attrs": {
+                "id": "callout_tip",
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "tip body"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "callout",
+            "kind": "important",
+            "title": null,
+            "attrs": {
+                "id": "callout_important",
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "important body"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "callout",
+            "kind": "warning",
+            "title": null,
+            "attrs": {
+                "id": "callout_warning",
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "warning body"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "callout",
+            "kind": "caution",
+            "title": null,
+            "attrs": {
+                "id": "callout_caution",
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "caution body"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "callout",
+            "kind": "aside",
+            "title": null,
+            "attrs": {
+                "id": "callout_aside",
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "aside body"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "callout",
+            "kind": "note",
+            "title": [
+                {
+                    "type": "strong",
+                    "inlines": [
+                        {
+                            "type": "emph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "bold italic"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+            },
+            "blocks": [
+                {
+                    "type": "list",
+                    "kind": {
+                        "kind": "bullet"
+                    },
+                    "tight": true,
+                    "items": [
+                        {
+                            "checked": null,
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Tight inside callout"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "code_block",
+                    "lang": "python",
+                    "text": "print(42)\n",
+                    "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                    }
+                }
+            ]
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/callouts.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [],
+        "labels": {
+            "callout_note": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "callout_note"
+            },
+            "callout_tip": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "callout_tip"
+            },
+            "callout_important": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "callout_important"
+            },
+            "callout_warning": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "callout_warning"
+            },
+            "callout_caution": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "callout_caution"
+            },
+            "callout_aside": {
+                "kind": "other",
+                "number": null,
+                "supplement": "",
+                "text": "callout_aside"
+            }
+        },
+        "footnotes": 0
+    }
+}

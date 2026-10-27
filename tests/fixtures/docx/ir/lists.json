@@ -1,0 +1,221 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "list",
+            "kind": {
+                "kind": "ordered",
+                "start": 7
+            },
+            "tight": false,
+            "items": [
+                {
+                    "checked": null,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Ordered first"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Ordered continuation"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "list",
+                            "kind": {
+                                "kind": "bullet"
+                            },
+                            "tight": true,
+                            "items": [
+                                {
+                                    "checked": null,
+                                    "blocks": [
+                                        {
+                                            "type": "paragraph",
+                                            "inlines": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "Nested bullet"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "checked": null,
+                    "blocks": []
+                },
+                {
+                    "checked": true,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Checked task"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Task continuation"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "checked": false,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Unchecked task"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "list",
+            "kind": {
+                "kind": "bullet"
+            },
+            "tight": true,
+            "items": [
+                {
+                    "checked": null,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Tight first"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Tight second"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "list",
+            "kind": {
+                "kind": "ordered",
+                "start": 2
+            },
+            "tight": false,
+            "items": [
+                {
+                    "checked": null,
+                    "blocks": [
+                        {
+                            "type": "raw",
+                            "format": "openxml",
+                            "text": "<w:p><w:r><w:t>Raw first item</w:t></w:r></w:p>"
+                        },
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "After raw item"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "definition_list",
+            "items": [
+                {
+                    "term": [
+                        {
+                            "type": "text",
+                            "text": "A term"
+                        }
+                    ],
+                    "definitions": [
+                        [
+                            {
+                                "type": "paragraph",
+                                "inlines": [
+                                    {
+                                        "type": "text",
+                                        "text": "First definition"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "paragraph",
+                                "inlines": [
+                                    {
+                                        "type": "text",
+                                        "text": "Definition continuation"
+                                    }
+                                ]
+                            }
+                        ],
+                        [
+                            {
+                                "type": "paragraph",
+                                "inlines": [
+                                    {
+                                        "type": "text",
+                                        "text": "Alternative definition"
+                                    }
+                                ]
+                            }
+                        ]
+                    ]
+                }
+            ]
+        }
+    ],
+    "features": {},
+    "source": {
+        "path": "/fixtures/lists.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [],
+    "resolved": {
+        "toc": [],
+        "labels": {},
+        "footnotes": 0
+    }
+}

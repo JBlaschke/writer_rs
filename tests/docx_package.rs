@@ -238,12 +238,12 @@ fn stub_diagnostics_name_their_owner() {
     assert!(!diagnostics.is_empty());
     for diagnostic in &diagnostics {
         assert!(
-            ["T40", "T41", "T42"]
+            ["T41", "T42"]
                 .iter()
                 .any(|owner| diagnostic.message.contains(owner))
         );
     }
-    for owner in ["T40", "T41", "T42"] {
+    for owner in ["T41", "T42"] {
         assert!(diagnostics.iter().any(|d| d.message.contains(owner)));
     }
     for (message, line) in [("figures", 5), ("tables", 9), ("display math", 13)]

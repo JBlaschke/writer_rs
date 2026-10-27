@@ -116,6 +116,7 @@ pub struct Emitter<'a> {
     pub body: String,
     /// Footnote elements, without their enclosing root or separators.
     pub notes: String,
+    pub(crate) content: footnotes::ContentState<'a>,
 }
 
 /// Section properties and usable content area, in twentieths of a point.
@@ -188,9 +189,9 @@ impl Emitter<'_> {
     pub(crate) fn text_paragraph(&mut self, text: &str, style: &str) {
         let style = self.styles.ensure(style, StyleKind::Paragraph);
         let props = xml::ParaProps { style: Some(style), ..Default::default() };
-        self.buffer().push_str(&format!("<w:p>{}", props.to_xml()));
+        self.start_paragraph(props);
         self.text_run(text);
-        self.buffer().push_str("</w:p>");
+        self.end_paragraph();
     }
 
     pub(crate) fn unsupported(
@@ -233,6 +234,7 @@ pub fn write(
     )?;
     let footer = emitter.package.footer().map(|(path, _)| path.to_owned());
     emitter.document();
+    emitter.finish_footnotes();
     if opts.all_styles {
         for &(name, kind) in styles::VOCABULARY {
             emitter.styles.ensure(name, kind);
@@ -302,6 +304,8 @@ fn prepare_emitter<'a>(
     );
     let lang = LangTag::effective(&doc.meta, opts.config)
         .unwrap_or_else(|| LangTag { lang: "en".into(), region: None });
+    let mut ids = reference.map_or_else(Ids::default, |r| r.ids);
+    let content = footnotes::ContentState::new(doc, &mut ids);
     Ok(Emitter {
         doc,
         config: opts.config,
@@ -311,13 +315,14 @@ fn prepare_emitter<'a>(
         numbering,
         layout,
         package,
-        ids: reference.map_or_else(Ids::default, |r| r.ids),
+        ids,
         diagnostics: Diagnostics::new(),
         containers: Vec::new(),
         part: Part::Document,
         lang,
         body: String::new(),
         notes: String::new(),
+        content,
     })
 }
 
