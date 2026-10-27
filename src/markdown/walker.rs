@@ -30,6 +30,15 @@ pub(crate) fn walk<'a>(
     root: &'a AstNode<'a>, original: &str, config: &Config,
     ctx: &mut super::Fragment<'_>, top_level: bool,
 ) -> Result<Vec<Block>> {
+    walk_with_includes(root, original, config, ctx, top_level, None)
+}
+
+/// The document-only include state does not alter public fragment literals.
+pub(crate) fn walk_with_includes<'a>(
+    root: &'a AstNode<'a>, original: &str, config: &Config,
+    ctx: &mut super::Fragment<'_>, top_level: bool,
+    includes: Option<&mut super::include::State>,
+) -> Result<Vec<Block>> {
     let mut walker = Walker {
         config,
         ctx,
@@ -40,6 +49,7 @@ pub(crate) fn walk<'a>(
         figure_depth: 0,
         bibliography_seen: false,
         html_scan: HtmlScan::default(),
+        includes,
     };
     walker.collect_footnotes(root);
     walker.children(root, top_level)
@@ -55,6 +65,7 @@ struct Walker<'a, 't, 'w, 'f> {
     figure_depth: usize,
     bibliography_seen: bool,
     html_scan: HtmlScan,
+    includes: Option<&'w mut super::include::State>,
 }
 
 impl<'a> Walker<'a, '_, '_, '_> {
@@ -689,6 +700,9 @@ impl<'a> Walker<'a, '_, '_, '_> {
         for problem in &info.problems {
             self.warn("invalid-directive", problem, &span);
         }
+        if info.name == "include" {
+            return self.include_directive(node, text, span, top_level);
+        }
         self.check_directive_closed(&span);
         if info.name.is_empty() {
             self.warn(
@@ -697,9 +711,6 @@ impl<'a> Walker<'a, '_, '_, '_> {
                 &span,
             );
             return self.children(node, false);
-        }
-        if info.name == "include" {
-            return self.include_directive(&info, span, top_level);
         }
         if info.name == "raw" {
             return self.raw_directive(node, info, span);
@@ -923,12 +934,67 @@ impl<'a> Walker<'a, '_, '_, '_> {
         Ok(vec![Block::Raw { format, text, span: Some(span) }])
     }
 
-    /// T1B replaces this body with include expansion and cycle checks.
     fn include_directive(
-        &mut self, info: &DirectiveInfo, span: SourceSpan, top_level: bool,
+        &mut self, node: &'a AstNode<'a>, info: &str, span: SourceSpan,
+        top_level: bool,
     ) -> Result<Vec<Block>> {
-        tracing::warn!(info = ?info, line = span.start_line, top_level, "Markdown include expansion arrives in T1B");
-        Ok(Vec::new())
+        let closed = {
+            let data = node.data();
+            let last = self.lines.get(data.sourcepos.end.line - 1);
+            match (&data.value, last) {
+                (NodeValue::BlockDirective(directive), Some(last)) => {
+                    let rest = last.trim_start_matches([' ', '\t']);
+                    let prefix = &last.as_bytes()[..last.len() - rest.len()];
+                    let indent = prefix.iter().fold(0_usize, |column, byte| {
+                        column + if *byte == b'\t' { 4 - column % 4 } else { 1 }
+                    });
+                    let count = rest.bytes().take_while(|b| *b == b':').count();
+                    data.sourcepos.start.line != data.sourcepos.end.line
+                        && indent <= 3
+                        && count >= directive.fence_length
+                        && rest[count..]
+                            .bytes()
+                            .all(|b| matches!(b, b' ' | b'\t' | b'\r'))
+                }
+                _ => false,
+            }
+        };
+        if !closed {
+            self.warn(
+                "unclosed-directive",
+                "directive has no closing `:::` fence",
+                &span,
+            );
+        }
+        if !top_level || self.includes.is_none() {
+            self.report(
+                Diagnostic::error(
+                    "include-not-top-level",
+                    ":::include must be a direct child of the document",
+                ),
+                &span,
+            );
+            return Ok(Vec::new());
+        }
+        let Some(includes) = self.includes.as_deref_mut() else {
+            return Ok(Vec::new());
+        };
+        let path = super::include::include_path(info)
+            .map_err(|message| includes.error(&span, message))?;
+        let parsed = includes.expand(&path, &span, self.config)?;
+        self.ctx.assets.merge(parsed.assets);
+        self.ctx.diagnostics.extend(parsed.diagnostics);
+        let mut blocks = parsed.document.blocks;
+        let body = self.children(node, false)?;
+        if !body.is_empty() {
+            self.warn(
+                "invalid-directive",
+                ":::include is a leaf directive; its body follows the included content",
+                &span,
+            );
+            blocks.extend(body);
+        }
+        Ok(blocks)
     }
 
     fn inlines(
@@ -943,7 +1009,11 @@ impl<'a> Walker<'a, '_, '_, '_> {
                 if let NodeValue::Text(text) = &data.value
                     && !text[strip_next..].is_empty()
                 {
-                    out.push(Inline::Text { text: text[strip_next..].into() });
+                    out.extend(self.text_inlines(
+                        &text[strip_next..],
+                        node,
+                        span,
+                    )?);
                 }
                 strip_next = 0;
                 continue;
@@ -968,7 +1038,9 @@ impl<'a> Walker<'a, '_, '_, '_> {
     ) -> Result<Inlines> {
         let data = node.data();
         let inline = match &data.value {
-            NodeValue::Text(text) => Inline::Text { text: text.to_string() },
+            NodeValue::Text(text) => {
+                return self.text_inlines(text, node, span);
+            }
             NodeValue::SoftBreak => Inline::SoftBreak,
             NodeValue::LineBreak => Inline::LineBreak,
             NodeValue::Emph => {
@@ -1038,6 +1110,27 @@ impl<'a> Walker<'a, '_, '_, '_> {
             unexpected => return Err(unexpected_node(unexpected)),
         };
         Ok(vec![inline])
+    }
+
+    fn text_inlines(
+        &mut self, text: &str, node: &'a AstNode<'a>, span: &SourceSpan,
+    ) -> Result<Inlines> {
+        let excluded = node.ancestors().any(|parent| {
+            matches!(
+                parent.data().value,
+                NodeValue::Escaped | NodeValue::Link(_)
+            )
+        });
+        if excluded || !self.config.markdown.references {
+            return Ok(vec![Inline::text(text)]);
+        }
+        let start_allowed = node.previous_sibling().is_none_or(|previous| {
+            matches!(
+                previous.data().value,
+                NodeValue::SoftBreak | NodeValue::LineBreak
+            )
+        });
+        super::refs::scan(text, start_allowed, span, self.config, self.ctx)
     }
 
     fn dimensions(&mut self, attrs: &mut Attrs, span: &SourceSpan) {
@@ -3113,15 +3206,19 @@ mod tests {
     }
 
     #[test]
-    fn include_is_deferred() {
-        let result = parsed(
+    fn include_errors_are_located_and_fragments_cannot_include() {
+        match parse(
+            &source(),
             "Before\n\n:::include definitely-not-present.md\n:::\n\nAfter\n",
-        );
-        assert_eq!(result.document.blocks.len(), 2);
-        assert_eq!(plain_text(paragraph(&result.document.blocks[0])), "Before");
-        assert_eq!(plain_text(paragraph(&result.document.blocks[1])), "After");
-        assert!(result.document.includes.is_empty());
-        assert!(result.diagnostics.iter().next().is_none());
+            &Config::default(),
+        ) {
+            Err(Error::Parse { path, line, message }) => {
+                assert_eq!(path, source().path);
+                assert_eq!(line, Some(3));
+                assert!(message.contains("file not found"));
+            }
+            _ => panic!("missing include must be a parse error"),
+        }
         let mut assets = AssetRegistry::new();
         let mut diagnostics = Diagnostics::new();
         let base_dir = fixture_dir();
@@ -3142,7 +3239,9 @@ mod tests {
             .unwrap()
             .is_empty()
         );
-        assert!(diagnostics.iter().next().is_none());
+        let finding = diagnostics.iter().next().unwrap();
+        assert_eq!(finding.code, "include-not-top-level");
+        assert_eq!(finding.level, Level::Error);
     }
 
     #[test]

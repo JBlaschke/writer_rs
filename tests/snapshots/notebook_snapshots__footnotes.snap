@@ -228,7 +228,22 @@ expression: stable_json(&parsed.document)
         },
         {
           "type": "text",
-          "text": ". See @fig-later."
+          "text": ". See "
+        },
+        {
+          "type": "ref",
+          "target": "fig-later",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 1,
+            "end_line": 1,
+            "cell": 1
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {

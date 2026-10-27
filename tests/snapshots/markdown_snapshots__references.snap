@@ -44,7 +44,87 @@ expression: stable_json(&parsed.document)
       "inlines": [
         {
           "type": "text",
-          "text": "See @sec-x, @sec-x[Chapter], @fig-x[Fig.], @eq-x{.page}, and @eq-x[]."
+          "text": "See "
+        },
+        {
+          "type": "ref",
+          "target": "sec-x",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "sec-x",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "Chapter"
+            }
+          ],
+          "form": "normal",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "fig-x",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "Fig."
+            }
+          ],
+          "form": "normal",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "eq-x",
+          "supplement": null,
+          "form": "page",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": ", and "
+        },
+        {
+          "type": "ref",
+          "target": "eq-x",
+          "supplement": [],
+          "form": "normal",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {
@@ -138,7 +218,21 @@ expression: stable_json(&parsed.document)
       "inlines": [
         {
           "type": "text",
-          "text": "A reference to an unnumbered heading: @sec-unnumbered."
+          "text": "A reference to an unnumbered heading: "
+        },
+        {
+          "type": "ref",
+          "target": "sec-unnumbered",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 18,
+            "end_line": 18
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {
@@ -295,7 +389,33 @@ expression: stable_json(&parsed.document)
       "inlines": [
         {
           "type": "text",
-          "text": "A label group [@fig-a; @fig-b]."
+          "text": "A label group "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "fig-a",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "fig-b",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 28,
+            "end_line": 28
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {
@@ -308,7 +428,78 @@ expression: stable_json(&parsed.document)
       "inlines": [
         {
           "type": "text",
-          "text": "Citations [@doe2020; @lee2019, p. 12]{.prose}, [-@knuth1984], and [see @doe2020]."
+          "text": "Citations "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "lee2019",
+              "locator": "p. 12",
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "prose",
+          "span": {
+            "start_line": 30,
+            "end_line": 30
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "year",
+          "span": {
+            "start_line": 30,
+            "end_line": 30
+          }
+        },
+        {
+          "type": "text",
+          "text": ", and "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 30,
+            "end_line": 30
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {
@@ -329,7 +520,21 @@ expression: stable_json(&parsed.document)
         },
         {
           "type": "text",
-          "text": "literal for an at sign and keep the dot after @x."
+          "text": "literal for an at sign and keep the dot after "
+        },
+        {
+          "type": "ref",
+          "target": "x",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 32,
+            "end_line": 32
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {
@@ -418,7 +623,7 @@ expression: stable_json(&parsed.document)
     "math": true,
     "code": false,
     "notebook": false,
-    "citations": false,
+    "citations": true,
     "footnotes": false
   },
   "source": {

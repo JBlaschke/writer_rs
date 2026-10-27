@@ -48,6 +48,7 @@ pub(crate) fn convert(
         notebook.cells.iter().map(|c| c.source.0.clone()).collect();
     let (mut meta, effective) =
         metadata(notebook, source, config, &mut texts, assets, diagnostics)?;
+    opts.includes.set_parent_meta(&meta);
     let language = notebook.language();
     let mut options: Vec<_> = notebook
         .cells
@@ -1429,7 +1430,7 @@ impl Converter<'_> {
             directives.iter().filter(|directive| !directive.top_level)
         {
             self.diagnostics.push(
-                Diagnostic::warning(
+                Diagnostic::error(
                     "include-not-top-level",
                     ":::include must be at the top level of a notebook cell",
                 )
@@ -1458,11 +1459,23 @@ impl Converter<'_> {
                 cell: Some(index),
                 file: None,
             };
-            let path = directive.path.ok_or_else(|| Error::Parse {
+            let path = directive.path.map_err(|message| Error::Parse {
                 path: self.source.path.clone(),
-                line: Some(directive.start),
-                message: format!("cell {index}: :::include requires a path"),
+                line: None,
+                message: format!(
+                    "cell {index}, line {}: {message}",
+                    directive.start
+                ),
             })?;
+            if !directive.closed {
+                self.diagnostics.push(
+                    Diagnostic::warning(
+                        "unclosed-directive",
+                        "directive has no closing `:::` fence",
+                    )
+                    .with_span(span.clone()),
+                );
+            }
             let parsed =
                 self.includes.expand(&path, &span, self.source, self.config)?;
             self.included_features.merge(&parsed.document.features);
@@ -1754,7 +1767,8 @@ struct CellInclude {
     start: usize,
     end: usize,
     top_level: bool,
-    path: Option<String>,
+    path: std::result::Result<String, String>,
+    closed: bool,
     body: String,
 }
 
@@ -1780,11 +1794,7 @@ fn cell_includes(text: &str, config: &Config) -> Vec<CellInclude> {
         }) { continue; }
         let start = data.sourcepos.start.line;
         let end = data.sourcepos.end.line;
-        let closed =
-            text.lines().nth(end.saturating_sub(1)).is_some_and(|line| {
-                let line = line.trim();
-                line.len() >= 3 && line.chars().all(|c| c == ':')
-            });
+        let closed = closing_directive(text, data.sourcepos, directive);
         let body_end = end.saturating_sub(usize::from(closed));
         let body = text
             .lines()
@@ -1798,12 +1808,8 @@ fn cell_includes(text: &str, config: &Config) -> Vec<CellInclude> {
             top_level: node
                 .parent()
                 .is_some_and(|parent| parent.same_node(root)),
-            path: info.classes.first().cloned().or_else(|| {
-                info.args
-                    .iter()
-                    .find(|(key, _)| key == "path")
-                    .map(|(_, value)| value.clone())
-            }),
+            path: markdown::include::include_path(&directive.info),
+            closed,
             body,
         });
     }

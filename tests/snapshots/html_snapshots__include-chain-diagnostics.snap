@@ -1,0 +1,5 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+warning include-meta-ignored [fixture-root]/ipynb/include/chain.ipynb:1 `../../md/include/part-a.md` sets `title`; an included file's document metadata is ignored

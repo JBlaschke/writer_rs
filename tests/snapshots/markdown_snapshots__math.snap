@@ -65,7 +65,21 @@ expression: stable_json(&parsed.document)
       "inlines": [
         {
           "type": "text",
-          "text": "See @eq-sum."
+          "text": "See "
+        },
+        {
+          "type": "ref",
+          "target": "eq-sum",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {

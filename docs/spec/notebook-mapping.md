@@ -246,6 +246,12 @@ stays as written and `notebook-attachment-skipped` names the types offered.
   /// notebook itself); the resolver's include stack is `chain + [notebook]` for MAX_DEPTH and cycles.
   pub fn cell_includes_in(notebook: &SourceInfo, chain: &[PathBuf]) -> Box<dyn crate::notebook::CellIncludes>;
   ```
+  > **Contract change (coordinator, 2026-10-27):** `CellIncludes` gains the
+  > default no-op method `set_parent_meta(&DocMeta)`. The converter calls it
+  > after effective metadata construction so the include hook compares
+  > ignored child metadata with the actual parent, including in-memory input.
+  > Existing custom hooks need no implementation change.
+
   When T1B includes a `.ipynb` from anywhere it calls `notebook::parse_with(source, json,
   &effective_config, ParseOptions { includes: &mut *cell_includes_in(source, &its_chain), nested:
   true, selection: Selection::default() })`, never `notebook::parse` (which inserts a `Toc` and starts

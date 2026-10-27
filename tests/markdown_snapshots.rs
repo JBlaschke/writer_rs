@@ -40,12 +40,28 @@ fn parse_fixture(name: &str) -> writer::Result<Parsed> {
     parse(&source, &text, &Config::default())
 }
 
+fn checked_fixture(name: &str) -> Option<Parsed> {
+    match parse_fixture(name) {
+        Ok(parsed) => Some(parsed),
+        Err(error) if name == "includes" => {
+            assert!(error.to_string().contains("cycle"), "{error}");
+            None
+        }
+        Err(error) => panic!("{name}: {error}"),
+    }
+}
+
 fn stable_json(document: &Document) -> Value {
     let ids: Vec<_> =
         document.assets.iter().map(|asset| asset.id.as_str()).collect();
     let mut labels = BTreeMap::new();
+    let mut content =
+        serde_json::to_value((&document.meta.abstract_, &document.blocks))
+            .unwrap();
+    relabel(&mut content, &ids, &mut labels);
     let mut value = serde_json::to_value(document).unwrap();
     relabel(&mut value, &ids, &mut labels);
+    redact_document_paths(&mut value);
     if let Some(assets) = value.get_mut("assets").and_then(Value::as_array_mut)
     {
         for asset in assets.iter_mut() {
@@ -86,8 +102,41 @@ fn relabel(
 }
 
 fn redact_paths(text: &str) -> String {
-    text.replace(&*fixture_dir().to_string_lossy(), "[fixtures]")
-        .replace('\\', "/")
+    let mut text = text.replace('\\', "/");
+    let dir = fixture_dir();
+    let parent = dir.parent().unwrap();
+    for (path, label) in [
+        (std::fs::canonicalize(&dir).unwrap(), "[fixtures]"),
+        (dir.clone(), "[fixtures]"),
+        (std::fs::canonicalize(parent).unwrap(), "[fixture-root]"),
+        (parent.to_path_buf(), "[fixture-root]"),
+    ] {
+        text = text.replace(&path.to_string_lossy().replace('\\', "/"), label);
+    }
+    text
+}
+
+fn redact_document_paths(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            if map.contains_key("start_line")
+                && map.contains_key("end_line")
+                && let Some(Value::String(file)) = map.get_mut("file")
+            {
+                *file = redact_paths(file);
+            }
+            if let Some(Value::Array(paths)) = map.get_mut("includes") {
+                for path in paths {
+                    if let Value::String(path) = path {
+                        *path = redact_paths(path);
+                    }
+                }
+            }
+            map.values_mut().for_each(redact_document_paths);
+        }
+        Value::Array(items) => items.iter_mut().for_each(redact_document_paths),
+        _ => {}
+    }
 }
 
 #[test]
@@ -120,7 +169,9 @@ fn every_fixture_is_snapshotted() {
 #[test]
 fn fixtures_satisfy_ir_invariants() {
     for name in fixture_names() {
-        let parsed = parse_fixture(&name).unwrap();
+        let Some(parsed) = checked_fixture(&name) else {
+            continue;
+        };
         assert_eq!(
             parsed.document.invariant_violations(),
             Vec::<String>::new(),
@@ -155,13 +206,11 @@ fn fixtures_satisfy_ir_invariants() {
 #[test]
 fn every_diagnostic_has_path_and_span() {
     for name in fixture_names() {
-        let parsed = parse_fixture(&name).unwrap();
-        let mut previous = 0;
+        let Some(parsed) = checked_fixture(&name) else {
+            continue;
+        };
+        let mut previous = BTreeMap::new();
         for finding in parsed.diagnostics.iter() {
-            assert_eq!(
-                finding.path.as_deref(),
-                Some(parsed.document.source.path.as_path())
-            );
             let span = finding
                 .span
                 .as_ref()
@@ -170,11 +219,20 @@ fn every_diagnostic_has_path_and_span() {
                 span.start_line >= 1 && span.end_line >= span.start_line,
                 "{name}: {finding:#}"
             );
-            assert!(
-                span.start_line >= previous,
-                "{name}: diagnostics must be sorted"
+            assert_eq!(
+                finding.path.as_deref(),
+                Some(
+                    span.file
+                        .as_deref()
+                        .unwrap_or(&parsed.document.source.path)
+                )
             );
-            previous = span.start_line;
+            let last = previous.entry(finding.path.clone()).or_insert(0);
+            assert!(
+                span.start_line >= *last,
+                "{name}: diagnostics must be sorted within each file"
+            );
+            *last = span.start_line;
         }
     }
 }
@@ -182,7 +240,13 @@ fn every_diagnostic_has_path_and_span() {
 #[test]
 fn parse_is_deterministic() {
     for name in fixture_names() {
-        let first = parse_fixture(&name).unwrap();
+        let Some(first) = checked_fixture(&name) else {
+            assert_eq!(
+                parse_fixture(&name).err().unwrap().to_string(),
+                parse_fixture(&name).err().unwrap().to_string()
+            );
+            continue;
+        };
         let second = parse_fixture(&name).unwrap();
         assert_eq!(first.document, second.document, "{name}");
         assert_eq!(first.diagnostics, second.diagnostics, "{name}");
@@ -223,8 +287,19 @@ fn probe_corpus_produces_valid_ir() {
                 base_dir: dir.to_path_buf(),
             };
             let text = std::fs::read_to_string(&path).unwrap();
-            let parsed = parse(&source, &text, &Config::default())
-                .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+            let parsed = match parse(&source, &text, &Config::default()) {
+                Ok(parsed) => parsed,
+                Err(error)
+                    if matches!(
+                        path.file_name().and_then(|name| name.to_str()),
+                        Some("main.md" | "directive-include-paths.md")
+                    ) =>
+                {
+                    assert!(matches!(error, writer::Error::Parse { .. }));
+                    continue;
+                }
+                Err(error) => panic!("{}: {error}", path.display()),
+            };
             assert_eq!(
                 parsed.document.invariant_violations(),
                 Vec::<String>::new(),

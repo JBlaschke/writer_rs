@@ -54,5 +54,5 @@ expression: stable_asset_ids(&emitted.main)
 <figcaption><span class="caption-label">Figure 2.1:</span> c</figcaption>
 </figure>
 <div id="eq-b" class="equation numbered"><span class="math display" data-math-style="display" data-tex="z = 3">z = 3</span><span class="equation-number">(2.1)</span></div>
-<p>See @sec-one, @fig-zero, @eq-a, @eq-a[Eq.], @eq-a[], @sec-two[Chapter] and @sec-interlude.</p>
+<p>See <a class="ref" href="#sec-one">Section 1</a>, <a class="ref" href="#fig-zero">Figure 0.1</a>, <a class="ref" href="#eq-a">Equation 1.1</a>, <a class="ref" href="#eq-a">Eq. 1.1</a>, <a class="ref" href="#eq-a">1.1</a>, <a class="ref" href="#sec-two">Chapter 2</a> and <a class="ref" href="#sec-interlude">Interlude</a>.</p>
 </main>

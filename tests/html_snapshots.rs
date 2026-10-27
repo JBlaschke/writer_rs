@@ -27,8 +27,18 @@ fn fixture_paths() -> Vec<PathBuf> {
 }
 
 fn stable_paths(text: &str) -> String {
-    text.replace(&*fixture_dir().to_string_lossy(), "[fixtures]")
-        .replace('\\', "/")
+    let mut text = text.replace('\\', "/");
+    let dir = fixture_dir();
+    let parent = dir.parent().unwrap();
+    for (path, label) in [
+        (std::fs::canonicalize(&dir).unwrap(), "[fixtures]"),
+        (dir.clone(), "[fixtures]"),
+        (std::fs::canonicalize(parent).unwrap(), "[fixture-root]"),
+        (parent.to_path_buf(), "[fixture-root]"),
+    ] {
+        text = text.replace(&path.to_string_lossy().replace('\\', "/"), label);
+    }
+    text
 }
 
 fn stable_asset_ids(html: &str) -> String {

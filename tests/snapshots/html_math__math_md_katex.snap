@@ -8,7 +8,7 @@ expression: text
 </header>
 <p>Inline <span class="math inline" data-math-style="inline" data-tex="\frac{a}{b}">\frac{a}{b}</span>.</p>
 <div id="eq-sum" class="equation numbered"><span class="math display" data-math-style="display" data-tex="\sum_{i=0}^{n} i">\sum_{i=0}^{n} i</span><span class="equation-number">(1)</span></div>
-<p>See @eq-sum.</p>
+<p>See <a class="ref" href="#eq-sum">Equation 1</a>.</p>
 <div id="eq-aligned" class="equation numbered"><span class="math display" data-math-style="display" data-tex="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}">\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}</span><span class="equation-number">(2)</span></div>
 <p>Accents <span class="math inline" data-math-style="inline" data-tex="\hat{x} \vec{v} \dot{y}">\hat{x} \vec{v} \dot{y}</span>.</p>
 <div class="equation"><span class="math display" data-math-style="display" data-tex="x = 1  ">x = 1  </span></div>

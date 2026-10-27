@@ -1,15 +1,5 @@
 ---
 source: tests/html_snapshots.rs
-expression: stable_asset_ids(&emitted.main)
+expression: stable_paths(&error.to_string())
 ---
-<main data-writer-document>
-<header class="title-block">
-<h1 class="title">Include root</h1>
-</header>
-<h1 id="included-documents">Included documents</h1>
-<ul>
-<li>
-<p>A list item with a forbidden nested include:</p>
-</li>
-</ul>
-</main>
+[fixtures]/include/cycle-b.md:1 include cycle: includes.md → include/cycle-a.md → include/cycle-b.md → include/cycle-a.md

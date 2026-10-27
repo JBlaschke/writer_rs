@@ -10,7 +10,7 @@ pub mod tables;
 
 use crate::config::Config;
 use crate::error::Result;
-use crate::ir::{Block, Parsed, SourceInfo, SourceSpan};
+use crate::ir::{Block, DocMeta, Parsed, SourceInfo, SourceSpan};
 
 /// Parses notebook input into document IR, including saved outputs.
 pub fn parse(
@@ -41,6 +41,10 @@ pub struct ParseOptions<'a> {
 
 /// Supplies include expansion without coupling the frontend to a resolver.
 pub trait CellIncludes {
+    /// Supplies the notebook's effective metadata for include comparisons.
+    /// Custom hooks may ignore this context.
+    fn set_parent_meta(&mut self, _: &DocMeta) {}
+
     /// Returns the included parse, with its paths and spans already attributed.
     fn expand(
         &mut self, path: &str, span: &SourceSpan, notebook: &SourceInfo,

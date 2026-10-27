@@ -1,0 +1,7 @@
+---
+source: tests/notebook_snapshots.rs
+expression: diagnostics
+---
+[
+  "cell 1, lines 3-4 [include-meta-ignored] warning: `../md/include/part-a.md` sets `title`; an included file's document metadata is ignored"
+]

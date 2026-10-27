@@ -1,0 +1,38 @@
+---
+source: tests/notebook_snapshots.rs
+expression: html(&parsed)
+---
+<main data-writer-document>
+<h1 id="sec-notebook-includes">Notebook includes</h1>
+<p>The notebook owns its own note.<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup></p>
+<p>Before the included Markdown chain.</p>
+<p>Part A keeps its own file-scoped note.<sup class="footnote-ref"><a id="fnref-2" href="#fn-2" role="doc-noteref">2</a></sup></p>
+<h1 id="part-b">Part B</h1>
+<figure id="fig-part-b" class="figure kind-image">
+<img src="asset:[id]" alt="Part B">
+<figcaption><span class="caption-label">Figure 1:</span> Part B</figcaption>
+</figure>
+<p>After the chain, see <a class="ref" href="#fig-part-b">Figure 1</a>.</p>
+<div class="cell" data-cell="2">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">The saved output remains in the notebook.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">The saved output remains in the notebook.</span></code></pre>
+</div>
+</div>
+</div>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn-1">
+<p>This note belongs to includes.ipynb. <a class="footnote-back" href="#fnref-1" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-2">
+<p>This note belongs to part-a.md, not the including notebook. <a class="footnote-back" href="#fnref-2" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+</main>
