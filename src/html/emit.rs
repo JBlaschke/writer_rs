@@ -1076,11 +1076,26 @@ impl<'d> Emitter<'d, '_, '_> {
         let language = lang.map_or(String::new(), |lang| {
             format!(" class=\"language-{}\"", escape(lang))
         });
-        // T18 adds ANSI span rendering here; the serialized pair stays private.
-        format!(
-            "{open}<code{language}>{}</code></pre>\n",
+        let lines = if let Some(pair) = attrs.pairs.get("ansi") {
+            crate::notebook::ansi::to_html(&crate::notebook::ansi::parse(pair))
+                .into_iter()
+                .enumerate()
+                .map(|(index, line)| {
+                    let class = if code
+                        .is_highlighted(code.start.saturating_add(index as u64))
+                    {
+                        "line highlight"
+                    } else {
+                        "line"
+                    };
+                    format!("<span class=\"{class}\">{line}</span>")
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        } else {
             code_lines(&syntax, text, &code)
-        )
+        };
+        format!("{open}<code{language}>{}</code></pre>\n", lines)
     }
 
     fn figure(

@@ -654,7 +654,7 @@ fn code_block_numbered_start() {
                     ("include", "skip"),
                     ("trim", "true"),
                     ("escape", "true"),
-                    ("ansi", "skip"),
+                    ("ansi", "a\nb\nc"),
                     ("x", "keep")
                 ]
             ),
@@ -1167,14 +1167,14 @@ fn output_code_ansi_pair_not_printed() {
         let doc = document(vec![Block::CodeBlock {
             lang: Some("nosuchlang".into()),
             text: "<&".into(),
-            attrs: attrs(None, &[class], &[("ansi", "canonical ansi")]),
+            attrs: attrs(None, &[class], &[("ansi", "\x1b[1;31m<&\x1b[0m")]),
             span: None,
         }]);
         let (emitted, diagnostics) = render(&doc, &Config::default(), false);
         assert_eq!(
             emitted.body,
             format!(
-                "<pre class=\"hl-code {class}\"><code class=\"language-nosuchlang\"><span class=\"line\">&lt;&amp;</span></code></pre>\n"
+                "<pre class=\"hl-code {class}\"><code class=\"language-nosuchlang\"><span class=\"line\"><span class=\"ansi-red-intense-fg ansi-bold\">&lt;&amp;</span></span></code></pre>\n"
             )
         );
         assert!(!emitted.body.contains("data-ansi"));

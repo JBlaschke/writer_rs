@@ -1,0 +1,13 @@
+---
+source: tests/notebook_snapshots.rs
+expression: diagnostics
+---
+[
+  "cell 8, lines 1-2 [label-kind-mismatch] warning: label kind has no matching output; using the other captionable kind",
+  "cell 10, lines 1-4 [cell-options-invalid] warning: fig-cap ignored: a cell can have only one group",
+  "cell 18, lines 1-1 [cell-options-invalid] warning: invalid cell options: did not find expected ',' or ']' at line 2 column 1, while parsing a flow sequence at line 1 column 7",
+  "cell 19, lines 1-3 [cell-options-invalid] warning: invalid value for cell option `echo`",
+  "cell 19, lines 1-3 [cell-options-invalid] warning: invalid value for cell option `fig-cap`",
+  "cell 19, lines 1-3 [cell-options-invalid] warning: invalid value for cell option `warning`",
+  "cell 20, lines 1-5 [cell-option-unsupported] warning: unsupported cell options: code-fold, panel, unknown-option, fig-subcap outside a group"
+]

@@ -1,0 +1,1653 @@
+---
+source: tests/notebook_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Saved pandas tables"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0
+      }
+    },
+    {
+      "type": "cell",
+      "index": 1,
+      "id": "simple",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "table",
+                  "columns": [
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    }
+                  ],
+                  "head": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "x"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "y"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "0"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "2"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "3"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "4"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    }
+                  ],
+                  "foot": [],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 1
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 1
+      }
+    },
+    {
+      "type": "cell",
+      "index": 2,
+      "id": "multiindex",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "table",
+                  "columns": [
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    }
+                  ],
+                  "head": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "measure"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 3,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "value"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "low"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "high"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "group"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "sample"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "A"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 2,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "first"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "0"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "2"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "second"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "2"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "3"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    }
+                  ],
+                  "foot": [],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 2
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 2
+      }
+    },
+    {
+      "type": "cell",
+      "index": 3,
+      "id": "truncated",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "table",
+                  "columns": [
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    }
+                  ],
+                  "head": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "x"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "y"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "0"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "2"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "..."
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "..."
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "..."
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "99"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "99"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "100"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    }
+                  ],
+                  "foot": [],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 3
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "100 rows × 2 columns"
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 3
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 3
+      }
+    },
+    {
+      "type": "cell",
+      "index": 4,
+      "id": "truncated-columns",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "table",
+                  "columns": [
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    }
+                  ],
+                  "head": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "first"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "..."
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "last"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "0"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "..."
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "9"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    }
+                  ],
+                  "foot": [],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 4
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 4
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 4
+      }
+    },
+    {
+      "type": "cell",
+      "index": 5,
+      "id": "nan",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "table",
+                  "columns": [
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    }
+                  ],
+                  "head": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "value"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "date"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "0"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "NaN"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "NaT"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "-1.5"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "2026-10-27"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    }
+                  ],
+                  "foot": [],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 5
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 5
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 5
+      }
+    },
+    {
+      "type": "cell",
+      "index": 6,
+      "id": "styler",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "table",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Styled values"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "value"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "row"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "strong",
+                                  "inlines": [
+                                    {
+                                      "type": "text",
+                                      "text": "3"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 1,
+                        "cell": 6
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 6
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 6
+      }
+    },
+    {
+      "type": "cell",
+      "index": 7,
+      "id": "unescaped",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "raw",
+                  "format": "html",
+                  "text": "<style type=\"text/css\">#T_bad td { color: red; }</style><table id=\"T_bad\"><tbody><tr><td>b<c</td></tr></tbody></table>",
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 7
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 7
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7
+      }
+    },
+    {
+      "type": "cell",
+      "index": 8,
+      "id": "bare",
+      "language": "python",
+      "source": "df",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "table",
+                  "columns": [
+                    {
+                      "align": "default",
+                      "width": null
+                    },
+                    {
+                      "align": "default",
+                      "width": null
+                    }
+                  ],
+                  "head": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "name"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "value"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": true
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "cells": [
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "alpha"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        },
+                        {
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "1"
+                            }
+                          ],
+                          "align": null,
+                          "colspan": 1,
+                          "rowspan": 1,
+                          "header": false
+                        }
+                      ]
+                    }
+                  ],
+                  "foot": [],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 8
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "DataFrame fallback",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 8
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 8
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": true,
+    "notebook": true,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "notebook",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

@@ -1,0 +1,91 @@
+---
+source: tests/notebook_snapshots.rs
+expression: html(&parsed)
+---
+<main data-writer-document>
+<h1 id="notes-across-notebook-cells">Notes across notebook cells</h1>
+<p>First<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup>, shared<sup class="footnote-ref"><a id="fnref-2" href="#fn-2" role="doc-noteref">2</a></sup>, image<sup class="footnote-ref"><a id="fnref-3" href="#fn-3" role="doc-noteref">3</a></sup>, attachment<sup class="footnote-ref"><a id="fnref-4" href="#fn-4" role="doc-noteref">4</a></sup>, and <sup class="footnote-ref"><a id="fnref-5" href="#fn-5" role="doc-noteref">5</a></sup>. See @fig-later.</p>
+<p>Again<sup class="footnote-ref"><a id="fnref-2-2" href="#fn-2" role="doc-noteref">2</a></sup>, image again<sup class="footnote-ref"><a id="fnref-3-2" href="#fn-3" role="doc-noteref">3</a></sup>, and <sup class="footnote-ref"><a id="fnref-6" href="#fn-6" role="doc-noteref">6</a></sup>.</p>
+<p>Case reference<sup class="footnote-ref"><a id="fnref-7" href="#fn-7" role="doc-noteref">7</a></sup>.</p>
+<p>Case again<sup class="footnote-ref"><a id="fnref-7-2" href="#fn-7" role="doc-noteref">7</a></sup>.</p>
+<p>Undefined[^undefined].</p>
+<p>Before open fence[^shared].</p>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">unchanged<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Note</p>
+<p>A reference in an open note[^shared].</p>
+</aside>
+<aside class="callout callout-note" role="note">
+<p class="callout-title">Note</p>
+<p>A reference before an open fence[^shared].</p>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">still unchanged<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</aside>
+<hr>
+<hr>
+<p>Later reference<sup class="footnote-ref"><a id="fnref-8" href="#fn-8" role="doc-noteref">8</a></sup>.</p>
+<div class="cell" data-cell="11">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Markdown</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">output note<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/markdown">
+<p>Output reference<sup class="footnote-ref"><a id="fnref-9" href="#fn-9" role="doc-noteref">9</a></sup>.</p>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="12">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">image</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<figure id="fig-later" class="figure kind-image">
+<img src="asset:[id]" alt="Later image">
+<figcaption><span class="caption-label">Figure 3:</span> Later image</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn-1">
+<p>First note. <a class="footnote-back" href="#fnref-1" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-2">
+<p>Shared definition. <a class="footnote-back" href="#fnref-2" role="doc-backlink">↩︎</a> <a class="footnote-back" href="#fnref-2-2" role="doc-backlink">↩︎<sup>2</sup></a></p>
+</li>
+<li id="fn-3">
+<figure class="figure kind-image">
+<img src="images/note-missing.png" alt="missing">
+<figcaption><span class="caption-label">Figure 1:</span> missing</figcaption>
+</figure>
+<p><a class="footnote-back" href="#fnref-3" role="doc-backlink">↩︎</a> <a class="footnote-back" href="#fnref-3-2" role="doc-backlink">↩︎<sup>2</sup></a></p>
+</li>
+<li id="fn-4">
+<figure class="figure kind-image">
+<img src="asset:[id]" alt="own attachment">
+<figcaption><span class="caption-label">Figure 2:</span> own attachment</figcaption>
+</figure>
+<p><a class="footnote-back" href="#fnref-4" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-5">
+<p>first inline <a class="footnote-back" href="#fnref-5" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-6">
+<p>second inline <a class="footnote-back" href="#fnref-6" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-7">
+<p>Case-insensitive note. <a class="footnote-back" href="#fnref-7" role="doc-backlink">↩︎</a> <a class="footnote-back" href="#fnref-7-2" role="doc-backlink">↩︎<sup>2</sup></a></p>
+</li>
+<li id="fn-8">
+<p>Definition between thematic rules. <a class="footnote-back" href="#fnref-8" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-9">
+<p>Output-local note. <a class="footnote-back" href="#fnref-9" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+</main>

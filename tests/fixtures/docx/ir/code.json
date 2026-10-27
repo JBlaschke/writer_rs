@@ -48,7 +48,7 @@
                     "output-text"
                 ],
                 "pairs": {
-                    "ansi": "true"
+                    "ansi": "\u001b[31mnever highlight output\u001b[0m"
                 }
             }
         },

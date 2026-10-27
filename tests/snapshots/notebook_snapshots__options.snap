@@ -1,0 +1,2928 @@
+---
+source: tests/notebook_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Captions, labels and cell options"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0
+      }
+    },
+    {
+      "type": "cell",
+      "index": 1,
+      "id": "single",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": false,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "One image"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "One image"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 1
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "fig-one",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 4,
+                    "cell": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 4,
+        "cell": 1
+      }
+    },
+    {
+      "type": "cell",
+      "index": 2,
+      "id": "group",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": false,
+      "outputs": [],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 5,
+        "cell": 2
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Image group"
+        }
+      ],
+      "body": [
+        {
+          "type": "cell",
+          "index": 2,
+          "id": "group",
+          "language": "python",
+          "source": "display(saved_output)",
+          "execution_count": 1,
+          "show_input": false,
+          "show_output": true,
+          "outputs": [
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "image/png",
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Left alt"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 5,
+                        "cell": 2
+                      }
+                    },
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "span",
+                          "attrs": {
+                            "id": null,
+                            "classes": [
+                              "subcaption"
+                            ],
+                            "pairs": {}
+                          },
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "Left"
+                            }
+                          ]
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 5,
+                        "cell": 2
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "image/png",
+                "text/plain"
+              ]
+            },
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "image/png",
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Right alt"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 5,
+                        "cell": 2
+                      }
+                    },
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "span",
+                          "attrs": {
+                            "id": null,
+                            "classes": [
+                              "subcaption"
+                            ],
+                            "pairs": {}
+                          },
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "Right"
+                            }
+                          ]
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 5,
+                        "cell": 2
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "image/png",
+                "text/plain"
+              ]
+            }
+          ],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "tags": [],
+          "metadata": {},
+          "span": {
+            "start_line": 1,
+            "end_line": 5,
+            "cell": 2
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-group",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 5,
+        "cell": 2
+      }
+    },
+    {
+      "type": "cell",
+      "index": 3,
+      "id": "list",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "First image"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "First image"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 3
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "fig-list-1",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 3,
+                    "cell": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        },
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Second image"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Second image"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 3
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "fig-list-2",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 3,
+                    "cell": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 3
+      }
+    },
+    {
+      "type": "cell",
+      "index": 4,
+      "id": "bare",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "Plain image"
+                        }
+                      ],
+                      "url": "asset:000000000001",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 4
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "<Figure size 1x1>",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 4
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 4
+      }
+    },
+    {
+      "type": "cell",
+      "index": 5,
+      "id": "table",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "table",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Values"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": 0.20000000298023224
+                        },
+                        {
+                          "align": "default",
+                          "width": 0.4000000059604645
+                        },
+                        {
+                          "align": "default",
+                          "width": 0.4000000059604645
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "x"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "y"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "0"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "2"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        },
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "3"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "4"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 5
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "tbl-values",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 4,
+                    "cell": 5
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 4,
+        "cell": 5
+      }
+    },
+    {
+      "type": "cell",
+      "index": 6,
+      "id": "table-group",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": false,
+      "outputs": [],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 6
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Two tables"
+        }
+      ],
+      "body": [
+        {
+          "type": "cell",
+          "index": 6,
+          "id": "table-group",
+          "language": "python",
+          "source": "display(saved_output)",
+          "execution_count": 1,
+          "show_input": false,
+          "show_output": true,
+          "outputs": [
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "text/html",
+                  "blocks": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "x"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "y"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "0"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "2"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        },
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "3"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "4"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 6
+                      }
+                    },
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "span",
+                          "attrs": {
+                            "id": null,
+                            "classes": [
+                              "subcaption"
+                            ],
+                            "pairs": {}
+                          },
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "First table"
+                            }
+                          ]
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 6
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "text/html",
+                "text/plain"
+              ]
+            },
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "text/html",
+                  "blocks": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "x"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "y"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "0"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "2"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        },
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "3"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "4"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 6
+                      }
+                    },
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "span",
+                          "attrs": {
+                            "id": null,
+                            "classes": [
+                              "subcaption"
+                            ],
+                            "pairs": {}
+                          },
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "Second table"
+                            }
+                          ]
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 6
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "text/html",
+                "text/plain"
+              ]
+            }
+          ],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "tags": [],
+          "metadata": {},
+          "span": {
+            "start_line": 1,
+            "end_line": 3,
+            "cell": 6
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 6
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Source listing"
+        }
+      ],
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "python",
+          "text": "x = 1\ny = 2\nprint(x + y)",
+          "attrs": {
+            "id": null,
+            "classes": [
+              "numbered"
+            ],
+            "pairs": {
+              "highlight": "1-3,5"
+            }
+          },
+          "span": {
+            "start_line": 1,
+            "end_line": 6,
+            "cell": 7
+          }
+        }
+      ],
+      "attrs": {
+        "id": "lst-source",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 6,
+        "cell": 7
+      }
+    },
+    {
+      "type": "cell",
+      "index": 7,
+      "id": "listing",
+      "language": "python",
+      "source": "x = 1\ny = 2\nprint(x + y)",
+      "execution_count": 1,
+      "show_input": false,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "Listing output",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 6,
+                    "cell": 7
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [
+          "numbered"
+        ],
+        "pairs": {
+          "highlight": "1-3,5"
+        }
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 6,
+        "cell": 7
+      }
+    },
+    {
+      "type": "cell",
+      "index": 8,
+      "id": "mismatch",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "table",
+                  "caption": null,
+                  "body": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "x"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "y"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "0"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "2"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        },
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "3"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "4"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 2,
+                        "cell": 8
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "fig-mismatch",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 8
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 8
+      }
+    },
+    {
+      "type": "cell",
+      "index": 9,
+      "id": "anchor",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "Anchored output",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 9
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": "cell-anchor",
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 9
+      }
+    },
+    {
+      "type": "cell",
+      "index": 10,
+      "id": "both-groups",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": false,
+      "outputs": [],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 4,
+        "cell": 10
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Tables"
+        }
+      ],
+      "body": [
+        {
+          "type": "cell",
+          "index": 10,
+          "id": "both-groups",
+          "language": "python",
+          "source": "display(saved_output)",
+          "execution_count": 1,
+          "show_input": false,
+          "show_output": true,
+          "outputs": [
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "image/png",
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 10
+                      }
+                    }
+                  ]
+                },
+                {
+                  "mime": "text/plain",
+                  "blocks": [
+                    {
+                      "type": "code_block",
+                      "lang": null,
+                      "text": "<Figure size 1x1>",
+                      "attrs": {
+                        "id": null,
+                        "classes": [
+                          "output-text"
+                        ],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 10
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "image/png",
+                "text/plain"
+              ]
+            },
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "text/html",
+                  "blocks": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "x"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "y"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "0"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "2"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        },
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "3"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "4"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 10
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "text/html",
+                "text/plain"
+              ]
+            },
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "image/png",
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 10
+                      }
+                    }
+                  ]
+                },
+                {
+                  "mime": "text/plain",
+                  "blocks": [
+                    {
+                      "type": "code_block",
+                      "lang": null,
+                      "text": "<Figure size 1x1>",
+                      "attrs": {
+                        "id": null,
+                        "classes": [
+                          "output-text"
+                        ],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 10
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "image/png",
+                "text/plain"
+              ]
+            },
+            {
+              "kind": {
+                "kind": "display"
+              },
+              "execution_count": null,
+              "candidates": [
+                {
+                  "mime": "text/html",
+                  "blocks": [
+                    {
+                      "type": "table",
+                      "columns": [
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        },
+                        {
+                          "align": "default",
+                          "width": null
+                        }
+                      ],
+                      "head": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "x"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "y"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            }
+                          ]
+                        }
+                      ],
+                      "body": [
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "0"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "2"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        },
+                        {
+                          "cells": [
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "1"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": true
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "3"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            },
+                            {
+                              "inlines": [
+                                {
+                                  "type": "text",
+                                  "text": "4"
+                                }
+                              ],
+                              "align": null,
+                              "colspan": 1,
+                              "rowspan": 1,
+                              "header": false
+                            }
+                          ]
+                        }
+                      ],
+                      "foot": [],
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      },
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 10
+                      }
+                    }
+                  ]
+                }
+              ],
+              "mimes": [
+                "text/html",
+                "text/plain"
+              ]
+            }
+          ],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "tags": [],
+          "metadata": {},
+          "span": {
+            "start_line": 1,
+            "end_line": 4,
+            "cell": 10
+          }
+        }
+      ],
+      "attrs": {
+        "id": "tbl-both",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 4,
+        "cell": 10
+      }
+    },
+    {
+      "type": "cell",
+      "index": 11,
+      "id": "colon-label",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Colon label"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Colon label"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 11
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "fig:x",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 3,
+                    "cell": 11
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 11
+      }
+    },
+    {
+      "type": "cell",
+      "index": 12,
+      "id": "hidden-output",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": false,
+      "outputs": [],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 4,
+        "cell": 12
+      }
+    },
+    {
+      "type": "cell",
+      "index": 13,
+      "id": "asis",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "heading",
+                  "level": 2,
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Stream heading"
+                    }
+                  ],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 13
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "strong",
+                      "inlines": [
+                        {
+                          "type": "text",
+                          "text": "Rendered markdown"
+                        }
+                      ]
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 13
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 13
+      }
+    },
+    {
+      "type": "cell",
+      "index": 15,
+      "id": "filtered",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "stdout one\nstdout two",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 3,
+                    "cell": 15
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 15
+      }
+    },
+    {
+      "type": "cell",
+      "index": 16,
+      "id": "override",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Source caption"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Source caption"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 2,
+                        "cell": 16
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "fig-align": "center"
+                    }
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 16
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {
+        "writer": {
+          "fig-cap": "Metadata caption",
+          "fig-align": "center"
+        }
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 16
+      }
+    },
+    {
+      "type": "cell",
+      "index": 17,
+      "id": "table-none",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/html",
+              "blocks": [
+                {
+                  "type": "raw",
+                  "format": "html",
+                  "text": "<div><style scoped>.dataframe { color: black }</style><table class=\"dataframe\"><thead><tr><th></th><th>x</th><th>y</th></tr></thead><tbody><tr><th>0</th><td>1</td><td>2</td></tr><tr><th>1</th><td>3</td><td>4</td></tr></tbody></table></div>",
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 17
+                  }
+                }
+              ]
+            },
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "   x  y\n0  1  2\n1  3  4",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 17
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/html",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 17
+      }
+    },
+    {
+      "type": "cell",
+      "index": 18,
+      "id": "invalid-yaml",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "Invalid options preserve code",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 18
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 18
+      }
+    },
+    {
+      "type": "cell",
+      "index": 19,
+      "id": "wrong-types",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": false,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Valid metadata caption"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Valid metadata caption"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 4,
+                        "cell": 19
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 4,
+                    "cell": 19
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {
+        "writer": {
+          "echo": false,
+          "fig-cap": "Valid metadata caption",
+          "warning": false
+        }
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 4,
+        "cell": 19
+      }
+    },
+    {
+      "type": "cell",
+      "index": 20,
+      "id": "unsupported",
+      "language": "python",
+      "source": "display(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "Still rendered",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 5,
+                    "cell": 20
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 5,
+        "cell": 20
+      }
+    },
+    {
+      "type": "cell",
+      "index": 21,
+      "id": "shebang",
+      "language": "python",
+      "source": "#!/usr/bin/env python\n#| echo: false\ndisplay(saved_output)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "Options after shebang stay source",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 3,
+                    "cell": 21
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 21
+      }
+    },
+    {
+      "type": "cell",
+      "index": 22,
+      "id": "r-comment",
+      "language": "python",
+      "source": "print(\"R-style marker\")",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "R and Python share # comments",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 22
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [
+          "r-example",
+          "wide"
+        ],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 22
+      }
+    },
+    {
+      "type": "cell",
+      "index": 23,
+      "id": "c-comment",
+      "language": "python",
+      "source": "/*| echo: false */\nprintf(\"C source\")",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "C markers require a C kernel",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 2,
+                    "cell": 23
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 23
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": true,
+    "notebook": true,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "notebook",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "inline:70"
+    }
+  ]
+}

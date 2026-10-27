@@ -1,0 +1,15 @@
+---
+source: tests/notebook_snapshots.rs
+expression: diagnostics
+---
+[
+  "cell 3, lines 5-5 [missing-asset] warning: image `images/note-missing.png` not found (looked for [root]/tests/fixtures/ipynb/images/note-missing.png)",
+  "cell 3, lines 9-9 [footnote-unreferenced] warning: footnote \"unused\" is never referenced",
+  "cell 6, lines 1-1 [footnote-duplicate] warning: duplicate footnote \"NOTE\"; the first definition wins",
+  "cell 6, lines 3-3 [footnote-undefined] warning: footnote \"undefined\" is not defined in this fragment",
+  "cell 7, lines 1-1 [footnote-undefined] warning: footnote \"shared\" is not defined in this fragment",
+  "cell 8, lines 1-2 [unclosed-directive] warning: directive has no closing `:::` fence",
+  "cell 8, lines 2-2 [footnote-undefined] warning: footnote \"shared\" is not defined in this fragment",
+  "cell 9, lines 1-5 [unclosed-directive] warning: directive has no closing `:::` fence",
+  "cell 9, lines 2-2 [footnote-undefined] warning: footnote \"shared\" is not defined in this fragment"
+]

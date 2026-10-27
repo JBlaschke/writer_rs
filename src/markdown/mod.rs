@@ -232,7 +232,7 @@ fn insert_toc(document: &mut Document, config: &Config) {
     }
 }
 
-fn collect_features(document: &Document) -> Features {
+pub(crate) fn collect_features(document: &Document) -> Features {
     let mut features = Features {
         notebook: document.source.kind == SourceKind::Notebook,
         ..Features::default()

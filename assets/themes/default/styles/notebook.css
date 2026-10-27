@@ -71,6 +71,7 @@
 .ansi-hidden { visibility: hidden; }
 
 @media (max-width: 64rem) {
+    .output { overflow-x: auto; }
     .cell-prompt {
         position: static;
         width: auto;

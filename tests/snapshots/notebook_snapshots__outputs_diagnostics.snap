@@ -1,0 +1,18 @@
+---
+source: tests/notebook_snapshots.rs
+expression: diagnostics
+---
+[
+  "cell 4, lines 1-1 [output-invalid] warning: output 0: image/png: invalid base64: Invalid symbol 33, offset 9.",
+  "cell 7, lines 1-1 [output-file-outside] warning: output 0: file `../md/images/plot.png` is outside the notebook directory",
+  "cell 7, lines 1-1 [missing-asset] warning: output 0: image `images/missing.png` not found (looked for [root]/tests/fixtures/ipynb/images/missing.png)",
+  "cell 9, lines 1-1 [output-script] warning: output 0: HTML contains <script",
+  "cell 10, lines 1-1 [output-unsupported] warning: output 0: no renderer for application/vnd.plotly.v1+json",
+  "cell 11, lines 1-1 [output-script] warning: output 0: HTML contains <script",
+  "cell 11, lines 1-1 [output-unsupported] warning: output 0: interactive application/vnd.plotly.v1+json rendered as text/html",
+  "cell 12, lines 1-1 [output-script] warning: output 0: HTML contains <script",
+  "cell 12, lines 1-1 [output-unsupported] warning: output 0: interactive application/vnd.plotly.v1+json rendered as text/html",
+  "cell 13, lines 1-1 [output-unsupported] warning: output 0: interactive application/vnd.jupyter.widget-view+json rendered as text/plain",
+  "cell 16, lines 1-1 [output-unsupported] warning: output 0: no renderer for application/x-writer-fixture",
+  "cell 17, lines 1-1 [output-include] warning: output 0: :::include is not expanded in outputs"
+]
