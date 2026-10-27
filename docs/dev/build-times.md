@@ -479,3 +479,35 @@ Crate-private emitter state and shared paragraph helpers are the additive
 integration changes. No dependency, IR/config or module-list changes.
 T41/T42 retain their rich figure/table/image/field/math stubs, and T43 owns
 the later Word/LibreOffice smoke checks. T22 follows while this PR's CI runs.
+
+## T22 live-reload client acceptance (2026-10-27)
+
+Measured at checked T40 (`d757100`) plus the T22 working tree on macOS arm64
+with Rust 1.99.1. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 7.47 s | 45.00 s | 67.52 s | 891 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 172 s | 194.22 s | 1899.55 s | 890 passed |
+
+Formatting, all-target/all-feature Clippy, warnings-denied rustdoc and the
+basic HTML example pass. Final JavaScript/Python syntax checks pass; release
+embedded-asset coverage is repeated after the final client refinements.
+
+The package-free Python/Node/Chrome mock runner passes 19 browser checks
+across eight isolated sessions with Chrome 156.0.8078.48, Node 26.12.0 and
+Python 3.15.0. It covers loaded stylesheet handoff, visible CSS changes,
+±1 px anchors, included-file/cell edits, math/image identity, details state,
+title/template/raw-script behavior, per-view errors and warnings, dismissal,
+storage, view navigation, stale fetches, fallback recovery, reconnect/restart
+and measured retry intervals. A head-loaded script regression covers both
+views. Console output has no uncaught exceptions or unexpected client logs.
+The full command and limitations are in `live-reload-qa.md`.
+
+The client and mock/browser transport are lifted and adapted from presenter;
+Reveal behavior is replaced by the writer protocol. CI gains JavaScript
+syntax checks and the existing asset smoke test includes the new client.
+The coordinator clarifies same-block notebook position selectors and adds
+the missing T22 brief. No dependencies, public IR/config, module lists or
+Rust server code change. T23/T24 retain real-server and actual-pages QA.
+Both feature PRs target `main`; merge T40 before T22.
