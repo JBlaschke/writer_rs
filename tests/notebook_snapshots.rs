@@ -106,8 +106,10 @@ fn stable_json(document: &Document) -> Value {
     if let Some(assets) = value.get_mut("assets").and_then(Value::as_array_mut)
     {
         for asset in assets.iter_mut() {
-            if let Some(Value::String(origin)) = asset.get_mut("origin") {
-                *origin = origin.replace('\\', "/");
+            if let Some(Value::String(origin)) = asset.get_mut("origin")
+                && origin.starts_with("file:")
+            {
+                *origin = redact(origin);
             }
         }
         assets.sort_by_key(|asset| asset["id"].as_str().map(str::to_owned));
@@ -1364,4 +1366,46 @@ fn mixed_example_resolves_across_source_files() {
     assert!(
         footnotes[2].1.as_ref().unwrap().ends_with("analysis/results.ipynb")
     );
+}
+
+#[test]
+fn included_asset_origins_are_stable_across_checkout_paths_and_prefixes() {
+    let original = parse_fixture("includes").document;
+    let position = original
+        .assets
+        .iter()
+        .position(|asset| asset.origin.starts_with("file:"))
+        .unwrap();
+    let relative = "tests/fixtures/md/images/plot.png";
+    let mut expected = original.clone();
+    expected.assets[position].origin = format!("file:[root]/{relative}");
+    let expected = stable_json(&expected);
+    assert_eq!(stable_json(&original), expected);
+    for checkout in [root(), std::fs::canonicalize(root()).unwrap()] {
+        let path = checkout.join(relative);
+        let lexical = format!("file:{}", path.display());
+        let windows = format!(
+            "file:\\\\?\\{}",
+            path.to_string_lossy().replace('/', "\\")
+        );
+        for origin in [lexical, windows] {
+            let mut relocated = original.clone();
+            relocated.assets[position].origin = origin;
+            assert_eq!(stable_json(&relocated), expected);
+        }
+    }
+    for origin in
+        ["inline:987654321", "generated:keep\\bytes", "bytes:keep\\bytes"]
+    {
+        let mut generated = original.clone();
+        generated.assets[position].origin = origin.into();
+        let value = stable_json(&generated);
+        assert!(
+            value["assets"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|asset| { asset["origin"] == origin })
+        );
+    }
 }

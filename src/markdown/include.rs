@@ -19,6 +19,14 @@ use crate::ir::{
 /// Maximum nesting depth for Markdown includes.
 pub const MAX_DEPTH: usize = 8;
 
+/// The opening directive info as written, before comrak unescapes punctuation.
+/// `column` is comrak's 1-based byte column of the opening colon fence.
+pub(crate) fn raw_directive_info(line: &str, column: usize) -> Option<&str> {
+    let tail = line.get(column.checked_sub(1)?..)?;
+    let fence = tail.bytes().take_while(|byte| *byte == b':').count();
+    (fence >= 3).then(|| tail[fence..].trim())
+}
+
 /// Reads the local path from `include PATH`, including single/double quotes.
 pub(crate) fn include_path(info: &str) -> std::result::Result<String, String> {
     let info = info.trim();
@@ -595,18 +603,26 @@ fn scan_targets(text: &str, cell: bool) -> Vec<String> {
     let mut options = Options::default();
     options.extension.block_directive = true;
     options.extension.front_matter_delimiter = (!cell).then(|| "---".into());
-    let (text, _) = super::directives::colon_prepass(text, &options);
-    let root = parse_document(&arena, &text, &options);
+    let (_, lines) = super::recover::split_lines(text);
+    let (prepared, _) = super::directives::colon_prepass(text, &options);
+    let root = parse_document(&arena, &prepared, &options);
     root.descendants()
-        .filter_map(|node| match &node.data().value {
-            NodeValue::BlockDirective(directive)
-                if super::directives::parse_directive_info(&directive.info)
-                    .name
-                    == "include" =>
+        .filter_map(|node| {
+            let data = node.data();
+            let NodeValue::BlockDirective(directive) = &data.value else {
+                return None;
+            };
+            if super::directives::parse_directive_info(&directive.info).name
+                != "include"
             {
-                include_path(&directive.info).ok()
+                return None;
             }
-            _ => None,
+            let start = data.sourcepos.start;
+            let info = lines
+                .get(start.line - 1)
+                .and_then(|line| raw_directive_info(line, start.column))
+                .unwrap_or(&directive.info);
+            include_path(info).ok()
         })
         .collect()
 }
@@ -676,6 +692,56 @@ mod tests {
             "{.include}",
         ] {
             assert!(include_path(info).is_err(), "{info}");
+        }
+    }
+
+    #[test]
+    fn raw_directive_info_keeps_windows_path_bytes() {
+        let path =
+            r"\\?\C:\Users\runneradmin\AppData\Local\Temp\.tmp123\part.md";
+        let info = format!("include \"{path}\"");
+        for (prefix, column) in
+            [("", 1), ("   ", 4), ("> ", 3), ("- ", 3), ("\u{feff}", 4)]
+        {
+            let line = format!("{prefix}::::{info}");
+            assert_eq!(raw_directive_info(&line, column), Some(info.as_str()));
+            assert_eq!(
+                include_path(raw_directive_info(&line, column).unwrap())
+                    .unwrap(),
+                path
+            );
+        }
+        assert!(raw_directive_info("::include file.md", 1).is_none());
+        assert!(raw_directive_info(":::include file.md", 0).is_none());
+    }
+
+    #[test]
+    fn markdown_and_watcher_keep_raw_include_paths() {
+        for (bom, path) in [
+            ("", r"\\?\C:\writer-ci-path-byte-regression\.tmp123\part.md"),
+            ("\u{feff}", r"folder\.tmp123\part.md"),
+        ] {
+            let text = format!("{bom}:::include \"{path}\"\n:::\n");
+            for cell in [false, true] {
+                assert_eq!(
+                    scan_targets(&text, cell),
+                    [path],
+                    "BOM {bom:?}, cell {cell}"
+                );
+            }
+            let source = SourceInfo {
+                path: "main.md".into(),
+                base_dir: ".".into(),
+                kind: SourceKind::Markdown,
+            };
+            let Error::Parse { message, .. } =
+                super::super::parse(&source, &text, &Config::default())
+                    .err()
+                    .unwrap()
+            else {
+                panic!("the deliberately absent file must fail")
+            };
+            assert!(message.contains(&format!("`{path}`")), "{message}");
         }
     }
 }

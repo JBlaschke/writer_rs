@@ -199,3 +199,13 @@ and records that dependency and merge order if it is still open.
   computation output; no notebook was executed.
 - No dependency, public IR/config or module-list changes. Cite library lookup
   and rendering remain T70; `check` is T1C and Typst includes remain T53.
+
+## CI repair (coordinator, 2026-10-27)
+
+CI found an absolute asset origin in the notebook include snapshot on every OS
+and loss of Windows path backslashes in comrak directive info. Snapshot file
+origins now use the existing checkout/Windows-prefix redaction. Include paths
+come from the original opening source line in Markdown, notebook cells and
+the watcher, preserving literal backslashes before punctuation. Other
+directive parsing is unchanged. Synthetic Windows/BOM byte regressions and
+the existing real absolute-path integration test cover the correction.

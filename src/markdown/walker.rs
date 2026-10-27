@@ -43,6 +43,7 @@ pub(crate) fn walk_with_includes<'a>(
         config,
         ctx,
         lines: super::source_lines(original),
+        raw_lines: super::recover::split_lines(original).1,
         footnotes: BTreeMap::new(),
         emitted_footnotes: BTreeSet::new(),
         span_override: None,
@@ -59,6 +60,7 @@ struct Walker<'a, 't, 'w, 'f> {
     config: &'w Config,
     ctx: &'w mut super::Fragment<'f>,
     lines: Vec<&'t str>,
+    raw_lines: Vec<&'t str>,
     footnotes: BTreeMap<String, &'a AstNode<'a>>,
     emitted_footnotes: BTreeSet<String>,
     span_override: Option<SourceSpan>,
@@ -697,11 +699,20 @@ impl<'a> Walker<'a, '_, '_, '_> {
         if matches!(info.name.as_str(), "notes" | "comment") {
             return Ok(Vec::new());
         }
+        if info.name == "include" {
+            let start = node.data().sourcepos.start;
+            let raw = self
+                .raw_lines
+                .get(start.line - 1)
+                .and_then(|line| {
+                    super::include::raw_directive_info(line, start.column)
+                })
+                .unwrap_or(text)
+                .to_owned();
+            return self.include_directive(node, &raw, span, top_level);
+        }
         for problem in &info.problems {
             self.warn("invalid-directive", problem, &span);
-        }
-        if info.name == "include" {
-            return self.include_directive(node, text, span, top_level);
         }
         self.check_directive_closed(&span);
         if info.name.is_empty() {

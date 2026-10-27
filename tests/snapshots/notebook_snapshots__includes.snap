@@ -287,7 +287,7 @@ expression: stable_json(&parsed.document)
     {
       "id": "000000000001",
       "mime": "image/png",
-      "origin": "file:/Users/johannes.blaschke/Developer/writer_rs/tests/fixtures/md/images/plot.png"
+      "origin": "file:[root]/tests/fixtures/md/images/plot.png"
     }
   ],
   "includes": [

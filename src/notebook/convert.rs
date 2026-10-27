@@ -1779,6 +1779,7 @@ fn cell_includes(text: &str, config: &Config) -> Vec<CellInclude> {
     let arena = Arena::new();
     let root = parse_document(&arena, &rewritten, &options);
     let mut found = Vec::new();
+    let (_, lines) = markdown::recover::split_lines(text);
     for node in root.descendants() {
         let data = node.data();
         let NodeValue::BlockDirective(directive) = &data.value else {
@@ -1802,13 +1803,21 @@ fn cell_includes(text: &str, config: &Config) -> Vec<CellInclude> {
             .take(body_end.saturating_sub(start))
             .collect::<Vec<_>>()
             .join("\n");
+        let raw = lines
+            .get(start - 1)
+            .and_then(|line| {
+                markdown::include::raw_directive_info(
+                    line, data.sourcepos.start.column,
+                )
+            })
+            .unwrap_or(&directive.info);
         found.push(CellInclude {
             start,
             end,
             top_level: node
                 .parent()
                 .is_some_and(|parent| parent.same_node(root)),
-            path: markdown::include::include_path(&directive.info),
+            path: markdown::include::include_path(raw),
             closed,
             body,
         });
@@ -2099,5 +2108,21 @@ mod open_block_tests {
             assert!(scan(text, &Config::default()).1, "{text}");
         }
         assert!(!scan(":::note\n```python\nopen\n:::\n", &Config::default()).1);
+    }
+
+    #[test]
+    fn notebook_include_info_preserves_windows_path_bytes() {
+        for (bom, path) in [
+            (
+                "",
+                r"\\?\C:\Users\runneradmin\AppData\Local\Temp\.tmp123\part.md",
+            ),
+            ("\u{feff}", r"folder\.tmp123\part.md"),
+        ] {
+            let text = format!("{bom}:::include \"{path}\"\n:::\n");
+            let includes = cell_includes(&text, &Config::default());
+            assert_eq!(includes.len(), 1, "BOM {bom:?}");
+            assert_eq!(includes[0].path.as_deref(), Ok(path), "BOM {bom:?}");
+        }
     }
 }
