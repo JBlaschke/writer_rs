@@ -1,0 +1,422 @@
+{
+    "meta": {
+        "title": "Figures and captions"
+    },
+    "blocks": [
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "link",
+                    "url": "#fig-image",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Forward caption link"
+                        }
+                    ],
+                    "attrs": {}
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "image",
+            "attrs": {
+                "id": "fig-image"
+            },
+            "number": "1",
+            "caption": [
+                {
+                    "type": "text",
+                    "text": "Image caption "
+                },
+                {
+                    "type": "emph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "with emphasis"
+                        }
+                    ]
+                },
+                {
+                    "type": "footnote",
+                    "label": "caption-note",
+                    "number": 1,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "A note in the image caption."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "body": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "image",
+                            "url": "asset:917b8e6615f3",
+                            "alt": [
+                                {
+                                    "type": "text",
+                                    "text": "A sample image"
+                                }
+                            ],
+                            "title": "Image title",
+                            "attrs": {
+                                "id": "image-inline"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "table",
+            "attrs": {
+                "id": "tbl-data"
+            },
+            "number": "1",
+            "caption": [
+                {
+                    "type": "text",
+                    "text": "Table caption"
+                }
+            ],
+            "body": [
+                {
+                    "type": "table",
+                    "attrs": {
+                        "id": "tbl-inner",
+                        "pairs": {
+                            "custom-style": "Research Table"
+                        }
+                    },
+                    "columns": [
+                        {
+                            "align": "left",
+                            "width": 0.35
+                        },
+                        {
+                            "align": "right",
+                            "width": 0.65
+                        }
+                    ],
+                    "head": [
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Name"
+                                        }
+                                    ],
+                                    "header": true
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Value"
+                                        }
+                                    ],
+                                    "header": true
+                                }
+                            ]
+                        }
+                    ],
+                    "body": [
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Alpha"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "12"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "foot": []
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "listing",
+            "attrs": {
+                "id": "lst-code"
+            },
+            "number": "1",
+            "caption": [
+                {
+                    "type": "text",
+                    "text": "Listing caption"
+                }
+            ],
+            "body": [
+                {
+                    "type": "code_block",
+                    "lang": "rust",
+                    "text": "let value = 12;\n",
+                    "attrs": {}
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "other",
+            "attrs": {
+                "id": "fig-group"
+            },
+            "number": "2",
+            "caption": [
+                {
+                    "type": "text",
+                    "text": "Parent group caption"
+                }
+            ],
+            "body": [
+                {
+                    "type": "figure",
+                    "kind": "image",
+                    "attrs": {
+                        "id": "fig-child-a"
+                    },
+                    "number": "3",
+                    "caption": [
+                        {
+                            "type": "text",
+                            "text": "Child A"
+                        }
+                    ],
+                    "body": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "image",
+                                    "url": "asset:1c40f050d444",
+                                    "alt": [
+                                        {
+                                            "type": "text",
+                                            "text": "A sample image"
+                                        }
+                                    ],
+                                    "title": "Image title",
+                                    "attrs": {
+                                        "id": null
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "figure",
+                    "kind": "image",
+                    "attrs": {
+                        "id": "fig-child-b"
+                    },
+                    "number": "4",
+                    "caption": [
+                        {
+                            "type": "text",
+                            "text": "Child B"
+                        }
+                    ],
+                    "body": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "image",
+                                    "url": "asset:06c421732b50",
+                                    "alt": [
+                                        {
+                                            "type": "text",
+                                            "text": "A sample image"
+                                        }
+                                    ],
+                                    "title": "Image title",
+                                    "attrs": {
+                                        "id": null
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "other",
+            "attrs": {
+                "id": "fig-bare"
+            },
+            "number": null,
+            "caption": null,
+            "body": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "A labelled body without a caption."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "other",
+            "attrs": {
+                "id": "fig-unnumbered"
+            },
+            "number": null,
+            "caption": [
+                {
+                    "type": "strong",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "An unnumbered caption"
+                        }
+                    ]
+                }
+            ],
+            "body": [
+                {
+                    "type": "paragraph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "An unnumbered figure body."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "listing",
+            "attrs": {
+                "id": "lst-number-only"
+            },
+            "number": "2",
+            "caption": null,
+            "body": [
+                {
+                    "type": "code_block",
+                    "text": "number_only()",
+                    "lang": null,
+                    "attrs": {}
+                }
+            ]
+        }
+    ],
+    "features": {},
+    "assets": [
+        {
+            "id": "917b8e6615f3",
+            "mime": "image/png",
+            "origin": "inline:394"
+        },
+        {
+            "id": "1c40f050d444",
+            "mime": "image/jpeg",
+            "origin": "inline:828"
+        },
+        {
+            "id": "06c421732b50",
+            "mime": "image/svg+xml",
+            "origin": "inline:192"
+        }
+    ],
+    "source": {
+        "path": "/fixtures/figures.md",
+        "base_dir": "/fixtures",
+        "kind": "markdown"
+    },
+    "resolved": {
+        "labels": {
+            "fig-image": {
+                "kind": "figure",
+                "number": "1",
+                "supplement": "Exhibit",
+                "text": "fig-image"
+            },
+            "tbl-data": {
+                "kind": "table",
+                "number": "1",
+                "supplement": "Table",
+                "text": "tbl-data"
+            },
+            "lst-code": {
+                "kind": "listing",
+                "number": "1",
+                "supplement": "Listing",
+                "text": "lst-code"
+            },
+            "fig-group": {
+                "kind": "figure",
+                "number": "2",
+                "supplement": "Figure",
+                "text": "fig-group"
+            },
+            "fig-child-a": {
+                "kind": "figure",
+                "number": "3",
+                "supplement": "Figure",
+                "text": "fig-child-a"
+            },
+            "fig-child-b": {
+                "kind": "figure",
+                "number": "4",
+                "supplement": "Figure",
+                "text": "fig-child-b"
+            },
+            "fig-bare": {
+                "kind": "figure",
+                "number": null,
+                "supplement": "Figure",
+                "text": "fig-bare"
+            },
+            "fig-unnumbered": {
+                "kind": "figure",
+                "number": null,
+                "supplement": "Figure",
+                "text": "fig-unnumbered"
+            },
+            "lst-number-only": {
+                "kind": "listing",
+                "number": "2",
+                "supplement": "Listing",
+                "text": "lst-number-only"
+            }
+        },
+        "footnotes": 1
+    }
+}

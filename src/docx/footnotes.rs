@@ -3,8 +3,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ir::{Block, Document, Inline, RefForm, SourceKind, SourceSpan};
-use crate::resolve::anchor;
+use crate::ir::{
+    Block, Document, FigureKind, Inline, RefForm, SourceKind, SourceSpan,
+};
+use crate::resolve::{BIBLIOGRAPHY_ANCHOR, anchor};
 
 use super::{Container, Emitter, Ids, Part, StyleKind, body::BodyState, xml};
 
@@ -98,7 +100,7 @@ impl<'a> ContentPlan<'a> {
     }
 
     fn blocks(
-        &mut self, blocks: &'a [Block], doc: &Document,
+        &mut self, blocks: &'a [Block], doc: &'a Document,
         inherited: Option<&SourceSpan>, parent: Option<usize>, ids: &mut Ids,
     ) {
         for block in blocks {
@@ -152,17 +154,50 @@ impl<'a> ContentPlan<'a> {
                         }
                     }
                 }
-                Block::CodeBlock { attrs, .. } | Block::Table { attrs, .. } => {
+                Block::Figure { kind, caption, body, attrs, .. } => {
+                    self.label(attrs.id.as_deref());
+                    let caption_first =
+                        matches!(kind, FigureKind::Table | FigureKind::Listing);
+                    if !caption_first {
+                        self.blocks(body, doc, span, parent, ids);
+                    }
+                    if let Some(caption) = caption {
+                        self.inlines(caption, doc, span, parent, ids);
+                    }
+                    if caption_first {
+                        self.blocks(body, doc, span, parent, ids);
+                    }
+                }
+                Block::Table { attrs, .. } => {
+                    self.label(attrs.id.as_deref());
+                    for cell in super::tables::rendered_cells(block) {
+                        self.inlines(&cell.inlines, doc, span, parent, ids);
+                    }
+                }
+                Block::CodeBlock { attrs, .. } => {
                     self.label(attrs.id.as_deref());
                 }
-                // Rich figures, table cells and equations arrive in T41/T42.
+                Block::Bibliography { .. } => {
+                    if let Some(bibliography) = &doc.resolved.bibliography {
+                        self.label(Some(BIBLIOGRAPHY_ANCHOR));
+                        for entry in &bibliography.entries {
+                            if let Some(prefix) = &entry.prefix {
+                                self.inlines(prefix, doc, span, parent, ids);
+                            }
+                            self.inlines(
+                                &entry.inlines, doc, span, parent, ids,
+                            );
+                        }
+                    }
+                }
+                // Equation number bookmarks arrive in T42.
                 _ => {}
             }
         }
     }
 
     fn inlines(
-        &mut self, inlines: &'a [Inline], doc: &Document,
+        &mut self, inlines: &'a [Inline], doc: &'a Document,
         span: Option<&SourceSpan>, parent: Option<usize>, ids: &mut Ids,
     ) {
         for inline in inlines {

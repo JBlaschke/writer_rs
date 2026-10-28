@@ -20,63 +20,6 @@ expression: output.diagnostics
   {
     "level": "warning",
     "code": "unsupported-construct",
-    "message": "images in DOCX arrives in T41",
-    "path": null,
-    "span": null
-  },
-  {
-    "level": "warning",
-    "code": "docx-unknown-anchor",
-    "message": "DOCX bookmark for \"fig-throughput\" is not emitted",
-    "path": "/abs/document/document.md",
-    "span": {
-      "start_line": 1,
-      "end_line": 1
-    }
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "figures in DOCX arrives in T41",
-    "path": null,
-    "span": {
-      "start_line": 1,
-      "end_line": 1
-    }
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "figures in DOCX arrives in T41",
-    "path": null,
-    "span": {
-      "start_line": 1,
-      "end_line": 1
-    }
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "figures in DOCX arrives in T41",
-    "path": null,
-    "span": {
-      "start_line": 1,
-      "end_line": 1
-    }
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "figures in DOCX arrives in T41",
-    "path": null,
-    "span": {
-      "start_line": 1,
-      "end_line": 1
-    }
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
     "message": "display math in DOCX arrives in T42",
     "path": null,
     "span": {
@@ -93,47 +36,5 @@ expression: output.diagnostics
       "start_line": 1,
       "end_line": 1
     }
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "table of contents in DOCX arrives in T41",
-    "path": null,
-    "span": null
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "bibliographies in DOCX arrives in T41",
-    "path": null,
-    "span": null
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "images in DOCX arrives in T41",
-    "path": null,
-    "span": null
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "images in DOCX arrives in T41",
-    "path": null,
-    "span": null
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "images in DOCX arrives in T41",
-    "path": null,
-    "span": null
-  },
-  {
-    "level": "warning",
-    "code": "unsupported-construct",
-    "message": "images in DOCX arrives in T41",
-    "path": null,
-    "span": null
   }
 ]

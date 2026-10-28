@@ -161,7 +161,50 @@ expression: snapshot
                 </w:r>
             </w:hyperlink>
             <w:r>
-                <w:t xml:space="preserve">Inline plot</w:t>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="1" name="Picture 1" descr="Inline plot"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
             </w:r>
             <w:bookmarkStart w:id="2" w:name="_Fn000001"/>
             <w:r>
@@ -189,9 +232,11 @@ expression: snapshot
             <w:r>
                 <w:fldChar w:fldCharType="end"/>
             </w:r>
-            <w:r>
-                <w:t xml:space="preserve">Figure 1</w:t>
-            </w:r>
+            <w:hyperlink w:anchor="_ac87de141ca58dd95b2a3b4464269f29b5ca70e" w:history="1">
+                <w:r>
+                    <w:t xml:space="preserve">Figure 1</w:t>
+                </w:r>
+            </w:hyperlink>
             <w:hyperlink w:anchor="_fdabef51864cece78e14c461e4ab265d0b74de7" w:history="1">
                 <w:r>
                     <w:t xml:space="preserve">page </w:t>
@@ -322,32 +367,575 @@ expression: snapshot
         </w:p>
         <w:p>
             <w:pPr>
-                <w:pStyle w:val="BodyText"/>
+                <w:pStyle w:val="CaptionedFigure"/>
             </w:pPr>
+            <w:r>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="2" name="Picture 2" descr="Throughput per node"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="ImageCaption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="3" w:name="_ac87de141ca58dd95b2a3b4464269f29b5ca70e"/>
+            <w:r>
+                <w:t xml:space="preserve">Figure</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="3"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
             <w:r>
                 <w:t xml:space="preserve">Throughput per node</w:t>
             </w:r>
         </w:p>
         <w:p>
             <w:pPr>
-                <w:pStyle w:val="BodyText"/>
+                <w:pStyle w:val="TableCaption"/>
             </w:pPr>
+            <w:bookmarkStart w:id="4" w:name="_b1cb2cdaf4be367cdd1d996797f75590521e3fe"/>
+            <w:r>
+                <w:t xml:space="preserve">Table</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Table \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="4"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Throughput per node</w:t>
+            </w:r>
+        </w:p>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="Table"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="1" w:lastRow="1" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0060"/>
+                <w:tblCaption w:val="Throughput per node"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="2257"/>
+                <w:gridCol w:w="2257"/>
+                <w:gridCol w:w="2257"/>
+                <w:gridCol w:w="2257"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:trPr>
+                    <w:tblHeader/>
+                </w:trPr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Group</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Node</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">GB/s</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Load</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4514" w:type="dxa"/>
+                        <w:gridSpan w:val="2"/>
+                        <w:vMerge w:val="restart"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">A</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">42</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">90%</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4514" w:type="dxa"/>
+                        <w:gridSpan w:val="2"/>
+                        <w:vMerge/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">43</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2257" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">91%</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="9028" w:type="dxa"/>
+                        <w:gridSpan w:val="4"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Summary</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Caption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="5" w:name="_4c42af6f94689bdcfc07e7aae087a11b923a91c"/>
+            <w:r>
+                <w:t xml:space="preserve">Listing</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Listing \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="5"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
             <w:r>
                 <w:t xml:space="preserve">Throughput per node</w:t>
             </w:r>
         </w:p>
         <w:p>
             <w:pPr>
-                <w:pStyle w:val="BodyText"/>
+                <w:pStyle w:val="SourceCode"/>
             </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BuiltInTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">print</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DecValTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">42</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">)</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CaptionedFigure"/>
+            </w:pPr>
+            <w:r>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="3" name="Picture 3" descr="Left panel"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="ImageCaption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="6" w:name="_725babdec4502ee8615c106e49f9c29ab37dc26"/>
+            <w:r>
+                <w:t xml:space="preserve">Figure</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">2</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="6"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
             <w:r>
                 <w:t xml:space="preserve">Throughput per node</w:t>
             </w:r>
         </w:p>
         <w:p>
             <w:pPr>
-                <w:pStyle w:val="BodyText"/>
+                <w:pStyle w:val="CaptionedFigure"/>
             </w:pPr>
+            <w:r>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="4" name="Picture 4" descr="Right panel"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="ImageCaption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="7" w:name="_b664c84ac8c655e850685b89a1829b3922a98d2"/>
+            <w:r>
+                <w:t xml:space="preserve">Figure</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">3</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="7"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Throughput per node</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Caption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="8" w:name="_27fc46cf7320723b1931ed163bdc6f464ba2683"/>
+            <w:r>
+                <w:t xml:space="preserve">Other</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC \r 1 </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="8"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
             <w:r>
                 <w:t xml:space="preserve">Throughput per node</w:t>
             </w:r>
@@ -406,6 +994,105 @@ expression: snapshot
                 <w:br w:type="page"/>
             </w:r>
         </w:p>
+        <w:sdt>
+            <w:sdtPr>
+                <w:docPartObj>
+                    <w:docPartGallery w:val="Table of Contents"/>
+                    <w:docPartUnique/>
+                </w:docPartObj>
+            </w:sdtPr>
+            <w:sdtContent>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOCHeading"/>
+                    </w:pPr>
+                    <w:r>
+                        <w:t xml:space="preserve">Contents</w:t>
+                    </w:r>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC1"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:r>
+                        <w:fldChar w:fldCharType="begin"/>
+                    </w:r>
+                    <w:r>
+                        <w:instrText xml:space="preserve"> TOC \o &quot;1-3&quot; \h \z \u </w:instrText>
+                    </w:r>
+                    <w:r>
+                        <w:fldChar w:fldCharType="separate"/>
+                    </w:r>
+                    <w:hyperlink w:anchor="_fdabef51864cece78e14c461e4ab265d0b74de7" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Introduction</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _fdabef51864cece78e14c461e4ab265d0b74de7 \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                    <w:r>
+                        <w:fldChar w:fldCharType="end"/>
+                    </w:r>
+                </w:p>
+            </w:sdtContent>
+        </w:sdt>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading1"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="9" w:name="_refs"/>
+            <w:r>
+                <w:t xml:space="preserve">Bibliography</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="9"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Bibliography"/>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="720"/>
+                </w:tabs>
+                <w:ind w:left="720" w:hanging="720"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">[1]</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">D. Knuth. </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:i/>
+                    <w:iCs/>
+                </w:rPr>
+                <w:t xml:space="preserve">The TeXbook</w:t>
+            </w:r>
+        </w:p>
         <w:p>
             <w:pPr>
                 <w:pStyle w:val="CellPrompt"/>
@@ -442,7 +1129,50 @@ expression: snapshot
                 <w:pStyle w:val="FirstParagraph"/>
             </w:pPr>
             <w:r>
-                <w:t xml:space="preserve">Cell plot</w:t>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="5" name="Picture 5" descr="Cell plot"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
             </w:r>
         </w:p>
         <w:p>
@@ -450,7 +1180,50 @@ expression: snapshot
                 <w:pStyle w:val="FirstParagraph"/>
             </w:pPr>
             <w:r>
-                <w:t xml:space="preserve">Cell plot</w:t>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="6" name="Picture 6" descr="Cell plot"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
             </w:r>
         </w:p>
         <w:p>
@@ -458,7 +1231,50 @@ expression: snapshot
                 <w:pStyle w:val="FirstParagraph"/>
             </w:pPr>
             <w:r>
-                <w:t xml:space="preserve">Cell plot</w:t>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="7" name="Picture 7" descr="Cell plot"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
             </w:r>
         </w:p>
         <w:p>
@@ -474,7 +1290,50 @@ expression: snapshot
                 <w:pStyle w:val="FirstParagraph"/>
             </w:pPr>
             <w:r>
-                <w:t xml:space="preserve">Cell plot</w:t>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="4012057" cy="4012057"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="8" name="Picture 8" descr="Cell plot"/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="4012057" cy="4012057"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
             </w:r>
         </w:p>
         <w:sectPr>

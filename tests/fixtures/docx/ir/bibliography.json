@@ -1,0 +1,127 @@
+{
+    "meta": {
+        "vars": {
+            "reference-section-title": "Selected sources"
+        }
+    },
+    "blocks": [
+        {
+            "type": "toc",
+            "depth": 1
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "link",
+                    "url": "#refs",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "See selected sources"
+                        }
+                    ],
+                    "attrs": {}
+                }
+            ]
+        },
+        {
+            "type": "bibliography"
+        }
+    ],
+    "features": {},
+    "assets": [],
+    "source": {
+        "path": "/fixtures/bibliography.md",
+        "base_dir": "/fixtures",
+        "kind": "markdown"
+    },
+    "resolved": {
+        "bibliography": {
+            "style": "fixture",
+            "hanging_indent": true,
+            "entries": [
+                {
+                    "key": "first",
+                    "prefix": [
+                        {
+                            "type": "text",
+                            "text": "[1]"
+                        }
+                    ],
+                    "inlines": [
+                        {
+                            "type": "strong",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "First title."
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "text": " "
+                        },
+                        {
+                            "type": "link",
+                            "url": "https://example.org/first",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Source link"
+                                }
+                            ],
+                            "attrs": {}
+                        }
+                    ]
+                },
+                {
+                    "key": "second",
+                    "prefix": null,
+                    "inlines": [
+                        {
+                            "type": "emph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Second title."
+                                }
+                            ]
+                        },
+                        {
+                            "type": "footnote",
+                            "label": "bib-note",
+                            "number": 1,
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "A note in a bibliography entry."
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "toc": [
+            {
+                "level": 1,
+                "anchor": "refs",
+                "number": null,
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Stale title"
+                    }
+                ]
+            }
+        ],
+        "footnotes": 1
+    }
+}

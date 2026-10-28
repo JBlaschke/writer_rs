@@ -156,9 +156,7 @@ fn output_over_input_is_refused() {
 #[test]
 fn stub_targets_exit_2() {
     let dir = tempfile::tempdir().unwrap();
-    for (target, task) in
-        [("pdf", "T32"), ("docx", "T41"), ("latex", "T61"), ("typst", "T34")]
-    {
+    for (target, task) in [("pdf", "T32"), ("latex", "T61"), ("typst", "T34")] {
         writer()
             .args(["build", "examples/basic/document.md", "--to", target, "-o"])
             .arg(dir.path().join(format!("out.{target}")))

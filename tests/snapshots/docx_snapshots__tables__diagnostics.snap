@@ -1,0 +1,5 @@
+---
+source: tests/docx_snapshots.rs
+expression: output.diagnostics
+---
+[]

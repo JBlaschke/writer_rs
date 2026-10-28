@@ -63,7 +63,7 @@ fn fixture_paths() -> Vec<PathBuf> {
         .collect();
     paths.push(root().join("ir/sample-document.json"));
     paths.sort();
-    assert!(paths.len() >= 8, "keep all seven T40 fixtures and the sample IR");
+    assert!(paths.len() >= 12, "keep T40/T41 fixtures and the sample IR");
     paths
 }
 
@@ -187,6 +187,10 @@ fn resolved_ir_packages() {
         let name = path.file_stem().unwrap().to_str().unwrap();
         let doc: Document =
             serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        if matches!(name, "figures" | "tables" | "toc" | "bibliography") {
+            let violations = doc.invariant_violations();
+            assert!(violations.is_empty(), "{name}: {violations:#?}");
+        }
         let output = emit(&doc, &Config::default(), None);
         for (part, bytes) in parts(&output.bytes) {
             let label: String = part
@@ -809,4 +813,110 @@ fn packages_are_deterministic_with_and_without_reference_reuse() {
             assert!(counts.abstract_nums >= 2);
         }
     }
+}
+
+#[test]
+fn rich_content_prepass_matches_emission_across_parts_and_candidates() {
+    let mut doc = fixture("blocks");
+    doc.meta = Default::default();
+    let text = |value: &str| json!({"type": "text", "text": value});
+    let note = |number: u32, label: &str| {
+        json!({
+            "type": "footnote", "number": number, "blocks": [{
+                "type": "paragraph", "inlines": [
+                    {"type": "span", "attrs": {"id": label}, "inlines": [text(label)]},
+                    {"type": "image", "url": "asset:32debefb8003", "attrs": {}, "alt": [text("Note plot")]},
+                    {"type": "link", "url": "https://note.example/", "attrs": {}, "inlines": [text("source")]}
+                ]
+            }]
+        })
+    };
+    let heading = |label: &str| {
+        json!({
+            "type": "heading", "level": 1, "attrs": {"id": label},
+            "inlines": [text(label)]
+        })
+    };
+    doc.blocks = serde_json::from_value(json!([
+        {"type": "paragraph", "inlines": [
+            {"type": "link", "url": "#caption-note", "attrs": {}, "inlines": [text("Forward caption")]},
+            {"type": "link", "url": "#table-note", "attrs": {}, "inlines": [text("Forward table")]},
+            {"type": "link", "url": "#bibliography-note", "attrs": {}, "inlines": [text("Forward bibliography")]},
+            {"type": "link", "url": "#refs", "attrs": {}, "inlines": [text("References")]}
+        ]},
+        {"type": "toc", "depth": 2},
+        {"type": "figure", "kind": "other", "attrs": {"id": "rich-figure"},
+            "body": [{"type": "paragraph", "inlines": [text("Figure body"), note(1, "body-note")]}],
+            "caption": [text("Rich caption"), note(2, "caption-note")]},
+        {"type": "table", "columns": [{}], "head": [], "foot": [], "attrs": {},
+            "body": [{"cells": [{"inlines": [text("Rich cell"), note(3, "table-note")]}]}]},
+        {"type": "cell", "index": 0, "show_input": false, "show_output": true,
+            "outputs": [{"kind": {"kind": "display"}, "candidates": [
+                {"mime": "text/html", "blocks": [
+                    {"type": "raw", "format": "html", "text": "<p>Unpicked</p>"},
+                    heading("unpicked-heading"),
+                    {"type": "paragraph", "inlines": [note(5, "unpicked-note")]}]},
+                {"mime": "text/plain", "blocks": [heading("visible-heading")]}
+            ], "mimes": ["text/html", "text/plain"]}]},
+        {"type": "bibliography"}
+    ])).unwrap();
+    doc.resolved.toc = serde_json::from_value(json!([
+        {"level": 1, "number": null, "anchor": "visible-heading", "inlines": [text("Visible heading")]},
+        {"level": 1, "number": null, "anchor": "unpicked-heading", "inlines": [text("Hidden cache")]},
+        {"level": 1, "number": null, "anchor": "refs", "inlines": [text("References")]}
+    ])).unwrap();
+    doc.resolved.bibliography = Some(
+        serde_json::from_value(json!({
+            "style": "test", "hanging_indent": false,
+            "entries": [{"key": "entry", "prefix": [text("[1]")],
+                "inlines": [text("Rich entry"), note(4, "bibliography-note")]}]
+        }))
+        .unwrap(),
+    );
+    let output = emit(&doc, &Config::default(), None);
+    assert!(output.diagnostics.is_empty(), "{:?}", output.diagnostics);
+    let package = parts(&output.bytes);
+    let xml = String::from_utf8_lossy(&package["word/document.xml"]);
+    let notes = String::from_utf8_lossy(&package["word/footnotes.xml"]);
+    for (id, label) in [
+        (1, "body-note"),
+        (2, "caption-note"),
+        (3, "table-note"),
+        (4, "bibliography-note"),
+    ] {
+        assert_eq!(
+            xml.matches(&format!("<w:footnoteReference w:id=\"{id}\"/>"))
+                .count(),
+            1
+        );
+        assert_eq!(
+            notes.matches(&format!("w:name=\"{}\"", anchor(label))).count(),
+            1
+        );
+    }
+    for label in ["caption-note", "table-note", "bibliography-note", "refs"] {
+        assert!(
+            xml.contains(&format!("w:anchor=\"{}\"", anchor(label))),
+            "{label}"
+        );
+    }
+    assert!(!xml.contains("unpicked-note"));
+    assert!(!notes.contains("unpicked-note"));
+    assert!(!xml.contains(&format!("PAGEREF {}", anchor("unpicked-heading"))));
+    assert!(xml.contains("Hidden cache"));
+    assert!(xml.contains(&format!("PAGEREF {}", anchor("visible-heading"))));
+    assert!(
+        String::from_utf8_lossy(&package["word/_rels/footnotes.xml.rels"])
+            .contains("https://note.example/")
+    );
+    assert_eq!(
+        package.keys().filter(|name| name.starts_with("word/media/")).count(),
+        1
+    );
+    let drawing_ids: Vec<_> = notes
+        .split("<wp:docPr id=\"")
+        .skip(1)
+        .map(|tail| tail.split('"').next().unwrap())
+        .collect();
+    assert_eq!(drawing_ids, ["1", "2", "3", "4"]);
 }
