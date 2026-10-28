@@ -1,0 +1,2 @@
+// mode: display
+[| x |]

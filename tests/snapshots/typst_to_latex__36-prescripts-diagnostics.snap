@@ -1,0 +1,27 @@
+---
+source: tests/typst_to_latex.rs
+expression: diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "W-TYP-MATH-FN-UNKNOWN",
+    "message": "attach: approximate wrapper; used an approximation at bytes 0..23 of the equation",
+    "path": null,
+    "span": null
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-ARG-IGNORED",
+    "message": "attach: named argument `tl` is ignored at bytes 10..15 of the equation",
+    "path": null,
+    "span": null
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-ARG-IGNORED",
+    "message": "attach: named argument `bl` is ignored at bytes 17..22 of the equation",
+    "path": null,
+    "span": null
+  }
+]

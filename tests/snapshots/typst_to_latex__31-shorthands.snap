@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+a \rightarrow b \leq c \neq d \mapsto e

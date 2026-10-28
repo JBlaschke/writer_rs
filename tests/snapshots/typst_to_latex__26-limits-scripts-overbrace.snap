@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+\sum\limits_{i = 1}^{N} + \max\nolimits_{x} + \operatorname*{argmax}_{x} + \hat{x y} + \overbrace{a + b}^{\text{sum}}

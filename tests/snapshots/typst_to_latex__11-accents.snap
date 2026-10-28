@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+\hat{x} \vec{v} \dot{y}

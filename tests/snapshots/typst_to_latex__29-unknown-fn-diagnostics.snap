@@ -1,0 +1,13 @@
+---
+source: tests/typst_to_latex.rs
+expression: diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "W-TYP-MATH-FN-UNKNOWN",
+    "message": "foo: unknown function; used an approximation at bytes 0..6 of the equation",
+    "path": null,
+    "span": null
+  }
+]

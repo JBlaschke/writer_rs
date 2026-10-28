@@ -894,3 +894,23 @@ math { font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Liber
   vendored-assets.md (T00) with its license file.
 - R4 §4.4 recommended server-side `katex-rs`; the plan's binding choice (client-side KaTeX 0.19.1)
   stands. `katex-rs` is not a dependency.
+
+
+> **T51 coordinator refinements (2026-10-28):** Private symbols/calls children
+> share the frozen public facade; the symbols child owns COMMAND_PACKAGES.
+> Malformed non-code syntax retains visible text with W-TYP-MATH-SYM-UNKNOWN;
+> invalid call arity uses visible generic form with W-TYP-MATH-FN-UNKNOWN.
+> Hash literals are permitted only for direct named bool/none/numbers (including
+> unary-negative numbers via native `#(-3)` / `#(-1pt)` syntax, with exactly
+> one literal operand); redundant Hash strings remain code. MathText Number
+> preserves ASCII digits but maps styled Unicode digits through char_command.
+> Combined primes
+> and explicit superscripts share one superscript group to avoid invalid TeX.
+> Additional native double-acute/harpoon accents use audited amsmath overset
+> compositions; triple/quad dots use dddot/ddddot. Required left squiggles use
+> reflected right glyphs with graphicx/reflectbox, discovered through the same
+> package lookup. Obsolete planck.reduce is removed from curated names so the
+> frozen unknown-symbol fixture remains meaningful; Unicode hbar stays mapped.
+> Generator developer archive/overrides/output flags retain full pin checking,
+> atomic writes and the default/--check contract. Baseline and curated counts
+> are checked and reported separately.

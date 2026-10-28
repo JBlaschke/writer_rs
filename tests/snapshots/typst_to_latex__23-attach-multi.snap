@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+x_{1}^{2} + x_{i j} + e^{i \pi}

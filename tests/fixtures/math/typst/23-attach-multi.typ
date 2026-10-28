@@ -1,0 +1,2 @@
+// mode: inline
+x_1^2 + x_(i j) + e^(i pi)

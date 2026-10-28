@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+\begin{pmatrix}a & b \\ c & d\end{pmatrix}

@@ -59,7 +59,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
-| T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | todo |
+| T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | ready for review |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | todo |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | todo |
 | T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | todo |
@@ -370,3 +370,17 @@ Manual checks performed: …
 - PRs #22–25 merged into main (`38fa4b3`) while the pages milestone was being
   validated. T24 retains their checked code. Pending feature order is #26,
   then T24; #27 repairs the independent watcher race and is included here.
+
+
+- T24 is open in [PR #28](https://github.com/JBlaschke/writer_rs/pull/28)
+  (`c9d2282`). T51 starts on `codex/typst-math` from that checked milestone.
+  Its private symbol/call split and narrow recovery/generator choices are frozen
+  in the brief. Merge #26, then #28 before T51; #27 is an independent CI repair.
+
+
+- T51 passes formatting, Clippy, default/feature rustdoc, 1,428 debug and
+  1,427 release tests. All 14 public tests, 13 private units, 72 reviewed
+  snapshots and 11 Python tests pass. Actual Pandoc records, all 36 corpus
+  bodies and all 1,058 distinct generated table expressions pass their gates.
+  Pure conversion preserves unsupported source with located warnings and never
+  evaluates code. T42 follows for editable DOCX math while CI runs.

@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+\text{text} + \operatorname{foo} + \lim_{x \rightarrow 0}
