@@ -666,3 +666,38 @@ bytes fall back to located alt-text diagnostics; registry I/O errors propagate
 before ZIP/write. T42 math/OMML and T70 bibliography loading remain separate;
 T43 owns visual Word smoke tests. No dependencies, public IR/config/clap shapes
 or module lists change. Watcher work follows without waiting for remote CI.
+
+
+## T20 build watch acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T41 plus T20.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 10.75 s | 99.21 s | 92.53 s | 1,182 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 284 s | 329.95 s | 2795.66 s | 1,181 passed |
+
+The debug run completed before the desktop crash. Sources and tests survived;
+temporary logs did not. The release suite was rerun after recovery and passed,
+including the native watcher, library-loop and CLI subprocess tests. Two
+helper tests are deliberately ignored. Local native-service access is needed
+for macOS FSEvents; production and CI contain no sandbox workaround.
+Formatting, all-target/all-feature Clippy and rustdoc with denied warnings
+pass. Basic/mixed HTML builds remain 687.6/111.6 kB; basic DOCX is 9.5 kB
+with its existing T42 math warnings.
+
+Twenty-one private watcher tests, twenty backend tests, seventeen loop tests,
+nine CLI subprocess tests and one status unit test cover canonicalization,
+role/package filtering, bounded batching, save/rename/recreate behavior,
+initial and later build/config/include/asset failures, independent targets,
+quiet/reporting/usage behavior, catch-up and suppression of successful outputs.
+The two Unix symlink regressions preserve OS traversal semantics. Windows
+parent guards and portable bounded child cleanup are retained from presenter.
+
+The CLI watch stub is replaced. Narrow crate-private pipeline/report helpers
+preserve original multi-target output naming during partial rebuilds and
+borrow reports without losing source excerpts. Pure access events are ignored
+to prevent inotify self-rebuilds; all mutation events still count. Server/SSE,
+session runtime and actual PDF generation remain their named later milestones.
+No dependencies, public IR/config/clap shapes or module lists change.

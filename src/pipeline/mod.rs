@@ -551,6 +551,15 @@ pub fn output_path(
 pub fn build_targets(
     opts: &BuildOptions, targets: &[Target], worlds: &mut WorldSlot,
 ) -> BuildReport {
+    let count = targets.iter().collect::<std::collections::HashSet<_>>().len();
+    build_targets_with_count(opts, targets, worlds, count)
+}
+
+/// Retains original output-directory semantics during a selective watch rebuild.
+pub(crate) fn build_targets_with_count(
+    opts: &BuildOptions, targets: &[Target], worlds: &mut WorldSlot,
+    requested_count: usize,
+) -> BuildReport {
     let mut prepared = match prepare(opts) {
         Ok(prepared) => prepared,
         Err(failure) => return failed_report(failure, opts.cli.strict),
@@ -576,7 +585,7 @@ pub fn build_targets(
     let mut diagnostics = prepared.diagnostics.clone();
     let mut results = Vec::new();
     for target in &unique {
-        let out = output_path(&prepared, opts, *target, unique.len());
+        let out = output_path(&prepared, opts, *target, requested_count);
         let result = build_target(&prepared, opts, *target, &out, world);
         let written = result.map(|(written, found)| {
             diagnostics.extend(found);

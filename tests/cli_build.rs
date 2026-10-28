@@ -199,15 +199,6 @@ fn typst_target_on_typ_input_exits_2() {
 }
 
 #[test]
-fn watch_is_a_stub() {
-    writer()
-        .args(["build", "examples/basic/document.md", "--watch"])
-        .assert()
-        .code(2)
-        .stderr(contains("build --watch: not implemented yet (T20)"));
-}
-
-#[test]
 fn command_stubs_exit_2() {
     for (args, task) in [
         (vec!["serve", "examples/basic/document.md"], "T23"),
