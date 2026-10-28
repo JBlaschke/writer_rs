@@ -30,6 +30,14 @@ files). Facts come from R1, R2, R4, R5 and probes run for this spec and its revi
 
 ## 2. The structured subset: typst → IR (T50; §2.7 also T53)
 
+> **Contract change (coordinator, 2026-10-28):** T50 may split its implementation
+> into private frontend/{walker,literals,metadata,calls,tables,normalize}.rs children,
+> declared only in frontend.rs. Target-free check activates with T50; T71's
+> per-target guard and T52's target dispatch stay explicit. The pipeline applies
+> final CLI strictness before returning Typst Prepared, so metadata cannot
+> weaken a CLI strict flag before subset rendering. The shared missing-asset
+> parser accepts the optional Typst column suffix for watch recovery.
+
 ### 2.1 Entry point and failure policy
 `pub fn parse(source: &SourceInfo, text: &str, config: &Config) -> Result<Parsed>` (ir.md §4):
 `Source::detached(text)`; every error of `root.errors_and_warnings()` is `E-TYP-SYNTAX` and the result
@@ -84,6 +92,24 @@ Equations are kept verbatim (`Block::Math`/`Inline::Math`, dialect `Typst`), `#`
 owns all math-level diagnostics; code inside math is diagnosed per target by math.md §9
 (`E-TYP-MATH-CODE`, LaTeX only) and by the `equation_mathml` fallback (math.md §3.5).
 
+> **Table capacity (coordinator, 2026-10-28):** Structured tables are bounded
+> to 65,536 grid slots across their sections. Checked column/span expansion
+> beyond that budget emits E-TYP-ARG-INVALID and drops the table call while
+> retaining surrounding content. Native PDF compilation remains independent.
+> Auto/percent track mixtures and all-fr ratios are supported; fr mixed with
+> auto/percent is unsupported. Cell auto/vertical-only alignment inherits the
+> column instead of replacing its horizontal alignment.
+
+> **Literal content capacity (coordinator, 2026-10-28):** Captured content
+> shares a replay allowance across included files: at most 64 active content
+> expansions and 65,536 replayed expressions/content entries per parse. The
+> first exceeded limit emits a located E-TYP-ARG-INVALID and drops that replay.
+> Direct source markup does not consume this allowance. This bounds recursive
+> literal bindings without evaluating code or changing native PDF behavior.
+> Each decoded literal value also has a 65,536-node, 64-level and 8 MiB string
+> allowance, checked before cloning bound arrays/dictionaries. Excess values
+> emit E-TYP-ARG-INVALID. Ordinary literal arrays and aliases remain supported.
+
 ### 2.3 Labels
 A `Label` attaches to the nearest preceding sibling in the same `Markup` that is not `Space`,
 `Parbreak` or a comment (typst-eval 0.15.1 `markup.rs`: `Unlabellable` = space, parbreak, tag;
@@ -95,6 +121,16 @@ Targets: `Heading` → `attrs.id`; block `Equation`, `math.equation`, `mitex` �
 §5.6); `callout` → `Callout.attrs.id`; `code-cell` → `Cell.attrs.id`; anything else →
 `W-TYP-LABEL-IGNORED`. Labels already satisfy references.md's alphabet; `label("x y")` is
 `label-invalid`.
+
+> **Labelled plain tables (coordinator, 2026-10-28):** Keep the label on the
+> inner Table, with reference kind Other. After figure inference, normalize a
+> labelled Table outside an existing Table figure into an unnumbered,
+> captionless Table figure with no outer id and the same span. This satisfies
+> IR invariants without assigning a table number or changing reference kind.
+> If that table contains nested figures, carry its id on a containing Div and
+> clear only the table id instead; this is the representable Other-kind anchor
+> without forbidden figure nesting. Enclosing non-Other figures downgrade when
+> required by the same invariant, without discarding labels or content.
 
 ### 2.4 Allow-listed calls (callee `Ident` or `FieldAccess`, optionally through an import alias)
 Named arguments not listed are `W-TYP-ARG-IGNORED`, except the *silent* ones (layout-only, PDF
@@ -174,6 +210,14 @@ features and diagnostics merged; every block gets `SourceSpan.file`; `Document.i
 transitively, in first-use order. Missing/unreadable → `E-TYP-INCLUDE-MISSING`; a cycle (message names
 the chain) → `E-TYP-INCLUDE-CYCLE`; nesting deeper than 8 → `E-TYP-INCLUDE-DEPTH`; a non-literal path
 → `E-TYP-INCLUDE-DYNAMIC`. The PDF compile serves `.md`/`.ipynb` through §6.4.
+
+> **Included metadata (coordinator, 2026-10-28):** A Typst child uses its own
+> effective config while walking, but never changes the outer DocMeta. Explicit
+> nonempty show/set metadata emits include-meta-ignored at the include site.
+> Remove only a synthetic span-None child TOC; keep explicit outline blocks.
+> Invalid known literal argument shapes emit E-TYP-ARG-INVALID and skip the
+> argument; nonliteral template arguments emit E-TYP-TEMPLATE-ARG. Remaining
+> genuine config validation failures keep the existing Result error contract.
 
 ### 2.8 Diagnostic codes
 | code | level | meaning |

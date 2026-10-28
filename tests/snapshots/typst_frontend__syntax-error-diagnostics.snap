@@ -1,0 +1,28 @@
+---
+source: tests/typst_frontend.rs
+expression: diagnostics
+---
+[
+  {
+    "level": "error",
+    "code": "E-TYP-SYNTAX",
+    "message": "unclosed delimiter (col 8)",
+    "path": "[typ]/syntax-error.typ",
+    "span": {
+      "start_line": 3,
+      "end_line": 3,
+      "file": "[typ]/syntax-error.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-SYNTAX",
+    "message": "unclosed delimiter (col 14)",
+    "path": "[typ]/syntax-error.typ",
+    "span": {
+      "start_line": 3,
+      "end_line": 3,
+      "file": "[typ]/syntax-error.typ"
+    }
+  }
+]

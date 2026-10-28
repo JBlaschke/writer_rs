@@ -1,0 +1,248 @@
+---
+source: tests/typst_frontend.rs
+expression: diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "W-TYP-PACKAGE-VERSION",
+    "message": "imported @writer/doc:9.9.9 differs from embedded version 0.1.0 (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 2,
+      "end_line": 2,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-IMPORT-IGNORED",
+    "message": "import \"unloaded.typ\" is outside the structured subset (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 3,
+      "end_line": 3,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-TEMPLATE-ARG",
+    "message": "this call is not a literal constructor (col 31)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 4,
+      "end_line": 4,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-PATH-STRING",
+    "message": "pass bibliography paths with path(\"refs.bib\") (col 63)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 4,
+      "end_line": 4,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-SHOW-IGNORED",
+    "message": "this show rule is kept only by the PDF (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 5,
+      "end_line": 5,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-SET-IGNORED",
+    "message": "this set rule is kept only by the PDF (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 6,
+      "end_line": 6,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-LET-IGNORED",
+    "message": "only simple literal let bindings are part of the structured subset (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 7,
+      "end_line": 7,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-LABEL-ORPHAN",
+    "message": "label has no supported preceding target (col 1)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 1,
+      "end_line": 1,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-CALL-UNKNOWN",
+    "message": "call is not in the structured subset (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 12,
+      "end_line": 12,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-CALL-UNKNOWN",
+    "message": "call is not in the structured subset (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 13,
+      "end_line": 13,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-IDENT-UNKNOWN",
+    "message": "identifier has no scalar or content literal binding (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 14,
+      "end_line": 14,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-CODE-UNSUPPORTED",
+    "message": "code is outside the structured subset (col 3)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 15,
+      "end_line": 15,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-CODE-UNSUPPORTED",
+    "message": "code is outside the structured subset (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 16,
+      "end_line": 16,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-ARG-SPREAD",
+    "message": "spread arguments are outside the structured subset (col 7)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 17,
+      "end_line": 17,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-ARG-INVALID",
+    "message": "expected a string (col 6)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 18,
+      "end_line": 18,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-ARG-IGNORED",
+    "message": "argument `bogus` is ignored in the structured subset (col 27)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 19,
+      "end_line": 19,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-ARG-IGNORED",
+    "message": "heading depth 8 is clamped to 6 (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 19,
+      "end_line": 19,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-FIGURE-KIND",
+    "message": "figure kind `custom` uses the image counter outside native Typst (col 23)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 21,
+      "end_line": 21,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-TABLE-CELL",
+    "message": "table cell keeps paragraphs joined by line breaks; other blocks are dropped (col 20)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 23,
+      "end_line": 25,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-LABEL-IGNORED",
+    "message": "label has no supported preceding target (col 29)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 27,
+      "end_line": 27,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "W-TYP-SET-IGNORED",
+    "message": "nested set rule is ignored (col 9)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 29,
+      "end_line": 29,
+      "file": "[typ]/unsupported.typ"
+    }
+  },
+  {
+    "level": "error",
+    "code": "E-TYP-INCLUDE-DYNAMIC",
+    "message": "include path must be a literal string or path (col 2)",
+    "path": "[typ]/unsupported.typ",
+    "span": {
+      "start_line": 32,
+      "end_line": 32,
+      "file": "[typ]/unsupported.typ"
+    }
+  }
+]

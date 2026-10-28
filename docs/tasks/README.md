@@ -58,7 +58,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
-| T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | todo |
+| T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | ready for review |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | todo |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | todo |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | todo |
@@ -312,3 +312,20 @@ Manual checks performed: …
 - T20 passed CI and merged in PR #21 (`1bc404f`). T23 retains the checked
   T21/T25 dependency commits while #22/#23 remain open. Pending merge order
   is #22, then #23, then T23; main includes the same checked T20 code.
+
+- T23 is open in [PR #24](https://github.com/JBlaschke/writer_rs/pull/24)
+  (`b162c27`). T50 starts on `codex/typst-frontend` from that checked feature.
+  Merge #22, #23, then #24 before T50; all PRs target main while CI runs.
+  T50's brief freezes its private module split and narrow check/strict seams.
+
+
+- T50 passes formatting, Clippy, default/feature rustdoc, 1,359 debug and
+  1,358 release tests. All 52 frontend tests, 22 private units and 12 reviewed
+  snapshots cover the structured syntax subset, metadata/literals, calls/tables,
+  includes/assets, labels/notes/cites, exact math and located recovery. Library
+  HTML/DOCX composition and offline native subset compilation pass; target-free
+  CLI check is enabled. T32 follows to enable PDFs, then T24 actual pages.
+- PR24's Linux/Windows CI repair `d8e91e7` corrects the ancestor test's completion
+  barrier and catches intermediate directories created during watch retargeting.
+  Focused 23 watcher units and 53 integration tests pass; T50 includes the
+  equivalent cherry-pick `1dfa595` and passes both full suites with the repair.

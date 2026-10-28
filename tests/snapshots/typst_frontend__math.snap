@@ -1,0 +1,287 @@
+---
+source: tests/typst_frontend.rs
+expression: stable_document(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "math",
+      "source": "frac(a, b)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "sum_(i=0)^n x_i",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "a^2 + b^2 = c^2",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "sqrt(x) + root(3, x)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 7,
+        "end_line": 7,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "mat(1, 2; 3, 4)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 9,
+        "end_line": 9,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "cases(1 \"if\" x > 0, 0 \"else\")",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 11,
+        "end_line": 11,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "x' + x'' + f'(x)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 13,
+        "end_line": 13,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "abs(x) + norm(v) + lr(( a/b ])",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 15,
+        "end_line": 15,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "alpha + beta + arrow.r + arrow.l.long + dot + RR + NN",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 17,
+        "end_line": 17,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "integral_0^oo e^(-x) dif x",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 19,
+        "end_line": 19,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "vec(1, 2, 3) + binom(n, k)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 21,
+        "end_line": 21,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "hat(x) + tilde(y) + overline(z) + bold(v) + bb(R) + cal(F)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 23,
+        "end_line": 23,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "\"text\" + op(\"foo\") + lim_(x -> 0)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 25,
+        "end_line": 25,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "x_1^2 + x_(i j) + e^(i pi)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 27,
+        "end_line": 27,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "a & = b \\ c & = d",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 29,
+        "end_line": 29,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "mat(delim: #none, 1, 2; 3, 4)",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 31,
+        "end_line": 31,
+        "file": "[typ]/math.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "#text[kept code] + x",
+      "dialect": "typst",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 33,
+        "end_line": 33,
+        "file": "[typ]/math.typ"
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[typ]/math.typ",
+    "kind": "typst",
+    "base_dir": "[typ]"
+  },
+  "assets": []
+}

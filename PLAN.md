@@ -317,7 +317,7 @@ writer_rs/                                                                    ow
 ├── src/assets/registry.rs                                                      T01;   src/assets/{mod,emit}.rs: T14
 ├── src/markdown/mod.rs (stub: T01) → T12   frontmatter.rs: T10   code.rs: T01 (T11 adds invalid-code-attr)   {options,attrs,recover,directives}.rs: T11 (options.rs: comrak_options; directives.rs: info parsing + colon pre-pass)   walker.rs: T12   {refs,include}.rs: T1B (include::scan_includes: T16 lifts it first, additive, for T20)
 ├── src/notebook/mod.rs (stub: T01) → T18   {nbformat,convert,options,outputs,tables,ansi}.rs: T18
-├── src/typst/frontend.rs (stub: T01) → T50   {mod,world,compile,package,render,html,sourcemap}.rs: T03 (package.rs: T31 adds eject, install_dir)   emit.rs: T30   includes.rs: T53 (`MarkdownIncludes` stub: T16)
+├── src/typst/frontend.rs (stub: T01) and private frontend/{walker,literals,metadata,calls,tables,normalize}.rs → T50   {mod,world,compile,package,render,html,sourcemap}.rs: T03 (package.rs: T31 adds eject, install_dir)   emit.rs: T30   includes.rs: T53 (`MarkdownIncludes` stub: T16)
 ├── src/resolve/mod.rs (stub: T01) → T17   l10n.rs: T01   {labels,numbering,footnotes,toc}.rs: T17
 ├── src/cite/{mod,library,render}.rs  + the resolve hook that fills Cite.resolved   T70
 ├── src/math/mod.rs: T00 (skeleton)   latex_source.rs: T30   latex_mathml.rs: T1A   omml.rs: T42   typst_to_latex.rs + assets/math/unicode-latex.toml: T51

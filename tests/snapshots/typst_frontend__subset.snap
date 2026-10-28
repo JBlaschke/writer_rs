@@ -1,0 +1,1884 @@
+---
+source: tests/typst_frontend.rs
+expression: stable_document(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Subset corpus",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {
+      "bibliography": "refs.bib",
+      "numbering": true,
+      "pdf": {
+        "system_fonts": false
+      },
+      "toc": false
+    }
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Typed content"
+        }
+      ],
+      "attrs": {
+        "id": "sec-typed",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Text with *escaped stars*,   nonbreaking space – en dash — em dash … ellipsis."
+        },
+        {
+          "type": "soft_break"
+        },
+        {
+          "type": "text",
+          "text": "A soft line break and an explicit"
+        },
+        {
+          "type": "line_break"
+        },
+        {
+          "type": "text",
+          "text": "hard break;"
+        },
+        {
+          "type": "line_break"
+        },
+        {
+          "type": "text",
+          "text": "a call break. "
+        },
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "https://example.org"
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " links automatically."
+        }
+      ],
+      "span": {
+        "start_line": 7,
+        "end_line": 9,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "“Quotes” and ‘single quotes’, 5′ and an apostrophe in writer’s prose."
+        }
+      ],
+      "span": {
+        "start_line": 11,
+        "end_line": 11,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "strong",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Strong"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "emph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Emphasis"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "underline",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Underlined"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "strikeout",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Struck"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "small_caps",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Small capitals"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "superscript",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "super"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "subscript",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "sub"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "span",
+          "attrs": {
+            "id": null,
+            "classes": [
+              "overline"
+            ],
+            "pairs": {}
+          },
+          "inlines": [
+            {
+              "type": "text",
+              "text": "overline"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "span",
+          "attrs": {
+            "id": null,
+            "classes": [
+              "highlight"
+            ],
+            "pairs": {}
+          },
+          "inlines": [
+            {
+              "type": "text",
+              "text": "highlight"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 13,
+        "end_line": 13,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "“Inline quotation.” "
+        },
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A link"
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": "link-docs",
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " ."
+        }
+      ],
+      "span": {
+        "start_line": 15,
+        "end_line": 15,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Inline image"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": "inline-image",
+            "classes": [],
+            "pairs": {
+              "width": "1cm"
+            }
+          }
+        }
+      ],
+      "span": {
+        "start_line": 17,
+        "end_line": 17,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "code",
+          "text": "inline raw",
+          "attrs": {
+            "id": "code-inline",
+            "classes": [
+              "rust"
+            ],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 19,
+        "end_line": 19,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "rust",
+      "text": "let answer = 42;",
+      "attrs": {
+        "id": "code-block",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 21,
+        "end_line": 23,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "text",
+      "text": "block raw\nsecond line",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 26,
+        "end_line": 26,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Image caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "A local image"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "70%"
+                }
+              }
+            }
+          ],
+          "span": {
+            "start_line": 28,
+            "end_line": 28,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-image",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 28,
+        "end_line": 28,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "table",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Table caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "table",
+          "columns": [
+            {
+              "align": "default",
+              "width": null
+            },
+            {
+              "align": "default",
+              "width": null
+            }
+          ],
+          "head": [],
+          "body": [
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "A"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "B"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "C"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                },
+                {
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "D"
+                    }
+                  ],
+                  "align": null,
+                  "colspan": 1,
+                  "rowspan": 1,
+                  "header": false
+                }
+              ]
+            }
+          ],
+          "foot": [],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 30,
+            "end_line": 30,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "attrs": {
+        "id": "tbl-figure",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 30,
+        "end_line": 30,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "listing",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Listing caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "code_block",
+          "lang": "rust",
+          "text": "let x = 1;",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 32,
+            "end_line": 32,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "attrs": {
+        "id": "lst-figure",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 32,
+        "end_line": 32,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Generic caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A generic body."
+            }
+          ],
+          "span": {
+            "start_line": 34,
+            "end_line": 34,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-other",
+        "classes": [
+          "unnumbered"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 34,
+        "end_line": 34,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "table",
+      "columns": [
+        {
+          "align": "left",
+          "width": 0.25
+        },
+        {
+          "align": "center",
+          "width": 0.5
+        },
+        {
+          "align": "right",
+          "width": 0.25
+        }
+      ],
+      "head": [
+        {
+          "cells": [
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "H1"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": true
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "H2"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": true
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "H3"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": true
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "cells": [
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Wide"
+                }
+              ],
+              "align": null,
+              "colspan": 2,
+              "rowspan": 1,
+              "header": false
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "R1C3"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            }
+          ]
+        },
+        {
+          "cells": [
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Tall"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 2,
+              "header": false
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "R2C2"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "R2C3"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            }
+          ]
+        },
+        {
+          "cells": [
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "R3C2"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "R3C3"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            }
+          ]
+        }
+      ],
+      "foot": [
+        {
+          "cells": [
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "F1"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "F2"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            {
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "F3"
+                }
+              ],
+              "align": null,
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 36,
+        "end_line": 42,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "block_quote",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A block quote with "
+            },
+            {
+              "type": "strong",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "formatting"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ],
+          "span": {
+            "start_line": 44,
+            "end_line": 44,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "span": {
+        "start_line": 44,
+        "end_line": 44,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "bullet"
+      },
+      "tight": true,
+      "items": [
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "A bullet"
+                }
+              ],
+              "span": {
+                "start_line": 46,
+                "end_line": 46,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        },
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Another bullet"
+                }
+              ],
+              "span": {
+                "start_line": 47,
+                "end_line": 47,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 46,
+        "end_line": 47,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "ordered",
+        "start": 1
+      },
+      "tight": true,
+      "items": [
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "An ordered item"
+                }
+              ],
+              "span": {
+                "start_line": 49,
+                "end_line": 49,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        },
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Another ordered item"
+                }
+              ],
+              "span": {
+                "start_line": 50,
+                "end_line": 50,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 49,
+        "end_line": 50,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "definition_list",
+      "items": [
+        {
+          "term": [
+            {
+              "type": "text",
+              "text": "Term"
+            }
+          ],
+          "definitions": [
+            [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "A definition."
+                  }
+                ],
+                "span": {
+                  "start_line": 52,
+                  "end_line": 52,
+                  "file": "[typ]/subset.typ"
+                }
+              }
+            ]
+          ]
+        },
+        {
+          "term": [
+            {
+              "type": "text",
+              "text": "Other"
+            }
+          ],
+          "definitions": [
+            [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Another definition."
+                  }
+                ],
+                "span": {
+                  "start_line": 53,
+                  "end_line": 53,
+                  "file": "[typ]/subset.typ"
+                }
+              }
+            ]
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 52,
+        "end_line": 53,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "bullet"
+      },
+      "tight": false,
+      "items": [
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "First explicit item."
+                }
+              ],
+              "span": {
+                "start_line": 55,
+                "end_line": 55,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        },
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Second explicit item."
+                }
+              ],
+              "span": {
+                "start_line": 55,
+                "end_line": 55,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 55,
+        "end_line": 55,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "list",
+      "kind": {
+        "kind": "ordered",
+        "start": 3
+      },
+      "tight": true,
+      "items": [
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Third."
+                }
+              ],
+              "span": {
+                "start_line": 56,
+                "end_line": 56,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        },
+        {
+          "checked": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Fourth."
+                }
+              ],
+              "span": {
+                "start_line": 56,
+                "end_line": 56,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 56,
+        "end_line": 56,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "definition_list",
+      "items": [
+        {
+          "term": [
+            {
+              "type": "text",
+              "text": "API"
+            }
+          ],
+          "definitions": [
+            [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "A structured interface."
+                  }
+                ],
+                "span": {
+                  "start_line": 57,
+                  "end_line": 57,
+                  "file": "[typ]/subset.typ"
+                }
+              }
+            ]
+          ]
+        }
+      ],
+      "span": {
+        "start_line": 57,
+        "end_line": 57,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "div",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "center"
+        ],
+        "pairs": {}
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Centred paragraph."
+            }
+          ],
+          "span": {
+            "start_line": 59,
+            "end_line": 59,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "span": {
+        "start_line": 59,
+        "end_line": 59,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "div",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Wrapped block."
+            }
+          ],
+          "span": {
+            "start_line": 60,
+            "end_line": 60,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "span": {
+        "start_line": 60,
+        "end_line": 60,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Explicit paragraph."
+        }
+      ],
+      "span": {
+        "start_line": 61,
+        "end_line": 61,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "span",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Boxed inline"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "span",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "inlines": [
+            {
+              "type": "text",
+              "text": "styled inline"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 62,
+        "end_line": 62,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Unnumbered heading"
+        }
+      ],
+      "attrs": {
+        "id": "sec-plain",
+        "classes": [
+          "unnumbered",
+          "notoc"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 64,
+        "end_line": 64,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "x_1^2 + frac(1, 2)",
+      "dialect": "typst",
+      "attrs": {
+        "id": "eq-typed",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 66,
+        "end_line": 66,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "x + 1",
+      "dialect": "typst",
+      "attrs": {
+        "id": "eq-plain",
+        "classes": [
+          "unnumbered"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 68,
+        "end_line": 68,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A LaTeX inline "
+        },
+        {
+          "type": "math",
+          "source": "x^2",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": " and a display below."
+        }
+      ],
+      "span": {
+        "start_line": 70,
+        "end_line": 70,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "math",
+      "source": "x^2 + y^2 = z^2",
+      "dialect": "latex",
+      "attrs": {
+        "id": "eq-latex",
+        "classes": [
+          "unnumbered"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 72,
+        "end_line": 72,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "div",
+      "attrs": {
+        "id": "anchor-empty",
+        "classes": [],
+        "pairs": {}
+      },
+      "blocks": [],
+      "span": {
+        "start_line": 74,
+        "end_line": 74,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An inline anchor "
+        },
+        {
+          "type": "span",
+          "attrs": {
+            "id": "anchor-inline",
+            "classes": [],
+            "pairs": {}
+          },
+          "inlines": []
+        },
+        {
+          "type": "text",
+          "text": "  appears here."
+        }
+      ],
+      "span": {
+        "start_line": 76,
+        "end_line": 76,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Before the footnote "
+        },
+        {
+          "type": "footnote_ref",
+          "label": "proof"
+        },
+        {
+          "type": "text",
+          "text": "; here is the note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "The proof."
+                }
+              ],
+              "span": {
+                "start_line": 78,
+                "end_line": 78,
+                "file": "[typ]/subset.typ"
+              }
+            }
+          ],
+          "label": "proof"
+        },
+        {
+          "type": "text",
+          "text": "  and "
+        },
+        {
+          "type": "footnote_ref",
+          "label": "proof"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 78,
+        "end_line": 78,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "References "
+        },
+        {
+          "type": "ref",
+          "target": "sec-typed",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 80,
+            "end_line": 80,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "fig-image",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "Fig."
+            }
+          ],
+          "form": "normal",
+          "span": {
+            "start_line": 80,
+            "end_line": 80,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "tbl-figure",
+          "supplement": [],
+          "form": "normal",
+          "span": {
+            "start_line": 80,
+            "end_line": 80,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "sec-typed",
+          "supplement": null,
+          "form": "page",
+          "span": {
+            "start_line": 80,
+            "end_line": 80,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "section link"
+            }
+          ],
+          "url": "#sec-typed",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 80,
+        "end_line": 80,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 82,
+            "end_line": 82,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "soft_break"
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "prose",
+          "span": {
+            "start_line": 83,
+            "end_line": 83,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "year",
+          "span": {
+            "start_line": 83,
+            "end_line": 83,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "author",
+          "span": {
+            "start_line": 83,
+            "end_line": 83,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "full",
+          "span": {
+            "start_line": 83,
+            "end_line": 83,
+            "file": "[typ]/subset.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "none",
+          "span": {
+            "start_line": 83,
+            "end_line": 83,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "span": {
+        "start_line": 82,
+        "end_line": 83,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "title": [
+        {
+          "type": "text",
+          "text": "Remember"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Callout body."
+            }
+          ],
+          "span": {
+            "start_line": 85,
+            "end_line": 85,
+            "file": "[typ]/subset.typ"
+          }
+        }
+      ],
+      "attrs": {
+        "id": "callout-tip",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 85,
+        "end_line": 85,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "rust",
+      "text": "let x = 1;\nlet y = 2;",
+      "attrs": {
+        "id": "listing-helper",
+        "classes": [
+          "numbered",
+          "plain"
+        ],
+        "pairs": {
+          "highlight": "4-5",
+          "start": "4"
+        }
+      },
+      "span": {
+        "start_line": 87,
+        "end_line": 90,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "cell",
+      "index": 2,
+      "id": null,
+      "language": "python",
+      "source": "print(42)",
+      "execution_count": 7,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-typst",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "A saved output."
+                    }
+                  ],
+                  "span": {
+                    "start_line": 94,
+                    "end_line": 94,
+                    "file": "[typ]/subset.typ"
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/x-typst"
+          ]
+        },
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-typst",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Another saved output."
+                    }
+                  ],
+                  "span": {
+                    "start_line": 94,
+                    "end_line": 94,
+                    "file": "[typ]/subset.typ"
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/x-typst"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": "cell-demo",
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": null,
+      "span": {
+        "start_line": 92,
+        "end_line": 94,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "toc",
+      "depth": 2,
+      "span": {
+        "start_line": 96,
+        "end_line": 96,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 97,
+        "end_line": 97,
+        "file": "[typ]/subset.typ"
+      }
+    },
+    {
+      "type": "page_break",
+      "span": {
+        "start_line": 101,
+        "end_line": 101,
+        "file": "[typ]/subset.typ"
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": true,
+    "notebook": true,
+    "citations": true,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[typ]/subset.typ",
+    "kind": "typst",
+    "base_dir": "[typ]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:image.png"
+    }
+  ]
+}

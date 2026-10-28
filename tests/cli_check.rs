@@ -393,7 +393,7 @@ fn presenter_compatibility_adds_the_three_frozen_warnings_once() {
 }
 
 #[test]
-fn explicit_targets_and_typst_keep_their_milestone_stubs() {
+fn explicit_targets_keep_their_milestone_stub() {
     let dir = project(&[
         ("document.md", "# A report\n"),
         ("document.typ", "Hello\n"),
@@ -405,10 +405,6 @@ fn explicit_targets_and_typst_keep_their_milestone_stubs() {
             .code(2)
             .stderr(contains("T71"));
     }
-    check(&dir.path().join("document.typ"))
-        .assert()
-        .code(2)
-        .stderr(contains("T50"));
 }
 
 fn stable_file(file: &str) -> String {
