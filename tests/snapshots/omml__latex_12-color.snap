@@ -1,0 +1,12 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:r>
+        <m:t>x</m:t>
+    </m:r>
+    <m:r>
+        <m:t>y</m:t>
+    </m:r>
+</m:oMath>

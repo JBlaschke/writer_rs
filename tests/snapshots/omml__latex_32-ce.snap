@@ -1,0 +1,5 @@
+---
+source: tests/omml.rs
+expression: error.to_string()
+---
+Unknown command "\ce".

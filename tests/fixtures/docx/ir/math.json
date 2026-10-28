@@ -1,0 +1,233 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Forward reference: "
+                },
+                {
+                    "type": "ref",
+                    "target": "eq-fraction",
+                    "supplement": null,
+                    "form": "normal",
+                    "resolved": {
+                        "kind": "equation",
+                        "number": "1",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "Equation 1"
+                            }
+                        ],
+                        "anchor": "eq-fraction"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "."
+                }
+            ],
+            "span": {
+                "start_line": 1,
+                "end_line": 1
+            }
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "LaTeX "
+                },
+                {
+                    "type": "math",
+                    "source": "\\frac{a}{b}",
+                    "dialect": "latex"
+                },
+                {
+                    "type": "text",
+                    "text": " and Typst "
+                },
+                {
+                    "type": "math",
+                    "source": "frac(a, b)",
+                    "dialect": "typst"
+                },
+                {
+                    "type": "text",
+                    "text": "."
+                }
+            ],
+            "span": {
+                "start_line": 3,
+                "end_line": 3
+            }
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "math",
+                    "source": "x_1^2",
+                    "dialect": "latex"
+                }
+            ],
+            "span": {
+                "start_line": 5,
+                "end_line": 5
+            }
+        },
+        {
+            "type": "math",
+            "source": "\\frac{a}{b}",
+            "dialect": "latex",
+            "attrs": {
+                "id": "eq-fraction",
+                "classes": [],
+                "pairs": {}
+            },
+            "number": "1",
+            "span": {
+                "start_line": 7,
+                "end_line": 7
+            }
+        },
+        {
+            "type": "math",
+            "source": "sum_(i=0)^n i",
+            "dialect": "typst",
+            "attrs": {
+                "id": "eq-unnumbered",
+                "classes": [],
+                "pairs": {}
+            },
+            "number": null,
+            "span": {
+                "start_line": 9,
+                "end_line": 9
+            }
+        },
+        {
+            "type": "div",
+            "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                    "custom-style": "Math Panel"
+                }
+            },
+            "blocks": [
+                {
+                    "type": "math",
+                    "source": "x^2 + y^2 = z^2",
+                    "dialect": "latex",
+                    "attrs": {
+                        "id": "eq-second",
+                        "classes": [],
+                        "pairs": {}
+                    },
+                    "number": "2",
+                    "span": {
+                        "start_line": 12,
+                        "end_line": 12
+                    }
+                }
+            ],
+            "span": {
+                "start_line": 11,
+                "end_line": 13
+            }
+        },
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Math in a note"
+                },
+                {
+                    "type": "footnote",
+                    "label": "math-note",
+                    "number": 1,
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Inline note "
+                                },
+                                {
+                                    "type": "math",
+                                    "source": "sqrt(x)",
+                                    "dialect": "typst"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "math",
+                            "source": "frac(x, 2)",
+                            "dialect": "typst",
+                            "attrs": {
+                                "id": null,
+                                "classes": [],
+                                "pairs": {}
+                            },
+                            "number": null,
+                            "span": {
+                                "start_line": 16,
+                                "end_line": 16
+                            }
+                        }
+                    ]
+                }
+            ],
+            "span": {
+                "start_line": 15,
+                "end_line": 16
+            }
+        }
+    ],
+    "features": {
+        "math": true,
+        "footnotes": true
+    },
+    "source": {
+        "path": "/math.md",
+        "kind": "markdown",
+        "base_dir": "/"
+    },
+    "assets": [],
+    "includes": [],
+    "resolved": {
+        "labels": {
+            "eq-fraction": {
+                "kind": "equation",
+                "number": "1",
+                "supplement": "Equation",
+                "text": null,
+                "span": null
+            },
+            "eq-unnumbered": {
+                "kind": "equation",
+                "number": null,
+                "supplement": "Equation",
+                "text": null,
+                "span": null
+            },
+            "eq-second": {
+                "kind": "equation",
+                "number": "2",
+                "supplement": "Equation",
+                "text": null,
+                "span": null
+            }
+        },
+        "toc": [],
+        "footnotes": 1,
+        "bibliography": null
+    }
+}

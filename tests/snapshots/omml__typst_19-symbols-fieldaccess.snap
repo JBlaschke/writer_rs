@@ -1,0 +1,80 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:r>
+        <m:t>α</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:r>
+        <m:t>β</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>→</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>⟵</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>⋅</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:scr m:val="double-struck"/>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>R</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:scr m:val="double-struck"/>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>N</m:t>
+    </m:r>
+</m:oMath>

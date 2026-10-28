@@ -190,7 +190,7 @@ impl<'a> ContentPlan<'a> {
                         }
                     }
                 }
-                // Equation number bookmarks arrive in T42.
+                Block::Math { attrs, .. } => self.label(attrs.id.as_deref()),
                 _ => {}
             }
         }

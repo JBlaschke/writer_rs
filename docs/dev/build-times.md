@@ -970,4 +970,52 @@ boundaries pass. The complete final suites include these repairs.
 The converter returns a body and warnings only; package discovery remains a
 lookup consumed by T60. DOCX compiler MathML/OMML, native `.typ` dispatch and
 LaTeX target composition retain T42/T52/T60 ownership. Dependencies, public
-module exports and config/IR schemas are unchanged.
+module lists and config/IR schemas are unchanged.
+
+
+## T42 editable DOCX math acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T51 plus T42.
+Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 18.31 s | 280.22 s | 152.48 s | 1,475 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 410 s | 487.84 s | 4088.59 s | 1,474 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. All 14 private units, 44 focused public/package tests and 20
+package snapshot tests pass. The complete 37 LaTeX and 36 native Typst corpus
+classifications agree with the specification. All 73 OMML goldens and 19 new
+or changed DOCX package goldens were independently reviewed. Four foreign
+MathML fixtures and bounded parser/mapping tests cover recovery, entities,
+namespaces, styles, fences, matrices, accents and malformed markup.
+
+All 21 actual Pandoc 3.12.1 DOCX probes pass the shared-shape comparison.
+The two styling decisions and additional observed representation aliases are
+recorded in math.md §5.2, restricted to named exact forms with negative guards.
+No fixture is exempted. An inner plain `\mid` now remains a relation; only
+explicit stretchy inner bars split delimiter parts. Specific accents/bars/
+group characters precede n-ary limit classification. Both fixes have regressions.
+The snapshot formatter also preserves entity references inside text leaves.
+
+DOCX integration verifies both editable routes, every recovery transition,
+once-only located macro diagnostics, forced SVG/PNG media and footnote
+relationships, reference Normal-size scaling and inline descent, three-column
+frames, number-only bookmarks, forward links/PAGEREF and section/SEQ corrections.
+Ordinary container styles retain Equation; explicit custom Div styles override
+it. Frame cells avoid list indentation and clamp pictures to their own width.
+Real retained-World pipeline builds validate, reproduce bytes and keep successful
+HTML/DOCX when the independent PDF template fails.
+
+Two initial integration failures were fixture setup errors: a pre-hashed
+ResolvedRef anchor and a Normal style assumed to contain an inherited size.
+Tests now supply the logical label and an explicit reference Normal override.
+The old stub expectation now checks a real editable numbered equation without
+requiring a renderer. All final suites include these corrected checks.
+
+The converter uses private parse/fold/render/text children with existing XML
+and codex dependencies. Runtime creates no World and calls no external tool.
+DOCX borrows the session renderer and reuses picture/field/bookmark builders.
+Native `.typ` CLI dispatch and reference/manual Word validation remain T52/T43;
+no dependency, public config/IR schema or public module list changes.

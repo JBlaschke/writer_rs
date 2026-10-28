@@ -21,7 +21,7 @@ use std::path::Path;
 use crate::assets::registry::AssetRegistry;
 use crate::config::Config;
 use crate::error::{Diagnostics, Error, Result};
-use crate::ir::{Document, MathDialect, SourceSpan};
+use crate::ir::{Document, MathDialect};
 use crate::resolve::LangTag;
 
 pub use numbering::Numbering;
@@ -118,6 +118,7 @@ pub struct Emitter<'a> {
     pub notes: String,
     pub(crate) content: footnotes::ContentState<'a>,
     pub(crate) fields: fields::FieldState,
+    pub(crate) math_state: math::State,
     pub(crate) table_width_twips: Option<u32>,
     pub(crate) deferred_error: Option<Error>,
 }
@@ -199,16 +200,6 @@ impl Emitter<'_> {
         self.start_paragraph(props);
         self.text_run(text);
         self.end_paragraph();
-    }
-
-    pub(crate) fn unsupported(
-        &mut self, construct: &str, owner: &str, span: Option<&SourceSpan>,
-    ) {
-        let diagnostic = self.diagnostics.warn(
-            "unsupported-construct",
-            format!("{construct} in DOCX arrives in {owner}"),
-        );
-        diagnostic.span = span.cloned();
     }
 }
 
@@ -334,6 +325,7 @@ fn prepare_emitter<'a>(
         notes: String::new(),
         content,
         fields: fields::FieldState::default(),
+        math_state: math::State::new(opts.config),
         table_width_twips: None,
         deferred_error: None,
     })

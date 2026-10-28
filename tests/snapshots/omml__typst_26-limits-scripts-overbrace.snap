@@ -1,0 +1,152 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:nary>
+        <m:naryPr>
+            <m:chr m:val="∑"/>
+            <m:limLoc m:val="undOvr"/>
+            <m:subHide m:val="off"/>
+            <m:supHide m:val="off"/>
+        </m:naryPr>
+        <m:sub>
+            <m:r>
+                <m:t>i</m:t>
+            </m:r>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>=</m:t>
+            </m:r>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>1</m:t>
+            </m:r>
+        </m:sub>
+        <m:sup>
+            <m:r>
+                <m:t>N</m:t>
+            </m:r>
+        </m:sup>
+        <m:e>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>+</m:t>
+            </m:r>
+        </m:e>
+    </m:nary>
+    <m:sSub>
+        <m:e>
+            <m:box>
+                <m:boxPr>
+                    <m:opEmu m:val="on"/>
+                </m:boxPr>
+                <m:e>
+                    <m:r>
+                        <m:rPr>
+                            <m:sty m:val="p"/>
+                        </m:rPr>
+                        <m:t>max</m:t>
+                    </m:r>
+                </m:e>
+            </m:box>
+        </m:e>
+        <m:sub>
+            <m:r>
+                <m:t>x</m:t>
+            </m:r>
+        </m:sub>
+    </m:sSub>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:limLow>
+        <m:e>
+            <m:box>
+                <m:boxPr>
+                    <m:opEmu m:val="on"/>
+                </m:boxPr>
+                <m:e>
+                    <m:r>
+                        <m:rPr>
+                            <m:sty m:val="p"/>
+                        </m:rPr>
+                        <m:t>argmax</m:t>
+                    </m:r>
+                </m:e>
+            </m:box>
+        </m:e>
+        <m:lim>
+            <m:r>
+                <m:t>x</m:t>
+            </m:r>
+        </m:lim>
+    </m:limLow>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:acc>
+        <m:accPr>
+            <m:chr m:val="̂"/>
+        </m:accPr>
+        <m:e>
+            <m:r>
+                <m:t>x</m:t>
+            </m:r>
+            <m:r>
+                <m:t>y</m:t>
+            </m:r>
+        </m:e>
+    </m:acc>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:limUpp>
+        <m:e>
+            <m:groupChr>
+                <m:groupChrPr>
+                    <m:chr m:val="⏞"/>
+                    <m:pos m:val="top"/>
+                    <m:vertJc m:val="bot"/>
+                </m:groupChrPr>
+                <m:e>
+                    <m:r>
+                        <m:t>a</m:t>
+                    </m:r>
+                    <m:r>
+                        <m:rPr>
+                            <m:sty m:val="p"/>
+                        </m:rPr>
+                        <m:t>+</m:t>
+                    </m:r>
+                    <m:r>
+                        <m:t>b</m:t>
+                    </m:r>
+                </m:e>
+            </m:groupChr>
+        </m:e>
+        <m:lim>
+            <m:r>
+                <m:rPr>
+                    <m:nor/>
+                </m:rPr>
+                <m:t>sum</m:t>
+            </m:r>
+        </m:lim>
+    </m:limUpp>
+</m:oMath>

@@ -1,0 +1,220 @@
+# DOCX corpus classifications, math.md §10. T33 later adds pdf keys.
+
+[latex."01-frac"]
+docx = "omml"
+
+[latex."02-sum-limits"]
+docx = "omml"
+
+[latex."03-integral-dx"]
+docx = "omml"
+
+[latex."04-root-index"]
+docx = "omml"
+
+[latex."05-mathbb"]
+docx = "omml"
+
+[latex."06-left-right-frac"]
+docx = "omml"
+
+[latex."07-pmatrix"]
+docx = "omml"
+
+[latex."08-aligned"]
+docx = "omml"
+
+[latex."09-text-if"]
+docx = "omml"
+
+[latex."10-accents"]
+docx = "omml"
+
+[latex."11-operatorname-argmax"]
+docx = "omml"
+
+[latex."12-color"]
+docx = "omml"
+
+[latex."13-boldsymbol-mathbf"]
+docx = "omml"
+
+[latex."14-lim"]
+docx = "omml"
+
+[latex."15-def-macro"]
+docx = "omml"
+
+[latex."16-newcommand-no-arity"]
+docx = "omml"
+
+[latex."17-newcommand-arity"]
+docx = "omml"
+
+[latex."18-unknown-command"]
+docx = "no-mathml"
+
+[latex."19-unbalanced-brace"]
+docx = "no-mathml"
+
+[latex."20-cases"]
+docx = "omml"
+
+[latex."21-middle-delimiter"]
+docx = "omml"
+
+[latex."22-nary-inline"]
+docx = "omml"
+
+[latex."23-underbrace-overbrace"]
+docx = "omml"
+
+[latex."24-bmatrix-vmatrix"]
+docx = "omml"
+
+[latex."25-primes"]
+docx = "omml"
+
+[latex."26-spaces"]
+docx = "omml"
+
+[latex."27-tag-label"]
+docx = "omml"
+
+[latex."28-align-env"]
+docx = "omml"
+
+[latex."29-unicode-source"]
+docx = "omml"
+
+[latex."30-empty"]
+docx = "omml"
+
+[latex."31-macro-from-config"]
+docx = "omml"
+
+[latex."32-ce"]
+docx = "no-mathml"
+
+[latex."33-sympy-displaystyle"]
+docx = "omml"
+
+[latex."34-empty-base-scripts"]
+docx = "omml"
+
+[latex."35-nested-fences-text"]
+docx = "omml"
+
+[latex."36-left-dot-right-bar"]
+docx = "omml"
+
+[latex."37-sideset"]
+docx = "unsupported"
+
+[typst."01-frac"]
+docx = "omml"
+
+[typst."02-sum-attach"]
+docx = "omml"
+
+[typst."03-integral-dif"]
+docx = "omml"
+
+[typst."04-root"]
+docx = "omml"
+
+[typst."05-bb-cal"]
+docx = "omml"
+
+[typst."06-upright"]
+docx = "omml"
+
+[typst."07-lr-frac"]
+docx = "omml"
+
+[typst."08-mat"]
+docx = "omml"
+
+[typst."09-aligned"]
+docx = "omml"
+
+[typst."10-text-if"]
+docx = "omml"
+
+[typst."11-accents"]
+docx = "omml"
+
+[typst."12-op-argmax-limits"]
+docx = "omml"
+
+[typst."13-bold"]
+docx = "omml"
+
+[typst."14-lim-oo"]
+docx = "omml"
+
+[typst."15-cases"]
+docx = "omml"
+
+[typst."16-attach-primes"]
+docx = "omml"
+
+[typst."17-primes-fcall"]
+docx = "omml"
+
+[typst."18-abs-norm-lr-mismatch"]
+docx = "omml"
+
+[typst."19-symbols-fieldaccess"]
+docx = "omml"
+
+[typst."20-vec-binom"]
+docx = "omml"
+
+[typst."21-styles"]
+docx = "no-mathml"
+
+[typst."22-text-op-lim"]
+docx = "omml"
+
+[typst."23-attach-multi"]
+docx = "omml"
+
+[typst."24-alignpoints"]
+docx = "omml"
+
+[typst."25-lr-floor-ceil"]
+docx = "omml"
+
+[typst."26-limits-scripts-overbrace"]
+docx = "omml"
+
+[typst."27-mat-delim-named"]
+docx = "omml"
+
+[typst."28-hash-code"]
+docx = "omml"
+
+[typst."29-unknown-fn"]
+docx = "no-mathml"
+
+[typst."30-unknown-sym"]
+docx = "no-mathml"
+
+[typst."31-shorthands"]
+docx = "omml"
+
+[typst."32-spacing"]
+docx = "omml"
+
+[typst."33-llbracket"]
+docx = "omml"
+
+[typst."34-cancel-overline"]
+docx = "no-mathml"
+
+[typst."35-empty"]
+docx = "omml"
+
+[typst."36-prescripts"]
+docx = "omml"

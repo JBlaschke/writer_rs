@@ -275,9 +275,11 @@ expression: snapshot
             <w:pPr>
                 <w:pStyle w:val="BodyText"/>
             </w:pPr>
-            <w:r>
-                <w:t xml:space="preserve">x</w:t>
-            </w:r>
+            <m:oMath>
+                <m:r>
+                    <m:t>x</m:t>
+                </m:r>
+            </m:oMath>
             <w:r>
                 <w:t xml:space="preserve">​</w:t>
             </w:r>
