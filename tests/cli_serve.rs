@@ -672,21 +672,25 @@ fn invalid_startup_config_recovers_and_address_restart_notes_are_deduplicated()
 fn missing_explicit_config_follows_new_ancestors_until_the_file_exists() {
     let _turn = serial();
     let dir = project();
-    let server = Server::start(
+    let mut server = Server::start(
         dir.path(),
         "document.md",
         &["--config", "new/a/writer.toml"],
     );
-    let initial = server.state();
+    let events = server.events();
+    let initial = events.hello(&server);
     assert_eq!(initial["status"], "error");
+    // State is updated before the watch set; build events are published after
+    // it. Wait for that barrier before creating the next missing ancestor.
     fs::create_dir(dir.path().join("new")).unwrap();
     let first =
-        server.wait_state(id(&initial), |state| state["status"] == "error");
+        events.build(&server, id(&initial), |event| event["status"] == "error");
     fs::create_dir(dir.path().join("new/a")).unwrap();
     let second =
-        server.wait_state(id(&first), |state| state["status"] == "error");
+        events.build(&server, id(&first), |event| event["status"] == "error");
     write(&dir.path().join("new/a/writer.toml"), "[pdf]\nsystem_fonts=false\n");
-    let fixed = server.wait_state(id(&second), |state| state["status"] == "ok");
+    let fixed =
+        events.build(&server, id(&second), |event| event["status"] == "ok");
     assert!(fixed["web"].get("error").is_none());
     assert!(server.text("/").contains("Live document"));
 }
