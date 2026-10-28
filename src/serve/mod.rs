@@ -1,5 +1,5 @@
 //! Live server routes, state, events, and watching (live-reload.md §1, §5).
-//! Owner: T21. Stub created by T00.
+//! HTTP/SSE state and routes are available independently of the T23 session.
 
 pub mod events;
 pub mod files;
