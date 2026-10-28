@@ -1,0 +1,5 @@
+name = 'fixture'
+extends = 'default'
+
+[styles]
+entries = ['styles/extra.css']

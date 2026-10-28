@@ -131,3 +131,43 @@ Screenshots and request/console logs are written per session. The client
 also passes JavaScript syntax and release embedded-asset checks.
 
 Real-server checks remain assigned to T23 and actual pages checks to T24.
+
+## T23 real-server acceptance (2026-10-28)
+
+Executed all nine `tests/browser_serve.rs` cases against the real `writer serve`
+CLI with Google Chrome 156.0.8078.48 on macOS arm64. This is separate from the
+T22 mock-server evidence above. Every case uses an isolated fixture copy,
+bounded browser/server waits, real file edits and owned child cleanup.
+
+```sh
+env WRITER_REQUIRE_CHROME=1 cargo test --locked --offline \
+    --features browser-tests --test browser_serve -- --nocapture
+```
+
+Final result: nine passed in 36.34 s. The local transcript is retained at
+`target/task-prep/crash-recovery/writer-t23-browser-final.log` (ignored).
+
+| Checklist | Real-server evidence |
+|---|---|
+| 1–2: CSS and visible text | Reading anchor stays 12.4375 px before/after text and CSS edits; window marker survives; CSS build3 reports pages skipped while persistent client pages status stays ok. |
+| 3/5: offscreen main/include/notebook | Main, include source1/line3 and notebook cell3 centers land within 0.454 px of the viewport center. |
+| 4: TOC/deleted anchor | TOC growth moves the anchor 11.6875→11.328125 px (−0.3594); deleted-anchor fallback stays 12.328125 px. |
+| 6–7: math and images | Unchanged span/KaTeX child identity survives; edited math replaces the ink. Plot width changes 16→24 px with exactly its new versioned request; the control node and URL survive. |
+| 8–9: title/template/raw script | Title changes in place; template and raw-script edits produce the expected four top-level loads and one raw-script execution per context. |
+| 10/12: errors and warnings | Warning expansion persists; a parse failure gives one merged web/pages overlay with one excerpt, retains the good document and clears after repair. Dismissal survives same-build reconnect. |
+| 13: outage/restart/stale tab | Retry intervals 503.7/1004.8/2003.3/4003.0/5004.1/5001.9 ms match the capped backoff. Restart/missed builds apply, and a stale stored id causes exactly one extra reload. |
+| 14: views/keys/storage | Typing, modifiers and prevented events suppress shortcuts; key/button navigation and remembered root/explicit view choices work. |
+| 15: initial fallback | Repair causes the first-good full reload; the old marker is absent, the document loads once and status becomes ok. |
+| 16: console/logs | All cases reject uncaught/runtime/console errors and unexpected debug prefixes. The outage case admits only its expected connection failures. |
+
+The first run passed eight cases; its CSS test incorrectly expected persistent
+client status to become skipped. The corrected test observes the actual CSS
+SSE event and separately checks the retained client state. Production client
+behavior did not change; the final complete nine-case run passes.
+
+Items 11 and 17–19 remain T24: actual pages rendering, page hashes/requests and
+pages-only compiler failure/last-good behavior. T23 intentionally uses T21's
+empty successful PagesBuilder contract. The CLI suite separately exercises
+source/cell event payloads, invalid/missing config/theme/include repair,
+versioned assets, math-image registry routes, Host checks, port errors, quiet
+output and SIGINT before/after binding.

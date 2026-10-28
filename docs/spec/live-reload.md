@@ -556,6 +556,14 @@ pub enum ChangeKind { Css, Pages, Content }
   mounted files included, feeds the watch set.
 
 ### 5.4 One rebuild (`Session::rebuild`, T23; runs on `spawn_blocking`)
+
+> **Contract change (coordinator, 2026-10-28):** T23 keeps the session in a
+> private `src/cli/serve/session.rs` child of the owned CLI launcher. This
+> adds no public module or API. It reuses T20's package-filtered accessed paths
+> and failed-stage input discovery through two crate-private helpers; their
+> tested behavior is unchanged. Each caught stage panic discards the World,
+> and an independent scheduled stage may reacquire/reset it and continue.
+
 1. Merge the queued batches (paths sorted, deduplicated) and classify them (§6.2) → `kind`.
    `id = next_build_id(&state)`; `opts.mode = Mode::Serve { build_id: id }`; start the clock.
 2. `content` only: compute the source position (§2.3).
