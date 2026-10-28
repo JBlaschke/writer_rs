@@ -631,12 +631,20 @@ are content.
 ### 6.3 Mechanics (lifted verbatim)
 A batch is sent once no relevant event has arrived for `DEBOUNCE` (150 ms), at the latest
 `MAX_BATCH_WAIT` (2 s) after its first event; one coalescing thread `writer-watch` on `notify` 8.2
-(no debouncer crate). Every event kind counts (rename-replace editors); watches are re-added for
+(no debouncer crate). Every mutation event counts (rename-replace editors); watches are re-added for
 recreated paths. Below recursive directories only `.git/` and editor files (`*~`, `.#*`, `#*#`,
 `*.swp`, `*.swx`, `.*.sw[a-p]`, `4913`, `.DS_Store`) are ignored; `dist/`, `target/` count.
 Flat-watched directories count only listed files. macOS only (FSEvents replays recent changes): an
 event for a path whose inode change time precedes the last sent batch (at first, the watcher's
 start), a directory's creation included, is dropped; whole-second change times never qualify.
+
+> **Coordinator clarification (2026-10-28):** pure access events are ignored,
+> matching the presenter watcher: inotify reports the build's own input reads,
+> which would otherwise cause a rebuild loop. Create/modify/remove/rename,
+> metadata and rescan events retain the mutation handling above. On failed
+> preparation, also retain known missing-asset/error-diagnostic paths with the
+> before-build and last-good sets, so the first failed build can recover when
+> its missing resources are created.
 
 ### 6.4 API
 ```rust

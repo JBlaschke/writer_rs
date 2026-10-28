@@ -1,8 +1,11 @@
 //! `writer build`: select targets, report results and print written paths.
 //! Owner: T16. Formatting and argument helpers lifted from presenter_rs.
 
+use std::io::Write;
+use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::sync::mpsc;
 
 use super::{
     BuildArgs, EXIT_BUILD_ERROR, GlobalArgs, UsageError, clash_error,
@@ -10,8 +13,14 @@ use super::{
     report_diagnostics,
 };
 use crate::config::{CliOverrides, Target};
+use crate::error::Error;
 use crate::ir::SourceKind;
 use crate::pipeline::{self, BuildOptions, BuildReport, WorldSlot};
+use crate::serve::watch::{
+    self as watcher, ChangeBatch, ChangeKind, WatchStatus, Watcher,
+};
+
+const WATCHING: &str = "Watching for changes (Ctrl-C to stop)";
 
 /// Runs `writer build`; independent targets keep their successful outputs.
 pub fn run(args: &BuildArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
@@ -24,15 +33,184 @@ pub fn run(args: &BuildArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
     build_result(report, &opts, args.out.is_some(), global)
 }
 
-/// Replaced by T20's rebuild loop.
-pub fn watch(_: &BuildArgs, _: &GlobalArgs) -> anyhow::Result<ExitCode> {
-    Err(pipeline::not_implemented("build --watch", "T20").into())
+/// Watches inputs and reports rebuilds until interrupted.
+pub fn watch(
+    args: &BuildArgs, global: &GlobalArgs,
+) -> anyhow::Result<ExitCode> {
+    let (opts, targets, announced) = match build_options(args, global) {
+        Ok((opts, targets)) => (opts, targets, false),
+        Err(error) if is_config_error(&error) => {
+            let (opts, targets) = wait_for_config(args, global, &error)?;
+            (opts, targets, true)
+        }
+        Err(error) => return Err(error),
+    };
+    let mut first = true;
+    let mut refused = false;
+    let mut stopped = None;
+    watcher::run_build_watch_with(&opts, &targets, |status| {
+        let stop_for_clash = match &status {
+            WatchStatus::Built(report) => {
+                std::mem::take(&mut first) && initial_clash(report).is_some()
+            }
+            _ => false,
+        };
+        if !(announced && matches!(status, WatchStatus::Watching(_)))
+            && let Err(error) =
+                print_watch_status(status, &opts, args.out.is_some(), global)
+        {
+            stopped = Some(error);
+            return ControlFlow::Break(());
+        }
+        if stop_for_clash {
+            refused = true;
+            return ControlFlow::Break(());
+        }
+        ControlFlow::Continue(())
+    })?;
+    match stopped {
+        Some(error) => Err(error),
+        None if refused => Ok(ExitCode::from(super::EXIT_USAGE)),
+        None => Ok(ExitCode::SUCCESS),
+    }
+}
+
+fn initial_clash(report: &BuildReport) -> Option<&pipeline::Clash> {
+    report
+        .prepared
+        .as_ref()
+        .err()
+        .and_then(|failure| pipeline::refused_clash(&failure.error))
+        .or_else(|| {
+            report.targets.iter().find_map(|target| {
+                target.written.as_ref().err().and_then(pipeline::refused_clash)
+            })
+        })
+}
+
+fn is_config_error(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| {
+        matches!(cause.downcast_ref::<Error>(), Some(Error::Config(_)))
+    })
+}
+
+fn wait_for_config(
+    args: &BuildArgs, global: &GlobalArgs, error: &anyhow::Error,
+) -> anyhow::Result<(BuildOptions, Vec<Target>)> {
+    report::report_error(error);
+    let (tx, rx) = mpsc::channel();
+    let (opts, _) = base_options(args, global)?;
+    let mut watcher =
+        Watcher::start(&watcher::watch_set_before_build(&opts), tx)?;
+    status_line(WATCHING, global);
+    for batch in rx {
+        status_line(&rebuilding_line(&batch), global);
+        match build_options(args, global) {
+            Ok(found) => return Ok(found),
+            Err(error) if is_config_error(&error) => {
+                if let Err(error) =
+                    watcher.update(&watcher::watch_set_before_build(&opts))
+                {
+                    tracing::warn!("{error}");
+                }
+                report::report_error(&error);
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    Err(anyhow::anyhow!("file watcher stopped"))
+}
+
+fn print_watch_status(
+    status: WatchStatus<'_>, opts: &BuildOptions, explicit: bool,
+    global: &GlobalArgs,
+) -> anyhow::Result<()> {
+    match status {
+        WatchStatus::Built(report) => {
+            if let Err(failure) = &report.prepared {
+                if let Some(clash) = pipeline::refused_clash(&failure.error) {
+                    report_diagnostics(&failure.diagnostics, global);
+                    report::report_error(&clash_error(clash, explicit));
+                } else {
+                    report::print_build_failure(failure, &opts.input, global);
+                }
+                return Ok(());
+            }
+            report_diagnostics(&report.diagnostics, global);
+            for target in &report.targets {
+                match &target.written {
+                    Ok(paths) if !global.quiet => {
+                        for path in paths {
+                            print_stdout(&wrote_line(path)?)?;
+                        }
+                    }
+                    Ok(_) => {}
+                    Err(error) => match pipeline::refused_clash(error) {
+                        Some(clash) => {
+                            report::report_error(&clash_error(clash, explicit));
+                        }
+                        None => report::print_error_in(
+                            error,
+                            Some(&opts.input),
+                            &report::read_source,
+                        ),
+                    },
+                }
+            }
+        }
+        WatchStatus::Watching(_) => status_line(WATCHING, global),
+        WatchStatus::Changed(batch) => {
+            status_line(&rebuilding_line(batch), global);
+        }
+    }
+    Ok(())
+}
+
+fn rebuilding_line(batch: &ChangeBatch) -> String {
+    const SHOWN: usize = 3;
+    let kind = match batch.kind {
+        ChangeKind::Css => "css",
+        ChangeKind::Pages => "pages",
+        ChangeKind::Content => "content",
+    };
+    let mut paths: Vec<_> = batch
+        .paths
+        .iter()
+        .take(SHOWN)
+        .map(|path| display_path(path).display().to_string())
+        .collect();
+    if batch.paths.len() > SHOWN {
+        paths.push(format!("and {} more", batch.paths.len() - SHOWN));
+    }
+    format!("Rebuilding ({kind}): {}", paths.join(", "))
+}
+
+fn status_line(text: &str, global: &GlobalArgs) {
+    if !global.quiet {
+        let _ = writeln!(std::io::stderr().lock(), "{text}");
+    }
 }
 
 /// Builds the effective options and target list from CLI and configuration.
 pub fn build_options(
     args: &BuildArgs, global: &GlobalArgs,
 ) -> anyhow::Result<(BuildOptions, Vec<Target>)> {
+    let (opts, kind) = base_options(args, global)?;
+    let (config, _) = pipeline::load_config(&opts)?;
+    let mut targets = config.targets_for(kind);
+    let mut seen = std::collections::HashSet::new();
+    targets.retain(|target| seen.insert(*target));
+    if kind == SourceKind::Typst && targets.contains(&Target::Typst) {
+        return Err(UsageError(
+            "typst source is already a .typ file; use writer build part.md --to typst".into(),
+        ).into());
+    }
+    Ok((opts, targets))
+}
+
+fn base_options(
+    args: &BuildArgs, global: &GlobalArgs,
+) -> anyhow::Result<(BuildOptions, SourceKind)> {
     let mut opts = BuildOptions::new(&args.input);
     let kind = input_format(&args.input, args.format)?;
     opts.format = Some(kind);
@@ -53,16 +231,7 @@ pub fn build_options(
         allow_packages: args.allow_packages.then_some(true),
         ..CliOverrides::default()
     };
-    let (config, _) = pipeline::load_config(&opts)?;
-    let mut targets = config.targets_for(kind);
-    let mut seen = std::collections::HashSet::new();
-    targets.retain(|target| seen.insert(*target));
-    if kind == SourceKind::Typst && targets.contains(&Target::Typst) {
-        return Err(UsageError(
-            "typst source is already a .typ file; use writer build part.md --to typst".into(),
-        ).into());
-    }
-    Ok((opts, targets))
+    Ok((opts, kind))
 }
 
 fn build_result(
@@ -193,5 +362,28 @@ mod tests {
             "pdf: not implemented yet (T32)".into(),
         ));
         assert_eq!(exit_code_for(&error), EXIT_USAGE);
+    }
+
+    #[test]
+    fn rebuild_status_names_kind_and_limits_paths() {
+        for (kind, label) in [
+            (ChangeKind::Css, "css"),
+            (ChangeKind::Pages, "pages"),
+            (ChangeKind::Content, "content"),
+        ] {
+            let batch = ChangeBatch {
+                paths: ["a", "b", "c", "d", "e"].map(PathBuf::from).to_vec(),
+                kind,
+            };
+            assert_eq!(
+                rebuilding_line(&batch),
+                format!("Rebuilding ({label}): a, b, c, and 2 more"),
+            );
+        }
+        let batch = ChangeBatch {
+            paths: vec!["only.md".into()],
+            kind: ChangeKind::Content,
+        };
+        assert_eq!(rebuilding_line(&batch), "Rebuilding (content): only.md");
     }
 }

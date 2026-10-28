@@ -546,20 +546,50 @@ pub fn report_build_failure(
     }
 }
 
+/// Reports a borrowed failed build while a watch loop retains its state.
+pub(crate) fn print_build_failure(
+    failure: &BuildFailure, input: &Path, global: &GlobalArgs,
+) {
+    if !matches!(*failure.error, Error::MissingAsset { .. }) {
+        report_diagnostics(&failure.diagnostics, global);
+        print_error_in(&failure.error, Some(input), &read_source);
+        return;
+    }
+    let (missing, others): (Vec<_>, Vec<_>) =
+        failure.diagnostics.iter().partition(|diagnostic| {
+            diagnostic.level == Level::Error
+                && missing_asset_as_error(diagnostic).is_some()
+        });
+    let others = others.into_iter().cloned().collect();
+    report_diagnostics(&others, global);
+    let missing: Vec<_> =
+        missing.into_iter().filter_map(missing_asset_as_error).collect();
+    let mut errors: Vec<_> =
+        std::iter::once(failure.error.as_ref()).chain(&missing).collect();
+    source_order_by(&mut errors, |error| *error);
+    for error in errors {
+        print_error_in(error, Some(input), &read_source);
+    }
+}
+
 /// Sorts the missing assets of a failed build (`errors`, in the frontend's order: the deck's
 /// own, then those of the files it includes, in first-use order) into source order: the
 /// deck's first, then each included file's (`SourceSpan.file`, T48) in the order the files
 /// first appear, each file's by cell and line. Stable: errors on the same line keep their
 /// order, and errors without a span come last.
 fn source_order(errors: &mut [Error]) {
+    source_order_by(errors, |error| error);
+}
+
+fn source_order_by<T>(errors: &mut [T], error: impl Fn(&T) -> &Error) {
     let mut files: Vec<Option<PathBuf>> = vec![None];
-    for span in errors.iter().filter_map(Error::span) {
+    for span in errors.iter().filter_map(|value| error(value).span()) {
         if !files.contains(&span.file) {
             files.push(span.file);
         }
     }
-    errors.sort_by_key(|err| {
-        err.span().map_or((usize::MAX, 0, 0), |span| {
+    errors.sort_by_key(|value| {
+        error(value).span().map_or((usize::MAX, 0, 0), |span| {
             let file = files.iter().position(|file| *file == span.file);
             (
                 file.unwrap_or(usize::MAX),
