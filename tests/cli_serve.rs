@@ -700,17 +700,18 @@ fn a_missing_theme_at_start_can_be_created_without_restarting() {
     let _turn = serial();
     let dir = project();
     fs::remove_dir_all(dir.path().join("theme")).unwrap();
-    let server = Server::start(dir.path(), "document.md", &[]);
-    let initial = server.state();
+    let mut server = Server::start(dir.path(), "document.md", &[]);
+    let events = server.events();
+    let initial = events.hello(&server);
     assert_eq!(initial["web"]["error"]["kind"], "theme");
     fs::create_dir(dir.path().join("theme")).unwrap();
     let next =
-        server.wait_state(id(&initial), |state| state["status"] == "error");
+        events.build(&server, id(&initial), |event| event["status"] == "error");
     write(
         &dir.path().join("theme/theme.toml"),
         "name='recovered'\nextends='default'\n",
     );
-    server.wait_state(id(&next), |state| state["status"] == "ok");
+    events.build(&server, id(&next), |event| event["status"] == "ok");
     assert!(server.text("/").contains("Live document"));
 }
 
