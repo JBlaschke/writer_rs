@@ -1,15 +1,18 @@
 //! Live page sets and their HTML shell (live-reload.md §4).
 //!
-//! T21 supplies the shared types and shell. [`PagesBuilder::build`] deliberately
-//! returns an empty set until T24 adds compilation and per-page SVG reuse.
+//! The session compiles each document through its retained World and reuses
+//! unchanged standalone SVG resources across successful builds.
 
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Bytes;
+use typst_layout::{Page, PagedDocument};
 
-use crate::error::Diagnostics;
+use crate::error::{Diagnostics, Error};
 use crate::pipeline::{BuildFailure, BuildOptions, Prepared};
+use crate::typst::compile::{Compiled, compile_document};
 use crate::typst::world::WriterWorld;
 
 /// A page's SVG resource, content hash, dimensions and compiler reuse key.
@@ -19,9 +22,9 @@ pub struct PageSvg {
     pub hash: String,
     /// Standalone SVG bytes, shared cheaply between retained page sets.
     pub svg: Bytes,
-    /// Width and height in points, rounded to two decimal places by T24.
+    /// Width and height in points, rounded to two decimal places.
     pub size_pt: [f64; 2],
-    /// Compiler page hash used to reuse an unchanged page's SVG in T24.
+    /// Compiler page hash used to reuse an unchanged page's SVG.
     pub key: u128,
 }
 
@@ -72,26 +75,96 @@ pub enum PagesInput<'a> {
     },
 }
 
-/// Session pages builder; T24 adds the previous set for compiler-page reuse.
+/// Retains the last successful page set for compiler-page SVG reuse.
 #[derive(Default)]
-pub struct PagesBuilder;
+pub struct PagesBuilder {
+    previous: Option<Arc<PageSet>>,
+}
 
 impl PagesBuilder {
     /// Creates a pages builder for one serve session.
     pub fn new() -> Self {
-        Self
+        Self::default()
     }
 
-    /// Returns an empty successful set until T24 implements page compilation.
-    ///
-    /// The source and World are deliberately untouched: the server's state and
-    /// routes can run before the compiler-backed pages milestone is ready.
+    /// Compiles through the session's World and exports separate page SVGs.
+    /// Failed compilation or export leaves the previous successful set intact.
     pub fn build(
-        &mut self, _world: &mut WriterWorld, _input: PagesInput<'_>,
+        &mut self, world: &mut WriterWorld, input: PagesInput<'_>,
         build_id: u64,
     ) -> std::result::Result<(Arc<PageSet>, Diagnostics), BuildFailure> {
-        let set = PageSet { build_id, pages: Vec::new() };
-        Ok((Arc::new(set), Diagnostics::default()))
+        let (document, diagnostics) = compile_input(world, input)?;
+        let previous = self
+            .previous
+            .as_deref()
+            .map(|set| set.pages.iter().map(|page| (page.key, page)).collect())
+            .unwrap_or_default();
+        let pages = document
+            .pages()
+            .iter()
+            .map(|page| export_page(page, &previous))
+            .collect();
+        let set = Arc::new(PageSet { build_id, pages });
+        self.previous = Some(set.clone());
+        Ok((set, diagnostics))
+    }
+}
+
+fn compile_input(
+    world: &mut WriterWorld, input: PagesInput<'_>,
+) -> std::result::Result<(PagedDocument, Diagnostics), BuildFailure> {
+    let (path, diagnostics) = match input {
+        PagesInput::Generated { prepared, opts } => {
+            let diagnostics = crate::pipeline::pdf::load_with_diagnostics(
+                prepared, opts, world,
+            )?;
+            (prepared.document.source.path.as_path(), diagnostics)
+        }
+        PagesInput::TypstFile { path } => (path, Diagnostics::default()),
+    };
+    // compile_document already includes the include provider's diagnostics.
+    compiler_result(compile_document(world), diagnostics, path)
+}
+
+fn compiler_result<T>(
+    compiled: Compiled<T>, mut diagnostics: Diagnostics, input: &Path,
+) -> std::result::Result<(T, Diagnostics), BuildFailure> {
+    let Compiled { output, diagnostics: found } = compiled;
+    diagnostics.extend(found.into_iter().map(|mut diagnostic| {
+        diagnostic.path = diagnostic
+            .span
+            .as_ref()
+            .and_then(|span| span.file.clone())
+            .or(diagnostic.path)
+            .or_else(|| Some(input.to_path_buf()));
+        diagnostic
+    }));
+    let result =
+        Compiled { output, diagnostics: diagnostics.clone() }.into_result();
+    result.map_err(|mut error| {
+        if let Error::Compile { path, line, .. } = &mut error
+            && path == Path::new("/__writer-main.typ")
+        {
+            *path = input.to_path_buf();
+            *line = None;
+        }
+        BuildFailure { error: Box::new(error), diagnostics }
+    })
+}
+
+fn export_page(page: &Page, previous: &HashMap<u128, &PageSvg>) -> PageSvg {
+    let key = typst::utils::hash128(page);
+    if let Some(cached) = previous.get(&key) {
+        return (**cached).clone();
+    }
+    let svg =
+        typst_svg::svg(page, &typst_svg::SvgOptions::default()).into_bytes();
+    PageSvg {
+        hash: page_hash(&svg),
+        svg: Bytes::from(svg),
+        size_pt: [page.frame.width().to_pt(), page.frame.height().to_pt()]
+            .map(|size| (size * 100.0).round() / 100.0),
+        key,
     }
 }
 
@@ -166,6 +239,15 @@ pub fn shell_html(title: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+
+    use typst::foundations::Datetime;
+
+    use crate::assets::registry::AssetRegistry;
+    use crate::config::Config;
+    use crate::error::{Diagnostic, Level};
+    use crate::typst::sourcemap::SourceMap;
+    use crate::typst::world::{IncludeProvider, MainFile, Synthesized};
 
     fn page(svg: &'static str, size_pt: [f64; 2], key: u128) -> PageSvg {
         PageSvg {
@@ -237,45 +319,35 @@ mod tests {
         assert!(PAGES_CSS.contains("prefers-color-scheme: dark"));
     }
 
-    #[test]
-    fn builder_stub_returns_empty_sets_without_compiling_either_input_kind() {
-        use crate::config::Config;
-        use crate::typst::world::MainFile;
-        use typst::foundations::Datetime;
-
-        let root = tempfile::tempdir().unwrap();
-        let path = root.path().join("absent.typ");
-        std::fs::write(&path, "#not_compiled()\n").unwrap();
+    fn world(root: &Path, main: MainFile) -> WriterWorld {
         let mut config = Config::default();
         config.pdf.system_fonts = false;
-        let mut world = WriterWorld::from_config(
+        WriterWorld::from_config(
             &config,
-            root.path(),
-            MainFile::Path(path.clone()),
+            root,
+            main,
             Datetime::from_ymd(2026, 10, 28).unwrap(),
         )
-        .unwrap();
-        std::fs::remove_file(&path).unwrap();
-        let mut builder = PagesBuilder::new();
-        for build_id in [1, 3] {
-            let (set, diagnostics) = builder
-                .build(
-                    &mut world,
-                    PagesInput::TypstFile { path: &path },
-                    build_id,
-                )
-                .unwrap();
-            assert_eq!(set.build_id, build_id);
-            assert!(set.pages.is_empty());
-            assert!(diagnostics.is_empty());
-            assert!(world.accessed().is_empty());
-        }
+        .unwrap()
+    }
 
-        let source = root.path().join("document.md");
-        std::fs::write(&source, "# Prepared document\n").unwrap();
-        let opts = BuildOptions::new(&source);
-        let prepared = crate::pipeline::prepare(&opts).unwrap();
-        std::fs::remove_file(&source).unwrap();
+    fn prepared(path: &Path, text: &str) -> (BuildOptions, Prepared) {
+        fs::write(path, text).unwrap();
+        let opts = BuildOptions::new(path);
+        let mut prepared = crate::pipeline::prepare(&opts).unwrap();
+        prepared.config.pdf.system_fonts = false;
+        (opts, prepared)
+    }
+
+    #[test]
+    fn generated_document_compiles_to_separate_content_addressed_pages() {
+        let root = tempfile::tempdir().unwrap();
+        let (opts, prepared) = prepared(
+            &root.path().join("document.md"),
+            "# First page\n\nFirst.\n\n```{=typst}\n#pagebreak()\n```\n\n# Second page\n",
+        );
+        let mut world = world(root.path(), MainFile::Virtual);
+        let mut builder = PagesBuilder::new();
         let (set, diagnostics) = builder
             .build(
                 &mut world,
@@ -283,9 +355,321 @@ mod tests {
                 4,
             )
             .unwrap();
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
         assert_eq!(set.build_id, 4);
-        assert!(set.pages.is_empty());
-        assert!(diagnostics.is_empty());
-        assert!(world.accessed().is_empty());
+        assert_eq!(set.pages.len(), 2);
+        for page in &set.pages {
+            assert!(
+                std::str::from_utf8(&page.svg).unwrap().starts_with("<svg")
+            );
+            assert_eq!(page.hash, page_hash(&page.svg));
+            assert_eq!(page.size_pt, [595.28, 841.89]);
+        }
+        assert!(Arc::ptr_eq(builder.previous.as_ref().unwrap(), &set));
+    }
+
+    #[test]
+    fn typst_file_uses_disk_main_tracks_reads_and_rounds_page_sizes() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("document.typ");
+        fs::write(&path,
+            "#set page(width: 123.456pt, height: 234.567pt, margin: 0pt)\nDirect Typst.\n",
+        ).unwrap();
+        let mut world = world(root.path(), MainFile::Path(path.clone()));
+        let (set, diagnostics) = PagesBuilder::new()
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 8)
+            .unwrap();
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        assert_eq!(set.pages.len(), 1);
+        assert_eq!(set.pages[0].size_pt, [123.46, 234.57]);
+        assert!(world.accessed().contains(&fs::canonicalize(path).unwrap()));
+    }
+
+    #[test]
+    fn identical_pages_reuse_exact_bytes_even_after_previous_order_changes() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("document.typ");
+        fs::write(&path, "First.\n#pagebreak()\nSecond.\n").unwrap();
+        let mut world = world(root.path(), MainFile::Path(path.clone()));
+        let mut builder = PagesBuilder::new();
+        let (first, _) = builder
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 1)
+            .unwrap();
+        assert_eq!(first.pages.len(), 2);
+        world.reset();
+        let (same, _) = builder
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 2)
+            .unwrap();
+        for (before, after) in first.pages.iter().zip(&same.pages) {
+            assert_eq!(before.key, after.key);
+            assert_eq!(before.hash, after.hash);
+            assert_eq!(before.svg.as_ptr(), after.svg.as_ptr());
+        }
+        // Previous indices do not participate in the compiler-key lookup.
+        builder.previous = Some(Arc::new(PageSet {
+            build_id: 2,
+            pages: vec![same.pages[1].clone(), same.pages[0].clone()],
+        }));
+        world.reset();
+        let (moved, _) = builder
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 3)
+            .unwrap();
+        for (before, after) in first.pages.iter().zip(&moved.pages) {
+            assert_eq!(before.svg.as_ptr(), after.svg.as_ptr());
+            assert_eq!(before.hash, after.hash);
+        }
+    }
+
+    #[test]
+    fn changing_a_later_page_keeps_the_first_pages_storage() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("document.typ");
+        fs::write(&path, "First.\n#pagebreak()\nSecond.\n").unwrap();
+        let mut world = world(root.path(), MainFile::Path(path.clone()));
+        let mut builder = PagesBuilder::new();
+        let (before, _) = builder
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 1)
+            .unwrap();
+        fs::write(&path, "First.\n#pagebreak()\nChanged.\n").unwrap();
+        world.reset();
+        let (after, _) = builder
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 2)
+            .unwrap();
+        assert_eq!(after.pages.len(), 2);
+        assert_eq!(before.pages[0].svg.as_ptr(), after.pages[0].svg.as_ptr());
+        assert_eq!(before.pages[0].hash, after.pages[0].hash);
+        assert_ne!(before.pages[1].svg.as_ptr(), after.pages[1].svg.as_ptr());
+        assert_ne!(before.pages[1].hash, after.pages[1].hash);
+    }
+
+    #[test]
+    fn failed_generated_compile_keeps_last_good_set_and_emitter_findings() {
+        use crate::ir::{Attrs, Block, Inline, SourceSpan};
+
+        let root = tempfile::tempdir().unwrap();
+        let (opts, mut prepared) =
+            prepared(&root.path().join("document.md"), "A valid page.\n");
+        let mut world = world(root.path(), MainFile::Virtual);
+        let mut builder = PagesBuilder::new();
+        let (good, _) = builder
+            .build(
+                &mut world,
+                PagesInput::Generated { prepared: &prepared, opts: &opts },
+                1,
+            )
+            .unwrap();
+        prepared.document.blocks.push(Block::paragraph(vec![Inline::Image {
+            alt: vec![Inline::text("Remote image")],
+            url: "https://example.org/image.svg".into(),
+            title: None,
+            attrs: Attrs::default(),
+        }]));
+        prepared.document.blocks.push(Block::Raw {
+            format: "typst".into(),
+            text: "#unknown_writer_pages_value()".into(),
+            span: Some(SourceSpan {
+                start_line: 7,
+                end_line: 7,
+                cell: None,
+                file: Some(prepared.document.source.path.clone()),
+            }),
+        });
+        world.reset();
+        let failure = builder
+            .build(
+                &mut world,
+                PagesInput::Generated { prepared: &prepared, opts: &opts },
+                2,
+            )
+            .unwrap_err();
+        assert!(Arc::ptr_eq(builder.previous.as_ref().unwrap(), &good));
+        assert_eq!(
+            failure
+                .diagnostics
+                .iter()
+                .filter(|finding| { finding.code == "unsupported-construct" })
+                .count(),
+            1
+        );
+        let errors = failure
+            .diagnostics
+            .iter()
+            .filter(|finding| finding.level == Level::Error)
+            .collect::<Vec<_>>();
+        assert_eq!(errors.len(), 1, "{:?}", failure.diagnostics);
+        assert_eq!(errors[0].path, Some(prepared.document.source.path.clone()));
+        assert_eq!(errors[0].span.as_ref().unwrap().start_line, 7);
+    }
+
+    struct WarningInclude;
+
+    impl IncludeProvider for WarningInclude {
+        fn synthesize(
+            &self, _: &Path, _: &Path,
+        ) -> crate::error::Result<Synthesized> {
+            Ok(Synthesized {
+                text: "Included source.".into(),
+                map: SourceMap::default(),
+                assets: AssetRegistry::new(),
+                files: Vec::new(),
+                diagnostics: [Diagnostic::warning(
+                    "pages-include-test", "a retained include finding",
+                )]
+                .into_iter()
+                .collect(),
+            })
+        }
+    }
+
+    #[test]
+    fn include_provider_findings_are_returned_exactly_once() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("document.typ");
+        fs::write(&path, "#include \"part.md\"\n").unwrap();
+        fs::write(root.path().join("part.md"), "Included source.").unwrap();
+        let mut world = world(root.path(), MainFile::Path(path.clone()));
+        world.set_include_provider(Box::new(WarningInclude));
+        let (_, diagnostics) = PagesBuilder::new()
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 1)
+            .unwrap();
+        assert_eq!(
+            diagnostics
+                .iter()
+                .filter(|finding| { finding.code == "pages-include-test" })
+                .count(),
+            1,
+            "{diagnostics:?}"
+        );
+    }
+
+    struct PanicInclude;
+
+    impl IncludeProvider for PanicInclude {
+        fn synthesize(
+            &self, _: &Path, _: &Path,
+        ) -> crate::error::Result<Synthesized> {
+            panic!("expected pages include panic");
+        }
+    }
+
+    #[test]
+    fn compile_panic_does_not_replace_last_good_reuse_state() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("document.typ");
+        fs::write(&path, "A successful page.\n").unwrap();
+        let mut world = world(root.path(), MainFile::Path(path.clone()));
+        let mut builder = PagesBuilder::new();
+        let (good, _) = builder
+            .build(&mut world, PagesInput::TypstFile { path: &path }, 1)
+            .unwrap();
+        fs::write(&path, "#include \"part.md\"\n").unwrap();
+        world.set_include_provider(Box::new(PanicInclude));
+        world.reset();
+        let failed =
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                builder.build(
+                    &mut world,
+                    PagesInput::TypstFile { path: &path },
+                    2,
+                )
+            }));
+        assert!(failed.is_err());
+        assert!(Arc::ptr_eq(builder.previous.as_ref().unwrap(), &good));
+    }
+
+    #[test]
+    fn failed_compile_retains_every_finding_and_prefers_mapped_source_paths() {
+        use crate::ir::SourceSpan;
+
+        let source = Path::new("/project/document.md");
+        let included = Path::new("/project/chapter.ipynb");
+        let mut first = Diagnostic::error(
+            "typst-error",
+            "failed\n  hint: in @local/test:1.0.0/lib.typ:3",
+        );
+        first.path = Some("/compiler/main.typ".into());
+        first.span = Some(SourceSpan {
+            start_line: 7,
+            end_line: 8,
+            cell: Some(4),
+            file: Some(included.into()),
+        });
+        let mut later = Diagnostic::error("typst-error", "another failure");
+        later.path = Some("/templates/template.typ".into());
+        let compiled = Compiled::<()> {
+            output: None,
+            diagnostics: [
+                Diagnostic::warning("typst-warning", "compiler warning"),
+                first,
+                later,
+            ]
+            .into_iter()
+            .collect(),
+        };
+        let before =
+            [Diagnostic::warning("emitter-warning", "emitter warning")]
+                .into_iter()
+                .collect();
+        let failure = compiler_result(compiled, before, source).unwrap_err();
+        assert_eq!(failure.diagnostics.len(), 4);
+        let findings = failure.diagnostics.iter().collect::<Vec<_>>();
+        assert_eq!(findings[0].code, "emitter-warning");
+        assert_eq!(findings[1].path.as_deref(), Some(source));
+        assert_eq!(findings[2].path.as_deref(), Some(included));
+        assert_eq!(findings[2].span.as_ref().unwrap().cell, Some(4));
+        assert_eq!(
+            findings[3].path.as_deref(),
+            Some(Path::new("/templates/template.typ"))
+        );
+        let Error::Compile { path, line, hints, .. } = *failure.error else {
+            panic!("compile error");
+        };
+        assert_eq!(path, included);
+        assert_eq!(line, Some(7));
+        assert_eq!(hints, ["in @local/test:1.0.0/lib.typ:3"]);
+        let missing = compiler_result(
+            Compiled::<()> {
+                output: None,
+                diagnostics: Diagnostics::default(),
+            },
+            Diagnostics::default(),
+            source,
+        )
+        .unwrap_err();
+        assert!(
+            matches!(*missing.error, Error::Compile { path, line: None, .. } if path == source)
+        );
+    }
+
+    #[test]
+    fn notebook_compile_error_keeps_the_markdown_cell_location() {
+        let root = tempfile::tempdir().unwrap();
+        let notebook = serde_json::json!({
+            "nbformat": 4, "nbformat_minor": 5, "metadata": {},
+            "cells": [
+                {"cell_type": "markdown", "metadata": {}, "source": ["# Notebook\n"]},
+                {"cell_type": "markdown", "metadata": {}, "source": ["```{=typst}\n#unknown_writer_pages_value()\n```\n"]},
+            ],
+        });
+        let path = root.path().join("document.ipynb");
+        let (opts, prepared) =
+            prepared(&path, &serde_json::to_string(&notebook).unwrap());
+        let mut world = world(root.path(), MainFile::Virtual);
+        let failure = PagesBuilder::new()
+            .build(
+                &mut world,
+                PagesInput::Generated { prepared: &prepared, opts: &opts },
+                1,
+            )
+            .unwrap_err();
+        let first = failure
+            .diagnostics
+            .iter()
+            .find(|finding| finding.level == Level::Error)
+            .unwrap();
+        assert_eq!(first.path.as_ref(), Some(&prepared.document.source.path));
+        let span = first.span.as_ref().unwrap();
+        assert_eq!(span.cell, Some(1));
+        assert_eq!(span.start_line, 1);
     }
 }

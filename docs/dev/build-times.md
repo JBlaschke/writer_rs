@@ -893,3 +893,41 @@ the World's full session timestamp and remove managed resource mount subtrees.
 The target owns no reset/eviction. Native .typ dispatch, export, full citations
 and actual pages retain their T52/T34/T70/T24 boundaries; dependencies and public
 API/config/IR schemas are unchanged.
+
+
+## T24 compiler-backed pages acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T32 plus the independent
+main-CI watcher repair and T24. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 25.94 s | 189.05 s | 162.17 s | 1,401 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 386 s | 458.23 s | 3720.23 s | 1,400 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. All 12 pages units, 26 watcher units and 47 real CLI/watch/server
+integration tests pass. All 13 real-server Chrome cases pass in 44.91 s with
+required Chrome 156.0.8078.48; all 26 A–K mock/Chrome checks pass. JavaScript and
+Python syntax checks pass. Detailed measured page anchors, selective requests,
+lazy/decode races, zoom, startup/restart state and last-good error behavior are
+recorded in docs/dev/live-reload-qa.md. No browser acceptance was skipped.
+
+PagesBuilder loads generated source once through the retained World, combines
+emission/compiler findings once and keeps all failure locations/cells/hints.
+It exports separate content-addressed SVGs, rounds point sizes and reuses exact
+Bytes storage for matching compiler page keys anywhere in the prior good set.
+Only successful complete sets replace its cache; reset/eviction stay in T23.
+The client reserves final geometry before native lazy loading, preserves page
+fractions and keeps old decoded pixels until replacements load/decode.
+
+The first checks exposed two test expectations tied to the prior stub: the
+server script body and img.width/height IDL values. The route test now compares
+the actual embedded script; geometry checks use intrinsic attributes and
+separate rendered dimensions. The final complete browser/full suites pass.
+
+Independent main CI repair `fd233f1` is included through equivalent `dbb25e5`:
+macOS historical directory creation is filtered by identity; the already
+present PR22 child-lifetime guard is retained. Its main-only validation is in
+docs/dev/watch-ci-recovery.md and its standalone PR27 has no feature dependency.
+Full .typ build/serve acceptance and compiler-side includes retain T52/T53.

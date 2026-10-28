@@ -870,3 +870,14 @@ anchor page is kept, `p` switches views, `apply(p, 18)` then `apply(q, 1)` rende
 - Length: about 840 lines, above the brief's 250–600. The spec serves six tasks (T20–T24, T73)
   and three languages (Rust, the client JS, the protocol), and its unit lists and QA checklist
   are acceptance criteria the task files copy.
+
+
+> **T24 coordinator clarification (2026-10-28):** The existing compile_document
+> wrapper already includes include-provider diagnostics. Pages compilation
+> appends them exactly once, combining only emission findings separately.
+> Generated pages reuse T32's private detailed source loader; no reset/eviction
+> belongs to PagesBuilder. Selective HTML/PDF process-watch coverage extends
+> tests/cli_watch.rs, while tests/watch.rs remains the backend harness. Browser
+> readiness waits only for visible pages, preserving native lazy loading. A
+> decoded old image may temporarily share a page with its lazy replacement;
+> settled DOM retains the single-image shape specified above.

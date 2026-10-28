@@ -15,6 +15,9 @@ GET /__mock/restart: restart at build 1 with staged content and drop streams.
 GET /__mock/failroot?on=1|0: fail content fetches without stopping SSE.
 GET /__mock/early?on=1|0: stage the client script in head, before body.
 GET /__mock/reset: reset build 1; /log: return and clear request log.
+POST /__mock/pages: stage {hashes:[16-hex],size_pt:[[w,h]]}; emit pages to apply.
+GET /?view=pages&client=1: the real pages client; default remains the T22 spy.
+GET /__mock/pages/hold|release?hash=HASH: gate a page response for revision tests.
 
 WRITER_ASSETS overrides the repository assets directory; WRITER_CLIENT overrides
 live-reload.js, useful while testing a scratch implementation. No dependencies.
@@ -25,6 +28,7 @@ import html
 import json
 import mimetypes
 import os
+import re
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -36,6 +40,9 @@ ASSETS = Path(os.environ.get(
 )).resolve()
 CLIENT = Path(os.environ.get(
     "WRITER_CLIENT", str(ASSETS / "writer/live-reload.js")
+)).resolve()
+PAGES_SCRIPT = Path(os.environ.get(
+    "WRITER_PAGES_CLIENT", str(ASSETS / "writer/pages.js")
 )).resolve()
 
 INITIAL_CSS = """html { scroll-behavior: auto; }
@@ -109,6 +116,37 @@ apply(p, id) { window.__qaPages.push({pages: p, id}); }
 """
 
 
+# T22's default spy shell stays unchanged. client=1 opts into the T24 client.
+PAGES_LIVE = """<!DOCTYPE html><html lang="en" data-writer-view="pages">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock compiler pages</title><style>
+body { margin:0; padding-top:80px; background:#ddd; }
+#writer-pages-toolbar { position:fixed; inset:0 0 auto; z-index:100;
+    display:flex; gap:8px; padding:12px 16px; background:white; }
+#writer-pages { display:flex; flex-direction:column; align-items:center;
+    gap:16px; padding:16px; }
+.writer-page { background:white; box-shadow:0 2px 8px #0003; }
+.writer-page img { display:block; }
+</style></head><body>
+<header id="writer-pages-toolbar">
+<button type="button" data-zoom="out">−</button><span id="writer-pages-zoom">Fit</span>
+<button type="button" data-zoom="in">+</button><button type="button" data-zoom="fit">Fit</button>
+<span id="writer-pages-counter"></span><span id="writer-pages-status" hidden></span>
+</header><main id="writer-pages" data-writer-pages></main>
+<script src="/__writer/pages.js"></script>
+<script src="/__writer/live-reload.js"></script></body></html>
+"""
+
+
+def page_svg(index, size, digest):
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size[0]}pt" '
+        f'height="{size[1]}pt"><rect width="100%" height="100%" '
+        f'fill="#{digest[-6:]}"/><text x="20" y="40">'
+        f'Page {index}: {digest}</text></svg>'
+    )
+
+
 def error_payload(query):
     line = query.get("line", ["41"])[0]
     cell = query.get("cell", [""])[0]
@@ -154,6 +192,14 @@ class Mock:
         self.reset()
 
     def reset(self):
+        for held in getattr(self, "page_holds", {}).values():
+            held.set()
+        self.page_holds = {}
+        self.page_versions = {}
+        self.stage_pages({
+            "hashes": ["0000000000000001", "0000000000000002"],
+            "size_pt": [[595.28, 841.89], [595.28, 841.89]],
+        })
         self.build_id = 1
         self.document = initial_document()
         self.css = INITIAL_CSS
@@ -175,10 +221,21 @@ class Mock:
         self.log = []
         self.served = self.snapshot()
 
+    def stage_pages(self, spec):
+        hashes, sizes = spec["hashes"], spec["size_pt"]
+        if len(hashes) != len(sizes) or any(
+            not isinstance(digest, str) or not re.fullmatch("[0-9a-f]{16}", digest)
+            or len(size) != 2 or any(not isinstance(n, (int, float)) or n <= 0 for n in size)
+            for digest, size in zip(hashes, sizes)
+        ):
+            raise ValueError("invalid mock pages")
+        self.page_data = {"count": len(hashes), "hashes": list(hashes),
+                          "size_pt": [list(size) for size in sizes]}
+        for index, (digest, size) in enumerate(zip(hashes, sizes), 1):
+            self.page_versions.setdefault(digest, page_svg(index, size, digest))
+
     def pages(self, status):
-        return {"status": status, "count": 2,
-                "hashes": ["0000000000000001", "0000000000000002"],
-                "size_pt": [[595.28, 841.89], [595.28, 841.89]]}
+        return {"status": status, **self.page_data}
 
     def snapshot(self):
         return {"document": self.document, "css": self.css,
@@ -264,7 +321,12 @@ class Handler(BaseHTTPRequestHandler):
         field = {"document": "document", "css": "css", "head": "head",
                  "body": "body", "bodyend": "body_end"}.get(url.path.split("/")[-1])
         with MOCK.cond:
-            if url.path == "/__mock/asset":
+            if url.path == "/__mock/pages":
+                try:
+                    MOCK.stage_pages(json.loads(body))
+                except (ValueError, KeyError, TypeError):
+                    return self.send(400, "invalid mock pages", "text/plain")
+            elif url.path == "/__mock/asset":
                 MOCK.assets[query["path"][0]] = body
             elif url.path == "/__mock/image":
                 MOCK.images[query["name"][0]] = body
@@ -294,7 +356,7 @@ class Handler(BaseHTTPRequestHandler):
             if fail_root:
                 return self.send(503, "deliberate content failure", "text/plain")
             if query.get("view", ["web"])[0] == "pages":
-                page = PAGES
+                page = PAGES_LIVE if query.get("client", ["0"])[0] == "1" else PAGES
             elif served:
                 page = PAGE.format(**served)
                 early = served["early"]
@@ -306,6 +368,28 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200, page, "text/html; charset=utf-8")
         if path == "/__writer/state":
             return self.send(200, json.dumps(state), "application/json")
+        if path == "/__writer/pages.js":
+            return self.send(200, PAGES_SCRIPT.read_text(), "text/javascript")
+        match = re.fullmatch(r"/__writer/pages/([1-9][0-9]*)\.svg", path)
+        if match:
+            index = int(match.group(1)) - 1
+            digest = query.get("v", [""])[0]
+            with MOCK.cond:
+                image = MOCK.page_versions.get(digest)
+                immutable = image is not None
+                if image is None and index < len(MOCK.page_data["hashes"]):
+                    digest = MOCK.page_data["hashes"][index]
+                    image = MOCK.page_versions[digest]
+                held = MOCK.page_holds.get(digest)
+            if image is None:
+                return self.send(404, "no such page", "text/plain")
+            # Wait outside cond: release/reset and other SSE/control requests
+            # must remain available while one image response is held.
+            if held and not held.wait(10):
+                return self.send(504, "mock page hold timed out", "text/plain")
+            return self.send(200, image, "image/svg+xml", (
+                "public, max-age=31536000, immutable" if immutable else "no-store"
+            ))
         if path == "/__writer/theme.css" and served:
             return self.send(200, served["css"], "text/css")
         if path == "/__writer/live-reload.js":
@@ -335,7 +419,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def control(self, path, query):
         with MOCK.cond:
-            if path == "/__mock/emit":
+            if path == "/__mock/pages/hold":
+                digest = query.get("hash", [""])[0]
+                MOCK.page_holds[digest] = threading.Event()
+                return self.send(200, "ok", "text/plain")
+            elif path == "/__mock/pages/release":
+                held = MOCK.page_holds.pop(query.get("hash", [""])[0], None)
+                if held:
+                    held.set()
+                return self.send(200, "ok", "text/plain")
+            elif path == "/__mock/emit":
                 event = MOCK.emit(query.get("kind", ["content"])[0], query)
                 return self.send(200, json.dumps(event), "application/json")
             if path == "/__mock/document":
