@@ -4,7 +4,7 @@ expression: html(&parsed)
 ---
 <main data-writer-document>
 <h1 id="notes-across-notebook-cells">Notes across notebook cells</h1>
-<p>First<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup>, shared<sup class="footnote-ref"><a id="fnref-2" href="#fn-2" role="doc-noteref">2</a></sup>, image<sup class="footnote-ref"><a id="fnref-3" href="#fn-3" role="doc-noteref">3</a></sup>, attachment<sup class="footnote-ref"><a id="fnref-4" href="#fn-4" role="doc-noteref">4</a></sup>, and <sup class="footnote-ref"><a id="fnref-5" href="#fn-5" role="doc-noteref">5</a></sup>. See @fig-later.</p>
+<p>First<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup>, shared<sup class="footnote-ref"><a id="fnref-2" href="#fn-2" role="doc-noteref">2</a></sup>, image<sup class="footnote-ref"><a id="fnref-3" href="#fn-3" role="doc-noteref">3</a></sup>, attachment<sup class="footnote-ref"><a id="fnref-4" href="#fn-4" role="doc-noteref">4</a></sup>, and <sup class="footnote-ref"><a id="fnref-5" href="#fn-5" role="doc-noteref">5</a></sup>. See <a class="ref" href="#fig-later">Figure 3</a>.</p>
 <p>Again<sup class="footnote-ref"><a id="fnref-2-2" href="#fn-2" role="doc-noteref">2</a></sup>, image again<sup class="footnote-ref"><a id="fnref-3-2" href="#fn-3" role="doc-noteref">3</a></sup>, and <sup class="footnote-ref"><a id="fnref-6" href="#fn-6" role="doc-noteref">6</a></sup>.</p>
 <p>Case reference<sup class="footnote-ref"><a id="fnref-7" href="#fn-7" role="doc-noteref">7</a></sup>.</p>
 <p>Case again<sup class="footnote-ref"><a id="fnref-7-2" href="#fn-7" role="doc-noteref">7</a></sup>.</p>

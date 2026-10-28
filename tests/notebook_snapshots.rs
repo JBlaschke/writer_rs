@@ -19,9 +19,9 @@ use writer::notebook::{self, CellIncludes, CellRef, ParseOptions, Selection};
 use writer::resolve::{ResolveOptions, resolve};
 use writer::typst::emit::{AssetPaths, EmitOptions as TypstOptions};
 
-const FIXTURES: [&str; 7] = [
+const FIXTURES: [&str; 8] = [
     "minimal", "outputs", "options", "tags", "frontmatter", "dataframe",
-    "footnotes",
+    "footnotes", "includes",
 ];
 
 fn root() -> PathBuf {
@@ -102,11 +102,14 @@ fn stable_json(document: &Document) -> Value {
     relabel(&mut content, &ids, &mut labels);
     let mut value = serde_json::to_value(document).unwrap();
     relabel(&mut value, &ids, &mut labels);
+    redact_document_paths(&mut value);
     if let Some(assets) = value.get_mut("assets").and_then(Value::as_array_mut)
     {
         for asset in assets.iter_mut() {
-            if let Some(Value::String(origin)) = asset.get_mut("origin") {
-                *origin = origin.replace('\\', "/");
+            if let Some(Value::String(origin)) = asset.get_mut("origin")
+                && origin.starts_with("file:")
+            {
+                *origin = redact(origin);
             }
         }
         assets.sort_by_key(|asset| asset["id"].as_str().map(str::to_owned));
@@ -142,7 +145,39 @@ fn relabel(
 }
 
 fn redact(text: &str) -> String {
-    text.replace(&*root().to_string_lossy(), "[root]").replace('\\', "/")
+    let normalize = |text: &str| {
+        text.replace('\\', "/").replace("//?/UNC/", "//").replace("//?/", "")
+    };
+    let mut text = normalize(text);
+    for path in [std::fs::canonicalize(root()).unwrap(), root()] {
+        text = text.replace(&normalize(&path.to_string_lossy()), "[root]");
+    }
+    text
+}
+
+fn redact_document_paths(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            if map.contains_key("start_line")
+                && map.contains_key("end_line")
+                && let Some(Value::String(file)) = map.get_mut("file")
+            {
+                *file = redact(file);
+            }
+            if let Some(Value::Array(paths)) = map.get_mut("includes") {
+                for path in paths {
+                    if let Value::String(path) = path {
+                        *path = redact(path);
+                    }
+                }
+            }
+            map.values_mut().for_each(redact_document_paths);
+        }
+        Value::Array(items) => {
+            items.iter_mut().for_each(redact_document_paths);
+        }
+        _ => {}
+    }
 }
 
 fn effective_config(document: &Document) -> Config {
@@ -221,9 +256,26 @@ fn every_fixture_is_snapshotted() {
                 let at = finding.span.as_ref().map_or_else(
                     || "notebook".to_owned(),
                     |span| {
+                        if let Some(file) = span.file.as_deref().or(finding
+                            .path
+                            .as_deref()
+                            .filter(|_| span.cell.is_none()))
+                        {
+                            let cell =
+                                span.cell.map_or(String::new(), |cell| {
+                                    format!(", cell {cell}")
+                                });
+                            return format!(
+                                "{}{cell}, lines {}-{}",
+                                redact(&file.to_string_lossy()),
+                                span.start_line,
+                                span.end_line,
+                            );
+                        }
                         format!(
                             "cell {}, lines {}-{}",
-                            span.cell.unwrap(),
+                            span.cell
+                                .map_or("?".into(), |cell| cell.to_string()),
                             span.start_line,
                             span.end_line
                         )
@@ -1197,4 +1249,163 @@ fn stable_asset_labels_follow_content_instead_of_absolute_path_hashes() {
         "the changed file hash reorders inventory"
     );
     assert_eq!(stable_json(&original), stable_json(&relocated));
+}
+
+#[test]
+fn includes_fixture_preserves_file_notes_and_watch_order() {
+    let parsed = parse_fixture("includes");
+    let part_a = std::fs::canonicalize(
+        root().join("tests/fixtures/md/include/part-a.md"),
+    )
+    .unwrap();
+    let part_b = std::fs::canonicalize(
+        root().join("tests/fixtures/md/include/part-b.md"),
+    )
+    .unwrap();
+    assert_eq!(parsed.document.includes, [part_a.clone(), part_b.clone()]);
+    assert_eq!(parsed.document.assets.len(), 1);
+    let mut note_scopes = Vec::new();
+    ir::walk_inlines(&parsed.document, &mut |inline| {
+        if let Inline::Footnote { label: Some(label), blocks, .. } = inline {
+            assert_eq!(label, "1");
+            note_scopes.push(blocks[0].span().unwrap().file.clone());
+        }
+    });
+    assert_eq!(note_scopes, [None, Some(part_a.clone())]);
+    let included = all_blocks(&parsed.document);
+    assert!(included.iter().any(|block| {
+        block.span().and_then(|span| span.file.as_ref()) == Some(&part_b)
+    }));
+    assert!(!codes(&parsed).contains(&"footnote-unreferenced"));
+    assert!(!codes(&parsed).contains(&"footnote-undefined"));
+    let mut document = parsed.document.clone();
+    let config = effective_config(&document);
+    let diagnostics = resolve(
+        &mut document,
+        &ResolveOptions { config: &config, library: None, lenient: false },
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+    let mut numbers = Vec::new();
+    ir::walk_inlines(&document, &mut |inline| {
+        if let Inline::Footnote { number, .. } = inline {
+            numbers.push(*number);
+        }
+    });
+    assert_eq!(numbers, [Some(1), Some(2)]);
+}
+
+#[test]
+fn included_snapshot_paths_keep_text_and_normalize_windows_prefixes() {
+    let path = root().join("tests/fixtures/md/include/part-a.md");
+    let extended =
+        format!("\\\\?\\{}", path.to_string_lossy().replace('/', "\\"));
+    let mut value = json!({
+        "span": {"start_line": 1, "end_line": 2, "file": extended},
+        "includes": [path], "text": "print('\\n')",
+    });
+    redact_document_paths(&mut value);
+    assert_eq!(
+        value["span"]["file"],
+        "[root]/tests/fixtures/md/include/part-a.md"
+    );
+    assert_eq!(
+        value["includes"][0],
+        "[root]/tests/fixtures/md/include/part-a.md"
+    );
+    assert_eq!(value["text"], "print('\\n')");
+}
+
+#[test]
+fn mixed_example_resolves_across_source_files() {
+    let path = root().join("examples/mixed/document.md");
+    let source = SourceInfo {
+        base_dir: path.parent().unwrap().to_path_buf(),
+        path: path.clone(),
+        kind: SourceKind::Markdown,
+    };
+    let mut parsed = writer::markdown::parse(
+        &source,
+        &std::fs::read_to_string(&path).unwrap(),
+        &Config::default(),
+    )
+    .unwrap();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let config = effective_config(&parsed.document);
+    let diagnostics = resolve(
+        &mut parsed.document,
+        &ResolveOptions { config: &config, library: None, lenient: false },
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+    assert!(parsed.document.invariant_violations().is_empty());
+    assert_eq!(parsed.document.includes.len(), 3);
+    assert_eq!(parsed.document.assets.len(), 2);
+    assert!(parsed.document.features.notebook);
+    for label in [
+        "sec-mixed-method", "fig-mixed-flow", "fig-mixed-rolling",
+        "tbl-mixed-summary",
+    ] {
+        assert!(parsed.document.resolved.labels.contains_key(label), "{label}");
+    }
+    let mut footnotes = Vec::new();
+    ir::walk_inlines(&parsed.document, &mut |inline| {
+        if let Inline::Footnote { label: Some(label), number, blocks } = inline
+        {
+            assert_eq!(label, "1");
+            footnotes.push((*number, blocks[0].span().unwrap().file.clone()));
+        }
+    });
+    assert_eq!(footnotes.len(), 3);
+    assert_eq!(
+        footnotes.iter().map(|(number, _)| *number).collect::<Vec<_>>(),
+        [Some(1), Some(2), Some(3)]
+    );
+    assert!(footnotes[0].1.is_none());
+    assert!(
+        footnotes[1].1.as_ref().unwrap().ends_with("parts/details/method.md")
+    );
+    assert!(
+        footnotes[2].1.as_ref().unwrap().ends_with("analysis/results.ipynb")
+    );
+}
+
+#[test]
+fn included_asset_origins_are_stable_across_checkout_paths_and_prefixes() {
+    let original = parse_fixture("includes").document;
+    let position = original
+        .assets
+        .iter()
+        .position(|asset| asset.origin.starts_with("file:"))
+        .unwrap();
+    let relative = "tests/fixtures/md/images/plot.png";
+    let mut expected = original.clone();
+    expected.assets[position].origin = format!("file:[root]/{relative}");
+    let expected = stable_json(&expected);
+    assert_eq!(stable_json(&original), expected);
+    for checkout in [root(), std::fs::canonicalize(root()).unwrap()] {
+        let path = checkout.join(relative);
+        let lexical = format!("file:{}", path.display());
+        let windows = format!(
+            "file:\\\\?\\{}",
+            path.to_string_lossy().replace('/', "\\")
+        );
+        for origin in [lexical, windows] {
+            let mut relocated = original.clone();
+            relocated.assets[position].origin = origin;
+            assert_eq!(stable_json(&relocated), expected);
+        }
+    }
+    for origin in
+        ["inline:987654321", "generated:keep\\bytes", "bytes:keep\\bytes"]
+    {
+        let mut generated = original.clone();
+        generated.assets[position].origin = origin.into();
+        let value = stable_json(&generated);
+        assert!(
+            value["assets"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|asset| { asset["origin"] == origin })
+        );
+    }
 }

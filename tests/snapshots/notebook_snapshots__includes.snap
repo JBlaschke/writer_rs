@@ -1,0 +1,297 @@
+---
+source: tests/notebook_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Notebook includes"
+        }
+      ],
+      "attrs": {
+        "id": "sec-notebook-includes",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "The notebook owns its own note."
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "This note belongs to includes.ipynb."
+                }
+              ],
+              "span": {
+                "start_line": 5,
+                "end_line": 5,
+                "cell": 0
+              }
+            }
+          ],
+          "label": "1"
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "cell": 0
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Before the included Markdown chain."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 1
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Part A keeps its own file-scoped note."
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "This note belongs to part-a.md, not the including notebook."
+                }
+              ],
+              "span": {
+                "start_line": 10,
+                "end_line": 10,
+                "file": "[root]/tests/fixtures/md/include/part-a.md"
+              }
+            }
+          ],
+          "label": "1"
+        }
+      ],
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "file": "[root]/tests/fixtures/md/include/part-a.md"
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Part B"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "file": "[root]/tests/fixtures/md/include/part-b.md"
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Part B"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Part B"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 3,
+            "end_line": 3,
+            "file": "[root]/tests/fixtures/md/include/part-b.md"
+          }
+        }
+      ],
+      "attrs": {
+        "id": "fig-part-b",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "file": "[root]/tests/fixtures/md/include/part-b.md"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "After the chain, see "
+        },
+        {
+          "type": "ref",
+          "target": "fig-part-b",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 6,
+            "end_line": 6,
+            "cell": 1
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 6,
+        "end_line": 6,
+        "cell": 1
+      }
+    },
+    {
+      "type": "cell",
+      "index": 2,
+      "id": "saved-output",
+      "language": "python",
+      "source": "print(\"The saved output remains in the notebook.\")",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "The saved output remains in the notebook.",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 2
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": true,
+    "notebook": true,
+    "citations": false,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "notebook",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:[root]/tests/fixtures/md/images/plot.png"
+    }
+  ],
+  "includes": [
+    "[root]/tests/fixtures/md/include/part-a.md",
+    "[root]/tests/fixtures/md/include/part-b.md"
+  ]
+}

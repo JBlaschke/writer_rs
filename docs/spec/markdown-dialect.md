@@ -489,6 +489,11 @@ table cell, caption and footnote, but not inside `Link` inlines)
   `me@example.com` is a `Link` and `@fig-x`, `(@tbl-y)`, `[@k; @j]` are text.
 
 ### 7.3 Parse-time shape and classification outcomes
+> **Coordinator clarification (2026-10-27):** `.page` is valid only on a
+> bare reference; a citation group's `.page` is an invalid mode whose attrs
+> stay literal. Any negative `-@` item selects the group's Year mode unless
+> an explicit valid group mode overrides it. `CiteMode` remains unchanged.
+
 The frontend does not know the bibliography, so it emits syntactic shapes: a bare `@target…` →
 `Inline::Ref { target, supplement, form: Page|Normal, resolved: None }`, where `supplement` is
 `None` when no `[…]` follows, `Some(vec![])` for `[]`, and otherwise
@@ -557,6 +562,13 @@ from `Cite` nodes and recomputed by resolve. The resolve pass classifies each ta
   transitively, absolute, in first-use order (the watch set, live-reload.md).
   `include::scan_includes(path) -> Vec<PathBuf>` (lifted) lets the watcher find includes of a
   file that failed to parse.
+
+> **Coordinator clarification (2026-10-27):** include expansion uses private
+> parse/walker context; public `Fragment` fields stay unchanged. Configuration
+> tables affect included parsing and are excluded from `include-meta-ignored`;
+> explicitly set document metadata, including empty lists, is compared.
+> The best-effort watcher scanner descends into notebook Markdown and
+> raw-Markdown cells while retaining arbitrary-extension Markdown roots.
 
 ## 9. Presenter compatibility — T12 (drops), T1C (`check --compat presenter`)
 Identical in both tools: front matter grammar and the config-table rule (§2.2), the attribute

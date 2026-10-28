@@ -1,0 +1,5 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+[fixture-root]/ipynb/include/chain.ipynb: cell 1, line 1: warning: `../../md/include/part-a.md` sets `title`; an included file's document metadata is ignored [include-meta-ignored]

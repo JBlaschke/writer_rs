@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="130" viewBox="0 0 640 130">
+  <rect width="640" height="130" rx="8" fill="white"/>
+  <g fill="#edf3fa" stroke="#35608c" stroke-width="2">
+    <rect x="20" y="15" width="180" height="40" rx="6"/>
+    <rect x="20" y="75" width="180" height="40" rx="6"/>
+    <rect x="400" y="45" width="220" height="40" rx="6"/>
+  </g>
+  <g fill="none" stroke="#35608c" stroke-width="2">
+    <path d="M200 35 H290 V65 H390 M200 95 H290 V65"/>
+    <path d="m380 59 10 6-10 6"/>
+  </g>
+  <g fill="#172f47" font-family="sans-serif" font-size="16" text-anchor="middle">
+    <text x="110" y="41">Markdown sections</text>
+    <text x="110" y="101">Saved notebook output</text>
+    <text x="510" y="71">One document</text>
+  </g>
+</svg>

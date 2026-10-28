@@ -56,9 +56,25 @@ pub struct Fragment<'a> {
 ///
 /// Front matter is applied to a clone of `config`. Missing local assets are
 /// warnings; malformed front matter or unexpected parser nodes return errors.
-/// Labels, numbering, references and includes are resolved by later passes.
+/// References are scanned and top-level includes expand during parsing.
+/// Label classification and numbering belong to the later resolve pass.
 pub fn parse(
     source: &SourceInfo, text: &str, config: &Config,
+) -> Result<Parsed> {
+    parse_document_in(source, text, config, None)
+}
+
+/// An included document keeps its own parsing settings and the existing chain.
+pub(crate) fn parse_included(
+    source: &SourceInfo, text: &str, config: &Config,
+    context: &include::Context,
+) -> Result<Parsed> {
+    parse_document_in(source, text, config, Some(context))
+}
+
+fn parse_document_in(
+    source: &SourceInfo, text: &str, config: &Config,
+    enclosing: Option<&include::Context>,
 ) -> Result<Parsed> {
     let _listings = walker::DirListings::enter();
     let arena = Arena::new();
@@ -75,6 +91,9 @@ pub fn parse(
         }
     });
     let mut effective = config.clone();
+    if enclosing.is_some() {
+        effective.document.toc = Toc::Off;
+    }
     effective.merge_front_matter(&meta)?;
     options = document_options(&effective, empty_front);
     let mut assets = AssetRegistry::new();
@@ -94,19 +113,33 @@ pub fn parse(
     if empty_front {
         mark_empty_front_matter(root);
     }
-    let blocks = walker::walk(root, text, &effective, &mut ctx, true)?;
-    // T1B: reference scanner (§7.2) runs here.
+    let context = enclosing.map_or_else(
+        || include::Context::root(source, &meta),
+        |context| context.with_meta(&meta),
+    );
+    let mut included = include::State::new(source, context);
+    let blocks = walker::walk_with_includes(
+        root,
+        text,
+        &effective,
+        &mut ctx,
+        true,
+        Some(&mut included),
+    )?;
     let mut document = Document {
         meta,
         blocks,
         features: Features::default(),
         source: source.clone(),
         assets: assets.infos(&source.base_dir),
-        includes: Vec::new(),
+        includes: included.files,
         resolved: Default::default(),
     };
-    insert_toc(&mut document, &effective);
+    if enclosing.is_none() {
+        insert_toc(&mut document, &effective);
+    }
     document.features = collect_features(&document);
+    document.features.merge(&included.features);
     Ok(Parsed {
         document,
         assets,
@@ -125,7 +158,6 @@ pub fn parse_blocks(
     let arena = Arena::new();
     let root = prepared_ast(&arena, text, &options, ctx);
     let blocks = walker::walk(root, text, config, ctx, false)?;
-    // T1B: reference scanner (§7.2) runs here.
     Ok(blocks)
 }
 

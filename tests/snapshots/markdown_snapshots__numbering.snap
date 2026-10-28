@@ -526,7 +526,115 @@ expression: stable_json(&parsed.document)
       "inlines": [
         {
           "type": "text",
-          "text": "See @sec-one, @fig-zero, @eq-a, @eq-a[Eq.], @eq-a[], @sec-two[Chapter] and @sec-interlude."
+          "text": "See "
+        },
+        {
+          "type": "ref",
+          "target": "sec-one",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "fig-zero",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "eq-a",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "eq-a",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "Eq."
+            }
+          ],
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "eq-a",
+          "supplement": [],
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "ref",
+          "target": "sec-two",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "Chapter"
+            }
+          ],
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "ref",
+          "target": "sec-interlude",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 46,
+            "end_line": 46
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
         }
       ],
       "span": {

@@ -8,7 +8,7 @@ expression: text
 </header>
 <p>Inline <span class="math inline" data-tex="\frac{a}{b}"><img src="asset:[id]" alt="\frac{a}{b}" style="height:12.66pt;vertical-align:-4.22pt"></span>.</p>
 <div id="eq-sum" class="equation numbered"><span class="math display" data-tex="\sum_{i=0}^{n} i"><img src="asset:[id]" alt="\sum_{i=0}^{n} i" style="height:30.74pt;vertical-align:-13.15pt"></span><span class="equation-number">(1)</span></div>
-<p>See @eq-sum.</p>
+<p>See <a class="ref" href="#eq-sum">Equation 1</a>.</p>
 <div id="eq-aligned" class="equation numbered"><span class="math display" data-tex="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}"><img src="asset:[id]" alt="\begin{aligned} a &amp;= b + c \\ &amp;= d \end{aligned}" style="height:30.38pt;vertical-align:-2.4pt"></span><span class="equation-number">(2)</span></div>
 <p>Accents <span class="math inline" data-tex="\hat{x} \vec{v} \dot{y}"><img src="asset:[id]" alt="\hat{x} \vec{v} \dot{y}" style="height:10.99pt;vertical-align:-2.46pt"></span>.</p>
 <div class="equation"><span class="math display" data-tex="x = 1  "><img src="asset:[id]" alt="x = 1 \tag{3} \label{eq:t}" style="height:8.12pt;vertical-align:-0.13pt"></span></div>

@@ -41,7 +41,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | ready for review |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | done (PR #14) |
-| T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | todo |
+| T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | ready for review |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
 | T20 | File watcher and the document watch set | M2 | M | T16 | todo |
 | T21 | Dev server: routes, events, per-view state | M2 | M | T16 | todo |
@@ -199,6 +199,17 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   example in light/dark and narrow layouts. A small notebook theme fix
   contains wide-table scrolling without clipping desktop output prompts.
   T1B follows while CI runs; each milestone keeps its own PR against `main`.
+- T18 is open in [PR #17](https://github.com/JBlaschke/writer_rs/pull/17)
+  (`b523e05`). T1B starts from that checked feature on
+  `codex/references-and-includes`; merge T18 first while both PRs target
+  `main`. Its scanner/include brief records the additive context contracts.
+- T1B passes formatting, Clippy, rustdoc, 1,028 debug and 1,027 release
+  tests. Fourteen scanner unit tests, four frontend integration tests and
+  26 include tests on Unix cover syntax, metadata, scoped notes, mixed-file
+  recursion and located failures. Twenty-one new/updated snapshots are
+  reviewed; two obsolete cycle diagnostic snapshots are removed. Nineteen
+  Chrome checks cover the mixed example's images, links and three scoped
+  notes in light/dark and narrow layouts. T18 must merge before T1B.
 - The T40 brief closes the previous `scripts/waves.py` missing-definition
   error. The audit now passes for written briefs; several later task briefs
   are still being written. Finish those definitions before

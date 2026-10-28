@@ -550,3 +550,48 @@ No Python cells were re-executed: the example retains presenter's stored
 outputs and Python bodies, with Markdown, metadata and option-comment edits.
 Include expansion/reference scanning remains T1B; rich DOCX output remains
 T41/T42. No dependency, public IR/config or module-list changes.
+
+## T1B reference/include acceptance (2026-10-27)
+
+Measured at checked T18 (`b523e05`) plus the T1B working tree on macOS arm64
+with Rust 1.99.1. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 10.03 s | 51.56 s | 76.97 s | 1,028 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 185 s | 209.50 s | 2064.16 s | 1,027 passed |
+
+Formatting, all-target/all-feature Clippy, warnings-denied rustdoc and the
+task-brief dependency audit pass. The basic, notebook and mixed HTML examples
+build without diagnostics; the mixed report is 111.6 kB. Notebook computation
+is read from stored outputs, never executed.
+
+Fourteen scanner unit tests and four frontend integration tests cover syntax,
+Unicode/boundaries, modes, groups, supplements, escaping, Link/code/math/raw
+exclusions, fragment contexts and disabled references. Twenty-six include
+tests on Unix (24 on Windows) cover first/last/nested includes, inherited and
+child configuration, explicit empty metadata, file-scoped notes, repeated
+files, assets/spans, mixed cycles, depth 8/9, notebook path validation, leaf
+bodies, precise YAML/cell locations, and watcher traversal. Unix regressions
+cover symlink cycles and directory-symlink/`..` semantics. The watcher retains
+its existing depth boundary and ordinary lexical path output.
+
+Twenty-one snapshots are added/updated and reviewed, activating references
+in Markdown, numbering/math and notebook footnote fixtures and covering a
+Markdown → notebook → Markdown chain. The fatal cycle replaces its earlier
+placeholder output; two unused diagnostic snapshots are removed. Snapshot
+paths handle Windows canonical prefixes and preserve source text, with
+asset labels seeded from content order.
+
+Isolated Chrome 156.0.8078.48 with Node 26.12.0 passes 19 checks on the mixed
+example: nested headings, PNG/SVG loads, table/figures, one root TOC, 18 valid
+internal targets and three independent file-local notes. A cross-file ref,
+footnote and backlink are clicked successfully. Desktop and 390 px light/dark
+layouts have no page overflow or clipped prompts; console logs are empty.
+Screenshots are visually reviewed. The saved notebook cells are adapted from
+the existing executed example without recomputation.
+
+Private Markdown context and the default no-op notebook metadata hook retain
+existing Fragment literals and custom include hooks. No dependency, public
+IR/config or module-list changes. Bibliography lookup/rendering remains T70,
+`check` T1C, Typst includes T53. Both PRs target `main`; merge T18 before T1B.
