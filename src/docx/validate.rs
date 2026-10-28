@@ -1322,7 +1322,7 @@ fn table_errors(table: &XmlNode) -> Vec<String> {
     errors
 }
 
-fn svg_first_element(bytes: &[u8]) -> bool {
+pub(crate) fn svg_first_element(bytes: &[u8]) -> bool {
     let Ok(source) = std::str::from_utf8(bytes) else {
         return false;
     };

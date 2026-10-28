@@ -586,6 +586,16 @@ minus 216 twips × 635. Drawing (inline only; `{n}` = `ids.doc_pr`, unique acros
  </pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>
 ```
 
+> **Contract clarification (coordinator, 2026-10-27):** asset-registry read
+> failures remain errors, including a file disappearing after registration;
+> a private first-error slot defers them through the unit-returning run API
+> and `write` returns the error before packaging. Corrupt PNG/JPEG/GIF/WebP
+> content and failed GIF/WebP/PDF conversions produce alt text and a located
+> `unsupported-construct` warning. SVG retains the natural-size and failed
+> PNG-fallback rules above when its first XML element is `svg`, using the
+> validator's BOM/declaration/comment/DOCTYPE handling; other bytes produce
+> alt text and `unsupported-construct`. No external URL is fetched.
+
 ## 5. Child order and ordered builders — T04 (`docx::xml` in `src/docx/mod.rs`)
 Source: python-docx 1.2.0 `_tag_seq` (`docx/oxml/{text/parfmt,text/font,table,section,styles,settings}.py`,
 read 2026-10-24); `w:lvl`, `w:abstractNum`, `w:numbering`, `wp:inline`, borders and `m:*` from

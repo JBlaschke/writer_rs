@@ -626,3 +626,43 @@ The final suite includes PR #18's original-byte include parsing and notebook
 origin-redaction repair. Its focused 604-test run, Clippy and formatting also
 passed independently. Remote CI is separate from these local results.
 No dependency, IR/config, module-list or clap-shape changes.
+
+
+## T41 rich DOCX acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T1C plus the T41 working
+tree. Main (`91ed669`) subsequently merged all preceding PRs with an
+identical base tree; rebase changed no tested implementation bytes.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 1.39 s | 18.43 s | 31.25 s | 1,115 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 225 s | 254.06 s | 2553.84 s | 1,114 passed |
+
+The debug run is warm after focused builds; the final narrowed legacy stub
+assertion also passes its eleven-test package suite independently. Formatting,
+all-target/all-feature Clippy and rustdoc with warnings denied pass.
+
+Five image unit tests, 45 new feature integration tests and one cross-feature
+prepass regression cover figures/caption fields, section/subfigure SEQ resets,
+TOC/bibliography, native PNG/JPEG DPI, vector/fallback SVG, GIF/WebP/PDF
+conversions, dimensions/clamping, table grids/merges/styles/recovery and rich
+notes/bookmarks across parts. Every successful new test package validates;
+whole-fixture snapshots also use docx-rs read-back. All 63 new/updated snapshots
+are reviewed (57 new, six updated). Fixture IDs/media hashes and diagnostic
+paths are portable; original-byte fixtures are generated locally.
+
+The three basic/notebook/mixed examples build repeated byte-identical packages.
+Manual basic/mixed DOCX outputs are 9.5/47.6 kB; their HTML regression builds
+remain 687.6/111.6 kB. Canonical references reports its intentional duplicate
+labels while preserving valid package structure. The canonical saved-output
+fixture's missing selected image prevents output; a staged copy supplies that
+file and redirects its outside-image probe to exercise its remaining outputs.
+
+The target borrows the existing compiler World, preserves reference documents
+and output-clash rules, and reads SOURCE_DATE_EPOCH once. Corrupt/non-SVG image
+bytes fall back to located alt-text diagnostics; registry I/O errors propagate
+before ZIP/write. T42 math/OMML and T70 bibliography loading remain separate;
+T43 owns visual Word smoke tests. No dependencies, public IR/config/clap shapes
+or module lists change. Watcher work follows without waiting for remote CI.

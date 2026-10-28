@@ -1,0 +1,244 @@
+{
+    "meta": {
+        "vars": {
+            "toc-title": "Overview",
+            "reference-section-title": "Sources"
+        }
+    },
+    "blocks": [
+        {
+            "type": "toc",
+            "depth": 2
+        },
+        {
+            "type": "heading",
+            "level": 1,
+            "attrs": {
+                "id": "sec-intro",
+                "classes": []
+            },
+            "number": "1",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Introduction"
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "level": 2,
+            "attrs": {
+                "id": "sec-method",
+                "classes": []
+            },
+            "number": "1.1",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Methods"
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "level": 3,
+            "attrs": {
+                "id": "sec-detail",
+                "classes": []
+            },
+            "number": "1.1.1",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Details"
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "level": 1,
+            "attrs": {
+                "id": "sec-unlisted",
+                "classes": [
+                    "notoc"
+                ]
+            },
+            "number": "2",
+            "inlines": [
+                {
+                    "type": "text",
+                    "text": "Unlisted chapter"
+                }
+            ]
+        },
+        {
+            "type": "cell",
+            "index": 0,
+            "show_input": false,
+            "show_output": true,
+            "outputs": [
+                {
+                    "kind": {
+                        "kind": "display"
+                    },
+                    "candidates": [
+                        {
+                            "mime": "text/html",
+                            "blocks": [
+                                {
+                                    "type": "raw",
+                                    "format": "html",
+                                    "text": "<p>HTML-only candidate</p>"
+                                },
+                                {
+                                    "type": "heading",
+                                    "level": 1,
+                                    "attrs": {
+                                        "id": "hidden-toc",
+                                        "classes": []
+                                    },
+                                    "number": "3",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Hidden heading"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "mime": "text/plain",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Chosen plain candidate."
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "mimes": [
+                        "text/html",
+                        "text/plain"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "toc",
+            "depth": 1
+        },
+        {
+            "type": "bibliography"
+        }
+    ],
+    "features": {},
+    "assets": [],
+    "source": {
+        "path": "/fixtures/toc.md",
+        "base_dir": "/fixtures",
+        "kind": "markdown"
+    },
+    "resolved": {
+        "labels": {
+            "sec-intro": {
+                "kind": "heading",
+                "number": "1",
+                "supplement": "Section",
+                "text": "Introduction"
+            },
+            "sec-method": {
+                "kind": "heading",
+                "number": "1.1",
+                "supplement": "Section",
+                "text": "Methods"
+            },
+            "sec-detail": {
+                "kind": "heading",
+                "number": "1.1.1",
+                "supplement": "Section",
+                "text": "Details"
+            },
+            "sec-unlisted": {
+                "kind": "heading",
+                "number": "2",
+                "supplement": "Section",
+                "text": "Unlisted chapter"
+            },
+            "hidden-toc": {
+                "kind": "heading",
+                "number": "3",
+                "supplement": "Section",
+                "text": "Hidden heading"
+            }
+        },
+        "toc": [
+            {
+                "level": 1,
+                "anchor": "sec-intro",
+                "number": "1",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Introduction"
+                    }
+                ]
+            },
+            {
+                "level": 2,
+                "anchor": "sec-method",
+                "number": "1.1",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Methods"
+                    }
+                ]
+            },
+            {
+                "level": 3,
+                "anchor": "sec-detail",
+                "number": "1.1.1",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Details"
+                    }
+                ]
+            },
+            {
+                "level": 1,
+                "anchor": "hidden-toc",
+                "number": "3",
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Hidden heading"
+                    }
+                ]
+            },
+            {
+                "level": 1,
+                "anchor": "refs",
+                "number": null,
+                "inlines": [
+                    {
+                        "type": "text",
+                        "text": "Stale bibliography title"
+                    }
+                ]
+            }
+        ],
+        "bibliography": {
+            "style": "fixture",
+            "hanging_indent": false,
+            "entries": []
+        }
+    }
+}

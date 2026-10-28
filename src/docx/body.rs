@@ -334,6 +334,11 @@ impl Emitter<'_> {
 
     /// Starts a paragraph, including deferred list and footnote markers.
     pub(crate) fn start_paragraph(&mut self, mut props: ParaProps) {
+        if props.style.as_deref().is_some_and(|style| {
+            self.styles.id_for("heading 1", StyleKind::Paragraph) == Some(style)
+        }) {
+            self.heading_one();
+        }
         let marker = if let Some(frame) = self.content.body.lists.last_mut() {
             let left = 720 * (u32::from(frame.level) + 1);
             if frame.first {
@@ -700,7 +705,7 @@ impl Emitter<'_> {
         }
     }
 
-    fn separate_table(&mut self) {
+    pub(crate) fn separate_table(&mut self) {
         self.ensure_list_marker();
         if last_element_is_table(self.buffer()) {
             self.buffer().push_str("<w:p/>");

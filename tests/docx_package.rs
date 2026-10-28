@@ -228,32 +228,18 @@ fn all_styles_writes_the_vocabulary() {
 }
 
 #[test]
-fn stub_diagnostics_name_their_owner() {
+fn math_stub_diagnostics_keep_their_owner_and_source_span() {
     let result = output(&Config::default(), None, None, false).unwrap();
     let diagnostics: Vec<_> = result
         .diagnostics
         .iter()
         .filter(|d| d.code == "unsupported-construct")
         .collect();
-    assert!(!diagnostics.is_empty());
-    for diagnostic in &diagnostics {
-        assert!(
-            ["T41", "T42"]
-                .iter()
-                .any(|owner| diagnostic.message.contains(owner))
-        );
-    }
-    for owner in ["T41", "T42"] {
-        assert!(diagnostics.iter().any(|d| d.message.contains(owner)));
-    }
-    for (message, line) in [("figures", 5), ("tables", 9), ("display math", 13)]
-    {
-        let diagnostic = diagnostics
-            .iter()
-            .find(|d| d.message.starts_with(message))
-            .unwrap();
-        assert_eq!(diagnostic.span.as_ref().unwrap().start_line, line);
-    }
+    assert_eq!(diagnostics.len(), 1);
+    let diagnostic = diagnostics[0];
+    assert!(diagnostic.message.contains("T42"));
+    assert!(diagnostic.message.starts_with("display math"));
+    assert_eq!(diagnostic.span.as_ref().unwrap().start_line, 13);
 }
 
 #[test]

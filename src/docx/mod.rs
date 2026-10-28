@@ -20,7 +20,7 @@ use std::path::Path;
 
 use crate::assets::registry::AssetRegistry;
 use crate::config::Config;
-use crate::error::{Diagnostics, Result};
+use crate::error::{Diagnostics, Error, Result};
 use crate::ir::{Document, MathDialect, SourceSpan};
 use crate::resolve::LangTag;
 
@@ -117,6 +117,9 @@ pub struct Emitter<'a> {
     /// Footnote elements, without their enclosing root or separators.
     pub notes: String,
     pub(crate) content: footnotes::ContentState<'a>,
+    pub(crate) fields: fields::FieldState,
+    pub(crate) table_width_twips: Option<u32>,
+    pub(crate) deferred_error: Option<Error>,
 }
 
 /// Section properties and usable content area, in twentieths of a point.
@@ -172,6 +175,10 @@ pub enum Container {
 }
 
 impl Emitter<'_> {
+    pub(crate) fn available_width_twips(&self) -> u32 {
+        self.table_width_twips.unwrap_or(self.layout.text_width_twips).max(1)
+    }
+
     fn buffer(&mut self) -> &mut String {
         match self.part {
             Part::Document => &mut self.body,
@@ -235,6 +242,9 @@ pub fn write(
     let footer = emitter.package.footer().map(|(path, _)| path.to_owned());
     emitter.document();
     emitter.finish_footnotes();
+    if let Some(error) = emitter.deferred_error.take() {
+        return Err(error);
+    }
     if opts.all_styles {
         for &(name, kind) in styles::VOCABULARY {
             emitter.styles.ensure(name, kind);
@@ -323,6 +333,9 @@ fn prepare_emitter<'a>(
         body: String::new(),
         notes: String::new(),
         content,
+        fields: fields::FieldState::default(),
+        table_width_twips: None,
+        deferred_error: None,
     })
 }
 
@@ -413,6 +426,14 @@ fn preflight(doc: &Document, assets: &AssetRegistry) -> Result<bool> {
     let mut notes = preflight_blocks(&doc.blocks, assets)?;
     if let Some(abstract_) = &doc.meta.abstract_ {
         notes |= preflight_blocks(abstract_, assets)?;
+    }
+    if let Some(bibliography) = &doc.resolved.bibliography {
+        for entry in &bibliography.entries {
+            if let Some(prefix) = &entry.prefix {
+                notes |= preflight_inlines(prefix, assets)?;
+            }
+            notes |= preflight_inlines(&entry.inlines, assets)?;
+        }
     }
     Ok(notes)
 }
@@ -999,10 +1020,17 @@ pub mod xml {
 
     /// Builds a complex Word field, retaining the separator for empty results.
     pub fn field(instr: &str, result_runs: &str) -> String {
-        format!(
-            "<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText xml:space=\"preserve\"> {} </w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>{result_runs}<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>",
+        let (start, end) = field_parts(instr);
+        format!("{start}{result_runs}{end}")
+    }
+
+    /// Shared framing for cached fields spanning multiple paragraphs.
+    pub(crate) fn field_parts(instr: &str) -> (String, &'static str) {
+        let start = format!(
+            "<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText xml:space=\"preserve\"> {} </w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>",
             escape(instr),
-        )
+        );
+        (start, "<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>")
     }
 
     /// Ordered XML children, serialized by schema rank then insertion sequence.

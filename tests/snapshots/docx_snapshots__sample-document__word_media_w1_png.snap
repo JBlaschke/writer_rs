@@ -1,0 +1,6 @@
+---
+source: tests/docx_snapshots.rs
+expression: snapshot
+---
+70 bytes
+BLAKE3 32debefb8003f35ad2022546c3a97408307ced50b552bb2cc443a7263611bd30

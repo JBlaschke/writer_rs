@@ -1,0 +1,426 @@
+{
+    "meta": {},
+    "blocks": [
+        {
+            "type": "paragraph",
+            "inlines": [
+                {
+                    "type": "link",
+                    "url": "#tbl-rich",
+                    "attrs": {},
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "Forward table link"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "figure",
+            "kind": "table",
+            "body": [
+                {
+                    "type": "table",
+                    "columns": [
+                        {
+                            "align": "left",
+                            "width": 0.2
+                        },
+                        {
+                            "align": "center",
+                            "width": 0.3
+                        },
+                        {
+                            "align": "right",
+                            "width": 0.5
+                        }
+                    ],
+                    "head": [
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Head left"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Head center"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Head right"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "body": [
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Merged body header"
+                                        }
+                                    ],
+                                    "colspan": 2,
+                                    "rowspan": 2,
+                                    "header": true,
+                                    "align": "center"
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "image",
+                                            "url": "asset:32debefb8003",
+                                            "alt": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "Cell plot"
+                                                }
+                                            ],
+                                            "title": "A plot in a cell",
+                                            "attrs": {
+                                                "pairs": {
+                                                    "width": "100%"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": " Note"
+                                        },
+                                        {
+                                            "type": "footnote",
+                                            "label": "table-note",
+                                            "number": 1,
+                                            "blocks": [
+                                                {
+                                                    "type": "paragraph",
+                                                    "inlines": [
+                                                        {
+                                                            "type": "text",
+                                                            "text": "Cell note text "
+                                                        },
+                                                        {
+                                                            "type": "link",
+                                                            "url": "#tbl-rich",
+                                                            "attrs": {},
+                                                            "inlines": [
+                                                                {
+                                                                    "type": "text",
+                                                                    "text": "back to table"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "link",
+                                            "url": "https://example.com/table?a=1&b=2",
+                                            "attrs": {},
+                                            "inlines": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "External cell link"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Row label"
+                                        }
+                                    ],
+                                    "header": true
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Column center"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Explicit default"
+                                        }
+                                    ],
+                                    "align": "default"
+                                }
+                            ]
+                        }
+                    ],
+                    "foot": [
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Footer"
+                                        }
+                                    ],
+                                    "colspan": 3,
+                                    "header": true
+                                }
+                            ]
+                        }
+                    ],
+                    "attrs": {
+                        "pairs": {
+                            "custom-style": "Cell Grid"
+                        }
+                    },
+                    "span": {
+                        "start_line": 4,
+                        "end_line": 10
+                    }
+                }
+            ],
+            "caption": [
+                {
+                    "type": "text",
+                    "text": "Values & "
+                },
+                {
+                    "type": "emph",
+                    "inlines": [
+                        {
+                            "type": "text",
+                            "text": "<units>"
+                        }
+                    ]
+                }
+            ],
+            "attrs": {
+                "id": "tbl-rich",
+                "pairs": {
+                    "custom-style": "Outer Grid"
+                }
+            },
+            "number": "1",
+            "span": {
+                "start_line": 2,
+                "end_line": 10
+            }
+        },
+        {
+            "type": "figure",
+            "kind": "table",
+            "body": [
+                {
+                    "type": "table",
+                    "columns": [
+                        {}
+                    ],
+                    "head": [],
+                    "body": [
+                        {
+                            "cells": [
+                                {
+                                    "inlines": [
+                                        {
+                                            "type": "text",
+                                            "text": "Inherited style cell"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "foot": [],
+                    "attrs": {}
+                }
+            ],
+            "caption": [
+                {
+                    "type": "text",
+                    "text": "Inherited style"
+                }
+            ],
+            "attrs": {
+                "pairs": {
+                    "custom-style": "Figure Grid"
+                }
+            }
+        },
+        {
+            "type": "table",
+            "columns": [
+                {
+                    "width": 0.2
+                },
+                {},
+                {}
+            ],
+            "head": [],
+            "body": [
+                {
+                    "cells": [
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Equal first"
+                                }
+                            ]
+                        },
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Equal second"
+                                }
+                            ]
+                        },
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Equal last"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "foot": [],
+            "attrs": {}
+        },
+        {
+            "type": "table",
+            "columns": [
+                {
+                    "width": 0.2
+                },
+                {
+                    "width": 0.3
+                }
+            ],
+            "head": [],
+            "body": [
+                {
+                    "cells": [
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Half-width first"
+                                }
+                            ]
+                        },
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Half-width last"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "foot": [],
+            "attrs": {}
+        },
+        {
+            "type": "table",
+            "columns": [
+                {
+                    "width": 2.0
+                },
+                {
+                    "width": 1.0
+                }
+            ],
+            "head": [],
+            "body": [
+                {
+                    "cells": [
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Normalized first"
+                                }
+                            ]
+                        },
+                        {
+                            "inlines": [
+                                {
+                                    "type": "text",
+                                    "text": "Normalized last"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "foot": [],
+            "attrs": {}
+        }
+    ],
+    "features": {
+        "footnotes": true
+    },
+    "source": {
+        "path": "/fixtures/tables.md",
+        "kind": "markdown",
+        "base_dir": "/fixtures"
+    },
+    "assets": [
+        {
+            "id": "32debefb8003",
+            "mime": "image/png",
+            "origin": "file:plot.png"
+        }
+    ],
+    "includes": [],
+    "resolved": {
+        "toc": [],
+        "labels": {
+            "tbl-rich": {
+                "kind": "table",
+                "number": "1",
+                "supplement": "Table",
+                "text": "Table 1"
+            }
+        },
+        "footnotes": 1
+    }
+}

@@ -38,14 +38,14 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | done (PR #8) |
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | done (PR #9) |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
-| T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | ready for review |
+| T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | done (PR #17) |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | done (PR #14) |
-| T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | ready for review |
-| T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | ready for review |
+| T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | done (PR #18) |
+| T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | done (PR #19) |
 | T20 | File watcher and the document watch set | M2 | M | T16 | todo |
 | T21 | Dev server: routes, events, per-view state | M2 | M | T16 | todo |
-| T22 | Live-reload client | M2 | M | T00 | ready for review |
+| T22 | Live-reload client | M2 | M | T00 | done (PR #16) |
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
@@ -54,8 +54,8 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
-| T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | ready for review |
-| T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | todo |
+| T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
+| T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | ready for review |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | todo |
@@ -221,6 +221,20 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   Markdown and eight notebook fixtures. The three examples check cleanly;
   basic HTML remains 687.6 kB. It includes the checked T1B CI repair.
   Both inherited PRs remain open: merge T18, then T1B, then T1C.
+- T1C is open in [PR #19](https://github.com/JBlaschke/writer_rs/pull/19)
+  (`e1d5acb`). T41 starts from that checked feature on
+  `codex/docx-rich-content`. Merge #17, then #18, then #19 before T41;
+  all milestone PRs target main and CI does not block implementation.
+- T18/T1B/T1C passed CI and merged in PRs #17/#18/#19. Main is
+  `91ed669`; its tree matches checked T1C, including the PR #18 CI repair.
+  T41 rebases onto that merged main and has no pending merge dependency.
+- T41 passes formatting, Clippy, rustdoc, 1,115 debug and 1,114 release
+  tests. Five image unit tests and 46 new integration tests cover rich
+  figures/captions, SEQ resets, editable tables, images/DPI/conversions,
+  TOC/bibliography, notes/bookmarks, target wiring and output safety.
+  All 63 new/updated snapshots are reviewed; successful packages validate
+  and read back independently. Basic/mixed DOCX builds are 9.5/47.6 kB;
+  HTML remains 687.6/111.6 kB. T42 math warnings remain explicit.
 - The T40 brief closes the previous `scripts/waves.py` missing-definition
   error. The audit now passes for written briefs; several later task briefs
   are still being written. Finish those definitions before

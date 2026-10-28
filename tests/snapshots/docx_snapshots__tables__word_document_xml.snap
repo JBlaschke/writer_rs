@@ -1,0 +1,492 @@
+---
+source: tests/docx_snapshots.rs
+expression: snapshot
+---
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+    <w:body>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:hyperlink w:anchor="_56aa8e51d5d2edf96a4189591e526043d3337ac" w:history="1">
+                <w:r>
+                    <w:rPr>
+                        <w:rStyle w:val="Hyperlink"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">Forward table link</w:t>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="TableCaption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="1" w:name="_56aa8e51d5d2edf96a4189591e526043d3337ac"/>
+            <w:r>
+                <w:t xml:space="preserve">Table</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Table \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="1"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Values &amp; </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:i/>
+                    <w:iCs/>
+                </w:rPr>
+                <w:t xml:space="preserve">
+                    &lt;units&gt;
+                </w:t>
+            </w:r>
+        </w:p>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="CellGrid"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="1" w:lastRow="1" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0060"/>
+                <w:tblCaption w:val="Values &amp; &lt;units&gt;"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="1805"/>
+                <w:gridCol w:w="2708"/>
+                <w:gridCol w:w="4513"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:trPr>
+                    <w:tblHeader/>
+                </w:trPr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="1805" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Head left</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2708" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Head center</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Head right</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                        <w:gridSpan w:val="2"/>
+                        <w:vMerge w:val="restart"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:b/>
+                                <w:bCs/>
+                            </w:rPr>
+                            <w:t xml:space="preserve">Merged body header</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:drawing>
+                                <wp:inline distT="0" distB="0" distL="0" distR="0">
+                                    <wp:extent cx="2728595" cy="2728595"/>
+                                    <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                                    <wp:docPr id="1" name="Picture 1" descr="Cell plot" title="A plot in a cell"/>
+                                    <wp:cNvGraphicFramePr>
+                                        <a:graphicFrameLocks noChangeAspect="1"/>
+                                    </wp:cNvGraphicFramePr>
+                                    <a:graphic>
+                                        <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                            <pic:pic>
+                                                <pic:nvPicPr>
+                                                    <pic:cNvPr id="0" name="w1.png"/>
+                                                    <pic:cNvPicPr>
+                                                        <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                                    </pic:cNvPicPr>
+                                                </pic:nvPicPr>
+                                                <pic:blipFill>
+                                                    <a:blip r:embed="rId6">
+                                                    </a:blip>
+                                                    <a:stretch>
+                                                        <a:fillRect/>
+                                                    </a:stretch>
+                                                </pic:blipFill>
+                                                <pic:spPr bwMode="auto">
+                                                    <a:xfrm>
+                                                        <a:off x="0" y="0"/>
+                                                        <a:ext cx="2728595" cy="2728595"/>
+                                                    </a:xfrm>
+                                                    <a:prstGeom prst="rect">
+                                                        <a:avLst/>
+                                                    </a:prstGeom>
+                                                    <a:noFill/>
+                                                    <a:ln w="9525">
+                                                        <a:noFill/>
+                                                        <a:headEnd/>
+                                                        <a:tailEnd/>
+                                                    </a:ln>
+                                                </pic:spPr>
+                                            </pic:pic>
+                                        </a:graphicData>
+                                    </a:graphic>
+                                </wp:inline>
+                            </w:drawing>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> Note</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:rPr>
+                                <w:rStyle w:val="FootnoteReference"/>
+                            </w:rPr>
+                            <w:footnoteReference w:id="1"/>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                        <w:gridSpan w:val="2"/>
+                        <w:vMerge/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:hyperlink r:id="rId7" w:history="1">
+                            <w:r>
+                                <w:rPr>
+                                    <w:rStyle w:val="Hyperlink"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">External cell link</w:t>
+                            </w:r>
+                        </w:hyperlink>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="1805" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:b/>
+                                <w:bCs/>
+                            </w:rPr>
+                            <w:t xml:space="preserve">Row label</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2708" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Column center</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Explicit default</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="9026" w:type="dxa"/>
+                        <w:gridSpan w:val="3"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Footer</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="TableCaption"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Inherited style</w:t>
+            </w:r>
+        </w:p>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="FigureGrid"/>
+                <w:tblW w:w="0" w:type="auto"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0000"/>
+                <w:tblCaption w:val="Inherited style"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="9026"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="9026" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Inherited style cell</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="Table"/>
+                <w:tblW w:w="0" w:type="auto"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0000"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="3008"/>
+                <w:gridCol w:w="3008"/>
+                <w:gridCol w:w="3010"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3008" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Equal first</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3008" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Equal second</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3010" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Equal last</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="Table"/>
+                <w:tblW w:w="2500" w:type="pct"/>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0000"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="1805"/>
+                <w:gridCol w:w="2708"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="1805" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Half-width first</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2708" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Half-width last</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="Table"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0000"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="6017"/>
+                <w:gridCol w:w="3009"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6017" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Normalized first</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3009" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Normalized last</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+        <w:sectPr>
+            <w:footerReference w:type="default" r:id="rId5"/>
+            <w:footnotePr>
+                <w:numRestart w:val="eachSect"/>
+            </w:footnotePr>
+            <w:pgSz w:w="11906" w:h="16838"/>
+            <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>
+            <w:cols w:space="720"/>
+        </w:sectPr>
+    </w:body>
+</w:document>
