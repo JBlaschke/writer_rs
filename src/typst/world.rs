@@ -214,6 +214,22 @@ impl WriterWorld {
         });
     }
 
+    /// Removes mounts and cached disk files under a virtual path prefix.
+    /// Reserved main, render and asset resources remain installed.
+    pub(crate) fn unmount(&mut self, prefix: &str) {
+        let Ok(path) = VirtualPath::new(prefix) else {
+            return;
+        };
+        let prefix = path.get_with_slash().trim_end_matches('/');
+        self.mounts
+            .retain(|(existing, _)| mounted_rest(existing, prefix).is_none());
+        exclusive(&mut self.slots).retain(|id, _| {
+            !matches!(id.root(), VirtualRoot::Project)
+                || is_virtual(*id)
+                || mounted_rest(id.vpath().get_with_slash(), prefix).is_none()
+        });
+    }
+
     /// Rebuilds both libraries only when their input strings have changed.
     pub fn set_inputs(&mut self, inputs: BTreeMap<String, String>) {
         if self.inputs == inputs {
@@ -276,6 +292,11 @@ impl WriterWorld {
             return None;
         }
         self.project_path(id.vpath()).ok()
+    }
+
+    /// Full fixed timestamp selected when this compiler session was created.
+    pub(crate) fn session_timestamp(&self) -> Datetime {
+        self.today
     }
 
     pub(crate) fn allows_packages(&self) -> bool {
@@ -707,6 +728,105 @@ mod tests {
             );
         });
         assert_eq!(world.source(world.main()).unwrap().text(), "Virtual main");
+    }
+
+    #[test]
+    fn session_timestamp_retains_time_while_world_today_is_date_only() {
+        let dir = tempfile::tempdir().unwrap();
+        let timestamp =
+            Datetime::from_ymd_hms(2026, 10, 28, 23, 45, 6).unwrap();
+        let mut world = WriterWorld::new(WorldOptions {
+            root: dir.path().into(),
+            main: MainFile::Virtual,
+            today: timestamp,
+            system_fonts: false,
+            font_paths: Vec::new(),
+            package_paths: Vec::new(),
+            allow_packages: false,
+            inputs: world_inputs(&Config::default()),
+        })
+        .unwrap();
+        assert_eq!(world.session_timestamp(), timestamp);
+        assert_eq!(world.session_timestamp().hour(), Some(23));
+        assert_eq!(world.session_timestamp().minute(), Some(45));
+        assert_eq!(world.session_timestamp().second(), Some(6));
+        assert_eq!(world.today(None), Datetime::from_ymd(2026, 10, 28));
+        world.reset();
+        assert_eq!(world.session_timestamp(), timestamp);
+    }
+
+    #[test]
+    fn unmount_invalidates_sources_and_bytes_then_uses_remaining_roots() {
+        let root = tempfile::tempdir().unwrap();
+        let parent = tempfile::tempdir().unwrap();
+        let child = tempfile::tempdir().unwrap();
+        let sibling = tempfile::tempdir().unwrap();
+        for (dir, text) in [(root.path(), "project"), (parent.path(), "parent")]
+        {
+            let dir = dir.join(if text == "project" {
+                "__writer/bib/0"
+            } else {
+                "bib/0"
+            });
+            fs::create_dir_all(&dir).unwrap();
+            fs::write(dir.join("entry.typ"), text).unwrap();
+            fs::write(dir.join("data.bin"), text).unwrap();
+        }
+        fs::write(child.path().join("entry.typ"), "child").unwrap();
+        fs::write(child.path().join("data.bin"), "child").unwrap();
+        fs::write(sibling.path().join("data.bin"), "sibling").unwrap();
+        let mut world = world(root.path());
+        world.mount("/__writer", parent.path());
+        world.mount("/__writer/bib/0", child.path());
+        world.mount("/__writer/bibliography", sibling.path());
+        let source = project_id("/__writer/bib/0/entry.typ");
+        let bytes = project_id("/__writer/bib/0/data.bin");
+        let neighbor = project_id("/__writer/bibliography/data.bin");
+        assert_eq!(world.source(source).unwrap().text(), "child");
+        assert_eq!(&*world.file(bytes).unwrap(), b"child");
+        assert_eq!(&*world.file(neighbor).unwrap(), b"sibling");
+        fs::write(sibling.path().join("data.bin"), "changed").unwrap();
+        world.unmount("/__writer/bib/");
+        assert_eq!(world.source(source).unwrap().text(), "parent");
+        assert_eq!(&*world.file(bytes).unwrap(), b"parent");
+        // A similar spelling is outside the removed path-component prefix.
+        assert_eq!(&*world.file(neighbor).unwrap(), b"sibling");
+        assert!(
+            world
+                .mounts
+                .iter()
+                .any(|(prefix, _)| { prefix == "/__writer/bibliography" })
+        );
+        world.unmount("/__writer");
+        assert_eq!(world.source(source).unwrap().text(), "project");
+        assert_eq!(&*world.file(bytes).unwrap(), b"project");
+        assert!(world.mounts.is_empty());
+    }
+
+    #[test]
+    fn unmount_preserves_virtual_main_and_render_sources_and_bytes() {
+        let root = tempfile::tempdir().unwrap();
+        let mounted = tempfile::tempdir().unwrap();
+        let mut world = world(root.path());
+        world.set_main_text("Virtual main", SourceMap::default());
+        world.set_render_image("png", b"render image");
+        let image = project_id("/__render/image.png");
+        assert_eq!(&*world.file(image).unwrap(), b"render image");
+        world.mount("/", mounted.path());
+        world.with_render_main("Render source", false, |world| {
+            world.mount("/__render", mounted.path());
+            world.unmount("/");
+            assert_eq!(
+                world.source(world.main()).unwrap().text(),
+                "Render source"
+            );
+            assert_eq!(&*world.file(world.main()).unwrap(), b"Render source");
+            assert_eq!(&*world.file(image).unwrap(), b"render image");
+            assert!(world.mounts.is_empty());
+        });
+        assert_eq!(world.source(world.main()).unwrap().text(), "Virtual main");
+        assert_eq!(&*world.file(world.main()).unwrap(), b"Virtual main");
+        assert_eq!(&*world.file(image).unwrap(), b"render image");
     }
 
     #[test]

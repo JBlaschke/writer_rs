@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+error label-invalid [fixtures]/attributes.md:14 label `with space` is invalid; use letters, digits, `_`, `-`, `:` or `.`, e.g. `#fig-x`

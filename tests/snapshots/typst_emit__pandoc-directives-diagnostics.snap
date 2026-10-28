@@ -1,0 +1,6 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+info directive-colon-rewritten [fixtures]/pandoc-directives.md:13 rewrote colons or closing colons on a directive line for comrak
+info directive-colon-rewritten [fixtures]/pandoc-directives.md:17 rewrote colons or closing colons on a directive line for comrak

@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+

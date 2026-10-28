@@ -84,15 +84,13 @@ fn dump_default_config() {
 }
 
 #[test]
-fn dump_stub_flags() {
-    for (flag, task) in [("--typst", "T32"), ("--latex", "T61")] {
-        writer()
-            .args(["dump", "examples/basic/document.md", flag])
-            .assert()
-            .code(2)
-            .stdout("")
-            .stderr(contains(format!("({task})")));
-    }
+fn dump_latex_remains_pending() {
+    writer()
+        .args(["dump", "examples/basic/document.md", "--latex"])
+        .assert()
+        .code(2)
+        .stdout("")
+        .stderr(contains("(T61)"));
 }
 
 #[test]
@@ -134,4 +132,54 @@ fn error_diagnostics_still_print_ir_and_exit_1() {
         writer().arg("dump").arg(&input).assert().code(1).get_output().clone();
     let _: Document = serde_json::from_slice(&output.stdout).unwrap();
     assert!(String::from_utf8(output.stderr).unwrap().contains("label"));
+}
+
+#[test]
+fn dump_typst_is_deterministic_source_without_pdf_writes() {
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("document.md");
+    std::fs::write(
+        &input,
+        "# Dump source\n\n```{=typst}\n#panic(\"not compiled\")\n```\n",
+    )
+    .unwrap();
+    let run = || {
+        writer()
+            .arg("dump")
+            .arg(&input)
+            .arg("--typst")
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone()
+    };
+    let first = run();
+    assert_eq!(first, run());
+    let text = String::from_utf8(first).unwrap();
+    assert!(text.contains("writer-doc"));
+    assert!(text.contains("not compiled"));
+    assert!(!dir.path().join("dist").exists());
+}
+
+#[test]
+fn dump_typst_warnings_use_stderr_and_keep_source_on_stdout() {
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("document.md");
+    std::fs::write(&input, "![Remote image](https://example.org/image.svg)\n")
+        .unwrap();
+    let output = writer()
+        .arg("dump")
+        .arg(&input)
+        .arg("--typst")
+        .assert()
+        .success()
+        .get_output()
+        .clone();
+    let source = String::from_utf8(output.stdout).unwrap();
+    let findings = String::from_utf8(output.stderr).unwrap();
+    assert!(source.contains("https://example.org/image.svg"));
+    assert!(!source.contains("cannot fetch image"));
+    assert!(findings.contains("cannot fetch image"), "{findings}");
+    assert!(!dir.path().join("dist").exists());
 }

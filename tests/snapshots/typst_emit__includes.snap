@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: corpus_stable_paths(&error.to_string())
+---
+[fixtures]/include/cycle-b.md:1 include cycle: includes.md → include/cycle-a.md → include/cycle-b.md → include/cycle-a.md

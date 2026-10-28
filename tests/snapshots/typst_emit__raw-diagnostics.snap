@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning raw-unknown-format [fixtures]/raw.md:22 unknown raw format `weird`

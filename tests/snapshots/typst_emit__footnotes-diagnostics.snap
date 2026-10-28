@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning footnote-unreferenced [fixtures]/footnotes.md:14 footnote `unused` is never referenced

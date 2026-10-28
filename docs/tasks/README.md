@@ -51,7 +51,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | ready for review |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
-| T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
+| T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | ready for review |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
@@ -329,3 +329,21 @@ Manual checks performed: …
   barrier and catches intermediate directories created during watch retargeting.
   Focused 23 watcher units and 53 integration tests pass; T50 includes the
   equivalent cherry-pick `1dfa595` and passes both full suites with the repair.
+
+
+- T50 is open in [PR #25](https://github.com/JBlaschke/writer_rs/pull/25)
+  (`9a46045`). T32 starts on `codex/pdf-pipeline` from that checked feature.
+  Merge #22, #23, #24, then #25 before T32; each PR targets main while CI runs.
+  Its brief freezes private PDF diagnostic and World timestamp/mount seams.
+
+
+- T32 passes formatting, Clippy, default/feature rustdoc, 1,387 debug and
+  1,386 release tests. All 80 focused tests, 10 World units and 35 reviewed
+  source/diagnostic snapshots cover embedded PDF builds and source-only dump,
+  timestamps/reproducibility, resources, mapped failure retention, output safety
+  and the complete numbering oracle. Basic/mixed PDFs have 3/2 pages at 50.8/91.5 kB;
+  HTML is unchanged. T24 actual pages follows while CI runs independently.
+- PR24's additional Windows missing-theme test repair `fe896de` uses the same SSE
+  completion barrier as config recovery. Its focused real-process test passes;
+  T50 includes equivalent `f32603f` and T32 includes `8fd053f`. Both final T32 full
+  suites include that repair; remote CI proceeds independently.

@@ -904,3 +904,15 @@ trip.
   §2.4's unnumbered shape; `$ … $` covers the rest.
 - **`E-TYP-MATH-CODE`** (R2 §7.3: every `E-*` fails HTML/DOCX/LaTeX) is math.md §9's LaTeX-only
   warning; the frontend keeps such equations (math.md Deviations).
+
+
+> **T32 coordinator seams (2026-10-28):** Preserve public PDF/pipeline APIs.
+> Private detailed build/loading entries retain successful emission findings
+> and complete failed compiler diagnostics for target dispatch and later pages.
+> The World exposes its full retained timestamp privately and can remove a
+> mounted subtree plus cached disk slots without removing reserved resources.
+> The PDF loader replaces only its template/bib/csl namespaces, owns no reset
+> or cache eviction, and uses the same timestamp as World::today. Mapped
+> diagnostic span.file wins, then compiler path, then original input.
+> Page counts read the pinned exporter's plain XMP packet and are tested
+> against the compiler's exact count; unsupported bytes return None.

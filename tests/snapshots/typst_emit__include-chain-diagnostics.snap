@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning include-meta-ignored [fixture-root]/ipynb/include/chain.ipynb:1 cell 1 `../../md/include/part-a.md` sets `title`; an included file's document metadata is ignored

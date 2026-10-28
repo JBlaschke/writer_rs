@@ -13,7 +13,7 @@ use super::{
     report_diagnostics,
 };
 use crate::config::{CliOverrides, Target};
-use crate::error::Error;
+use crate::error::{Diagnostics, Error};
 use crate::ir::SourceKind;
 use crate::pipeline::{self, BuildOptions, BuildReport, WorldSlot};
 use crate::serve::watch::{
@@ -145,6 +145,10 @@ fn print_watch_status(
                         }
                     }
                     Ok(_) => {}
+                    Err(error)
+                        if compiler_error_reported(
+                            error, &report.diagnostics,
+                        ) => {}
                     Err(error) => match pipeline::refused_clash(error) {
                         Some(clash) => {
                             report::report_error(&clash_error(clash, explicit));
@@ -261,16 +265,34 @@ fn build_result(
             }
             Ok(_) => {}
             Err(error) => {
+                let reported = compiler_error_reported(&error, &diagnostics);
                 let error = match pipeline::refused_clash(&error) {
                     Some(clash) => clash_error(clash, explicit),
                     None => super::locate(error, &opts.input),
                 };
                 exit = exit.max(exit_code_for(&error));
-                report::report_error(&error);
+                if !reported {
+                    report::report_error(&error);
+                }
             }
         }
     }
     Ok(ExitCode::from(exit))
+}
+
+/// Detailed target failures also carry the first compiler error as a finding.
+fn compiler_error_reported(error: &Error, diagnostics: &Diagnostics) -> bool {
+    let Error::Compile { path, line, message, .. } = error else {
+        return false;
+    };
+    diagnostics.iter().any(|diagnostic| {
+        diagnostic.level == crate::error::Level::Error
+            && diagnostic.code == "typst-error"
+            && diagnostic.path.as_deref() == Some(path.as_path())
+            && diagnostic.span.as_ref().map(|span| span.start_line) == *line
+            && diagnostic.message.split("\n  hint: ").next()
+                == Some(message.as_str())
+    })
 }
 
 fn wrote_line(path: &Path) -> anyhow::Result<String> {
