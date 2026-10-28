@@ -442,6 +442,41 @@ fn existing_ancestor(path: &Path) -> Option<PathBuf> {
     path.ancestors().skip(1).find(|dir| dir.is_dir()).map(Path::to_path_buf)
 }
 
+/// A directory known to exist when a macOS watch was installed. Its inode
+/// identity survives child-entry writes, unlike directory ctime. Birth time
+/// also distinguishes inode reuse after removal and recreation.
+#[cfg(target_os = "macos")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct DirectoryIdentity {
+    device: u64,
+    inode: u64,
+    created: SystemTime,
+}
+
+#[cfg(target_os = "macos")]
+impl DirectoryIdentity {
+    fn read(path: &Path) -> Option<Self> {
+        use std::os::unix::fs::MetadataExt;
+
+        let metadata = std::fs::metadata(path).ok()?;
+        metadata.is_dir().then_some(Self {
+            device: metadata.dev(),
+            inode: metadata.ino(),
+            created: metadata.created().ok()?,
+        })
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn directory_identities(
+    wanted: &BTreeMap<PathBuf, RecursiveMode>,
+) -> BTreeMap<PathBuf, DirectoryIdentity> {
+    wanted
+        .keys()
+        .filter_map(|path| Some((path.clone(), DirectoryIdentity::read(path)?)))
+        .collect()
+}
+
 /// State shared between the [`Watcher`] and its coalescing thread.
 #[derive(Debug)]
 struct Shared {
@@ -454,6 +489,9 @@ struct Shared {
     recreated: BTreeSet<PathBuf>,
     /// When the last batch was sent (at first: when the watcher started).
     since: SystemTime,
+    /// Identities captured before installing watches, for historical FSEvents.
+    #[cfg(target_os = "macos")]
+    known_dirs: BTreeMap<PathBuf, DirectoryIdentity>,
 }
 
 impl Shared {
@@ -521,6 +559,8 @@ impl Watcher {
             missing: BTreeSet::new(),
             recreated: BTreeSet::new(),
             since: SystemTime::now(),
+            #[cfg(target_os = "macos")]
+            known_dirs: BTreeMap::new(),
         }));
         let thread_shared = Arc::clone(&shared);
         let thread_tx = tx.clone();
@@ -562,12 +602,18 @@ impl Watcher {
             wanted.insert(parent.clone(), RecursiveMode::NonRecursive);
         }
         let planned = wanted.clone();
+        #[cfg(target_os = "macos")]
+        let known_dirs = directory_identities(&wanted);
         let (files, recursive) =
             (filter.files.clone(), filter.recursive.clone());
         // Swap the filter first, so that events of newly watched directories count.
         let (recreated, since, old_files) = {
             let mut shared = lock(&self.shared);
             let old = std::mem::replace(&mut shared.filter, filter);
+            #[cfg(target_os = "macos")]
+            {
+                shared.known_dirs = known_dirs;
+            }
             shared.missing = missing.clone();
             (std::mem::take(&mut shared.recreated), shared.since, old.files)
         };
@@ -853,6 +899,18 @@ fn collect(
     );
     let mut relevant = false;
     for path in event.paths.iter().map(|path| canonical(path)) {
+        #[cfg(target_os = "macos")]
+        if matches!(
+            event.kind,
+            EventKind::Create(notify::event::CreateKind::Folder)
+        ) && DirectoryIdentity::read(&path).is_some_and(|identity| {
+            shared.known_dirs.get(&path) == Some(&identity)
+        }) {
+            // FSEvents may repeat a directory's creation after watch startup.
+            // A child/output write updates its ctime, so ctime alone cannot
+            // prove that the directory itself is still the one already watched.
+            continue;
+        }
         let recreated = structural && shared.is_structural(&path);
         if !recreated
             && ((!structural && path.is_dir()) || !shared.filter.matches(&path))
@@ -875,6 +933,8 @@ fn collect(
         }
         if recreated {
             shared.recreated.insert(path.clone());
+            #[cfg(target_os = "macos")]
+            shared.known_dirs.retain(|known, _| !known.starts_with(&path));
         }
         pending.insert(path);
         relevant = true;
@@ -1212,12 +1272,117 @@ mod tests {
             missing: BTreeSet::new(),
             recreated: BTreeSet::new(),
             since: std::time::UNIX_EPOCH,
+            #[cfg(target_os = "macos")]
+            known_dirs: directory_identities(
+                &plan_watches(&Filter::new(set).targets).0,
+            ),
         })
     }
 
     fn modified(path: &Path) -> notify::Result<Event> {
         Ok(Event::new(EventKind::Modify(ModifyKind::Data(DataChange::Content)))
             .add_path(path.to_path_buf()))
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn stale_directory_create_does_not_upgrade_a_pages_only_change() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = canonical(directory.path());
+        let template = root.join("template.typ");
+        std::fs::write(&template, "// initial template").unwrap();
+        let mut set = WatchSet::new([template.clone()], []);
+        set.pages_paths.push(template.clone());
+        let shared = shared(&set);
+        let original = lock(&shared).known_dirs[&root];
+
+        // The first build writes an output after watching starts. This changes
+        // the parent's ctime, but not its identity. FSEvents can still deliver
+        // the parent's earlier creation alongside a later template edit.
+        std::fs::write(root.join("out.html"), "built").unwrap();
+        std::fs::write(&template, "// changed template").unwrap();
+        assert_eq!(DirectoryIdentity::read(&root), Some(original));
+        let mut pending = BTreeSet::new();
+        let stale =
+            Event::new(EventKind::Create(notify::event::CreateKind::Folder))
+                .add_path(root.clone());
+        assert!(!collect(Ok(stale), &shared, &mut pending));
+        assert!(collect(modified(&template), &shared, &mut pending));
+        assert_eq!(pending, BTreeSet::from([template.clone()]));
+        assert!(lock(&shared).recreated.is_empty());
+        let paths = pending.iter().cloned().collect::<Vec<_>>();
+        assert_eq!(
+            classify_paths(&paths, &[], std::slice::from_ref(&template)),
+            ChangeKind::Pages
+        );
+
+        // Loss-of-events notification must bypass the stale-create check.
+        let mut rescan =
+            Event::new(EventKind::Create(notify::event::CreateKind::Folder))
+                .add_path(root);
+        rescan.attrs.set_flag(notify::event::Flag::Rescan);
+        pending.clear();
+        assert!(collect(Ok(rescan), &shared, &mut pending));
+        assert_eq!(pending, BTreeSet::from([template]));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn new_and_replaced_directory_creates_still_count() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = canonical(directory.path());
+        let target = root.join("new");
+        let set = WatchSet::new([target.join("input.md")], []);
+        let shared = shared(&set);
+        std::fs::create_dir(&target).unwrap();
+        let mut pending = BTreeSet::new();
+        let created = || {
+            Event::new(EventKind::Create(notify::event::CreateKind::Folder))
+                .add_path(target.clone())
+        };
+        assert!(collect(Ok(created()), &shared, &mut pending));
+        assert!(pending.contains(&target));
+        assert!(lock(&shared).recreated.contains(&target));
+
+        // Model the next update installing a watch on the new directory.
+        lock(&shared).known_dirs =
+            directory_identities(&plan_watches(&Filter::new(&set).targets).0);
+        let original = lock(&shared).known_dirs[&target];
+        std::fs::rename(&target, root.join("old")).unwrap();
+        std::fs::create_dir(&target).unwrap();
+        assert_ne!(DirectoryIdentity::read(&target), Some(original));
+        pending.clear();
+        assert!(collect(Ok(created()), &shared, &mut pending));
+        assert!(pending.contains(&target));
+        assert!(!lock(&shared).known_dirs.contains_key(&target));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn known_directory_removal_and_root_change_are_not_suppressed() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = canonical(directory.path());
+        let shared = shared(&WatchSet::new([root.join("input.md")], []));
+        let mut pending = BTreeSet::new();
+        let removed = Event::new(EventKind::Remove(RemoveKind::Folder))
+            .add_path(root.clone());
+        assert!(collect(Ok(removed), &shared, &mut pending));
+        assert!(pending.contains(&root));
+        assert!(!lock(&shared).known_dirs.contains_key(&root));
+
+        // A root-changed rename still counts even for the same live inode.
+        lock(&shared)
+            .known_dirs
+            .insert(root.clone(), DirectoryIdentity::read(&root).unwrap());
+        pending.clear();
+        let renamed = Event::new(EventKind::Modify(ModifyKind::Name(
+            notify::event::RenameMode::From,
+        )))
+        .set_info("root changed")
+        .add_path(root.clone());
+        assert!(collect(Ok(renamed), &shared, &mut pending));
+        assert!(pending.contains(&root));
+        assert!(!lock(&shared).known_dirs.contains_key(&root));
     }
 
     #[test]
@@ -1429,6 +1594,8 @@ mod tests {
             missing,
             recreated: BTreeSet::new(),
             since: SystemTime::now(),
+            #[cfg(target_os = "macos")]
+            known_dirs: BTreeMap::new(),
         };
         for name in ["a", "a/b", "other", "other/c", "recursive"] {
             assert!(shared.is_structural(&root.join(name)), "{name}");
