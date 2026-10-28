@@ -44,7 +44,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | done (PR #18) |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | done (PR #19) |
 | T20 | File watcher and the document watch set | M2 | M | T16 | ready for review |
-| T21 | Dev server: routes, events, per-view state | M2 | M | T16 | todo |
+| T21 | Dev server: routes, events, per-view state | M2 | M | T16 | ready for review |
 | T22 | Live-reload client | M2 | M | T00 | done (PR #16) |
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
@@ -271,3 +271,15 @@ Manual checks performed: …
   debouncing, target subsets, output suppression and Windows directory guards.
   The release suite was rerun after desktop crash recovery; source and tests
   survived unchanged. T21 follows while CI runs, with one PR per milestone.
+
+- T20 is open in [PR #21](https://github.com/JBlaschke/writer_rs/pull/21)
+  (`722cf8e`). T21 starts on `codex/dev-server` from that checked milestone.
+  Merge #20, then #21, then T21; all PRs target main and CI proceeds
+  independently of implementation.
+
+- T21 passes formatting, Clippy, rustdoc, 1,235 debug and 1,234 release tests.
+  Nineteen real HTTP/SSE tests and 34 module tests cover the routes, state,
+  ranges/cache, per-view protocol, Host checks and bounded shutdown. The
+  pages shell is complete; compilation/client remains T24. Full validation
+  also hardens the inherited watch-loop harness against concurrent startup
+  contention without changing deadlines or production behavior.

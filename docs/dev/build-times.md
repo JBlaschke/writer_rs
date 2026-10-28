@@ -701,3 +701,39 @@ borrow reports without losing source excerpts. Pure access events are ignored
 to prevent inotify self-rebuilds; all mutation events still count. Server/SSE,
 session runtime and actual PDF generation remain their named later milestones.
 No dependencies, public IR/config/clap shapes or module lists change.
+
+
+## T21 dev server acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T20 plus T21.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 0.76 s | 88.79 s | 29.36 s | 1,235 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 305 s | 362.68 s | 3016.97 s | 1,234 passed |
+
+Formatting, all-target/all-feature Clippy and warnings-denied rustdoc pass.
+Nineteen real HTTP/SSE tests and 34 new module tests cover all routes and
+content/cache headers, file streaming/single ranges, generated URLs/fonts,
+last-good registries, theme stylesheet rewriting/fallback, view selection,
+current/previous SVG hashes and security headers, SSE hello/build/reconnect/
+lag/drop behavior, Host checks on every route and bounded stalled-request
+shutdown. State tests exercise all nine view-result combinations, retained
+errors and warnings, exact diagnostic deduplication and title/page rotation.
+Event JSON golden assertions cover null/omission rules, every error kind,
+notebook/include excerpts, TOML provenance and first-error compiler locations.
+No snapshot files are added; explicit golden JSON is reviewed in source.
+
+The initial full run reproduced startup timeouts for all fourteen concurrent
+watch-loop child processes; the isolated case passed. Serializing their
+lifetimes passes all seventeen loop tests in 29.73 s and the final full debug
+suite, keeping ten-second operation deadlines and production code unchanged.
+This narrow inherited harness fix is recorded in the task brief. Native
+FSEvents and loopback tests use approved local service access.
+
+Basic/mixed HTML remains 687.6/111.6 kB; basic DOCX remains 9.5 kB with its
+existing T42 math warnings. The pages types, shell and SVG routing are real;
+PagesBuilder and pages.js remain the explicit empty/placeholder T24 contract.
+The serve CLI/session remains T23. No dependency, public IR/config/pipeline/
+clap shape or module list changes.
