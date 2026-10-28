@@ -317,7 +317,7 @@ writer_rs/                                                                    ow
 ├── src/assets/registry.rs                                                      T01;   src/assets/{mod,emit}.rs: T14
 ├── src/markdown/mod.rs (stub: T01) → T12   frontmatter.rs: T10   code.rs: T01 (T11 adds invalid-code-attr)   {options,attrs,recover,directives}.rs: T11 (options.rs: comrak_options; directives.rs: info parsing + colon pre-pass)   walker.rs: T12   {refs,include}.rs: T1B (include::scan_includes: T16 lifts it first, additive, for T20)
 ├── src/notebook/mod.rs (stub: T01) → T18   {nbformat,convert,options,outputs,tables,ansi}.rs: T18
-├── src/typst/frontend.rs (stub: T01) → T50   {mod,world,compile,package,render,html,sourcemap}.rs: T03 (package.rs: T31 adds eject, install_dir)   emit.rs: T30   includes.rs: T53 (`MarkdownIncludes` stub: T16)
+├── src/typst/frontend.rs (stub: T01) and private frontend/{walker,literals,metadata,calls,tables,normalize}.rs → T50   {mod,world,compile,package,render,html,sourcemap}.rs: T03 (package.rs: T31 adds eject, install_dir)   emit.rs: T30   includes.rs: T53 (`MarkdownIncludes` stub: T16)
 ├── src/resolve/mod.rs (stub: T01) → T17   l10n.rs: T01   {labels,numbering,footnotes,toc}.rs: T17
 ├── src/cite/{mod,library,render}.rs  + the resolve hook that fills Cite.resolved   T70
 ├── src/math/mod.rs: T00 (skeleton)   latex_source.rs: T30   latex_mathml.rs: T1A   omml.rs: T42   typst_to_latex.rs + assets/math/unicode-latex.toml: T51
@@ -329,7 +329,7 @@ writer_rs/                                                                    ow
 ├── src/serve/{mod,server,files}.rs: T21   events.rs: T21 → T73 (ErrorPayload bodies)   watch.rs: T20   pages.rs: T21 (types, shell_html, PagesBuilder::build stub) → T24
 ├── src/check.rs  src/cli/check.rs: T1C (T33 adds the mitex pre-flight, additive) → T71 (typst and per-target lints, additive)
 ├── src/pdf/devtools.rs (browser-test client): T25   src/pdf/chrome.rs: T77
-├── src/cli/mod.rs (clap tree, stubs for every command): T16   build.rs, dump.rs: T16   serve.rs: T23   init.rs, eject.rs: T72   report.rs: T16 (lift) → T73
+├── src/cli/mod.rs (clap tree, stubs for every command): T16   build.rs, dump.rs: T16   serve.rs and private serve/session.rs: T23   init.rs, eject.rs: T72   report.rs: T16 (lift) → T73
 └── tests/  fixtures/{md,ir,config,bib}: T01 (other tasks add files, named in §7)   ipynb: T18   typ: T50   math: T1A, T42, T51   themes/child-theme: T15   docx/reference.docx: T04 → T43   latex/template.tex: T61   live-reload: T22   serve: T23
             common/docx.rs (read-back helper): T04
             integration tests belong to the task whose feature they test (named in each task file)

@@ -1,0 +1,341 @@
+---
+source: tests/typst_frontend.rs
+expression: stable_document(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Outer document"
+        }
+      ],
+      "attrs": {
+        "id": "sec-outer",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "file": "[typ]/includes.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Before the include and a forward note "
+        },
+        {
+          "type": "footnote_ref",
+          "label": "shared"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "file": "[typ]/includes.typ"
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Included section"
+        }
+      ],
+      "attrs": {
+        "id": "sec-part",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Included content, a reference "
+        },
+        {
+          "type": "ref",
+          "target": "sec-outer",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 3,
+            "end_line": 3,
+            "file": "[typ]/include/part.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " and inline "
+        },
+        {
+          "type": "math",
+          "source": "x + 1",
+          "dialect": "typst"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Included image"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Here is the shared note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Included footnote body."
+                }
+              ],
+              "span": {
+                "start_line": 7,
+                "end_line": 7,
+                "file": "[typ]/include/part.typ"
+              }
+            }
+          ],
+          "label": "shared"
+        },
+        {
+          "type": "text",
+          "text": " ."
+        }
+      ],
+      "span": {
+        "start_line": 7,
+        "end_line": 7,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Included section"
+        }
+      ],
+      "attrs": {
+        "id": "sec-part",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Included content, a reference "
+        },
+        {
+          "type": "ref",
+          "target": "sec-outer",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 3,
+            "end_line": 3,
+            "file": "[typ]/include/part.typ"
+          }
+        },
+        {
+          "type": "text",
+          "text": " and inline "
+        },
+        {
+          "type": "math",
+          "source": "x + 1",
+          "dialect": "typst"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Included image"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Here is the shared note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Included footnote body."
+                }
+              ],
+              "span": {
+                "start_line": 7,
+                "end_line": 7,
+                "file": "[typ]/include/part.typ"
+              }
+            }
+          ],
+          "label": "shared"
+        },
+        {
+          "type": "text",
+          "text": " ."
+        }
+      ],
+      "span": {
+        "start_line": 7,
+        "end_line": 7,
+        "file": "[typ]/include/part.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "After both includes."
+        }
+      ],
+      "span": {
+        "start_line": 9,
+        "end_line": 9,
+        "file": "[typ]/includes.typ"
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[typ]/includes.typ",
+    "kind": "typst",
+    "base_dir": "[typ]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "file:image.png"
+    }
+  ],
+  "includes": [
+    "[typ]/include/part.typ"
+  ]
+}

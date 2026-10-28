@@ -212,12 +212,35 @@ pub fn parse_only(
     }
     normalize_resources(&mut config, &source.base_dir);
     apply_cli(&mut config, &opts.cli)?;
+    let diagnostics = if kind == SourceKind::Typst {
+        // The frontend applies its metadata strictness before CLI precedence.
+        // An explicit false override restores the base level of Typst warnings.
+        let diagnostics = if opts.cli.strict == Some(false) {
+            parsed
+                .diagnostics
+                .into_iter()
+                .map(|mut diagnostic| {
+                    if diagnostic.level == Level::Error
+                        && diagnostic.code.starts_with("W-TYP-")
+                    {
+                        diagnostic.level = Level::Warning;
+                    }
+                    diagnostic
+                })
+                .collect()
+        } else {
+            parsed.diagnostics
+        };
+        escalate_strict(diagnostics, opts.cli.strict, &config)
+    } else {
+        parsed.diagnostics
+    };
     Ok(Prepared {
         document: parsed.document,
         assets: parsed.assets,
         config,
         config_path,
-        diagnostics: parsed.diagnostics,
+        diagnostics,
     })
 }
 

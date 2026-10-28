@@ -701,3 +701,157 @@ borrow reports without losing source excerpts. Pure access events are ignored
 to prevent inotify self-rebuilds; all mutation events still count. Server/SSE,
 session runtime and actual PDF generation remain their named later milestones.
 No dependencies, public IR/config/clap shapes or module lists change.
+
+
+## T21 dev server acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T20 plus T21.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 0.76 s | 88.79 s | 29.36 s | 1,235 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 305 s | 362.68 s | 3016.97 s | 1,234 passed |
+
+Formatting, all-target/all-feature Clippy and warnings-denied rustdoc pass.
+Nineteen real HTTP/SSE tests and 34 new module tests cover all routes and
+content/cache headers, file streaming/single ranges, generated URLs/fonts,
+last-good registries, theme stylesheet rewriting/fallback, view selection,
+current/previous SVG hashes and security headers, SSE hello/build/reconnect/
+lag/drop behavior, Host checks on every route and bounded stalled-request
+shutdown. State tests exercise all nine view-result combinations, retained
+errors and warnings, exact diagnostic deduplication and title/page rotation.
+Event JSON golden assertions cover null/omission rules, every error kind,
+notebook/include excerpts, TOML provenance and first-error compiler locations.
+No snapshot files are added; explicit golden JSON is reviewed in source.
+
+The initial full run reproduced startup timeouts for all fourteen concurrent
+watch-loop child processes; the isolated case passed. Serializing their
+lifetimes passes all seventeen loop tests in 29.73 s and the final full debug
+suite, keeping ten-second operation deadlines and production code unchanged.
+This narrow inherited harness fix is recorded in the task brief. Native
+FSEvents and loopback tests use approved local service access.
+
+Basic/mixed HTML remains 687.6/111.6 kB; basic DOCX remains 9.5 kB with its
+existing T42 math warnings. The pages types, shell and SVG routing are real;
+PagesBuilder and pages.js remain the explicit empty/placeholder T24 contract.
+The serve CLI/session remains T23. No dependency, public IR/config/pipeline/
+clap shape or module list changes.
+
+
+## T25 browser smoke acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T21 plus T25.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 11.55 s | 170.20 s | 99.36 s | 1,235 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 307 s | 363.21 s | 3052.82 s | 1,234 passed |
+
+With `browser-tests`, all 28 client units pass (3.46 s build, 5.26 s tests).
+All six browser/helper tests pass with `WRITER_REQUIRE_CHROME=1` (11.16 s
+build, 8.32 s tests). The actual browser is Google Chrome 156.0.8078.48 at
+`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`; CHROME_PATH
+is unset, so discovery selects that first installed macOS bundle.
+
+The copied standalone basic document renders its single document root,
+highlighted code, KaTeX, complete images and fonts without page errors or
+external network resources. Client fixtures verify error/log collection,
+fragments, promises/special values, refused evaluations, stale/replacing
+loaders and navigation failures. Pure helpers cover required-browser policy
+and reserved/non-UTF-8 file URL bytes. Browser calls and cleanup are bounded
+and serial; ordinary suites launch no browser. Non-Unix driving returns the
+explicit platform error while the feature remains portable to compile.
+
+Transport units cover executable/discovery order, app bundles and snap
+placement, private profiles, NUL framing, closed/broken/malformed pipes,
+quiet/failed browsers, timeout/stderr tails, lifecycle matching, cleanup and
+watchdog ownership. Review fixes canonicalize relative/symlink scratch bases,
+classify a bare snap wrapper through its resolved executable, fail promptly
+on startup protocol refusals and leave unverified/reused PIDs alive. The
+initial fake-browser failures were fixture replies sent to stdout (the real
+launcher redirects it); corrected fixtures use DevTools fd4 and pass.
+
+The public Page API and a browser discovery helper are feature-gated. Required
+transport internals stay in the owned devtools module; the T77 print stub and
+all dependency/IR/config/pipeline/CLI/module lists remain untouched. Real
+serve/browser integration follows in T23, actual pages in T24.
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. Basic/mixed HTML remains 687.6/111.6 kB. Browser tests
+were executed, not skipped; native process/service access was used locally.
+
+## T23 serve CLI acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T25 plus T23.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 9.98 s | 153.87 s | 113.48 s | 1,283 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 320 s | 383.61 s | 3071.46 s | 1,282 passed |
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. All 32 launcher/session units pass (13.31 s build,
+11.98 s tests), all 16 real CLI tests pass (11.97 s build, 7.47 s tests), and
+all nine real-server Chrome tests pass in 36.34 s with required Chrome
+156.0.8078.48. The browser QA measurements and checklist mapping are recorded
+in docs/dev/live-reload-qa.md; no browser acceptance was skipped. Basic/mixed
+HTML remains 687.6/111.6 kB.
+
+The CLI starts watching before build1, announces its actual bound URL, handles
+Ctrl-C before/during/after the first build and during binding, then rebuilds
+only affected views while keeping successful output. Tests cover config/theme/
+include repair, nested missing config ancestors, source/include/notebook
+positions, content-versioned images, equation-image registry routes, Host and
+port errors, quiet reporting and live warning/error state. The compiler World
+is retained/reset per session, discarded after caught panics and reacquired
+for independent stages. A focused regression keeps package filtering aligned
+with the World's retained config across disk config changes and discard.
+
+Browser checks verify pixel-level reading/source anchors, selective DOM/math/
+image updates, actual reload counts, merged/dismissible errors, persistent
+warnings, view shortcuts/storage, reconnect/backoff and stale-tab behavior.
+The first run's only failure was a test confusing a skipped event with retained
+client view status; the corrected complete run passes without a client change.
+
+Coordinator-approved ownership additions: private cli/serve/session.rs child,
+two crate-private watcher helpers, removal of the serve stub assertion and
+additive T22 QA evidence. Public IR/config/pipeline/clap/module lists and all
+dependencies remain unchanged. Actual pages and .typ end-to-end support retain
+their T24/T50/T52 boundaries; this session uses the explicit empty PagesBuilder.
+
+
+## T50 structured Typst frontend acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T23 plus its watcher repair
+and T50. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 20.32 s | 212.70 s | 135.70 s | 1,359 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 313 s | 378.60 s | 3193.00 s | 1,358 passed |
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. All 52 public frontend tests pass in 2.24 s and all 22
+private units pass. Twelve unresolved-IR/diagnostic corpus snapshots are
+reviewed, including portable path/asset redaction and untouched math bytes.
+Basic/mixed HTML remains 687.6/111.6 kB; compiler-backed subset validation and
+HTML/DOCX library composition pass offline. No external Typst process or
+frontend code evaluation is used.
+
+Coverage includes metadata precedence, scoped captured literals/import aliases,
+markup/call/table families, quotes, source-based labels/citation groups, notes,
+verbatim math, recursive includes and assets, syntax/unsupported diagnostics,
+strict CLI overrides, normalized IR invariants and target-free CLI check. Table
+capacity, captured-content replay and literal-value limits have adversarial
+regressions. Native .typ target dispatch and cross-format includes retain their
+T52/T53 boundaries.
+
+PR24 CI exposed a missing-config ancestor synchronization assumption on Linux
+and Windows. Its repair `d8e91e7` waits for post-watch-update SSE events and catches
+intermediate directories appearing during watch installation. Twenty-three
+watcher units and 53 CLI/backend/loop integration tests, formatting and Clippy
+pass before push; the same repair is included in these final full-suite runs.
+The three-OS CI reruns independently.

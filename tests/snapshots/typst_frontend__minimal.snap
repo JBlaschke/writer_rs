@@ -1,0 +1,283 @@
+---
+source: tests/typst_frontend.rs
+expression: stable_document(&parsed.document)
+---
+{
+  "meta": {
+    "title": "A structured document",
+    "subtitle": "Literal metadata",
+    "authors": [
+      {
+        "name": "Ada Lovelace",
+        "affiliation": null,
+        "email": null,
+        "id": null
+      },
+      {
+        "name": "Grace Hopper",
+        "affiliation": "Institute",
+        "email": "grace@example.org",
+        "id": "0000-0001"
+      }
+    ],
+    "date": "2026-10-28",
+    "abstract_": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An abstract with "
+          },
+          {
+            "type": "emph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "emphasis"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ],
+        "span": {
+          "start_line": 7,
+          "end_line": 7,
+          "file": "[typ]/minimal.typ"
+        }
+      }
+    ],
+    "keywords": [
+      "Typst",
+      "IR"
+    ],
+    "description": "An offline frontend fixture",
+    "lang": "en-GB",
+    "vars": {
+      "abstract-title": "Summary",
+      "bibliography": "refs.bib",
+      "cite_locale": "en-GB",
+      "cite_style": "ieee",
+      "custom-value": {
+        "enabled": true,
+        "items": [
+          "a",
+          3,
+          null
+        ],
+        "number": -2.5
+      },
+      "docx": {},
+      "html": {},
+      "latex": {},
+      "latex_template": "template.tex",
+      "markdown": {},
+      "math": {},
+      "notebook": {},
+      "numbering": {
+        "equations": "labelled",
+        "figures": "section",
+        "headings": "1.1"
+      },
+      "paper": "a4",
+      "pdf": {
+        "system_fonts": false
+      },
+      "reference_doc": "reference.docx",
+      "references": {},
+      "template": "template.typ",
+      "theme": "default",
+      "toc": 2,
+      "typst": {
+        "strict": false
+      },
+      "reference-section-title": "Sources",
+      "toc-title": "Contents"
+    }
+  },
+  "blocks": [
+    {
+      "type": "toc",
+      "depth": 2
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Introduction"
+        }
+      ],
+      "attrs": {
+        "id": "sec-intro",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 19,
+        "end_line": 19,
+        "file": "[typ]/minimal.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A paragraph with "
+        },
+        {
+          "type": "strong",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "strong"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "emph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "emphasis"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "code",
+          "text": "inline",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "math",
+          "source": "a^2",
+          "dialect": "typst"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 21,
+        "end_line": 21,
+        "file": "[typ]/minimal.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A forward note reference "
+        },
+        {
+          "type": "footnote_ref",
+          "label": "later"
+        },
+        {
+          "type": "text",
+          "text": " appears before its definition."
+        }
+      ],
+      "span": {
+        "start_line": 23,
+        "end_line": 23,
+        "file": "[typ]/minimal.typ"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Footnote body with "
+                },
+                {
+                  "type": "strong",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "strong"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " text."
+                }
+              ],
+              "span": {
+                "start_line": 25,
+                "end_line": 25,
+                "file": "[typ]/minimal.typ"
+              }
+            }
+          ],
+          "label": "later"
+        },
+        {
+          "type": "text",
+          "text": "  and its repeat "
+        },
+        {
+          "type": "footnote_ref",
+          "label": "later"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 25,
+        "end_line": 25,
+        "file": "[typ]/minimal.typ"
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[typ]/minimal.typ",
+    "kind": "typst",
+    "base_dir": "[typ]"
+  },
+  "assets": []
+}

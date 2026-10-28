@@ -1332,14 +1332,25 @@ const LOOKED_FOR: &str = " (looked for ";
 /// Such a diagnostic's `path` is the *source* file (the document or notebook, set by the
 /// frontend) and its span the referencing lines; the missing file is only in the message,
 /// whose format is frozen for this function: ``<what> `<url as written>` not found (looked
-/// for <resolved path>)``. The pipeline escalates with
+/// for <resolved path>)``, optionally followed by Typst's `` (col N)``.
+/// The pipeline escalates with
 /// `Error::MissingAsset { path: missing_asset_path(d)?, span: d.span.clone() }`.
 pub fn missing_asset_path(diagnostic: &Diagnostic) -> Option<PathBuf> {
     if diagnostic.code != MISSING_ASSET {
         return None;
     }
-    let (_, path) =
-        diagnostic.message.strip_suffix(')')?.rsplit_once(LOOKED_FOR)?;
+    let message = match diagnostic.message.rsplit_once(" (col ") {
+        Some((message, column))
+            if column.strip_suffix(')').is_some_and(|column| {
+                !column.is_empty()
+                    && column.bytes().all(|byte| byte.is_ascii_digit())
+            }) =>
+        {
+            message
+        }
+        _ => &diagnostic.message,
+    };
+    let (_, path) = message.strip_suffix(')')?.rsplit_once(LOOKED_FOR)?;
     Some(PathBuf::from(path))
 }
 
@@ -1876,6 +1887,22 @@ mod asset_tests {
         let other =
             Diagnostic::warning("invalid-directive", "x (looked for y)");
         assert_eq!(missing_asset_path(&other), None);
+    }
+
+    #[test]
+    fn missing_asset_path_accepts_typst_columns_without_trimming_file_names() {
+        let directory = tempfile::tempdir().unwrap();
+        for name in ["gone.png", "name (col 9).png", "gone).png"] {
+            let path = directory.path().join(name);
+            let diagnostic = Diagnostic::warning(
+                MISSING_ASSET,
+                format!(
+                    "image `{name}` not found{LOOKED_FOR}{}) (col 17)",
+                    path.display()
+                ),
+            );
+            assert_eq!(missing_asset_path(&diagnostic), Some(path));
+        }
     }
 
     #[test]

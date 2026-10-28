@@ -1,0 +1,31 @@
+---
+source: tests/typst_frontend.rs
+expression: stable_document(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[typ]/syntax-error.typ",
+    "kind": "typst",
+    "base_dir": "[typ]"
+  },
+  "assets": []
+}

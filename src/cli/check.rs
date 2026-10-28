@@ -17,7 +17,7 @@ use crate::error::{Diagnostic, Diagnostics, Error, Level};
 use crate::ir::{self, SourceKind};
 use crate::pipeline::{self, BuildOptions, Mode};
 
-/// Runs `writer check`; future Typst and per-target checks remain explicit stubs.
+/// Runs `writer check`; per-target checks remain the T71 milestone.
 pub fn run(args: &CheckArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
     if args.target.is_some() {
         return Err(pipeline::not_implemented("check --target", "T71").into());
@@ -43,9 +43,6 @@ fn check_input(
                 .collect());
         }
     };
-    if kind == SourceKind::Typst {
-        return Err(pipeline::not_implemented("check typst", "T50").into());
-    }
     let mut opts = BuildOptions::new(&args.input);
     opts.format = Some(kind);
     opts.config_path = global.config.clone();

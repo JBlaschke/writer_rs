@@ -396,6 +396,20 @@ fn plan_watches(
     (wanted, missing.into_keys().collect())
 }
 
+/// Directories that appeared below the planned watches while they were being installed.
+/// A flat ancestor cannot report creations that happened before it was watched. Send the
+/// newly reachable directory as a normal catch-up change so the next update can retarget.
+fn appeared_directories(
+    missing: &BTreeSet<PathBuf>, planned: &BTreeMap<PathBuf, RecursiveMode>,
+) -> BTreeSet<PathBuf> {
+    missing
+        .iter()
+        .filter_map(|target| target.ancestors().find(|dir| dir.is_dir()))
+        .map(canonical)
+        .filter(|dir| !covers(planned, dir))
+        .collect()
+}
+
 /// Whether changes of the entries of `dir` reach a watch in `watched`: `dir` itself is
 /// watched, or it lies below a recursively watched directory.
 fn covers(watched: &BTreeMap<PathBuf, RecursiveMode>, dir: &Path) -> bool {
@@ -573,11 +587,21 @@ impl Watcher {
     /// Errors: as [`Watcher::start`]; the other directories are still updated.
     pub fn update(&mut self, set: &WatchSet) -> Result<()> {
         let filter = Filter::new(set);
-        let (mut wanted, missing) = plan_watches(&filter.targets);
+        let (wanted, missing) = plan_watches(&filter.targets);
+        self.update_planned(filter, wanted, missing)
+    }
+
+    /// Installs one plan, then catches up changes made while it was installed.
+    fn update_planned(
+        &mut self, filter: Filter,
+        mut wanted: BTreeMap<PathBuf, RecursiveMode>,
+        missing: BTreeSet<PathBuf>,
+    ) -> Result<()> {
         self.guards = guard_watches(&wanted);
         for parent in &self.guards {
             wanted.insert(parent.clone(), RecursiveMode::NonRecursive);
         }
+        let planned = wanted.clone();
         #[cfg(target_os = "macos")]
         let known_dirs = directory_identities(&wanted);
         let (files, recursive) =
@@ -590,7 +614,7 @@ impl Watcher {
             {
                 shared.known_dirs = known_dirs;
             }
-            shared.missing = missing;
+            shared.missing = missing.clone();
             (std::mem::take(&mut shared.recreated), shared.since, old.files)
         };
         let stale: Vec<PathBuf> = self
@@ -609,10 +633,13 @@ impl Watcher {
             }
         }
         let (watched, result) = self.watch_all(wanted);
+        // Compare planned coverage, not successful watches: an existing directory
+        // that cannot be watched must not cause an endless catch-up/retry loop.
+        let appeared = appeared_directories(&missing, &planned);
         if unwatched || watched {
-            self.catch_up(files.iter(), &recursive, since);
+            self.catch_up(files.iter(), &recursive, since, &appeared);
         } else {
-            self.catch_up(files.difference(&old_files), &[], since);
+            self.catch_up(files.difference(&old_files), &[], since, &appeared);
         }
         result
     }
@@ -666,18 +693,19 @@ impl Watcher {
     }
 
     /// Sends a batch for the inputs modified at or after `since`: of `files`, and the files
-    /// below the `recursive` directories that are not on the ignore list. Their changes may
-    /// have been missed while the watch set changed (module docs). A batch sent counts as
+    /// below the `recursive` directories that are not on the ignore list, plus directories
+    /// that appeared below the planned watches. Their changes may have been missed while
+    /// the watch set changed (module docs). A batch sent counts as
     /// the last batch ([`Shared::since`]), so later updates do not report the same changes
     /// again.
     fn catch_up<'a>(
         &self, files: impl Iterator<Item = &'a PathBuf>, recursive: &[PathBuf],
-        since: SystemTime,
+        since: SystemTime, appeared: &BTreeSet<PathBuf>,
     ) {
         // Whatever changes from now on is reported by the watches (or the next update).
         let scanned = SystemTime::now();
-        let mut paths: BTreeSet<PathBuf> =
-            files.filter(|file| modified_since(file, since)).cloned().collect();
+        let mut paths = appeared.clone();
+        paths.extend(files.filter(|file| modified_since(file, since)).cloned());
         for root in recursive {
             modified_below(root, root, since, &mut paths);
         }
@@ -1099,7 +1127,8 @@ impl AccessHistory {
     }
 }
 
-fn accessed_files(
+/// Compiler-observed paths outside configured and system package roots.
+pub(crate) fn accessed_files(
     world: &WriterWorld, config: &Config, root: &Path,
 ) -> BTreeSet<PathBuf> {
     let roots = package_roots(config, root);
@@ -1133,7 +1162,8 @@ fn package_roots(config: &Config, root: &Path) -> Vec<PathBuf> {
     .collect()
 }
 
-fn failure_paths(failure: &BuildFailure) -> Vec<PathBuf> {
+/// Known failed-stage inputs, including diagnostic missing-asset paths.
+pub(crate) fn failure_paths(failure: &BuildFailure) -> Vec<PathBuf> {
     let mut paths = Vec::new();
     if let Error::MissingAsset { path, .. } = failure.error.as_ref() {
         paths.push(path.clone());
@@ -1573,6 +1603,65 @@ mod tests {
         for name in ["a/b/c", "other/x", "recursive/z"] {
             assert!(!shared.is_structural(&root.join(name)), "{name}");
         }
+    }
+
+    #[test]
+    fn appeared_directories_compare_planned_coverage() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = canonical(directory.path());
+        let child = root.join("new/a");
+        std::fs::create_dir_all(&child).unwrap();
+        let missing = BTreeSet::from([child.join("deep")]);
+        let flat =
+            BTreeMap::from([(root.clone(), RecursiveMode::NonRecursive)]);
+        assert_eq!(
+            appeared_directories(&missing, &flat),
+            BTreeSet::from([child.clone()])
+        );
+        // Backend failures do not remove planned coverage and trigger retries.
+        let planned = BTreeMap::from([(child, RecursiveMode::NonRecursive)]);
+        assert!(appeared_directories(&missing, &planned).is_empty());
+        let recursive = BTreeMap::from([(root, RecursiveMode::Recursive)]);
+        assert!(appeared_directories(&missing, &recursive).is_empty());
+    }
+
+    #[test]
+    fn an_update_reports_a_directory_created_after_watch_planning() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = canonical(directory.path());
+        let parent = root.join("new");
+        let child = parent.join("a");
+        let set = WatchSet::new([child.join("writer.toml")], []);
+        let (tx, rx) = mpsc::channel();
+        let mut watcher = Watcher::start(&set, tx).unwrap();
+        std::fs::create_dir(&parent).unwrap();
+        let filter = Filter::new(&set);
+        let (wanted, missing) = plan_watches(&filter.targets);
+        assert!(wanted.contains_key(&parent));
+        assert!(!wanted.contains_key(&child));
+
+        // Reproduce a new ancestor appearing between planning and installation.
+        // There is no final file for the ordinary file catch-up scan to find.
+        std::fs::create_dir(&child).unwrap();
+        assert_eq!(
+            appeared_directories(&missing, &wanted),
+            BTreeSet::from([child.clone()])
+        );
+        watcher.update_planned(filter, wanted, missing).unwrap();
+        let batches = rx.try_iter().collect::<Vec<_>>();
+        assert!(
+            batches.iter().any(|batch| batch.paths.contains(&child)),
+            "{batches:?}"
+        );
+        assert!(!watcher.watched_dirs().iter().any(|(dir, _)| dir == &child));
+
+        // A normal rebuild retargets once. Comparing with the next plan cannot
+        // keep reporting a directory merely because its backend watch failed.
+        watcher.update(&set).unwrap();
+        assert!(watcher.watched_dirs().contains(&(child, false)));
+        let filter = Filter::new(&set);
+        let (wanted, missing) = plan_watches(&filter.targets);
+        assert!(appeared_directories(&missing, &wanted).is_empty());
     }
 
     #[test]

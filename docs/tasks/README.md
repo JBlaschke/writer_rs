@@ -43,22 +43,22 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | done (PR #14) |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | done (PR #18) |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | done (PR #19) |
-| T20 | File watcher and the document watch set | M2 | M | T16 | ready for review |
-| T21 | Dev server: routes, events, per-view state | M2 | M | T16 | todo |
+| T20 | File watcher and the document watch set | M2 | M | T16 | done (PR #21) |
+| T21 | Dev server: routes, events, per-view state | M2 | M | T16 | ready for review |
 | T22 | Live-reload client | M2 | M | T00 | done (PR #16) |
-| T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
+| T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | ready for review |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
-| T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
+| T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | ready for review |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
-| T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | ready for review |
+| T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
-| T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | todo |
+| T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | ready for review |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | todo |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | todo |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | todo |
@@ -271,3 +271,61 @@ Manual checks performed: …
   debouncing, target subsets, output suppression and Windows directory guards.
   The release suite was rerun after desktop crash recovery; source and tests
   survived unchanged. T21 follows while CI runs, with one PR per milestone.
+
+- T20 is open in [PR #21](https://github.com/JBlaschke/writer_rs/pull/21)
+  (`722cf8e`). T21 starts on `codex/dev-server` from that checked milestone.
+  Merge #20, then #21, then T21; all PRs target main and CI proceeds
+  independently of implementation.
+
+- T21 passes formatting, Clippy, rustdoc, 1,235 debug and 1,234 release tests.
+  Nineteen real HTTP/SSE tests and 34 module tests cover the routes, state,
+  ranges/cache, per-view protocol, Host checks and bounded shutdown. The
+  pages shell is complete; compilation/client remains T24. Full validation
+  also hardens the inherited watch-loop harness against concurrent startup
+  contention without changing deadlines or production behavior.
+
+- T21 is open in [PR #22](https://github.com/JBlaschke/writer_rs/pull/22)
+  (`bbbd82c`). T25 starts on `codex/browser-smoke` from that checked feature.
+  Merge #20, #21, then #22 before T25; all PRs target main while CI runs.
+
+- T41 passed CI and merged in [PR #20](https://github.com/JBlaschke/writer_rs/pull/20)
+  (`9a7d9d3`). T25 keeps the checked T20/T21 dependency commits while their
+  PRs remain open; pending merge order is #21, then #22, then T25.
+
+- T25 passes formatting, Clippy, default/feature rustdoc, 1,235 debug and
+  1,234 release tests. All 28 feature client units and six browser/helper
+  tests pass with required Chrome 156.0.8078.48; the standalone document
+  renders math, highlighted code, images and fonts without browser errors.
+  The native driver stays opt-in; T23 real-server integration follows.
+
+- T25 is open in [PR #23](https://github.com/JBlaschke/writer_rs/pull/23)
+  (`800103f`). T23 starts on `codex/serve-cli` from that checked feature.
+  Merge #21, #22, then #23 before T23; all PRs target main while CI runs.
+  The brief/spec record its private session module and shared watcher seams.
+
+- T23 passes formatting, Clippy, default/feature rustdoc, 1,283 debug and
+  1,282 release tests. All 32 launcher/session units, 16 real CLI tests and
+  nine real-server Chrome cases pass; pixel-level anchors, selective updates,
+  recovery/reconnect, source/cell events and SIGINT are verified. T50 follows
+  to unblock T32 and the later T24 pages implementation, without waiting on CI.
+
+- T20 passed CI and merged in PR #21 (`1bc404f`). T23 retains the checked
+  T21/T25 dependency commits while #22/#23 remain open. Pending merge order
+  is #22, then #23, then T23; main includes the same checked T20 code.
+
+- T23 is open in [PR #24](https://github.com/JBlaschke/writer_rs/pull/24)
+  (`b162c27`). T50 starts on `codex/typst-frontend` from that checked feature.
+  Merge #22, #23, then #24 before T50; all PRs target main while CI runs.
+  T50's brief freezes its private module split and narrow check/strict seams.
+
+
+- T50 passes formatting, Clippy, default/feature rustdoc, 1,359 debug and
+  1,358 release tests. All 52 frontend tests, 22 private units and 12 reviewed
+  snapshots cover the structured syntax subset, metadata/literals, calls/tables,
+  includes/assets, labels/notes/cites, exact math and located recovery. Library
+  HTML/DOCX composition and offline native subset compilation pass; target-free
+  CLI check is enabled. T32 follows to enable PDFs, then T24 actual pages.
+- PR24's Linux/Windows CI repair `d8e91e7` corrects the ancestor test's completion
+  barrier and catches intermediate directories created during watch retargeting.
+  Focused 23 watcher units and 53 integration tests pass; T50 includes the
+  equivalent cherry-pick `1dfa595` and passes both full suites with the repair.
