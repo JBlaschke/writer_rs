@@ -5,6 +5,13 @@ expression: stable(&diagnostics)
 [
   {
     "level": "warning",
+    "code": "math-tag-ignored",
+    "file": "md/math.md",
+    "line": 19,
+    "cell": null
+  },
+  {
+    "level": "warning",
     "code": "equation-label-misplaced",
     "file": "md/math.md",
     "line": 27,

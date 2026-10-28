@@ -2,20 +2,25 @@
 //! Frontend and resolver findings are reused; no output is rendered or written.
 //! Error conversion and position ordering are adapted from presenter_rs/check.rs.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use comrak::nodes::{AstNode, NodeValue};
 use comrak::{Arena, parse_document};
 use serde_json::Value;
 
-use crate::config::Config;
+use crate::config::{Config, HtmlMath, Target};
 use crate::error::{Diagnostic, Diagnostics, Error, Level, Result};
-use crate::ir::{SourceKind, SourceSpan, detect_kind};
+use crate::ir::{
+    Block, Cell, Document, Inline, LabelInfo, MathDialect, RefForm, SourceKind,
+    SourceSpan, detect_kind,
+};
 use crate::markdown::directives::{
     DIRECTIVE_COLON_REWRITTEN, colon_prepass, parse_directive_info,
 };
 use crate::markdown::frontmatter::split_front_matter;
+use crate::math::latex_mathml::{self, MathError};
+use crate::math::latex_source;
 use crate::notebook::nbformat::{self, CellType};
 use crate::pipeline::{self, BuildFailure, BuildOptions, Mode};
 
@@ -37,6 +42,12 @@ pub fn run(
     opts.mode = Mode::Check;
     let prepared = pipeline::prepare(&opts)?;
     let mut diagnostics = prepared.diagnostics.into_vec();
+    let math = math_diagnostics(&prepared.document, &prepared.config);
+    diagnostics.extend(pipeline::escalate_strict(
+        math.into(),
+        opts.cli.strict,
+        &prepared.config,
+    ));
     if check.compat_presenter {
         for diagnostic in &mut diagnostics {
             if diagnostic.code == DIRECTIVE_COLON_REWRITTEN {
@@ -76,6 +87,406 @@ pub fn run(
         &prepared.document.includes,
     );
     Ok(diagnostics.into())
+}
+
+/// A source equation, with the union of outputs that selected this IR node.
+struct CheckedMath<'a> {
+    source: &'a str,
+    display: bool,
+    baseline: bool,
+    location: MathLocation,
+    targets: Vec<Target>,
+}
+
+/// Borrowed node addresses distinguish equal or empty sources at different
+/// positions. These keys are never dereferenced and stay local to one check.
+#[derive(PartialEq, Eq, Hash)]
+enum MathIdentity {
+    Block(*const Block),
+    Inline(*const Inline),
+}
+
+#[derive(Clone)]
+struct MathLocation {
+    path: PathBuf,
+    span: Option<SourceSpan>,
+}
+
+impl MathLocation {
+    fn nested(&self, span: Option<&SourceSpan>) -> Self {
+        let Some(span) = span else {
+            return self.clone();
+        };
+        let mut span = span.clone();
+        if let Some(parent) = &self.span {
+            let same_file = span
+                .file
+                .as_deref()
+                .is_none_or(|file| file == self.path.as_path());
+            if same_file {
+                span.cell = span.cell.or(parent.cell);
+            }
+            span.file = span.file.or_else(|| parent.file.clone());
+        }
+        Self {
+            path: span.file.clone().unwrap_or_else(|| self.path.clone()),
+            span: Some(span),
+        }
+    }
+
+    fn attach(&self, mut diagnostic: Diagnostic) -> Diagnostic {
+        diagnostic.path = Some(self.path.clone());
+        diagnostic.span = self.span.clone();
+        diagnostic
+    }
+}
+
+#[derive(Clone, Copy)]
+struct MathVisibility<'a> {
+    targets: &'a [Target],
+    baseline: bool,
+}
+
+#[derive(Default)]
+struct MathCollector<'a> {
+    labels: Option<&'a BTreeMap<String, LabelInfo>>,
+    equations: Vec<CheckedMath<'a>>,
+    seen: HashMap<MathIdentity, usize>,
+}
+
+impl<'a> MathCollector<'a> {
+    fn equation(
+        &mut self, identity: MathIdentity, source: &'a str,
+        dialect: MathDialect, display: bool, location: &MathLocation,
+        view: MathVisibility<'_>,
+    ) {
+        if dialect != MathDialect::Latex
+            || !view.baseline && !view.targets.contains(&Target::Pdf)
+        {
+            return;
+        }
+        if let Some(&index) = self.seen.get(&identity) {
+            let previous = &mut self.equations[index];
+            previous.baseline |= view.baseline;
+            for target in view.targets {
+                if !previous.targets.contains(target) {
+                    previous.targets.push(*target);
+                }
+            }
+            return;
+        }
+        self.seen.insert(identity, self.equations.len());
+        self.equations.push(CheckedMath {
+            source,
+            display,
+            baseline: view.baseline,
+            location: location.clone(),
+            targets: view.targets.to_vec(),
+        });
+    }
+
+    fn blocks(
+        &mut self, blocks: &'a [Block], inherited: &MathLocation,
+        view: MathVisibility<'_>,
+    ) {
+        for block in blocks {
+            let location = inherited.nested(block.span());
+            match block {
+                Block::Heading { inlines, .. }
+                | Block::Paragraph { inlines, .. } => {
+                    self.inlines(inlines, &location, view);
+                }
+                Block::Math { source, dialect, .. } => self.equation(
+                    MathIdentity::Block(std::ptr::from_ref(block)),
+                    source,
+                    *dialect,
+                    true,
+                    &location,
+                    view,
+                ),
+                Block::BlockQuote { blocks, .. }
+                | Block::Div { blocks, .. } => {
+                    self.blocks(blocks, &location, view);
+                }
+                Block::List { items, .. } => {
+                    for item in items {
+                        self.blocks(&item.blocks, &location, view);
+                    }
+                }
+                Block::DefinitionList { items, .. } => {
+                    for item in items {
+                        self.inlines(&item.term, &location, view);
+                        for definition in &item.definitions {
+                            self.blocks(definition, &location, view);
+                        }
+                    }
+                }
+                Block::Figure { caption, body, .. } => {
+                    if let Some(caption) = caption {
+                        self.inlines(caption, &location, view);
+                    }
+                    self.blocks(body, &location, view);
+                }
+                Block::Table { head, body, foot, .. } => {
+                    for row in head.iter().chain(body).chain(foot) {
+                        for cell in &row.cells {
+                            self.inlines(&cell.inlines, &location, view);
+                        }
+                    }
+                }
+                Block::Callout { title, blocks, .. } => {
+                    if let Some(title) = title {
+                        self.inlines(title, &location, view);
+                    }
+                    self.blocks(blocks, &location, view);
+                }
+                Block::Cell(cell) => self.cell(cell, &location, view),
+                _ => {}
+            }
+        }
+    }
+
+    fn inlines(
+        &mut self, inlines: &'a [Inline], location: &MathLocation,
+        view: MathVisibility<'_>,
+    ) {
+        for inline in inlines {
+            match inline {
+                Inline::Math { source, dialect } => self.equation(
+                    MathIdentity::Inline(std::ptr::from_ref(inline)),
+                    source,
+                    *dialect,
+                    false,
+                    location,
+                    view,
+                ),
+                Inline::Emph { inlines }
+                | Inline::Strong { inlines }
+                | Inline::Strikeout { inlines }
+                | Inline::Subscript { inlines }
+                | Inline::Superscript { inlines }
+                | Inline::Underline { inlines }
+                | Inline::SmallCaps { inlines }
+                | Inline::Link { inlines, .. }
+                | Inline::Span { inlines, .. } => {
+                    self.inlines(inlines, location, view);
+                }
+                Inline::Image { alt, .. } => {
+                    let targets = without_pdf(view.targets);
+                    self.inlines(
+                        alt,
+                        location,
+                        MathVisibility { targets: &targets, ..view },
+                    );
+                }
+                Inline::Footnote { blocks, .. } => {
+                    self.blocks(blocks, location, view);
+                }
+                Inline::Ref { target, supplement, form, resolved, .. } => {
+                    self.reference(
+                        target,
+                        supplement.as_deref(),
+                        *form,
+                        resolved.as_ref(),
+                        location,
+                        view,
+                    );
+                }
+                Inline::Cite { items, resolved, .. } => {
+                    let targets = if resolved.is_some() {
+                        view.targets.to_vec()
+                    } else {
+                        without_pdf(view.targets)
+                    };
+                    let view = MathVisibility { targets: &targets, ..view };
+                    for item in items {
+                        if let Some(prefix) = &item.prefix {
+                            self.inlines(prefix, location, view);
+                        }
+                        if let Some(suffix) = &item.suffix {
+                            self.inlines(suffix, location, view);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn reference(
+        &mut self, target: &str, supplement: Option<&'a [Inline]>,
+        form: RefForm, resolved: Option<&'a crate::ir::ResolvedRef>,
+        location: &MathLocation, view: MathVisibility<'_>,
+    ) {
+        let info = self.labels.and_then(|labels| labels.get(target));
+        let unnumbered = form != RefForm::Page
+            && info.is_some_and(|info| info.number.is_none());
+        let targets = if info.is_some() && !unnumbered {
+            view.targets.to_vec()
+        } else {
+            without_pdf(view.targets)
+        };
+        if let Some(supplement) = supplement {
+            self.inlines(
+                supplement,
+                location,
+                MathVisibility { targets: &targets, ..view },
+            );
+        }
+        if unnumbered
+            && view.targets.contains(&Target::Pdf)
+            && let Some(resolved) = resolved
+        {
+            // Full PDF emission uses this generated payload only for an
+            // unnumbered link. Its source nodes are checked separately.
+            self.inlines(
+                &resolved.text,
+                location,
+                MathVisibility { targets: &[Target::Pdf], baseline: false },
+            );
+        }
+    }
+
+    fn cell(
+        &mut self, cell: &'a Cell, location: &MathLocation,
+        view: MathVisibility<'_>,
+    ) {
+        if !cell.show_output {
+            return;
+        }
+        for output in &cell.outputs {
+            let picked: Vec<_> = view
+                .targets
+                .iter()
+                .map(|&target| (target, output.pick(math_target_name(target))))
+                .collect();
+            // Walk the union in candidate priority order. The target's chosen
+            // borrowed slice identifies the candidate, never its source text.
+            for candidate in &output.candidates {
+                let selected: Vec<_> = picked
+                    .iter()
+                    .filter(|(_, blocks)| {
+                        std::ptr::eq(*blocks, candidate.blocks.as_slice())
+                    })
+                    .map(|(target, _)| *target)
+                    .collect();
+                if !selected.is_empty() {
+                    self.blocks(
+                        &candidate.blocks,
+                        location,
+                        MathVisibility { targets: &selected, ..view },
+                    );
+                }
+            }
+        }
+    }
+}
+
+fn without_pdf(targets: &[Target]) -> Vec<Target> {
+    targets.iter().copied().filter(|target| *target != Target::Pdf).collect()
+}
+
+fn math_target_name(target: Target) -> &'static str {
+    match target {
+        Target::Html => "html",
+        Target::Pdf | Target::Typst => "typst",
+        Target::Docx => "docx",
+        Target::Latex => "latex",
+    }
+}
+
+fn math_diagnostics(document: &Document, config: &Config) -> Vec<Diagnostic> {
+    let targets = config.targets_for(document.source.kind);
+    let location =
+        MathLocation { path: document.source.path.clone(), span: None };
+    let mut collector = MathCollector {
+        labels: Some(&document.resolved.labels),
+        ..MathCollector::default()
+    };
+    let view = MathVisibility { targets: &targets, baseline: true };
+    if let Some(abstract_) = &document.meta.abstract_ {
+        collector.blocks(abstract_, &location, view);
+    }
+    collector.blocks(&document.blocks, &location, view);
+    let macros = latex_source::macros_from_config(&config.math.katex_options);
+    let mut diagnostics = Vec::new();
+    let mut macros_reported = false;
+    for equation in &collector.equations {
+        if equation.baseline && !macros_reported {
+            macros_reported = true;
+            diagnostics.extend(
+                latex_mathml::macro_diagnostics(&macros)
+                    .into_iter()
+                    .map(|finding| equation.location.attach(finding)),
+            );
+        }
+        validate_math(equation, &targets, config, &macros, &mut diagnostics);
+    }
+    diagnostics
+}
+
+fn validate_math(
+    equation: &CheckedMath<'_>, selected: &[Target], config: &Config,
+    macros: &BTreeMap<String, String>, diagnostics: &mut Vec<Diagnostic>,
+) {
+    let (prepared, removed) = latex_source::prepare(equation.source);
+    let pdf = equation.targets.contains(&Target::Pdf);
+    let tag_target = if pdf {
+        Some("pdf")
+    } else {
+        selected.iter().find_map(|target| {
+            if !equation.targets.contains(target) {
+                return None;
+            }
+            match target {
+                Target::Html => Some("html"),
+                Target::Docx => Some("docx"),
+                _ => None,
+            }
+        })
+    };
+    if removed && let Some(target) = tag_target {
+        diagnostics.push(equation.location.attach(Diagnostic::warning(
+            "math-tag-ignored",
+            format!("\\tag/\\label inside math are ignored for {target}; label the equation with {{#eq-x}}"),
+        )));
+    }
+    if equation.baseline
+        && let Err(error) =
+            latex_mathml::to_mathml(&prepared, equation.display, macros)
+    {
+        let mut message = match error {
+            MathError::Syntax { message, range, .. } => {
+                let position = range.map_or_else(String::new, |range| {
+                    format!(
+                        " at bytes {}..{} of the equation",
+                        range.start, range.end
+                    )
+                });
+                format!("invalid LaTeX math: {message}{position}")
+            }
+            error => format!("invalid LaTeX math: {error}"),
+        };
+        if config.math.html == HtmlMath::Katex
+            && equation.targets.contains(&Target::Html)
+        {
+            message.push_str("; KaTeX may still render it");
+        }
+        diagnostics.push(
+            equation
+                .location
+                .attach(Diagnostic::warning("math-syntax", message)),
+        );
+    }
+    if pdf {
+        let (prepared, _) = latex_source::for_typst(equation.source, macros);
+        if let Err(reason) = latex_source::preflight_typst(&prepared) {
+            diagnostics.push(equation.location.attach(Diagnostic::warning(
+                "math-conversion-failed",
+                format!("pdf: cannot convert equation ({reason}); used the source text"),
+            )));
+        }
+    }
 }
 
 /// Converts a stopped check to a located error finding for text or JSON reports.
@@ -650,6 +1061,270 @@ mod tests {
                 "unlocated", "tie-first", "tie-second", "root-cell",
                 "child-earlier", "child-later"
             ]
+        );
+    }
+
+    #[test]
+    fn empty_math_nodes_keep_distinct_identities_across_target_union_visits() {
+        let inlines = vec![
+            Inline::Math { source: String::new(), dialect: MathDialect::Latex },
+            Inline::Math { source: String::new(), dialect: MathDialect::Latex },
+            Inline::Math {
+                source: "#native".into(),
+                dialect: MathDialect::Typst,
+            },
+        ];
+        let location = MathLocation { path: "source.md".into(), span: None };
+        let mut collector = MathCollector::default();
+        collector.inlines(
+            &inlines,
+            &location,
+            MathVisibility { targets: &[Target::Pdf], baseline: true },
+        );
+        collector.inlines(
+            &inlines,
+            &location,
+            MathVisibility {
+                targets: &[Target::Html, Target::Pdf],
+                baseline: true,
+            },
+        );
+        assert_eq!(collector.equations.len(), 2);
+        for equation in collector.equations {
+            assert!(equation.source.is_empty());
+            assert_eq!(equation.targets, [Target::Pdf, Target::Html]);
+        }
+    }
+
+    #[test]
+    fn saved_output_union_tracks_borrowed_candidates_and_hidden_cells() {
+        use crate::ir::{Attrs, CellOutput, OutputCandidate};
+        let equation = || Block::Math {
+            source: String::new(),
+            dialect: MathDialect::Latex,
+            attrs: Attrs::default(),
+            number: None,
+            span: None,
+        };
+        let mut cell = Cell {
+            show_output: true,
+            outputs: vec![CellOutput {
+                candidates: vec![
+                    OutputCandidate {
+                        mime: "text/html".into(),
+                        blocks: vec![
+                            Block::Raw {
+                                format: "html".into(),
+                                text: "<p>html</p>".into(),
+                                span: None,
+                            },
+                            equation(),
+                        ],
+                    },
+                    OutputCandidate {
+                        mime: "text/latex".into(),
+                        blocks: vec![equation()],
+                    },
+                ],
+                ..CellOutput::default()
+            }],
+            ..Cell::default()
+        };
+        let location = MathLocation { path: "cells.ipynb".into(), span: None };
+        let targets = [Target::Pdf, Target::Html, Target::Docx, Target::Pdf];
+        let mut collector = MathCollector::default();
+        collector.cell(
+            &cell,
+            &location,
+            MathVisibility { targets: &targets, baseline: true },
+        );
+        assert_eq!(collector.equations.len(), 2);
+        assert_eq!(collector.equations[0].targets, [Target::Html]);
+        assert!(collector.equations[1].targets.contains(&Target::Pdf));
+        assert!(collector.equations[1].targets.contains(&Target::Docx));
+        drop(collector);
+        cell.show_output = false;
+        let mut hidden = MathCollector::default();
+        hidden.cell(
+            &cell,
+            &location,
+            MathVisibility { targets: &targets, baseline: true },
+        );
+        assert!(hidden.equations.is_empty());
+        let mut unselected = MathCollector::default();
+        cell.show_output = true;
+        unselected.cell(
+            &cell,
+            &location,
+            MathVisibility { targets: &[], baseline: true },
+        );
+        assert!(unselected.equations.is_empty());
+    }
+
+    #[test]
+    fn nested_math_locations_preserve_include_and_cell_when_child_has_lines() {
+        let parent = MathLocation {
+            path: "included.ipynb".into(),
+            span: Some(SourceSpan {
+                start_line: 1,
+                end_line: 12,
+                cell: Some(4),
+                file: Some("included.ipynb".into()),
+            }),
+        };
+        let child = parent.nested(Some(&SourceSpan {
+            start_line: 7,
+            end_line: 8,
+            cell: None,
+            file: None,
+        }));
+        let finding = child.attach(Diagnostic::warning("math-syntax", "bad"));
+        assert_eq!(finding.path.as_deref(), Some(Path::new("included.ipynb")));
+        let span = finding.span.unwrap();
+        assert_eq!(
+            (span.start_line, span.end_line, span.cell),
+            (7, 8, Some(4))
+        );
+        assert_eq!(span.file.as_deref(), Some(Path::new("included.ipynb")));
+        let included_markdown = parent.nested(Some(&SourceSpan {
+            start_line: 3,
+            end_line: 3,
+            cell: None,
+            file: Some("other.md".into()),
+        }));
+        assert_eq!(
+            included_markdown.span.unwrap().cell,
+            None,
+            "an included Markdown file must not inherit a notebook cell"
+        );
+    }
+
+    #[test]
+    fn pdf_inline_visibility_matches_nonfragment_reference_and_citation_emission()
+     {
+        use crate::ir::{
+            Attrs, CiteItem, CiteMode, LabelKind, ResolvedCite, ResolvedRef,
+        };
+        let math = |name: &str| Inline::Math {
+            source: format!(r"\foo{{{name}}}"),
+            dialect: MathDialect::Latex,
+        };
+        let label = |number: Option<&str>| LabelInfo {
+            kind: LabelKind::Heading,
+            number: number.map(str::to_owned),
+            supplement: "Section".into(),
+            text: None,
+            span: None,
+        };
+        let labels = BTreeMap::from([
+            ("plain".into(), label(None)),
+            ("page".into(), label(None)),
+            ("numbered".into(), label(Some("1"))),
+        ]);
+        let reference = |target: &str, form| Inline::Ref {
+            target: target.into(),
+            supplement: Some(vec![math(target)]),
+            form,
+            resolved: Some(ResolvedRef {
+                kind: LabelKind::Heading,
+                number: String::new(),
+                text: vec![math(if target == "plain" {
+                    "generated"
+                } else {
+                    "unused-generated"
+                })],
+                anchor: target.into(),
+            }),
+            span: None,
+        };
+        let citation = |resolved: bool| Inline::Cite {
+            items: vec![CiteItem {
+                key: "key".into(),
+                prefix: Some(vec![math(if resolved {
+                    "cite-prefix"
+                } else {
+                    "missing-prefix"
+                })]),
+                suffix: Some(vec![math(if resolved {
+                    "cite-suffix"
+                } else {
+                    "missing-suffix"
+                })]),
+                ..CiteItem::default()
+            }],
+            mode: CiteMode::Normal,
+            resolved: resolved.then(|| ResolvedCite {
+                inlines: vec![math("unused-generated")],
+                note: false,
+            }),
+            span: None,
+        };
+        let inlines = vec![
+            Inline::Image {
+                alt: vec![math("alt")],
+                url: "asset:image".into(),
+                title: None,
+                attrs: Attrs::default(),
+            },
+            reference("missing", RefForm::Normal),
+            reference("plain", RefForm::Normal),
+            reference("page", RefForm::Page),
+            reference("numbered", RefForm::Normal),
+            citation(false),
+            citation(true),
+        ];
+        let location = MathLocation { path: "source.md".into(), span: None };
+        let mut collector =
+            MathCollector { labels: Some(&labels), ..MathCollector::default() };
+        collector.inlines(
+            &inlines,
+            &location,
+            MathVisibility {
+                targets: &[Target::Html, Target::Pdf],
+                baseline: true,
+            },
+        );
+        assert_eq!(collector.equations.len(), 10);
+        for name in
+            ["alt", "missing", "plain", "missing-prefix", "missing-suffix"]
+        {
+            let source = format!(r"\foo{{{name}}}");
+            let equation = collector
+                .equations
+                .iter()
+                .find(|e| e.source == source)
+                .unwrap();
+            assert!(equation.baseline, "{name}");
+            assert!(!equation.targets.contains(&Target::Pdf), "{name}");
+        }
+        for name in ["page", "numbered", "cite-prefix", "cite-suffix"] {
+            let source = format!(r"\foo{{{name}}}");
+            let equation = collector
+                .equations
+                .iter()
+                .find(|e| e.source == source)
+                .unwrap();
+            assert!(equation.baseline, "{name}");
+            assert!(equation.targets.contains(&Target::Pdf), "{name}");
+        }
+        let generated = collector
+            .equations
+            .iter()
+            .find(|e| e.source == r"\foo{generated}")
+            .unwrap();
+        assert!(!generated.baseline);
+        assert_eq!(generated.targets, [Target::Pdf]);
+        let mut diagnostics = Vec::new();
+        validate_math(
+            generated,
+            &[Target::Pdf],
+            &Config::default(),
+            &BTreeMap::new(),
+            &mut diagnostics,
+        );
+        assert_eq!(
+            diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(),
+            ["math-conversion-failed"]
         );
     }
 }

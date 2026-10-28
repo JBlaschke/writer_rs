@@ -809,8 +809,8 @@ impl<'a> Emitter<'a> {
             if removed {
                 self.warning("math-tag-ignored", "\\tag/\\label inside math are ignored for pdf; label the equation with {#eq-x}".into());
             }
-            match mitex::convert_math(&prepared, None) {
-                Ok(_) => {
+            match latex_source::preflight_typst(&prepared) {
+                Ok(()) => {
                     self.write(if display { "#mitex(" } else { "#mi(" });
                     self.write(&math_literal(&prepared));
                     if unnumbered {
@@ -819,7 +819,7 @@ impl<'a> Emitter<'a> {
                     self.write(")");
                     return true;
                 }
-                Err(message) => self.warning("math-conversion-failed", format!("pdf: cannot convert equation ({}); used the source text", message.trim().trim_start_matches("error: "))),
+                Err(message) => self.warning("math-conversion-failed", format!("pdf: cannot convert equation ({message}); used the source text")),
             }
             let fallback = format!("#raw({})", string(source));
             self.typst_math(&fallback, display, unnumbered);
