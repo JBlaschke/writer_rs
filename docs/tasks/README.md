@@ -48,14 +48,14 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T22 | Live-reload client | M2 | M | T00 | done (PR #16) |
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | todo |
 | T24 | Pages view | M2 | M | T21, T23, T32 | todo |
-| T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | todo |
+| T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | ready for review |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | todo |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
-| T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | ready for review |
+| T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | todo |
@@ -283,3 +283,17 @@ Manual checks performed: …
   pages shell is complete; compilation/client remains T24. Full validation
   also hardens the inherited watch-loop harness against concurrent startup
   contention without changing deadlines or production behavior.
+
+- T21 is open in [PR #22](https://github.com/JBlaschke/writer_rs/pull/22)
+  (`bbbd82c`). T25 starts on `codex/browser-smoke` from that checked feature.
+  Merge #20, #21, then #22 before T25; all PRs target main while CI runs.
+
+- T41 passed CI and merged in [PR #20](https://github.com/JBlaschke/writer_rs/pull/20)
+  (`9a7d9d3`). T25 keeps the checked T20/T21 dependency commits while their
+  PRs remain open; pending merge order is #21, then #22, then T25.
+
+- T25 passes formatting, Clippy, default/feature rustdoc, 1,235 debug and
+  1,234 release tests. All 28 feature client units and six browser/helper
+  tests pass with required Chrome 156.0.8078.48; the standalone document
+  renders math, highlighted code, images and fonts without browser errors.
+  The native driver stays opt-in; T23 real-server integration follows.

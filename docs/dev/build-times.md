@@ -737,3 +737,47 @@ existing T42 math warnings. The pages types, shell and SVG routing are real;
 PagesBuilder and pages.js remain the explicit empty/placeholder T24 contract.
 The serve CLI/session remains T23. No dependency, public IR/config/pipeline/
 clap shape or module list changes.
+
+
+## T25 browser smoke acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T21 plus T25.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 11.55 s | 170.20 s | 99.36 s | 1,235 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 307 s | 363.21 s | 3052.82 s | 1,234 passed |
+
+With `browser-tests`, all 28 client units pass (3.46 s build, 5.26 s tests).
+All six browser/helper tests pass with `WRITER_REQUIRE_CHROME=1` (11.16 s
+build, 8.32 s tests). The actual browser is Google Chrome 156.0.8078.48 at
+`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`; CHROME_PATH
+is unset, so discovery selects that first installed macOS bundle.
+
+The copied standalone basic document renders its single document root,
+highlighted code, KaTeX, complete images and fonts without page errors or
+external network resources. Client fixtures verify error/log collection,
+fragments, promises/special values, refused evaluations, stale/replacing
+loaders and navigation failures. Pure helpers cover required-browser policy
+and reserved/non-UTF-8 file URL bytes. Browser calls and cleanup are bounded
+and serial; ordinary suites launch no browser. Non-Unix driving returns the
+explicit platform error while the feature remains portable to compile.
+
+Transport units cover executable/discovery order, app bundles and snap
+placement, private profiles, NUL framing, closed/broken/malformed pipes,
+quiet/failed browsers, timeout/stderr tails, lifecycle matching, cleanup and
+watchdog ownership. Review fixes canonicalize relative/symlink scratch bases,
+classify a bare snap wrapper through its resolved executable, fail promptly
+on startup protocol refusals and leave unverified/reused PIDs alive. The
+initial fake-browser failures were fixture replies sent to stdout (the real
+launcher redirects it); corrected fixtures use DevTools fd4 and pass.
+
+The public Page API and a browser discovery helper are feature-gated. Required
+transport internals stay in the owned devtools module; the T77 print stub and
+all dependency/IR/config/pipeline/CLI/module lists remain untouched. Real
+serve/browser integration follows in T23, actual pages in T24.
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. Basic/mixed HTML remains 687.6/111.6 kB. Browser tests
+were executed, not skipped; native process/service access was used locally.
