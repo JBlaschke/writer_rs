@@ -1,0 +1,41 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "info",
+    "code": "presenter-separator",
+    "file": "md/presenter-deck.md",
+    "line": 10,
+    "cell": null
+  },
+  {
+    "level": "info",
+    "code": "presenter-separator",
+    "file": "md/presenter-deck.md",
+    "line": 12,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "presenter-attr-dropped",
+    "file": "md/presenter-deck.md",
+    "line": 14,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "presenter-attr-dropped",
+    "file": "md/presenter-deck.md",
+    "line": 14,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "presenter-attr-dropped",
+    "file": "md/presenter-deck.md",
+    "line": 14,
+    "cell": null
+  }
+]

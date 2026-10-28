@@ -1,0 +1,13 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "warning",
+    "code": "unknown-cell-type",
+    "file": "tests/fixtures/ipynb/tags.ipynb",
+    "line": 1,
+    "cell": 20
+  }
+]

@@ -595,3 +595,34 @@ Private Markdown context and the default no-op notebook metadata hook retain
 existing Fragment literals and custom include hooks. No dependency, public
 IR/config or module-list changes. Bibliography lookup/rendering remains T70,
 `check` T1C, Typst includes T53. Both PRs target `main`; merge T18 before T1B.
+
+
+## T1C Markdown/notebook check acceptance (2026-10-27)
+
+Measured at checked T1B plus its CI repair (`9ec2dc4`) and the T1C working
+tree on macOS arm64 with Rust 1.99.1. Cached-dependency runs use
+`/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 15.70 s | 62.88 s | 104.64 s | 1,064 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 208 s | 233.33 s | 2176.28 s | 1,063 passed |
+
+Formatting, all-target/all-feature Clippy and warnings-denied rustdoc pass.
+Eleven library tests and four CLI unit tests cover structured failures,
+source-order diagnostics, presenter include boundaries/front matter and
+severity/reporting policy. Sixteen subprocess tests cover text/JSON schema,
+exit statuses, quiet/deny, source/cell locations, errors, repeated includes,
+compatibility promotion and absence of output writes. Eighteen Markdown and
+eight notebook diagnostic snapshots are reviewed, with portable file paths
+and explicit per-fixture code assertions.
+
+All three basic, notebook and mixed examples produce `[]` with JSON check;
+the basic HTML regression builds at 687.6 kB. Check uses frontend + lenient
+resolution without creating a compiler World, rendering or executing cells.
+Typst checks and explicit target checks remain the named T50/T71 stubs.
+
+The final suite includes PR #18's original-byte include parsing and notebook
+origin-redaction repair. Its focused 604-test run, Clippy and formatting also
+passed independently. Remote CI is separate from these local results.
+No dependency, IR/config, module-list or clap-shape changes.

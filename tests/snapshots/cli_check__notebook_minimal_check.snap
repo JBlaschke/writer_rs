@@ -1,0 +1,13 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "warning",
+    "code": "notebook-not-run",
+    "file": "tests/fixtures/ipynb/minimal.ipynb",
+    "line": null,
+    "cell": null
+  }
+]

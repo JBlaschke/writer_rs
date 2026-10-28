@@ -1,0 +1,55 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "warning",
+    "code": "label-kind-mismatch",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 8
+  },
+  {
+    "level": "warning",
+    "code": "cell-options-invalid",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 10
+  },
+  {
+    "level": "warning",
+    "code": "cell-options-invalid",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 18
+  },
+  {
+    "level": "warning",
+    "code": "cell-options-invalid",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 19
+  },
+  {
+    "level": "warning",
+    "code": "cell-options-invalid",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 19
+  },
+  {
+    "level": "warning",
+    "code": "cell-options-invalid",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 19
+  },
+  {
+    "level": "warning",
+    "code": "cell-option-unsupported",
+    "file": "tests/fixtures/ipynb/options.ipynb",
+    "line": 1,
+    "cell": 20
+  }
+]

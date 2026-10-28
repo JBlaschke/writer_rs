@@ -1,0 +1,13 @@
+---
+source: tests/cli_check.rs
+expression: tuples
+---
+[
+  {
+    "level": "warning",
+    "code": "include-meta-ignored",
+    "file": "tests/fixtures/ipynb/includes.ipynb",
+    "line": 3,
+    "cell": 1
+  }
+]

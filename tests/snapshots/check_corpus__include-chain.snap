@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "include-meta-ignored",
+    "file": "ipynb/include/chain.ipynb",
+    "line": 1,
+    "cell": 1
+  }
+]

@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "footnote-unreferenced",
+    "file": "md/footnotes.md",
+    "line": 14,
+    "cell": null
+  }
+]

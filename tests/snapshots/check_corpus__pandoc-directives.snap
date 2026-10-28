@@ -1,0 +1,20 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "info",
+    "code": "directive-colon-rewritten",
+    "file": "md/pandoc-directives.md",
+    "line": 13,
+    "cell": null
+  },
+  {
+    "level": "info",
+    "code": "directive-colon-rewritten",
+    "file": "md/pandoc-directives.md",
+    "line": 17,
+    "cell": null
+  }
+]

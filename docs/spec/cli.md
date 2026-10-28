@@ -90,6 +90,15 @@ writer check <INPUT> [--target LIST] [--deny-warnings] [--format text|json] [--c
 - Exit 0 when there are no errors (and, with `--deny-warnings`, no warnings); 1 otherwise.
   `--format json` prints `[{"level","code","message","file","line","cell"}]`.
 
+> **Coordinator clarification (2026-10-27):** T1C implements Markdown and
+> notebook frontend/lenient-resolve checks. Explicit `--target` remains the
+> T71 milestone stub, and Typst checking remains T50/T71, each exiting 2.
+> Other check failures, including configuration and unknown extensions, are
+> error diagnostics with exit 1. Informational findings are shown in text
+> without `-v` and never fail `--deny-warnings`. Quiet JSON remains complete;
+> quiet text hides informational notes and warnings, except that warnings
+> causing `--deny-warnings` failure are shown. JSON uses `file`, not `path`.
+
 ## dump
 ```
 writer dump <INPUT> [--ir | --typst | --latex | --context] [--no-resolve]

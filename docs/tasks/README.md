@@ -42,7 +42,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | done (PR #14) |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | ready for review |
-| T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | todo |
+| T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | ready for review |
 | T20 | File watcher and the document watch set | M2 | M | T16 | todo |
 | T21 | Dev server: routes, events, per-view state | M2 | M | T16 | todo |
 | T22 | Live-reload client | M2 | M | T00 | ready for review |
@@ -210,6 +210,17 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   reviewed; two obsolete cycle diagnostic snapshots are removed. Nineteen
   Chrome checks cover the mixed example's images, links and three scoped
   notes in light/dark and narrow layouts. T18 must merge before T1B.
+- T1B is open in [PR #18](https://github.com/JBlaschke/writer_rs/pull/18).
+  Its CI repair (`9ec2dc4`) preserves original Windows include-path bytes
+  and redacts notebook asset origins. All 604 focused local tests, formatting
+  and Clippy pass; the remote matrix is rerunning independently.
+- T1C passes formatting, Clippy, rustdoc, 1,064 debug and 1,063 release
+  tests. Eleven library tests, four CLI unit tests and 16 subprocess tests
+  cover severity/exit/quiet/JSON behavior, located failures, compatibility
+  checks and no output writes. Twenty-six reviewed snapshots cover all 18
+  Markdown and eight notebook fixtures. The three examples check cleanly;
+  basic HTML remains 687.6 kB. It includes the checked T1B CI repair.
+  Both inherited PRs remain open: merge T18, then T1B, then T1C.
 - The T40 brief closes the previous `scripts/waves.py` missing-definition
   error. The audit now passes for written briefs; several later task briefs
   are still being written. Finish those definitions before

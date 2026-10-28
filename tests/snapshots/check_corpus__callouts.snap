@@ -1,0 +1,5 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[]

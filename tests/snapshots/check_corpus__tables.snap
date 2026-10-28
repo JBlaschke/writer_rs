@@ -1,0 +1,20 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "table-caption-orphan",
+    "file": "md/tables.md",
+    "line": 18,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "table-caption-pandoc-colon",
+    "file": "md/tables.md",
+    "line": 22,
+    "cell": null
+  }
+]

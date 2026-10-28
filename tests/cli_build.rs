@@ -213,7 +213,6 @@ fn watch_is_a_stub() {
 fn command_stubs_exit_2() {
     for (args, task) in [
         (vec!["serve", "examples/basic/document.md"], "T23"),
-        (vec!["check", "examples/basic/document.md"], "T1C"),
         (vec!["init"], "T72"),
         (vec!["eject", "theme", "theme"], "T72"),
     ] {

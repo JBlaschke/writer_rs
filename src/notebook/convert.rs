@@ -338,17 +338,7 @@ fn metadata(
             }
             overlay(&mut meta, layer, &keys);
             texts[index] = "\n".repeat(consumed) + rest;
-        } else if parse_front_matter(yaml).is_ok()
-            && (serde_norway::from_str::<Value>(yaml)
-                .ok()
-                .and_then(|v| v.as_object().cloned())
-                .is_some_and(|m| {
-                    m.keys().any(|k| {
-                        META_KEYS.contains(&k.as_str())
-                            || CONFIG_TABLES.contains(&k.as_str())
-                    })
-                }))
-        {
+        } else if later_metadata_header(yaml) {
             diagnostics.push(
                 Diagnostic::warning(
                     "notebook-front-matter-ignored",
@@ -374,6 +364,20 @@ fn metadata(
         )?);
     }
     Ok((meta, effective))
+}
+
+/// Whether a later Markdown header is recognized and removed from cell text.
+pub(crate) fn later_metadata_header(yaml: &str) -> bool {
+    parse_front_matter(yaml).is_ok()
+        && serde_norway::from_str::<Value>(yaml)
+            .ok()
+            .and_then(|value| value.as_object().cloned())
+            .is_some_and(|map| {
+                map.keys().any(|key| {
+                    META_KEYS.contains(&key.as_str())
+                        || CONFIG_TABLES.contains(&key.as_str())
+                })
+            })
 }
 
 fn apply_layer(

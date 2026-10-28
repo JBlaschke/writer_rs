@@ -1,0 +1,27 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "unclosed-directive",
+    "file": "md/directives.md",
+    "line": 43,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "invalid-directive",
+    "file": "md/directives.md",
+    "line": 43,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "unclosed-directive",
+    "file": "md/directives.md",
+    "line": 45,
+    "cell": null
+  }
+]
