@@ -738,3 +738,13 @@ typst is the oracle there, and each variant asserts a number that differs from t
 10. **DOCX bibliography heading.** docx-output.md §4.14 writes no heading; §6 requires one because
     `Resolved.toc` lists the bibliography and `#refs` links are valid (§4.9). Contract change for
     docx-output.md §4.14 (T41).
+
+
+> **Contract clarification (coordinator, 2026-10-28):** T50 keeps a labelled
+> plain Typst table's id on its inner Table as kind Other. Its unnumbered,
+> captionless outer Table figure exists only to satisfy the shared IR invariant;
+> it has no id and does not consume a figure counter (typst-dialect.md §2.3).
+
+> When a labelled plain table contains nested figures, T50 carries the same
+> Other-kind label on a containing Div instead of introducing forbidden figure
+> nesting. The table content and all other labels are retained.

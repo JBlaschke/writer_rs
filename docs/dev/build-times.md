@@ -821,3 +821,37 @@ two crate-private watcher helpers, removal of the serve stub assertion and
 additive T22 QA evidence. Public IR/config/pipeline/clap/module lists and all
 dependencies remain unchanged. Actual pages and .typ end-to-end support retain
 their T24/T50/T52 boundaries; this session uses the explicit empty PagesBuilder.
+
+
+## T50 structured Typst frontend acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T23 plus its watcher repair
+and T50. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 20.32 s | 212.70 s | 135.70 s | 1,359 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 313 s | 378.60 s | 3193.00 s | 1,358 passed |
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. All 52 public frontend tests pass in 2.24 s and all 22
+private units pass. Twelve unresolved-IR/diagnostic corpus snapshots are
+reviewed, including portable path/asset redaction and untouched math bytes.
+Basic/mixed HTML remains 687.6/111.6 kB; compiler-backed subset validation and
+HTML/DOCX library composition pass offline. No external Typst process or
+frontend code evaluation is used.
+
+Coverage includes metadata precedence, scoped captured literals/import aliases,
+markup/call/table families, quotes, source-based labels/citation groups, notes,
+verbatim math, recursive includes and assets, syntax/unsupported diagnostics,
+strict CLI overrides, normalized IR invariants and target-free CLI check. Table
+capacity, captured-content replay and literal-value limits have adversarial
+regressions. Native .typ target dispatch and cross-format includes retain their
+T52/T53 boundaries.
+
+PR24 CI exposed a missing-config ancestor synchronization assumption on Linux
+and Windows. Its repair `d8e91e7` waits for post-watch-update SSE events and catches
+intermediate directories appearing during watch installation. Twenty-three
+watcher units and 53 CLI/backend/loop integration tests, formatting and Clippy
+pass before push; the same repair is included in these final full-suite runs.
+The three-OS CI reruns independently.

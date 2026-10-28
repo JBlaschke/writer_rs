@@ -1512,7 +1512,7 @@ mod tests {
         std::fs::write(&opts.input, "Hello").unwrap();
         let input = opts.input.clone();
         let mut session = session(opts);
-        let mut stages = Stages::default();
+        let mut stages = Stages { prepare: Action::Fail, ..Default::default() };
         session.rebuild_with(Vec::new(), &mut stages);
         assert_eq!(stages.calls, ["prepare", "pages"]);
         assert_eq!(state(&session)["web"]["status"], "error");
