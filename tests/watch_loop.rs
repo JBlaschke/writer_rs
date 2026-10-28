@@ -9,7 +9,7 @@ use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
@@ -27,6 +27,9 @@ const REQUEST: &str = "WRITER_WATCH_LOOP_TEST_REQUEST";
 const PREFIX: &str = "WRITER_WATCH_LOOP_STATUS ";
 const WAIT: Duration = Duration::from_secs(10);
 const QUIET: Duration = Duration::from_millis(1400);
+// Each child starts a native watcher and its own compiler/font state. Avoid
+// concurrent startup exhausting a loaded runner before the bounded waits begin.
+static CHILD: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum Stop {
@@ -187,6 +190,7 @@ fn watch_loop_driver() {
 }
 
 struct Loop {
+    _serial: MutexGuard<'static, ()>,
     child: Child,
     statuses: Receiver<std::result::Result<Status, String>>,
     output: Arc<Mutex<String>>,
@@ -195,6 +199,7 @@ struct Loop {
 
 impl Loop {
     fn spawn(request: Request) -> Self {
+        let serial = CHILD.lock().unwrap_or_else(PoisonError::into_inner);
         let mut child = Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact", "watch_loop_driver", "--ignored", "--nocapture",
@@ -244,6 +249,7 @@ impl Loop {
             }
         });
         Self {
+            _serial: serial,
             child,
             statuses,
             output,
