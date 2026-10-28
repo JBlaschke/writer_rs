@@ -1,0 +1,12 @@
+---
+source: tests/notebook_snapshots.rs
+expression: diagnostics
+---
+[
+  "notebook [notebook-presenter-metadata] info: metadata.presenter: read title, author, lang; ignored deck, event",
+  "cell 2, lines 1-3 [notebook-front-matter-ignored] warning: front matter in a later Markdown cell is ignored",
+  "cell 11, lines 1-1 [raw-cell-skipped] warning: set raw_mimetype to text/html, text/latex, text/markdown or text/x-typst",
+  "cell 12, lines 1-1 [raw-cell-skipped] warning: raw cell format \"text/x-rst\" is not supported",
+  "cell 13, lines 5-5 [notebook-attachment-skipped] warning: attachment \"only.bmp\" has no preferred image MIME type (offered: image/bmp)",
+  "cell 13, lines 5-5 [missing-attachment] warning: attachment \"missing.png\" is not present in cell 13"
+]

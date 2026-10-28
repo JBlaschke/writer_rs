@@ -1,0 +1,456 @@
+---
+source: tests/notebook_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Title from front matter",
+    "subtitle": "Subtitle from front matter",
+    "authors": [
+      {
+        "name": "Front matter author",
+        "affiliation": null,
+        "email": null,
+        "id": null
+      }
+    ],
+    "date": null,
+    "abstract_": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A "
+          },
+          {
+            "type": "strong",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "parsed"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " abstract."
+          }
+        ],
+        "span": {
+          "start_line": 1,
+          "end_line": 1
+        }
+      }
+    ],
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {
+      "toc": true,
+      "numbering": {
+        "headings": "1.1"
+      }
+    }
+  },
+  "blocks": [
+    {
+      "type": "toc",
+      "depth": 3
+    },
+    {
+      "type": "cell",
+      "index": 0,
+      "id": "before",
+      "language": "python",
+      "source": "print(\"before metadata\")",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "stream",
+            "name": "stdout"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/x-ansi",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "Before first markdown",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-stream-stdout"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": []
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0
+      }
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Welcome"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 6,
+        "cell": 1
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "First markdown cell."
+        }
+      ],
+      "span": {
+        "start_line": 8,
+        "end_line": 8,
+        "cell": 1
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Later section"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 4,
+        "end_line": 4,
+        "cell": 2
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 3
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Note: this matters"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 2,
+        "end_line": 3,
+        "cell": 3
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A mapping of prose is retained."
+        }
+      ],
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "cell": 3
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 4
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A thematic break, not front matter."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "cell": 4
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "cell": 4
+      }
+    },
+    {
+      "type": "raw",
+      "format": "html",
+      "text": "<div><img src=\"asset:000000000001\"> Raw HTML</div>",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 5
+      }
+    },
+    {
+      "type": "raw",
+      "format": "latex",
+      "text": "\\vspace{1em}",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 6
+      }
+    },
+    {
+      "type": "raw",
+      "format": "typst",
+      "text": "#text[Raw typst]",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7
+      }
+    },
+    {
+      "type": "raw",
+      "format": "openxml",
+      "text": "<w:p><w:r><w:t>Raw Word</w:t></w:r></w:p>",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 8
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "strong",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Raw Markdown"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "math",
+          "source": "x^2",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 9
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": null,
+      "text": "Plain raw source\n",
+      "attrs": {
+        "id": null,
+        "classes": [
+          "raw-cell"
+        ],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 10
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "attached"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "attached"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "span": {
+            "start_line": 1,
+            "end_line": 1,
+            "cell": 13
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 13
+      }
+    },
+    {
+      "type": "raw",
+      "format": "html",
+      "text": "<img src=\"asset:000000000001\">\n",
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "cell": 13
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "unsupported"
+            }
+          ],
+          "url": "attachment:only.bmp",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "missing"
+            }
+          ],
+          "url": "attachment:missing.png",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ],
+      "span": {
+        "start_line": 5,
+        "end_line": 5,
+        "cell": 13
+      }
+    }
+  ],
+  "features": {
+    "math": true,
+    "code": true,
+    "notebook": true,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "notebook",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "inline:70"
+    }
+  ]
+}

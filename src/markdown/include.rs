@@ -13,7 +13,7 @@ use crate::ir::{SourceKind, detect_kind};
 pub const MAX_DEPTH: usize = 8;
 
 /// Reads the local path from `include PATH`, including single/double quotes.
-fn include_path(info: &str) -> std::result::Result<String, String> {
+pub(crate) fn include_path(info: &str) -> std::result::Result<String, String> {
     let info = info.trim();
     if info.starts_with('{') {
         return Err(format!(
@@ -113,6 +113,41 @@ fn scan_file(
         seen.push(target.clone());
         found.push(target.clone());
         scan_file(&target, depth + 1, seen, found);
+    }
+}
+
+/// Creates the notebook include hook; expansion arrives with T1B.
+pub fn cell_includes(
+    notebook: &crate::ir::SourceInfo,
+) -> Box<dyn crate::notebook::CellIncludes> {
+    cell_includes_in(notebook, &[])
+}
+
+/// Creates a notebook include hook with its enclosing canonical include chain.
+pub fn cell_includes_in(
+    notebook: &crate::ir::SourceInfo, chain: &[PathBuf],
+) -> Box<dyn crate::notebook::CellIncludes> {
+    let _ = chain;
+    Box::new(NotebookIncludes { path: notebook.path.clone() })
+}
+
+struct NotebookIncludes {
+    path: PathBuf,
+}
+
+impl crate::notebook::CellIncludes for NotebookIncludes {
+    fn expand(
+        &mut self, _: &str, span: &crate::ir::SourceSpan,
+        _: &crate::ir::SourceInfo, _: &crate::config::Config,
+    ) -> crate::error::Result<crate::ir::Parsed> {
+        let cell = span.cell.unwrap_or(0);
+        Err(crate::error::Error::Parse {
+            path: self.path.clone(),
+            line: Some(span.start_line),
+            message: format!(
+                "cell {cell}: :::include in notebooks arrives with T1B"
+            ),
+        })
     }
 }
 

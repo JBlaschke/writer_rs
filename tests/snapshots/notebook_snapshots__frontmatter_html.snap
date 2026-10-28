@@ -1,0 +1,57 @@
+---
+source: tests/notebook_snapshots.rs
+expression: html(&parsed)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Title from front matter</h1>
+<p class="subtitle">Subtitle from front matter</p>
+<div class="authors">
+<p class="author"><span class="author-name">Front matter author</span></p>
+</div>
+<section class="abstract" role="doc-abstract">
+<p class="abstract-title">Abstract</p>
+<p>A <strong>parsed</strong> abstract.</p>
+</section>
+</header>
+<nav class="toc" role="doc-toc">
+<p class="toc-title">Contents</p>
+<ol>
+<li><a href="#welcome"><span class="number">1</span> Welcome</a>
+<ol>
+<li><a href="#later-section"><span class="number">1.1</span> Later section</a></li>
+<li><a href="#note-this-matters"><span class="number">1.2</span> Note: this matters</a></li>
+</ol>
+</li>
+</ol>
+</nav>
+<div class="cell" data-cell="0">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">before metadata<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">Before first markdown</span></code></pre>
+</div>
+</div>
+</div>
+<h1 id="welcome"><span class="number">1</span> Welcome</h1>
+<p>First markdown cell.</p>
+<h2 id="later-section"><span class="number">1.1</span> Later section</h2>
+<hr>
+<h2 id="note-this-matters"><span class="number">1.2</span> Note: this matters</h2>
+<p>A mapping of prose is retained.</p>
+<hr>
+<p>A thematic break, not front matter.</p>
+<hr>
+<div><img src="asset:[id]"> Raw HTML</div>
+<p><strong>Raw Markdown</strong> and <span class="math inline" data-math-style="inline" data-tex="x^2">x^2</span>.</p>
+<pre class="hl-code raw-cell"><code><span class="line">Plain raw source</span></code></pre>
+<figure class="figure kind-image">
+<img src="asset:[id]" alt="attached">
+<figcaption><span class="caption-label">Figure 1:</span> attached</figcaption>
+</figure>
+<img src="asset:[id]">
+<p><img src="attachment:only.bmp" alt="unsupported"> <img src="attachment:missing.png" alt="missing"></p>
+</main>

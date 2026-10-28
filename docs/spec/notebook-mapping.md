@@ -133,6 +133,13 @@ exists at any depth of any candidate or any kept output's `mimes` contains `text
   there, is Markdown (cells are parsed without the front-matter extension).
 - Heading text never becomes `meta.title`. Per-cell `metadata.presenter` (slide layout) is ignored silently.
 
+> **Coordinator clarification (2026-10-27):** the merged `DocMeta` must
+> replay the metadata layers' effective configuration when the pipeline
+> calls `Config::merge_front_matter` again. Remove superseded shorthand
+> aliases when later table fields replace them, reconcile `cite_style`/`csl`,
+> and preserve omitted numbering keys across boolean/map overlays. This
+> normalization adds no configuration defaults to the document metadata.
+
 ### 2.3 Markdown cells (and raw cells with a Markdown format, §2.8)
 `markdown::parse_blocks(text, &config, &mut Fragment { assets, base_dir: notebook dir, diagnostics, file:
 None, cell: Some(index), missing_asset_is_error: false })` (markdown-dialect.md §2.3) on the cell
@@ -180,6 +187,13 @@ cell's), and steps 4–5 skip blocks inside `Block::Cell.outputs`.
    type's end condition (*probe*: an unclosed `:::note` takes the definitions as children; an open
    fence in a directive or list item takes them, or the blank lines, as code text). Its references to
    other cells' definitions stay text and raise `footnote-undefined` (step 5).
+
+> **Coordinator clarification (2026-10-27):** synthetic `__inline_N`
+> definitions appended by comrak do not replace the last real block in the
+> open-block check. A directive closer follows comrak's container-relative
+> indentation (at most three spaces) and has at least the opening fence's
+> colon count. This also handles footnotes containing directives correctly.
+
 3. Blocks inside footnotes that came from appended text get the span of the definition in its own
    cell (`cell`, lines from step 1). A diagnostic whose span lies within a definition's lines (appended,
    or the definition's own lines in its own cell) is kept only from the fragment that holds the
@@ -458,6 +472,11 @@ None }` unless `tbl-colwidths`.
 `caption` = trimmed text of `<caption>`. Verified shapes (probe, pandas 3.1.0): simple, `_repr_html_`
 with `<style scoped>`, MultiIndex (3 head rows, `colspan=2`, `rowspan=2`, 5 columns), truncated (note
 "100 rows × 2 columns"), Styler (caption "Styled caption"); an unescaped `b<c` Styler cell rejects.
+
+> **Contract change (coordinator, 2026-10-27):** a table whose expanded grid
+> exceeds 1,000,000 slots, overflows checked arithmetic, or has overlapping
+> spans falls back to raw HTML. This bounds allocation for malformed spans
+> while preserving the existing candidate fallback mechanism and public API.
 
 ### 4.5 Local files of outputs (lifted, presenter audit F08)
 Relative `src`/`poster` values of `text/html` outputs and the images and raw HTML of `text/markdown`

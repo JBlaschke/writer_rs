@@ -1,0 +1,7 @@
+---
+source: tests/notebook_snapshots.rs
+expression: diagnostics
+---
+[
+  "cell 20, lines 1-1 [unknown-cell-type] warning: unknown cell_type \"future-chart\", cell ignored"
+]

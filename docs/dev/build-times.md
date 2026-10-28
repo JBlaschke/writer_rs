@@ -511,3 +511,42 @@ The coordinator clarifies same-block notebook position selectors and adds
 the missing T22 brief. No dependencies, public IR/config, module lists or
 Rust server code change. T23/T24 retain real-server and actual-pages QA.
 Both feature PRs target `main`; merge T40 before T22.
+
+## T18 notebook frontend acceptance (2026-10-27)
+
+Measured at checked T22 (`b2e7905`) plus the T18 working tree on macOS arm64
+with Rust 1.99.1. The merged T40/T22 tree (`43a1ed8`) is identical to that
+base. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 0.82 s | 28.01 s | 27.72 s | 981 passed |
+| `cargo test --locked --offline --release --no-fail-fast` | 191 s | 215.88 s | 1981.85 s | 980 passed |
+
+Formatting, all-target/all-feature Clippy and warnings-denied rustdoc pass.
+The basic HTML example builds at 687.6 kB, and the saved notebook example at
+774.5 kB, both without diagnostics. Debug-only assertions and the ignored
+DOCX generator retain their existing behavior.
+
+Sixteen lenient-parser tests and 26 notebook integration tests cover metadata
+layers and alias replay, options/tags, captions, candidate fallback, tables,
+attachments, local-file boundaries, selection, cross-cell notes, includes
+hooks, diagnostics and spans. Notebook unit tests cover ANSI, options, table
+grids, streams and open-block detection. Twenty-one new snapshots and the
+updated DOCX ANSI snapshot are reviewed. Asset labels are seeded by logical
+first use so absolute-path hashes cannot reorder Windows snapshots.
+
+Isolated Chrome 156.0.8078.48 with Node 26.12.0 passes 15 browser checks on
+the saved example: six cells, five visible inputs, seven outputs, a loaded
+plot, portable DataFrame and captions, ANSI palette/effects, and no console
+errors or private ANSI leaks. Light/dark desktop and 390 px layouts are
+checked visually. A wide-table overflow found at 390 px is fixed by scrolling
+outputs below 64 rem, where prompts are already static. The page width is
+375 px after the fix; desktop gutter prompts and native table columns remain
+intact. After this stylesheet correction, all 37 theme/embedded-asset tests
+pass again in debug and release and the rebuilt example passes browser QA.
+
+No Python cells were re-executed: the example retains presenter's stored
+outputs and Python bodies, with Markdown, metadata and option-comment edits.
+Include expansion/reference scanning remains T1B; rich DOCX output remains
+T41/T42. No dependency, public IR/config or module-list changes.

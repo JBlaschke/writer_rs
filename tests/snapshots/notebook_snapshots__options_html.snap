@@ -1,0 +1,429 @@
+---
+source: tests/notebook_snapshots.rs
+expression: html(&parsed)
+---
+<main data-writer-document>
+<h1 id="captions-labels-and-cell-options">Captions, labels and cell options</h1>
+<div class="cell" data-cell="1">
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<figure id="fig-one" class="figure kind-image">
+<img src="asset:[id]" alt="One image">
+<figcaption><span class="caption-label">Figure 1:</span> One image</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="2">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+</div>
+<figure id="fig-group" class="figure kind-other">
+<div class="cell" data-cell="2">
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<p><img src="asset:[id]" alt="Left alt"></p>
+<p><span class="subcaption">Left</span></p>
+</div>
+<div class="output output-display" data-mime="image/png">
+<p><img src="asset:[id]" alt="Right alt"></p>
+<p><span class="subcaption">Right</span></p>
+</div>
+</div>
+</div>
+<figcaption><span class="caption-label">Figure 2:</span> Image group</figcaption>
+</figure>
+<div class="cell" data-cell="3">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<figure id="fig-list-1" class="figure kind-image">
+<img src="asset:[id]" alt="First image">
+<figcaption><span class="caption-label">Figure 3:</span> First image</figcaption>
+</figure>
+</div>
+<div class="output output-display" data-mime="image/png">
+<figure id="fig-list-2" class="figure kind-image">
+<img src="asset:[id]" alt="Second image">
+<figcaption><span class="caption-label">Figure 4:</span> Second image</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="4">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<p><img src="asset:[id]" alt="Plain image"></p>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="5">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<figure id="tbl-values" class="figure kind-table">
+<figcaption><span class="caption-label">Table 1:</span> Values</figcaption>
+<table>
+<colgroup>
+<col style="width:20%">
+<col style="width:40%">
+<col style="width:40%">
+</colgroup>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="6">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+</div>
+<figure class="figure kind-other">
+<div class="cell" data-cell="6">
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p><span class="subcaption">First table</span></p>
+</div>
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p><span class="subcaption">Second table</span></p>
+</div>
+</div>
+</div>
+<figcaption><span class="caption-label">Figure 5:</span> Two tables</figcaption>
+</figure>
+<figure id="lst-source" class="figure kind-listing">
+<figcaption><span class="caption-label">Listing 1:</span> Source listing</figcaption>
+<pre class="hl-code numbered"><code class="language-python"><span class="line highlight"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span></span>
+<span class="line highlight"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">y</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span></span></span>
+<span class="line highlight"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">y</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</figure>
+<div class="cell" data-cell="7">
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">Listing output</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="8">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<figure id="fig-mismatch" class="figure kind-table">
+<figcaption><span class="caption-label">Table 2</span></figcaption>
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-anchor" class="cell" data-cell="9">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">Anchored output</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="10">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+</div>
+<figure id="tbl-both" class="figure kind-other">
+<div class="cell" data-cell="10">
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<p><img src="asset:[id]" alt=""></p>
+</div>
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="output output-display" data-mime="image/png">
+<p><img src="asset:[id]" alt=""></p>
+</div>
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<figcaption><span class="caption-label">Figure 6:</span> Tables</figcaption>
+</figure>
+<div class="cell" data-cell="11">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<figure id="fig:x" class="figure kind-image">
+<img src="asset:[id]" alt="Colon label">
+<figcaption><span class="caption-label">Figure 7:</span> Colon label</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="12">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+</div>
+<div class="cell" data-cell="13">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<h2 id="stream-heading">Stream heading</h2>
+<p><strong>Rendered markdown</strong></p>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="15">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">stdout one</span>
+<span class="line">stdout two</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="16">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<figure class="figure kind-image" data-fig-align="center">
+<img src="asset:[id]" alt="Source caption">
+<figcaption><span class="caption-label">Figure 8:</span> Source caption</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="17">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<div><style scoped>.dataframe { color: black }</style><table class="dataframe"><thead><tr><th></th><th>x</th><th>y</th></tr></thead><tbody><tr><th>0</th><td>1</td><td>2</td></tr><tr><th>1</th><td>3</td><td>4</td></tr></tbody></table></div>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="18">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">Invalid options preserve code</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="19">
+<div class="cell-outputs">
+<div class="output output-display" data-mime="image/png">
+<figure class="figure kind-image">
+<img src="asset:[id]" alt="Valid metadata caption">
+<figcaption><span class="caption-label">Figure 9:</span> Valid metadata caption</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="20">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">Still rendered</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="21">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span>!/usr/bin/env python</span></span></span>
+<span class="line"><span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span>| echo: false</span></span></span>
+<span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">display</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">saved_output</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">Options after shebang stay source</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell r-example wide" data-cell="22">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">R-style marker<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">R and Python share # comments</span></code></pre>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="23">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">echo</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">false</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span></span></span>
+<span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">printf</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">C source<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-stream stdout" data-mime="text/x-ansi">
+<pre class="hl-code output-stream-stdout"><code><span class="line">C markers require a C kernel</span></code></pre>
+</div>
+</div>
+</div>
+</main>

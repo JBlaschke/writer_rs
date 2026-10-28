@@ -198,3 +198,28 @@ CSS (T19); `check` (T1C, T71); typst includes, `writer-cells` (T53); LaTeX's U+0
 - `@` references stay text until T1B's scanner (wave 5); PLAN §7's re-blessing rule names only md fixtures (add ipynb).
 - The Status line gives T18 §1–§6 and §8, but `Selection` (§7.3) and `CellParts.input/outputs` are T18's `mod.rs`; this
   task implements them, T53 the typst side. `tests/nbformat.rs` is not named in PLAN §3.2.
+
+## Implementation amendments (coordinator, 2026-10-27)
+
+- Starts from checked T22 (`b2e7905`) on `codex/notebook-frontend` while
+  PRs #15/#16 proceed through CI. Both predecessors merged before this PR
+  opened; their merged tree (`43a1ed8`) matches the checked T22 tree.
+  The PR targets `main` without a pending merge dependency.
+- Reuse Markdown's feature collection and include-path parser with
+  crate-private visibility. The include hook stubs are additive in T1B's
+  existing file. No public IR/config, dependency or module-list changes.
+- The spec records configuration alias normalization for faithful pipeline
+  replay, comrak's exact open-directive test and a bounded table grid.
+- Snapshot asset IDs follow logical first use, independent of absolute
+  paths or registry hash ordering on Linux, macOS and Windows.
+- The earlier DOCX code fixture's placeholder ANSI pair becomes valid
+  canonical ANSI with the same plain text; its package snapshot now checks
+  styled output runs rather than an ignored future field.
+- Earlier HTML tests likewise use valid ANSI payloads and check styled,
+  escaped output while keeping the private pair out of attributes.
+- The example retains presenter's saved Python bodies and outputs; only
+  Markdown, metadata and option comments change. It is not re-executed.
+- Browser QA found that a wide DataFrame overflowed the 390 px page. The
+  default notebook theme now scrolls outputs below 64 rem, where prompts are
+  already in normal flow; desktop gutter prompts and native table layout
+  remain intact. This is an additive correction to T19's stylesheet.

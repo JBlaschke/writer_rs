@@ -38,7 +38,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T15 | Theme chain, document template, context, helpers, styles | M1 | M | T03, T13, T14 | done (PR #8) |
 | T16 | Pipeline and CLI tree with stubs, `build` + `dump`, example, e2e snapshots | M1 | M | T03, T10, T12, T13, T14, T15, T17 | done (PR #9) |
 | T17 | Resolve pass: labels, numbering, references, footnotes, TOC | M1 | M | T01 | done (PR #7) |
-| T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | todo |
+| T18 | Notebook frontend | M1 | L | T12, T13, T30, T40 | ready for review |
 | T19 | Default HTML theme v1 | M1 | M | T15, T16 | done (PR #11) |
 | T1A | Math in HTML (KaTeX, MathML, image routes) | M1 | M | T03, T15, T16, T30 | done (PR #14) |
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | todo |
@@ -189,6 +189,16 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
   client preserves reading position, unchanged math/images and per-view
   state; QA covers reload/reconnect paths and scripts loaded in the head.
   Real-server and actual pages checks remain with T23/T24.
+- T40/T22 passed CI and merged in PRs #15/#16 (`94ad41b`/`43a1ed8`).
+  T18 was developed on checked T22 (`b2e7905`); that tree matches merged
+  `main`, so its PR has no pending merge dependency.
+- T18 passes formatting, Clippy, rustdoc, 981 debug and 980 release tests.
+  Sixteen parser tests, 26 notebook integration tests and 21 reviewed
+  snapshots cover saved outputs, options, metadata, tables, attachments,
+  selection and cross-cell notes. Fifteen browser checks cover the saved
+  example in light/dark and narrow layouts. A small notebook theme fix
+  contains wide-table scrolling without clipping desktop output prompts.
+  T1B follows while CI runs; each milestone keeps its own PR against `main`.
 - The T40 brief closes the previous `scripts/waves.py` missing-definition
   error. The audit now passes for written briefs; several later task briefs
   are still being written. Finish those definitions before

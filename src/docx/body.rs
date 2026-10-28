@@ -547,8 +547,68 @@ impl Emitter<'_> {
             style: Some(style),
             ..Default::default()
         });
-        self.code_lines(&lines, &code);
+        if let Some(pair) = attrs.pairs.get("ansi") {
+            self.ansi_code_lines(pair, &code);
+        } else {
+            self.code_lines(&lines, &code);
+        }
         self.end_paragraph();
+    }
+
+    fn ansi_code_lines(&mut self, pair: &str, code: &CodeAttrs) {
+        use crate::notebook::ansi;
+
+        let spans = ansi::parse(pair);
+        let mut lines = vec![Vec::new()];
+        for span in &spans {
+            for (index, text) in span.text.split('\n').enumerate() {
+                if index > 0 {
+                    lines.push(Vec::new());
+                }
+                if !text.is_empty() {
+                    // The initial line exists; subsequent lines are pushed above.
+                    lines
+                        .last_mut()
+                        .expect("output line exists")
+                        .push((span.style, text));
+                }
+            }
+        }
+        if spans.last().is_some_and(|span| span.text.ends_with('\n')) {
+            lines.pop();
+        }
+        let last =
+            code.start.saturating_add(lines.len().saturating_sub(1) as u64);
+        let width = last.to_string().len();
+        let style = self.styles.ensure("Verbatim Char", StyleKind::Character);
+        for (index, segments) in lines.iter().enumerate() {
+            if index > 0 {
+                self.buffer().push_str("<w:r><w:br/></w:r>");
+            }
+            let number = code.start.saturating_add(index as u64);
+            let highlight = code.is_highlighted(number).then(|| {
+                "<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"FFF3BF\"/>".into()
+            });
+            if code.numbered {
+                let style = self
+                    .styles
+                    .ensure("Code Line Number", StyleKind::Character);
+                self.code_run(
+                    &format!("{number:>width$} "),
+                    RunProps {
+                        style: Some(style),
+                        shading: highlight.clone(),
+                        ..Default::default()
+                    },
+                );
+            }
+            for (ansi_style, text) in segments {
+                self.code_run(
+                    text,
+                    ansi_run_props(ansi_style, &style, highlight.clone()),
+                );
+            }
+        }
     }
 
     fn code_lines(&mut self, lines: &[Vec<(&str, String)>], code: &CodeAttrs) {
@@ -702,6 +762,38 @@ fn empty_tag_is(text: &str, name: &str) -> bool {
     )
 }
 
+fn ansi_run_props(
+    style: &anstyle::Style, character_style: &str, highlight: Option<String>,
+) -> RunProps {
+    use crate::notebook::ansi;
+    use anstyle::Effects;
+
+    let effects = style.get_effects();
+    let inverse = effects.contains(Effects::INVERT);
+    let color = |color: Option<anstyle::Color>, default: &str| {
+        color
+            .map(|color| {
+                let (red, green, blue) = ansi::rgb(color);
+                format!("{red:02X}{green:02X}{blue:02X}")
+            })
+            .or_else(|| inverse.then(|| default.to_owned()))
+    };
+    let (foreground, background) = ansi::colors(style);
+    let shading = color(background, "000000").map(|color| {
+        format!("<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"{color}\"/>")
+    });
+    RunProps {
+        style: Some(character_style.into()),
+        bold: effects.contains(Effects::BOLD),
+        italic: effects.contains(Effects::ITALIC),
+        strike: effects.contains(Effects::STRIKETHROUGH),
+        color: color(foreground, "FFFFFF"),
+        underline: effects.contains(Effects::UNDERLINE),
+        shading: shading.or(highlight),
+        ..Default::default()
+    }
+}
+
 fn highlight(
     syntax: &SyntaxReference, text: &str,
 ) -> Option<Vec<Vec<(&'static str, String)>>> {
@@ -755,6 +847,27 @@ fn token_style(stack: &ScopeStack) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ansi_properties_use_rpr_order_and_rendered_colours() {
+        let span = &crate::notebook::ansi::parse("\x1b[1;2;3;4;7;8;9;31mX")[0];
+        assert_eq!(
+            ansi_run_props(&span.style, "VerbatimChar", None).to_xml(),
+            concat!(
+                "<w:rPr><w:rStyle w:val=\"VerbatimChar\"/><w:b/><w:bCs/>",
+                "<w:i/><w:iCs/><w:strike/><w:color w:val=\"FFFFFF\"/>",
+                "<w:u w:val=\"single\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"B22B31\"/></w:rPr>",
+            )
+        );
+        let span = &crate::notebook::ansi::parse("\x1b[7mX")[0];
+        let props = ansi_run_props(&span.style, "V", None);
+        assert_eq!(props.color.as_deref(), Some("FFFFFF"));
+        assert!(props.shading.unwrap().contains("w:fill=\"000000\""));
+        let span = &crate::notebook::ansi::parse("\x1b[38;2;10;20;30mX")[0];
+        let props = ansi_run_props(&span.style, "V", Some("<w:shd/>".into()));
+        assert_eq!(props.color.as_deref(), Some("0A141E"));
+        assert_eq!(props.shading.as_deref(), Some("<w:shd/>"));
+    }
 
     #[test]
     fn highlighting_carries_multiline_scopes_and_keeps_exact_source() {

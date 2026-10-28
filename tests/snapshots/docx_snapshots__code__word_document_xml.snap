@@ -150,6 +150,7 @@ expression: snapshot
             <w:r>
                 <w:rPr>
                     <w:rStyle w:val="VerbatimChar"/>
+                    <w:color w:val="E75C58"/>
                 </w:rPr>
                 <w:t xml:space="preserve">never highlight output</w:t>
             </w:r>

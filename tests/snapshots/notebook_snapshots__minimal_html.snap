@@ -1,0 +1,14 @@
+---
+source: tests/notebook_snapshots.rs
+expression: html(&parsed)
+---
+<main data-writer-document>
+<h1 id="minimal-notebook">Minimal notebook</h1>
+<p>One markdown cell and one code cell.</p>
+<div class="cell" data-cell="1">
+<div class="cell-input">
+<div class="cell-prompt">In [ ]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">hello<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span></code></pre>
+</div>
+</div>
+</main>

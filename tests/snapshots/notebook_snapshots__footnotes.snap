@@ -1,0 +1,715 @@
+---
+source: tests/notebook_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Notes across notebook cells"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "First"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "First note."
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1,
+                "cell": 3
+              }
+            }
+          ],
+          "label": "1"
+        },
+        {
+          "type": "text",
+          "text": ", shared"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Shared definition."
+                }
+              ],
+              "span": {
+                "start_line": 3,
+                "end_line": 3,
+                "cell": 3
+              }
+            }
+          ],
+          "label": "shared"
+        },
+        {
+          "type": "text",
+          "text": ", image"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "figure",
+              "kind": "image",
+              "caption": [
+                {
+                  "type": "text",
+                  "text": "missing"
+                }
+              ],
+              "body": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "missing"
+                        }
+                      ],
+                      "url": "images/note-missing.png",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 5,
+                    "end_line": 5,
+                    "cell": 3
+                  }
+                }
+              ],
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              },
+              "span": {
+                "start_line": 5,
+                "end_line": 5,
+                "cell": 3
+              }
+            }
+          ],
+          "label": "missing"
+        },
+        {
+          "type": "text",
+          "text": ", attachment"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "figure",
+              "kind": "image",
+              "caption": [
+                {
+                  "type": "text",
+                  "text": "own attachment"
+                }
+              ],
+              "body": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "image",
+                      "alt": [
+                        {
+                          "type": "text",
+                          "text": "own attachment"
+                        }
+                      ],
+                      "url": "asset:000000000001",
+                      "title": null,
+                      "attrs": {
+                        "id": null,
+                        "classes": [],
+                        "pairs": {}
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start_line": 7,
+                    "end_line": 7,
+                    "cell": 3
+                  }
+                }
+              ],
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              },
+              "span": {
+                "start_line": 7,
+                "end_line": 7,
+                "cell": 3
+              }
+            }
+          ],
+          "label": "attached"
+        },
+        {
+          "type": "text",
+          "text": ", and "
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "first inline"
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1,
+                "cell": 1
+              }
+            }
+          ],
+          "label": null
+        },
+        {
+          "type": "text",
+          "text": ". See @fig-later."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 1
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Again"
+        },
+        {
+          "type": "footnote_ref",
+          "label": "shared"
+        },
+        {
+          "type": "text",
+          "text": ", image again"
+        },
+        {
+          "type": "footnote_ref",
+          "label": "missing"
+        },
+        {
+          "type": "text",
+          "text": ", and "
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "second inline"
+                }
+              ],
+              "span": {
+                "start_line": 1,
+                "end_line": 1,
+                "cell": 2
+              }
+            }
+          ],
+          "label": null
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 2
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Case reference"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Case-insensitive note."
+                }
+              ],
+              "span": {
+                "start_line": 3,
+                "end_line": 3,
+                "cell": 5
+              }
+            }
+          ],
+          "label": "Note"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 4
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Case again"
+        },
+        {
+          "type": "footnote_ref",
+          "label": "Note"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 5
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Undefined[^undefined]."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "cell": 6
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Before open fence[^shared]."
+        }
+      ],
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7
+      }
+    },
+    {
+      "type": "code_block",
+      "lang": "python",
+      "text": "print(\"unchanged\")",
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 3,
+        "end_line": 4,
+        "cell": 7
+      }
+    },
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A reference in an open note[^shared]."
+            }
+          ],
+          "span": {
+            "start_line": 2,
+            "end_line": 2,
+            "cell": 8
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 8
+      }
+    },
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A reference before an open fence[^shared]."
+            }
+          ],
+          "span": {
+            "start_line": 2,
+            "end_line": 2,
+            "cell": 9
+          }
+        },
+        {
+          "type": "code_block",
+          "lang": "python",
+          "text": "print(\"still unchanged\")",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          },
+          "span": {
+            "start_line": 4,
+            "end_line": 5,
+            "cell": 9
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 5,
+        "cell": 9
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 10
+      }
+    },
+    {
+      "type": "thematic_break",
+      "span": {
+        "start_line": 4,
+        "end_line": 4,
+        "cell": 10
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Later reference"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Definition between thematic rules."
+                }
+              ],
+              "span": {
+                "start_line": 2,
+                "end_line": 2,
+                "cell": 10
+              }
+            }
+          ],
+          "label": "later"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 6,
+        "end_line": 6,
+        "cell": 10
+      }
+    },
+    {
+      "type": "cell",
+      "index": 11,
+      "id": "output-note",
+      "language": "python",
+      "source": "display(Markdown(\"output note\"))",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/markdown",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "Output reference"
+                    },
+                    {
+                      "type": "footnote",
+                      "blocks": [
+                        {
+                          "type": "paragraph",
+                          "inlines": [
+                            {
+                              "type": "text",
+                              "text": "Output-local note."
+                            }
+                          ],
+                          "span": {
+                            "start_line": 1,
+                            "end_line": 1,
+                            "cell": 11
+                          }
+                        }
+                      ],
+                      "label": "cell11-out0-1"
+                    },
+                    {
+                      "type": "text",
+                      "text": "."
+                    }
+                  ],
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 11
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/markdown"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 11
+      }
+    },
+    {
+      "type": "cell",
+      "index": 12,
+      "id": "later-figure",
+      "language": "python",
+      "source": "display(image)",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "image/png",
+              "blocks": [
+                {
+                  "type": "figure",
+                  "kind": "image",
+                  "caption": [
+                    {
+                      "type": "text",
+                      "text": "Later image"
+                    }
+                  ],
+                  "body": [
+                    {
+                      "type": "paragraph",
+                      "inlines": [
+                        {
+                          "type": "image",
+                          "alt": [
+                            {
+                              "type": "text",
+                              "text": "Later image"
+                            }
+                          ],
+                          "url": "asset:000000000001",
+                          "title": null,
+                          "attrs": {
+                            "id": null,
+                            "classes": [],
+                            "pairs": {}
+                          }
+                        }
+                      ],
+                      "span": {
+                        "start_line": 1,
+                        "end_line": 3,
+                        "cell": 12
+                      }
+                    }
+                  ],
+                  "attrs": {
+                    "id": "fig-later",
+                    "classes": [],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 3,
+                    "cell": 12
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "image/png",
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 3,
+        "cell": 12
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": true,
+    "notebook": true,
+    "citations": false,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "notebook",
+    "base_dir": "[path]"
+  },
+  "assets": [
+    {
+      "id": "000000000001",
+      "mime": "image/png",
+      "origin": "inline:70"
+    }
+  ]
+}

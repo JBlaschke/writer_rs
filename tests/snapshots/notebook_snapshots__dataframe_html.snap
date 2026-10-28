@@ -1,0 +1,244 @@
+---
+source: tests/notebook_snapshots.rs
+expression: html(&parsed)
+---
+<main data-writer-document>
+<h1 id="saved-pandas-tables">Saved pandas tables</h1>
+<div class="cell" data-cell="1">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="2">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col"></th>
+<th scope="col" colspan="3">measure</th>
+</tr>
+<tr>
+<th scope="col"></th>
+<th scope="col"></th>
+<th scope="col">value</th>
+<th scope="col">low</th>
+<th scope="col">high</th>
+</tr>
+<tr>
+<th scope="col">group</th>
+<th scope="col">sample</th>
+<th scope="col"></th>
+<th scope="col"></th>
+<th scope="col"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row" rowspan="2">A</th>
+<th scope="row">first</th>
+<td>1</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">second</th>
+<td>2</td>
+<td>1</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="3">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">x</th>
+<th scope="col">y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<th scope="row">...</th>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th scope="row">99</th>
+<td>99</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+<p>100 rows × 2 columns</p>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="4">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">first</th>
+<th scope="col">...</th>
+<th scope="col">last</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>1</td>
+<td>...</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="5">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">value</th>
+<th scope="col">date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">0</th>
+<td>NaN</td>
+<td>NaT</td>
+</tr>
+<tr>
+<th scope="row">1</th>
+<td>-1.5</td>
+<td>2026-10-27</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="6">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<figure class="figure kind-table">
+<figcaption><span class="caption-label">Table 1:</span> Styled values</figcaption>
+<table>
+<thead>
+<tr>
+<th scope="col"></th>
+<th scope="col">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">row</th>
+<td><strong>3</strong></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="7">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<style type="text/css">#T_bad td { color: red; }</style><table id="T_bad"><tbody><tr><td>b<c</td></tr></tbody></table>
+</div>
+</div>
+</div>
+<div class="cell" data-cell="8">
+<div class="cell-input">
+<div class="cell-prompt">In [1]:</div>
+<pre class="hl-code"><code class="language-python"><span class="line"><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">df</span></span></span></span></code></pre>
+</div>
+<div class="cell-outputs">
+<div class="output output-display" data-mime="text/html">
+<table>
+<thead>
+<tr>
+<th scope="col">name</th>
+<th scope="col">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>alpha</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>

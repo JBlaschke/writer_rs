@@ -1,0 +1,89 @@
+---
+source: tests/notebook_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": null,
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Minimal notebook"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "One markdown cell and one code cell."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "cell": 0
+      }
+    },
+    {
+      "type": "cell",
+      "index": 1,
+      "id": "unrun",
+      "language": "python",
+      "source": "print(\"hello\")",
+      "execution_count": null,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {},
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 1
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": true,
+    "notebook": true,
+    "citations": false,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "notebook",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}
