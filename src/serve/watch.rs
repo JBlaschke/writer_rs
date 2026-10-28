@@ -1039,7 +1039,8 @@ impl AccessHistory {
     }
 }
 
-fn accessed_files(
+/// Compiler-observed paths outside configured and system package roots.
+pub(crate) fn accessed_files(
     world: &WriterWorld, config: &Config, root: &Path,
 ) -> BTreeSet<PathBuf> {
     let roots = package_roots(config, root);
@@ -1073,7 +1074,8 @@ fn package_roots(config: &Config, root: &Path) -> Vec<PathBuf> {
     .collect()
 }
 
-fn failure_paths(failure: &BuildFailure) -> Vec<PathBuf> {
+/// Known failed-stage inputs, including diagnostic missing-asset paths.
+pub(crate) fn failure_paths(failure: &BuildFailure) -> Vec<PathBuf> {
     let mut paths = Vec::new();
     if let Error::MissingAsset { path, .. } = failure.error.as_ref() {
         paths.push(path.clone());

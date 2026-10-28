@@ -781,3 +781,43 @@ serve/browser integration follows in T23, actual pages in T24.
 Formatting, all-target/all-feature Clippy and default/feature rustdoc with
 warnings denied pass. Basic/mixed HTML remains 687.6/111.6 kB. Browser tests
 were executed, not skipped; native process/service access was used locally.
+
+## T23 serve CLI acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T25 plus T23.
+Cached-dependency runs use `/usr/bin/time -p`; CPU is user plus system time.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 9.98 s | 153.87 s | 113.48 s | 1,283 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 320 s | 383.61 s | 3071.46 s | 1,282 passed |
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. All 32 launcher/session units pass (13.31 s build,
+11.98 s tests), all 16 real CLI tests pass (11.97 s build, 7.47 s tests), and
+all nine real-server Chrome tests pass in 36.34 s with required Chrome
+156.0.8078.48. The browser QA measurements and checklist mapping are recorded
+in docs/dev/live-reload-qa.md; no browser acceptance was skipped. Basic/mixed
+HTML remains 687.6/111.6 kB.
+
+The CLI starts watching before build1, announces its actual bound URL, handles
+Ctrl-C before/during/after the first build and during binding, then rebuilds
+only affected views while keeping successful output. Tests cover config/theme/
+include repair, nested missing config ancestors, source/include/notebook
+positions, content-versioned images, equation-image registry routes, Host and
+port errors, quiet reporting and live warning/error state. The compiler World
+is retained/reset per session, discarded after caught panics and reacquired
+for independent stages. A focused regression keeps package filtering aligned
+with the World's retained config across disk config changes and discard.
+
+Browser checks verify pixel-level reading/source anchors, selective DOM/math/
+image updates, actual reload counts, merged/dismissible errors, persistent
+warnings, view shortcuts/storage, reconnect/backoff and stale-tab behavior.
+The first run's only failure was a test confusing a skipped event with retained
+client view status; the corrected complete run passes without a client change.
+
+Coordinator-approved ownership additions: private cli/serve/session.rs child,
+two crate-private watcher helpers, removal of the serve stub assertion and
+additive T22 QA evidence. Public IR/config/pipeline/clap/module lists and all
+dependencies remain unchanged. Actual pages and .typ end-to-end support retain
+their T24/T50/T52 boundaries; this session uses the explicit empty PagesBuilder.

@@ -1,0 +1,5 @@
+[html]
+theme = 'theme'
+
+[pdf]
+system_fonts = false

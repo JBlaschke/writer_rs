@@ -200,11 +200,9 @@ fn typst_target_on_typ_input_exits_2() {
 
 #[test]
 fn command_stubs_exit_2() {
-    for (args, task) in [
-        (vec!["serve", "examples/basic/document.md"], "T23"),
-        (vec!["init"], "T72"),
-        (vec!["eject", "theme", "theme"], "T72"),
-    ] {
+    for (args, task) in
+        [(vec!["init"], "T72"), (vec!["eject", "theme", "theme"], "T72")]
+    {
         writer()
             .args(args)
             .assert()
