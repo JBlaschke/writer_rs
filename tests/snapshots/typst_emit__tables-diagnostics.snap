@@ -1,0 +1,6 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning table-caption-orphan [fixtures]/tables.md:18 `Table:` caption has no adjacent table
+warning table-caption-pandoc-colon [fixtures]/tables.md:22 use a separate `Table:` paragraph for a table caption

@@ -1,0 +1,7 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning unclosed-directive [fixtures]/directives.md:43 directive has no closing `:::` fence
+warning invalid-directive [fixtures]/directives.md:43 a directive needs a name; its children are kept
+warning unclosed-directive [fixtures]/directives.md:45 directive has no closing `:::` fence

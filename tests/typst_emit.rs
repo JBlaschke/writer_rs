@@ -1,9 +1,10 @@
 //! Typst source contracts on hand-built IR, including real package compilation.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use regex::Regex;
 use serde_json::{Value, json};
 use typst::foundations::Datetime;
 use typst::layout::{Frame, FrameItem};
@@ -11,8 +12,9 @@ use typst::model::Document as TypstDocument;
 use typst_layout::PagedDocument;
 use writer::assets::registry::AssetRegistry;
 use writer::config::{Config, HeadingNumbering};
-use writer::error::{Level, Result};
+use writer::error::{Diagnostics, Level, Result};
 use writer::ir::*;
+use writer::resolve::{ResolveOptions, resolve};
 use writer::typst::compile::{compile_document, oracle};
 use writer::typst::emit::{
     AssetPaths, EmitOptions, Emitted, IncludeRun, emit, emit_split,
@@ -1391,4 +1393,245 @@ fn metadata_and_bibliography_arguments_use_the_frozen_order_and_shapes() {
     doc.resolved.bibliography = None;
     let empty = emit(&doc, &AssetRegistry::new(), &opts).unwrap();
     assert!(!empty.text.contains("#bibliography("));
+}
+
+// T32 addition to the existing tests/typst_emit.rs, whose T30 tests remain.
+
+fn corpus_fixture_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/md")
+}
+
+fn corpus_fixture_paths() -> Vec<PathBuf> {
+    let mut paths: Vec<_> = fs::read_dir(corpus_fixture_dir())
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "md"))
+        .collect();
+    paths.sort();
+    assert!(paths.len() >= 17, "keep the complete Markdown fixture corpus");
+    paths
+}
+
+fn corpus_stable_paths(text: &str) -> String {
+    let dir = corpus_fixture_dir();
+    let parent = dir.parent().unwrap();
+    let roots = [
+        (fs::canonicalize(&dir).unwrap(), "[fixtures]"),
+        (dir.clone(), "[fixtures]"),
+        (fs::canonicalize(parent).unwrap(), "[fixture-root]"),
+        (parent.to_path_buf(), "[fixture-root]"),
+    ]
+    .map(|(path, replacement)| {
+        (path.to_string_lossy().into_owned(), replacement)
+    });
+    corpus_stable_path_roots(text, &roots)
+}
+
+fn corpus_stable_path_roots(text: &str, roots: &[(String, &str)]) -> String {
+    let mut spellings = Vec::new();
+    for (path, replacement) in roots {
+        if path.contains('\\') {
+            spellings.push((path.replace('\\', "\\\\"), *replacement, "\\\\"));
+            spellings.push((path.clone(), *replacement, "\\"));
+        }
+        spellings.push((path.replace('\\', "/"), *replacement, "/"));
+    }
+    spellings.sort_by_key(|(path, _, _)| std::cmp::Reverse(path.len()));
+    let mut stable = text.to_string();
+    for (root, replacement, separator) in spellings {
+        let mut remaining = stable.as_str();
+        let mut replaced = String::with_capacity(stable.len());
+        while let Some((before, after)) = remaining.split_once(root.as_str()) {
+            replaced.push_str(before);
+            replaced.push_str(replacement);
+            // Normalize only the path after this known root. A blanket slash
+            // rewrite would corrupt Typst escapes and verbatim code.
+            let end = after
+                .find(|ch: char| {
+                    ch.is_whitespace() || matches!(ch, '"' | '\'' | '`' | ':')
+                })
+                .unwrap_or(after.len());
+            let (suffix, rest) = after.split_at(end);
+            replaced.push_str(&suffix.replace(separator, "/"));
+            remaining = rest;
+        }
+        replaced.push_str(remaining);
+        stable = replaced;
+    }
+    stable
+}
+
+#[test]
+fn corpus_paths_normalize_windows_suffixes_without_rewriting_typst_escapes() {
+    let ordinary = r"D:\a\writer\tests\fixtures\md";
+    let extended = format!(r"\\?\{ordinary}");
+    let parent = r"D:\a\writer\tests\fixtures";
+    let extended_parent = format!(r"\\?\{parent}");
+    let roots = [
+        (ordinary.into(), "[fixtures]"),
+        (extended.clone(), "[fixtures]"),
+        (parent.into(), "[fixture-root]"),
+        (extended_parent.clone(), "[fixture-root]"),
+    ];
+    let input = format!(
+        "warning code {extended}\\code.md:43 message\nwarning include {extended_parent}\\ipynb\\include\\chain.ipynb:1 cell 1 message\n#raw(\"{}\\\\include\\\\part.typ\\n\")\n$ \\alpha + \\beta $\n#raw(\"unrelated\\\\path\\n\")\n{}/figures.md:30\n",
+        extended.replace('\\', "\\\\"),
+        ordinary.replace('\\', "/")
+    );
+    assert_eq!(
+        corpus_stable_path_roots(&input, &roots),
+        "warning code [fixtures]/code.md:43 message\nwarning include [fixture-root]/ipynb/include/chain.ipynb:1 cell 1 message\n#raw(\"[fixtures]/include/part.typ\\n\")\n$ \\alpha + \\beta $\n#raw(\"unrelated\\\\path\\n\")\n[fixtures]/figures.md:30\n"
+    );
+}
+
+fn corpus_stable_asset_ids(
+    text: &str, labels: &mut BTreeMap<String, String>,
+) -> String {
+    Regex::new(r"(/__assets/|asset:)([0-9a-f]{12})")
+        .unwrap()
+        .replace_all(text, |captures: &regex::Captures<'_>| {
+            let next = format!("{:012x}", labels.len() + 1);
+            let label = labels.entry(captures[2].to_string()).or_insert(next);
+            format!("{}{label}", &captures[1])
+        })
+        .into_owned()
+}
+
+fn corpus_diagnostics(diagnostics: &Diagnostics, source: &Path) -> String {
+    diagnostics
+        .iter()
+        .map(|finding| {
+            let path = finding
+                .span
+                .as_ref()
+                .and_then(|span| span.file.as_deref())
+                .or(finding.path.as_deref())
+                .unwrap_or(source);
+            let line = finding
+                .span
+                .as_ref()
+                .map(|span| span.start_line.to_string())
+                .unwrap_or_else(|| "?".into());
+            let cell = finding
+                .span
+                .as_ref()
+                .and_then(|span| span.cell)
+                .map(|cell| format!(" cell {cell}"))
+                .unwrap_or_default();
+            format!(
+                "{} {} {}:{line}{cell} {}",
+                finding.level,
+                finding.code,
+                path.display(),
+                finding.message,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn corpus_options(config: &Config) -> EmitOptions<'_> {
+    let filename = |path: &Path| {
+        path.file_name().and_then(|name| name.to_str()).unwrap().to_string()
+    };
+    let bibliography = config
+        .references
+        .bibliography
+        .iter()
+        .enumerate()
+        .map(|(index, path)| {
+            format!("/__writer/bib/{index}/{}", filename(path))
+        })
+        .collect();
+    let style = if Path::new(&config.references.style)
+        .extension()
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("csl"))
+    {
+        format!(
+            "/__writer/csl/{}",
+            filename(Path::new(&config.references.style))
+        )
+    } else {
+        config.references.style.clone()
+    };
+    let template = (!config.pdf.template.as_os_str().is_empty()).then(|| {
+        format!("/__writer/template/{}", filename(&config.pdf.template))
+    });
+    EmitOptions {
+        config,
+        assets: AssetPaths::Virtual,
+        template,
+        bibliography,
+        style,
+        footnote_prefix: String::new(),
+        fragment: false,
+    }
+}
+
+#[test]
+fn md_fixture_corpus() {
+    for path in corpus_fixture_paths() {
+        let name = path.file_stem().unwrap().to_string_lossy().into_owned();
+        let source = SourceInfo {
+            path: path.clone(),
+            kind: SourceKind::Markdown,
+            base_dir: corpus_fixture_dir(),
+        };
+        let text = fs::read_to_string(&path).unwrap();
+        let mut config = Config::default();
+        let mut parsed = match writer::markdown::parse(&source, &text, &config)
+        {
+            Ok(parsed) => parsed,
+            Err(error) => {
+                insta::assert_snapshot!(
+                    name,
+                    corpus_stable_paths(&error.to_string())
+                );
+                continue;
+            }
+        };
+        config.merge_front_matter(&parsed.document.meta).unwrap();
+        parsed.diagnostics.extend(resolve(
+            &mut parsed.document,
+            &ResolveOptions { config: &config, library: None, lenient: true },
+        ));
+        assert!(
+            parsed.document.invariant_violations().is_empty(),
+            "{name}: {:?}",
+            parsed.document.invariant_violations()
+        );
+        let options = corpus_options(&config);
+        let emitted = emit(&parsed.document, &parsed.assets, &options)
+            .unwrap_or_else(|error| panic!("{name}: emit: {error}"));
+        let repeated = emit(&parsed.document, &parsed.assets, &options)
+            .unwrap_or_else(|error| panic!("{name}: repeated emit: {error}"));
+        assert_eq!(emitted.text, repeated.text, "{name}: source determinism");
+        assert_eq!(emitted.map, repeated.map, "{name}: map determinism");
+        assert_eq!(
+            emitted.assets, repeated.assets,
+            "{name}: asset determinism"
+        );
+        assert_eq!(
+            emitted.diagnostics, repeated.diagnostics,
+            "{name}: findings"
+        );
+        assert_eq!(emitted.map.len(), emitted.text.lines().count(), "{name}");
+        assert!(emitted.text.ends_with('\n'), "{name}: LF-terminated source");
+        assert!(!emitted.text.contains('\r'), "{name}: no CR in source");
+        parsed.diagnostics.extend(emitted.diagnostics);
+
+        let mut labels = BTreeMap::new();
+        let stable_source = corpus_stable_paths(&corpus_stable_asset_ids(
+            &emitted.text, &mut labels,
+        ));
+        let stable_diagnostics = corpus_stable_paths(&corpus_stable_asset_ids(
+            &corpus_diagnostics(&parsed.diagnostics, &source.path),
+            &mut labels,
+        ));
+        insta::assert_snapshot!(name.clone(), stable_source);
+        insta::assert_snapshot!(
+            format!("{name}-diagnostics"),
+            stable_diagnostics
+        );
+    }
 }

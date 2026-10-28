@@ -855,3 +855,41 @@ intermediate directories appearing during watch installation. Twenty-three
 watcher units and 53 CLI/backend/loop integration tests, formatting and Clippy
 pass before push; the same repair is included in these final full-suite runs.
 The three-OS CI reruns independently.
+
+
+## T32 embedded PDF pipeline acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T50 plus the T23 missing-theme
+CI repair and T32. Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 23.69 s | 225.93 s | 148.28 s | 1,387 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 379 s | 443.70 s | 3591.66 s | 1,386 passed |
+
+Formatting, all-target/all-feature Clippy and default/feature rustdoc with
+warnings denied pass. All 80 focused CLI/PDF/oracle/emitter tests and 10 World
+units pass. Thirty-five new Markdown source/diagnostic snapshots are reviewed;
+portable root/suffix redaction preserves exact Typst escapes and asset identity.
+The oracle covers the complete required corpus plus three numbering policies,
+with the documented unique-label variant of the duplicate-label fixture.
+
+Basic/mixed builds produce 3/2-page PDFs at 50.8/91.5 kB, with unchanged HTML at
+687.6/111.6 kB. Fixed-time output is byte-identical across fresh/retained Worlds.
+Coverage includes virtual file/byte assets, same-basename bibliographies, CSL
+and named styles, relative template imports and mount removal, source/include/
+notebook diagnostics, package hints, independent target failure, output/input
+refusals, no writes on compile failure and source-only dump. A fake XMP packet
+inside an actual PDF title cannot override its page count. Normal/quiet mixed
+CLI failures print one mapped compiler error while keeping successful HTML.
+
+The initial release run found one inherited unit still expecting the T32 stub;
+it now verifies the generated dotted-stem PDF path. Both final full suites pass.
+The remaining missing-theme CI test receives the same post-watch-update SSE
+barrier as config recovery (PR24 repair `fe896de`, propagated to T50/T32).
+
+Coordinator-approved private seams retain all failed target diagnostics, expose
+the World's full session timestamp and remove managed resource mount subtrees.
+The target owns no reset/eviction. Native .typ dispatch, export, full citations
+and actual pages retain their T52/T34/T70/T24 boundaries; dependencies and public
+API/config/IR schemas are unchanged.

@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning invalid-dimension [fixtures]/figures.md:30 invalid image width `huge`; use a number with %, px, pt, cm, mm, in or em

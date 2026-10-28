@@ -532,7 +532,7 @@ pub fn web_page(
     })
 }
 
-/// Loads generated Typst into the shared world; T32 replaces the PDF stub.
+/// Loads generated Typst into the shared world without resetting the session.
 pub fn load_typst_main(
     prepared: &Prepared, opts: &BuildOptions, world: &mut WriterWorld,
 ) -> std::result::Result<(), BuildFailure> {
@@ -610,10 +610,16 @@ pub(crate) fn build_targets_with_count(
     for target in &unique {
         let out = output_path(&prepared, opts, *target, requested_count);
         let result = build_target(&prepared, opts, *target, &out, world);
-        let written = result.map(|(written, found)| {
-            diagnostics.extend(found);
-            written
-        });
+        let written = match result {
+            Ok((written, found)) => {
+                diagnostics.extend(found);
+                Ok(written)
+            }
+            Err(failure) => {
+                diagnostics.extend(failure.diagnostics);
+                Err(*failure.error)
+            }
+        };
         results.push(TargetResult { target: *target, written });
     }
     let diagnostics =
@@ -636,13 +642,13 @@ fn failed_report(
 fn build_target(
     prepared: &Prepared, opts: &BuildOptions, target: Target, out: &Path,
     world: &mut WriterWorld,
-) -> Result<(Vec<PathBuf>, Diagnostics)> {
+) -> std::result::Result<(Vec<PathBuf>, Diagnostics), BuildFailure> {
     let file_output = target != Target::Html || prepared.config.html.standalone;
     if file_output && names_directory(out) {
         return Err(Error::Config(format!(
             "output {} names a directory; give an output file or use HTML site mode",
             out.display(),
-        )));
+        )).into());
     }
     let main = if target == Target::Html {
         html::document_path(out, prepared.config.html.standalone)
@@ -653,12 +659,13 @@ fn build_target(
         return Err(Error::Io(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             clash,
-        )));
+        ))
+        .into());
     }
     if matches!(target, Target::Html | Target::Docx | Target::Latex)
         && let Some(diagnostic) = subset_error(&prepared.diagnostics)
     {
-        return Err(subset_parse(diagnostic, &opts.input));
+        return Err(subset_parse(diagnostic, &opts.input).into());
     }
     match target {
         Target::Html => html::build(prepared, opts, out, world),
@@ -668,7 +675,7 @@ fn build_target(
         Target::Pdf if prepared.config.pdf.engine == PdfEngine::Chrome => {
             crate::pdf::chrome::build(prepared, opts, out, world)
         }
-        Target::Pdf => pdf::build(prepared, opts, out, world),
+        Target::Pdf => return pdf::build_detailed(prepared, opts, out, world),
         Target::Docx => {
             let diagnostics = docx::build(
                 &prepared.document, &prepared.assets, &prepared.config,
@@ -679,7 +686,7 @@ fn build_target(
         Target::Latex => latex::build(prepared, opts, out, world),
         Target::Typst if prepared.document.source.kind == SourceKind::Typst => Err(Error::Other("cannot export a .typ input to typst; use writer build part.md --to typst".into())),
         Target::Typst => typst::build(prepared, opts, out, world),
-    }
+    }.map_err(Into::into)
 }
 
 fn names_directory(path: &Path) -> bool {
@@ -1534,9 +1541,10 @@ mod tests {
         );
         assert_eq!(report.targets.len(), 2);
         assert!(report.targets[0].written.is_ok());
-        assert!(is_not_implemented(
-            report.targets[1].written.as_ref().unwrap_err()
-        ));
+        assert_eq!(
+            report.targets[1].written.as_ref().unwrap(),
+            &[absolute(dir.path()).unwrap().join("dist/my.paper.pdf")]
+        );
     }
 
     #[test]

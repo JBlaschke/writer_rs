@@ -156,7 +156,7 @@ fn output_over_input_is_refused() {
 #[test]
 fn stub_targets_exit_2() {
     let dir = tempfile::tempdir().unwrap();
-    for (target, task) in [("pdf", "T32"), ("latex", "T61"), ("typst", "T34")] {
+    for (target, task) in [("latex", "T61"), ("typst", "T34")] {
         writer()
             .args(["build", "examples/basic/document.md", "--to", target, "-o"])
             .arg(dir.path().join(format!("out.{target}")))
@@ -180,10 +180,11 @@ fn stub_targets_exit_2() {
         .args(["build", "examples/basic/document.md", "--to", "html,pdf", "-o"])
         .arg(&mixed)
         .assert()
-        .code(2)
-        .stderr(contains("(T32)"));
+        .success();
     assert!(mixed.join("document.html").is_file());
-    assert!(!mixed.join("document.pdf").exists());
+    let pdf = std::fs::read(mixed.join("document.pdf")).unwrap();
+    assert!(pdf.starts_with(b"%PDF-"));
+    assert!(writer::pipeline::pdf::page_count(&pdf).is_some_and(|n| n > 0));
 }
 
 #[test]

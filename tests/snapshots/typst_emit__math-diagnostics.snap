@@ -1,0 +1,6 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning equation-label-misplaced [fixtures]/math.md:27 place the equation and its label in a paragraph of their own
+warning math-tag-ignored [fixtures]/math.md:19 \tag/\label inside math are ignored for pdf; label the equation with {#eq-x}

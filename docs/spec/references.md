@@ -748,3 +748,11 @@ typst is the oracle there, and each variant asserts a number that differs from t
 > When a labelled plain table contains nested figures, T50 carries the same
 > Other-kind label on a containing Div instead of introducing forbidden figure
 > nesting. The table content and all other labels are retained.
+
+
+> **Oracle fixture variant (coordinator, 2026-10-28):** references.md deliberately
+> repeats sec-duplicate for recovery tests. The T32 unique-label oracle variant
+> asserts both occurrences, removes only the second label before resolve, and
+> preserves all content/citations and the original fixture. Ordinary corpus
+> snapshots retain the duplicate-label recovery case. The oracle's full metadata
+> count and all kind/display-number assertions remain unchanged.
