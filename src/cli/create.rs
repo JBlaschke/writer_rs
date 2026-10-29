@@ -1,7 +1,7 @@
 //! Private no-clobber file/tree creation for scaffold and resource commands.
 
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{self, Write};
 use std::path::{Component, Path, PathBuf};
 
 use super::{UsageError, display_path};
@@ -64,7 +64,18 @@ pub(super) fn file(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
 pub(super) fn tree(
     dir: &Path, files: &[(PathBuf, Vec<u8>)], policy: Directory,
 ) -> anyhow::Result<Vec<PathBuf>> {
-    let (root, exists) = directory_target(dir)?;
+    // Tree arguments are usage errors; file parent failures retain the
+    // I/O classification of existing resource commands.
+    let (root, exists) = directory_target(dir).map_err(|error| {
+        if error
+            .downcast_ref::<io::Error>()
+            .is_some_and(|error| error.kind() == io::ErrorKind::NotADirectory)
+        {
+            anyhow::Error::from(UsageError(error.to_string()))
+        } else {
+            error
+        }
+    })?;
     if policy == Directory::New && exists {
         return Err(existing_path(dir));
     }
@@ -142,10 +153,13 @@ fn directory_target(dir: &Path) -> anyhow::Result<(PathBuf, bool)> {
                     })?;
                 }
                 if !fs::metadata(&resolved)?.is_dir() {
-                    return Err(UsageError(format!(
-                        "destination {} is not a directory",
-                        display_path(dir).display(),
-                    ))
+                    return Err(io::Error::new(
+                        io::ErrorKind::NotADirectory,
+                        format!(
+                            "destination {} is not a directory",
+                            display_path(dir).display(),
+                        ),
+                    )
                     .into());
                 }
             }
@@ -330,16 +344,36 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let blocked = root.path().join("blocked");
         fs::write(&blocked, b"user file").unwrap();
-        for destination in [
-            root.path().join("new/../blocked/result.tex"),
-            root.path().join("blocked/new/result.tex"),
+        for (destination, expected) in [
+            (root.path().join("new/../blocked/result.tex"), 2),
+            (root.path().join("blocked/result.tex"), 1),
+            (root.path().join("blocked/new/result.tex"), 1),
         ] {
             let error = file(&destination, b"bytes").unwrap_err();
+            assert_eq!(super::super::exit_code_for(&error), expected);
             assert!(!root.path().join("new").exists());
             assert_eq!(fs::read(&blocked).unwrap(), b"user file");
             assert!(error.to_string().contains("directory"), "{error}");
         }
         assert_eq!(fs::read_dir(root.path()).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn tree_parent_type_failures_are_usage_errors_without_writes() {
+        let root = tempfile::tempdir().unwrap();
+        let blocked = root.path().join("blocked");
+        fs::write(&blocked, b"user file").unwrap();
+        for destination in [blocked.clone(), blocked.join("new")] {
+            let error = tree(
+                &destination,
+                &[("file".into(), b"bytes".to_vec())],
+                Directory::New,
+            )
+            .unwrap_err();
+            assert_eq!(super::super::exit_code_for(&error), 2);
+            assert_eq!(fs::read(&blocked).unwrap(), b"user file");
+            assert_eq!(fs::read_dir(root.path()).unwrap().count(), 1);
+        }
     }
 
     #[test]

@@ -42,7 +42,14 @@ fn missing_parent_dotdot_cannot_overwrite_either_existing_package_version() {
         let destination = directory.path().join("new/../packages");
         let error = package::eject(&destination).unwrap_err();
         assert!(matches!(error, Error::Config(_)), "{error:?}");
-        assert!(error.to_string().contains("missing directory"), "{error}");
+        // Windows sees the existing version through `new/..`; POSIX
+        // instead rejects traversal through the missing directory.
+        let refusal = if cfg!(windows) {
+            "package version destination already exists"
+        } else {
+            "missing directory"
+        };
+        assert!(error.to_string().contains(refusal), "{error}");
         assert_eq!(inventory(directory.path()), before);
         assert!(!directory.path().join("new").exists());
         assert_eq!(
