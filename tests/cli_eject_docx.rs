@@ -1,5 +1,6 @@
 //! The built-in reference is a deterministic file with usable TOML guidance.
 
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, Stdio};
 
@@ -242,8 +243,15 @@ fn two_concurrent_ejections_have_exactly_one_winner() {
 }
 
 #[test]
-fn other_eject_resources_retain_the_t72_stub() {
+fn other_eject_resources_leave_the_docx_reference_unchanged() {
     let root = tempfile::tempdir().unwrap();
+    let reference = root.path().join("reference.docx");
+    writer(root.path())
+        .args(["eject", "docx-reference"])
+        .arg(&reference)
+        .assert()
+        .success();
+    let original = fs::read(&reference).unwrap();
     for resource in
         ["theme", "typst-template", "typst-package", "latex-template"]
     {
@@ -254,9 +262,12 @@ fn other_eject_resources_retain_the_t72_stub() {
             .arg(&destination)
             .output()
             .unwrap();
-        assert_eq!(output.status.code(), Some(2));
-        assert!(output.stdout.is_empty());
-        assert!(String::from_utf8(output.stderr).unwrap().contains("T72"));
-        assert!(!destination.exists());
+        assert!(output.status.success(), "{:?}", output.stderr);
+        let _: toml::Table =
+            toml::from_str(std::str::from_utf8(&output.stdout).unwrap())
+                .unwrap();
+        assert!(destination.exists());
+        assert_eq!(fs::read(&reference).unwrap(), original);
+        assert_reference(&reference);
     }
 }

@@ -200,16 +200,14 @@ fn typst_target_on_typ_input_exits_2() {
 }
 
 #[test]
-fn command_stubs_exit_2() {
-    for (args, task) in
-        [(vec!["init"], "T72"), (vec!["eject", "theme", "theme"], "T72")]
-    {
-        writer()
-            .args(args)
-            .assert()
-            .code(2)
-            .stderr(contains(format!("not implemented yet ({task})")));
-    }
+fn init_and_theme_ejection_are_available() {
+    let directory = tempfile::tempdir().unwrap();
+    let project = directory.path().join("report");
+    writer().arg("init").arg(&project).assert().success();
+    assert!(project.join("document.md").is_file());
+    let theme = directory.path().join("theme");
+    writer().args(["eject", "theme"]).arg(&theme).assert().success();
+    assert!(theme.join("theme.toml").is_file());
 }
 
 #[test]

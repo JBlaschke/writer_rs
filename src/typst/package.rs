@@ -4,7 +4,7 @@
 use std::any::Any;
 use std::fs;
 use std::io::{self, Read};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use typst::diag::{FileError, FileResult, PackageError};
 use typst::foundations::Bytes;
@@ -110,7 +110,17 @@ fn preflight_destination(destination: &Path) -> Result<()> {
                 )
                 .into());
             }
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                if matches!(
+                    parent.components().next_back(),
+                    Some(Component::ParentDir)
+                ) {
+                    return Err(Error::Config(format!(
+                        "package destination uses `..` after a missing directory: {}",
+                        parent.display(),
+                    )));
+                }
+            }
             Err(error) => return Err(error.into()),
         }
     }

@@ -66,7 +66,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | done |
 | T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | done |
 | T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | done |
-| T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | todo |
+| T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | done |
 | T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | todo |
 | T74 | User documentation | M7 | M | T53, T61, T71, T72, T73 | todo |
 | T75 | Release builds and site | M7 | S | T16 | todo |
@@ -569,3 +569,16 @@ Manual checks performed: …
   exactly eight raw infos and one HTML page-reference warning. Main is fully
   green, #34/#35 are green, and #36–#38 have no failures in the fresh CI audit.
   T72 scaffold/eject and its reviewed preflight corrections are staged next.
+
+
+- 2026-10-29: T71 published as [PR #39](https://github.com/JBlaschke/writer_rs/pull/39)
+  (`d56ff85`). T72 is validated on `codex/scaffold-eject`: four usable scaffold
+  variants, real citations/default/mixed builds, physical Typst export compiled
+  to PDF, exact resource ejection and preflighted no-clobber paths. All 1,933
+  distinct debug cases pass across the complete run and an unchanged watcher
+  rerun; all 1,932 release tests pass in one run, including every watcher test
+  (three intentional ignores per mode). Formatting and denied-warning
+  Clippy/rustdoc pass. The single initial cross-thread watcher timeout remains
+  causally unconfirmed; no test/deadline was weakened. Main and #34–#37 are
+  green, #38/#39 have pending checks without failures. T73 diagnostics is next;
+  T74 guide and T75 release/site drafts remain staged independently.

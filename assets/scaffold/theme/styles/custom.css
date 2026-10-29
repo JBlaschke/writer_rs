@@ -1,0 +1,4 @@
+/* Parent theme styles load first. Add the report's own styles here. */
+:root {
+    --w-measure: 46rem;
+}

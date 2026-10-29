@@ -1369,3 +1369,40 @@ page-reference warning. A parsed JSON subsequence audit preserves every old
 finding and its order, path, cell, line and severity. No source fixture changes,
 new snapshot exclusions, global tuple dedup or speculative renderer fallback
 were introduced. T70's bibliography resource policy remains intact.
+
+
+## T72 scaffold/eject acceptance (2026-10-29)
+
+Measured from T71 `d56ff85` plus the T72 working tree on macOS arm64,
+Rust 1.99.1, cached dependencies and incremental targets. Commands use
+`/usr/bin/time -p`; these are suite timings, not cold-build benchmarks.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 0.46 s | 516.99 s | 102.03 s | 1,932 passed; one existing watcher timeout; 3 ignored |
+| `cargo test --locked --offline --test watch -- --nocapture` | 0.65 s | 51.51 s | 0.42 s | all 20 unchanged watcher tests passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 13m 56s | 965.01 s | 7,320.56 s | 1,932 passed, 3 ignored |
+
+All 1,933 distinct debug cases pass across the complete run and the unchanged
+watcher-suite rerun. No repeated case is counted twice. The initial timeout
+was the outer cross-thread completion channel, which also includes synchronous
+macOS backend teardown; its exact cause is unconfirmed. No source, test,
+assertion or original deadline changed for the rerun. This records a full run
+plus focused rerun, rather than a single clean complete debug invocation.
+
+Configured formatting, all-target/all-feature denied-warning Clippy and
+all-feature denied-warning rustdoc pass. Focused gates include 81 CLI units,
+seven scaffold controls, nine resource-ejection cases, eleven original DOCX
+cases, eighteen original package cases, three new public package preflight
+cases and fifteen CLI build cases. The one obsolete T72 stub assertion now
+requires successful resource ejection with unchanged DOCX reference bytes.
+
+All four real scaffolds parse/check/dump, resolve configured citations and
+build their default and supported mixed targets: five for Markdown, four for
+native Typst. Both Markdown variants export a physical resource tree whose
+Typst main then builds to PDF. Ejected themes/templates and the written local
+package modules are actually used; byte and collision inventories remain exact.
+The complete release suite passes in one run, including all 20 watcher tests.
+The existing debug-only adversarial frontend case explains the one-test mode
+difference. Final configured formatting and whitespace checks pass; source
+was unchanged after the denied-warning Clippy/rustdoc gates.
