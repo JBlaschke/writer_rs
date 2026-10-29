@@ -67,7 +67,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | done |
 | T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | done |
 | T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | done |
-| T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | todo |
+| T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | done |
 | T74 | User documentation | M7 | M | T53, T61, T71, T72, T73 | todo |
 | T75 | Release builds and site | M7 | S | T16 | todo |
 | T76 | *Stretch:* code and CSV includes | M7 | S | T1B | todo |
@@ -582,3 +582,18 @@ Manual checks performed: …
   causally unconfirmed; no test/deadline was weakened. Main and #34–#37 are
   green, #38/#39 have pending checks without failures. T73 diagnostics is next;
   T74 guide and T75 release/site drafts remain staged independently.
+
+
+- 2026-10-29: T72 published as [PR #40](https://github.com/JBlaschke/writer_rs/pull/40)
+  (`772dc5e`), then repaired for Windows in `6eaa3c8`. Single-file parent errors
+  retain existing DOCX I/O exit 1; invalid tree destinations stay usage exit 2.
+  Package assertions retain each platform's actual safe refusal and all
+  no-write inventories. After repair, 88 CLI units and 53 public cases pass in
+  both modes, plus final formatting and denied-warning Clippy/rustdoc.
+- T73 diagnostics is validated on `codex/diagnostics`: source excerpts and
+  included-file precedence, compiler hints once, exact notebook/package origin,
+  and unchanged diagnostic/overlay schemas. Baseline complete suites pass
+  1,944 debug / 1,943 release cases (three intentional ignores), followed by
+  the focused T72 parent-repair integration above. Both actual required-Chrome
+  overlay/repair checks pass. T74 guide and T75 release/site installations are
+  next; their independently reviewed drafts are ready.
