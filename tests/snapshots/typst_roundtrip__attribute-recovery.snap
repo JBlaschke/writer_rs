@@ -1,0 +1,216 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "meta": {
+    "title": "Recoverable attribute syntax",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Single quotes"
+        }
+      ],
+      "attrs": {
+        "id": "sec-recovery",
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Single-quoted width"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Single-quoted width"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "50%"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1"
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A bare path"
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "code",
+          "text": "A bare pipe",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A bare key"
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": "{bare}"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "code",
+          "text": "Comma-separated classes",
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Consecutive blocks"
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": "{k='v'}"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "{this is not an attribute block}"
+        }
+      ]
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "resolved": {
+    "labels": {
+      "sec-recovery": {
+        "kind": "heading",
+        "number": null,
+        "supplement": "Section",
+        "text": "Single quotes",
+        "span": null
+      }
+    },
+    "toc": [
+      {
+        "level": 1,
+        "number": null,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Single quotes"
+          }
+        ],
+        "anchor": "sec-recovery"
+      }
+    ],
+    "bibliography": null,
+    "footnotes": 0
+  }
+}

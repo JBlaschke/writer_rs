@@ -1,6 +1,7 @@
 //! Embedded Typst World, virtual files, and fonts (typst-dialect.md §6).
 //! Owner: T03. Stub created by T00.
 
+use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -12,7 +13,7 @@ use typst::syntax::{FileId, RootedPath, Source, VirtualPath, VirtualRoot};
 use typst::text::{Font, FontBook};
 use typst::utils::LazyHash;
 use typst::{Feature, Library, LibraryExt, World};
-use typst_kit::fonts::FontStore;
+use typst_kit::fonts::{FontPath, FontStore};
 
 use crate::assets::registry::{AssetData, AssetRegistry};
 use crate::config::{Config, Toc};
@@ -80,6 +81,7 @@ pub struct Synthesized {
 pub struct WriterWorld {
     root: PathBuf,
     main: FileId,
+    native_main: Option<FileId>,
     html_mode: bool,
     paged_library: LazyHash<Library>,
     html_library: LazyHash<Library>,
@@ -130,7 +132,9 @@ impl WriterWorld {
                 root.display()
             )));
         }
+        let native_file = matches!(&opts.main, MainFile::Path(_));
         let main = main_id(&root, opts.main)?;
+        let native_main = native_file.then_some(main);
         let (paged_library, html_library) = libraries(&opts.inputs);
         let mut fonts = FontStore::new();
         fonts.extend(typst_kit::fonts::embedded());
@@ -143,6 +147,7 @@ impl WriterWorld {
         let mut world = Self {
             root,
             main,
+            native_main,
             html_mode: false,
             paged_library,
             html_library,
@@ -335,7 +340,9 @@ impl WriterWorld {
         if let Some(source) = &slot.source_result {
             return source.clone();
         }
-        let result = if is_include(id) {
+        // A caller-selected native main stays Typst even with a .md/.ipynb
+        // suffix, including while equation helpers use a scratch main.
+        let result = if is_include(id) && Some(id) != self.native_main {
             self.synthesize(id, slot)
         } else {
             self.bytes_in_slot(id, slot).and_then(|bytes| {
@@ -500,6 +507,11 @@ impl World for WriterWorld {
     }
 
     fn font(&self, index: usize) -> Option<Font> {
+        if let Some(source) = self.fonts.source(index)
+            && let Some(path) = (source as &dyn Any).downcast_ref::<FontPath>()
+        {
+            locked(&self.accessed).insert(canonical_if_possible(&path.path));
+        }
         self.fonts.font(index)
     }
 
@@ -713,6 +725,55 @@ mod tests {
     }
 
     #[test]
+    fn only_selected_disk_fonts_enter_the_consumed_file_set() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut world = world(dir.path());
+        let embedded = world.font(0).unwrap();
+        assert!(world.accessed().is_empty());
+        let selected = dir.path().join("selected.otf");
+        let unselected = dir.path().join("unselected.otf");
+        fs::write(&selected, embedded.data()).unwrap();
+        fs::write(&unselected, embedded.data()).unwrap();
+        let index = world
+            .book()
+            .families()
+            .map(|(_, fonts)| fonts.count())
+            .sum::<usize>();
+        for path in [&selected, &unselected] {
+            world.fonts.push((
+                FontPath { path: path.clone(), index: embedded.index() },
+                embedded.info().clone(),
+            ));
+        }
+        assert!(world.accessed().is_empty());
+        assert_eq!(world.font(index).unwrap().data(), embedded.data());
+        let expected: BTreeSet<_> =
+            [fs::canonicalize(selected).unwrap()].into_iter().collect();
+        assert_eq!(world.accessed(), expected);
+        assert!(world.font(0).is_some());
+        assert!(world.font(usize::MAX).is_none());
+        assert_eq!(world.accessed(), expected);
+        assert!(
+            !world.accessed().contains(&fs::canonicalize(unselected).unwrap())
+        );
+        world.reset();
+        assert!(world.accessed().is_empty());
+        // FontStore retains decoded fonts; a later rebuild still consumes the
+        // selected disk font even when the underlying load is already cached.
+        assert!(world.font(index).is_some());
+        assert_eq!(world.accessed(), expected);
+        let missing = dir.path().join("missing.otf");
+        world.fonts.push((
+            FontPath { path: missing.clone(), index: embedded.index() },
+            embedded.info().clone(),
+        ));
+        assert!(world.font(index + 2).is_none());
+        let mut attempted = expected;
+        attempted.insert(missing);
+        assert_eq!(world.accessed(), attempted);
+    }
+
+    #[test]
     fn mounts_preserve_reserved_sources() {
         let dir = tempfile::tempdir().unwrap();
         let mounted = tempfile::tempdir().unwrap();
@@ -827,6 +888,40 @@ mod tests {
         assert_eq!(world.source(world.main()).unwrap().text(), "Virtual main");
         assert_eq!(&*world.file(world.main()).unwrap(), b"Virtual main");
         assert_eq!(&*world.file(image).unwrap(), b"render image");
+    }
+
+    #[test]
+    fn native_main_file_kind_survives_render_scratch_switch_and_reset() {
+        let dir = tempfile::tempdir().unwrap();
+        let text = "#let value = 2\n#value\n";
+        fs::write(dir.path().join("other.md"), text).unwrap();
+        for name in ["main.md", "main.ipynb"] {
+            let path = dir.path().join(name);
+            fs::write(&path, text).unwrap();
+            let mut config = Config::default();
+            config.pdf.system_fonts = false;
+            config.pdf.allow_packages = false;
+            let mut world = WriterWorld::from_config(
+                &config,
+                dir.path(),
+                MainFile::Path(path),
+                Datetime::from_ymd(2026, 10, 29).unwrap(),
+            )
+            .unwrap();
+            let native = world.main();
+            assert_eq!(world.source(native).unwrap().text(), text);
+            world.with_render_main("Scratch main\n", false, |world| {
+                world.reset();
+                assert_ne!(world.main(), native);
+                assert_eq!(world.source(native).unwrap().text(), text);
+                assert_eq!(
+                    world.source(world.main()).unwrap().text(),
+                    "Scratch main\n"
+                );
+                assert!(world.source(project_id("/other.md")).is_err());
+            });
+            assert_eq!(world.main(), native);
+        }
     }
 
     #[test]

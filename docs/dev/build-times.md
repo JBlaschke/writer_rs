@@ -1153,3 +1153,60 @@ between referenced assets and copied resources. Only two crate-private emitter
 helpers and existing stub-test migrations cross task ownership; no dependencies,
 IR/config/public shapes or module lists change. The template's own imports are
 not copied, and Typst CLI package/template ejection remains T72.
+
+## T52 native Typst document acceptance (2026-10-29)
+
+Measured on the same macOS arm64/Rust 1.99.1 checkout with warm dependencies,
+the lockfile and offline registry. Both default and browser-feature code paths
+were validated with embedded fonts and packages disabled for mandatory tests.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 41.18 s | 394.95 s | 183.34 s | 1,601 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 473 s | 568.24 s | 5,010.27 s | 1,600 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. All 14 real Chrome preview tests pass without skips in 43.80 s.
+The new native preview case follows default pages, web recovery, native control
+flow and included-file edits through actual HTTP/SSE and Chrome. All 20 real
+HTTP/SSE serve cases pass in the full debug suite.
+
+Twenty-two native pipeline/CLI cases and five math integration cases pass. They
+exercise original-file native compilation, fixed fresh/retained PDF identity,
+source edits, both target orders, independent subset failures, native errors/
+hints, last-good outputs, default/format/quiet/engine behavior, template warning,
+consumed dynamic source/image/font guards and once-only error reporting.
+All 36 native math classifications remain exact: 32 editable OMML forms and four
+no-MathML routes, with display picture/final-source recovery. Native HTML's two
+MathML knobs, image mode, font/CSS/asset/baseline rules, real LaTeX macros and
+retained-main restoration pass. No external compiler, TeX, Pandoc, fonts or
+network is needed for these mandatory tests.
+
+The 15 required Markdown fixtures compare equal before snapshot redaction,
+with four focused normalizer controls. All code fields stay byte-exact; math
+changes only through documented preparation. Both sides use the same effective
+emission options before independent metadata merge/resolve. The two narrow §7
+refinements cover notebook provenance and block-only code line controls; no
+citation, whitespace or fixture-level exemptions were added. All goldens were
+independently reviewed.
+
+Two new emitter regressions and all 37 emitter tests preserve nested/repeated
+note punctuation and intentional spaces. The actual runtime fix removes one
+invented pre-label space; three inherited goldens change by exactly four spaces.
+The initial preview assertions were corrected to the existing web-document
+marker and shared error-overlay contract; no client/protocol change was needed.
+
+Four new private units preserve all native diagnostics and selected/attempted
+font-read inventory. FontStore's existing cached font-content policy remains:
+restart after disk font edits. The consumed-font integration uses explicit
+public World::font selection; actual compiler-selected custom-font clash
+coverage is not claimed. Local font conversion tools were unavailable, and no
+font fixture, package install or dependency was added. No public API/config/IR
+shape changes; T53 includes and positive LaTeX export retain their next-milestone
+boundaries.
+
+The final explicit-format follow-up pins the original native main's file kind,
+so `--format typ` on `.md` or `.ipynb` bypasses synthesis while actual includes
+still use it. Its two CLI/library regressions and a private scratch/reset unit
+pass. The measurements above are from the complete rerun after that correction,
+not the earlier 1,598/1,597 pass. All 14 browser tests ran again without skips.

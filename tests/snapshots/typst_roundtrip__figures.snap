@@ -1,0 +1,510 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "meta": {
+    "title": "Image attribute variants",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Caption with "
+        },
+        {
+          "type": "emph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "emph"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Caption with emph"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "50%"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": "fig:x",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1"
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Caption"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "50%"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": "fig:y",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "2"
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Caption"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Caption"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "3"
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Caption"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": "fig:z",
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " trailing text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "One"
+            }
+          ],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "image",
+          "alt": [
+            {
+              "type": "text",
+              "text": "Two"
+            }
+          ],
+          "url": "asset:000000000002",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "nested img"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "link",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "alt"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {
+                  "width": "10%"
+                }
+              }
+            }
+          ],
+          "url": "https://example.org",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "image",
+          "alt": [],
+          "url": "asset:000000000001",
+          "title": null,
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "figure",
+      "kind": "other",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Two panels"
+        }
+      ],
+      "body": [
+        {
+          "type": "figure",
+          "kind": "image",
+          "caption": [
+            {
+              "type": "text",
+              "text": "Left"
+            }
+          ],
+          "body": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "image",
+                  "alt": [
+                    {
+                      "type": "text",
+                      "text": "Left"
+                    }
+                  ],
+                  "url": "asset:000000000001",
+                  "title": null,
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "width": "45%"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "id": "fig-left",
+            "classes": [],
+            "pairs": {}
+          },
+          "number": "5"
+        },
+        {
+          "type": "figure",
+          "kind": "image",
+          "caption": [
+            {
+              "type": "text",
+              "text": "Right"
+            }
+          ],
+          "body": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "image",
+                  "alt": [
+                    {
+                      "type": "text",
+                      "text": "Right"
+                    }
+                  ],
+                  "url": "asset:000000000002",
+                  "title": null,
+                  "attrs": {
+                    "id": null,
+                    "classes": [],
+                    "pairs": {
+                      "width": "45%"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "id": "fig-right",
+            "classes": [],
+            "pairs": {}
+          },
+          "number": "6"
+        }
+      ],
+      "attrs": {
+        "id": "fig-panels",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "4"
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Invalid dimension"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Invalid dimension"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "7"
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "resolved": {
+    "labels": {
+      "fig-left": {
+        "kind": "figure",
+        "number": "5",
+        "supplement": "Figure",
+        "text": "Left",
+        "span": null
+      },
+      "fig-panels": {
+        "kind": "figure",
+        "number": "4",
+        "supplement": "Figure",
+        "text": "Two panels",
+        "span": null
+      },
+      "fig-right": {
+        "kind": "figure",
+        "number": "6",
+        "supplement": "Figure",
+        "text": "Right",
+        "span": null
+      },
+      "fig:x": {
+        "kind": "figure",
+        "number": "1",
+        "supplement": "Figure",
+        "text": "Caption with emph",
+        "span": null
+      },
+      "fig:y": {
+        "kind": "figure",
+        "number": "2",
+        "supplement": "Figure",
+        "text": "Caption",
+        "span": null
+      },
+      "fig:z": {
+        "kind": "other",
+        "number": null,
+        "supplement": "",
+        "text": null,
+        "span": null
+      }
+    },
+    "toc": [],
+    "bibliography": null,
+    "footnotes": 0
+  }
+}

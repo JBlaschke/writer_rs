@@ -1,0 +1,72 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "meta": {
+    "title": "Page breaks and insertion points",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "page_break"
+    },
+    {
+      "type": "toc",
+      "depth": 2
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Before a thematic break."
+        }
+      ]
+    },
+    {
+      "type": "thematic_break"
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Between thematic breaks."
+        }
+      ]
+    },
+    {
+      "type": "thematic_break"
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "After the thematic breaks."
+        }
+      ]
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "resolved": {
+    "labels": {},
+    "toc": [],
+    "bibliography": null,
+    "footnotes": 0
+  }
+}

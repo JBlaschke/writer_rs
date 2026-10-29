@@ -13,7 +13,7 @@ expression: stable_source
 )
 
 A named note#footnote[
-  The first paragraph of a named note refers to another note#footnote[A nested footnote reference\'s content.] <writer-fn-b>.
+  The first paragraph of a named note refers to another note#footnote[A nested footnote reference\'s content.]<writer-fn-b>.
 
   A second paragraph in the same note.
-] <writer-fn-a>, the same note again#footnote(<writer-fn-a>), and an inline note#footnote[Inline content.];.
+]<writer-fn-a>, the same note again#footnote(<writer-fn-a>), and an inline note#footnote[Inline content.];.

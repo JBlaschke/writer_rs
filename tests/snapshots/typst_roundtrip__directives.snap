@@ -1,0 +1,168 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "meta": {
+    "title": "Document directives",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": [
+        {
+          "type": "text",
+          "text": "Outer container"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Outer content."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "kind": "tip",
+          "title": null,
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Nested content with a longer outer fence."
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "id": null,
+            "classes": [],
+            "pairs": {}
+          }
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "A container figure"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Figure content"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": "fig-container",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1"
+    },
+    {
+      "type": "page_break"
+    },
+    {
+      "type": "toc",
+      "depth": 2
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An unknown directive is retained as a generic container."
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": [
+        {
+          "type": "text",
+          "text": "An unclosed directive"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "The document deliberately ends inside this directive."
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "resolved": {
+    "labels": {
+      "fig-container": {
+        "kind": "figure",
+        "number": "1",
+        "supplement": "Figure",
+        "text": "A container figure",
+        "span": null
+      }
+    },
+    "toc": [],
+    "bibliography": null,
+    "footnotes": 0
+  }
+}

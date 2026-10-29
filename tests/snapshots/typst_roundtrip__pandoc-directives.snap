@@ -1,0 +1,113 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "meta": {
+    "title": "Pandoc-style directives",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": [
+        {
+          "type": "text",
+          "text": "A pandoc note"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Pandoc class syntax."
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "page_break"
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": [
+        {
+          "type": "text",
+          "text": "A title: with a colon"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A colon after the fence requires the compatibility pre-pass."
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "callout",
+      "kind": "note",
+      "title": [
+        {
+          "type": "text",
+          "text": "Fig 1: x"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Another colon in a directive's info string."
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": false
+  },
+  "resolved": {
+    "labels": {},
+    "toc": [],
+    "bibliography": null,
+    "footnotes": 0
+  }
+}

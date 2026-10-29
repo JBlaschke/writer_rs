@@ -1545,3 +1545,87 @@ fn pages_apply_accepts_restart_ids_and_ignores_its_stale_startup_fetch() {
     record("pages apply restart and startup race", &facts);
     assert_console_clean(&mut page);
 }
+
+#[test]
+fn native_typst_pages_and_web_views_follow_real_source_and_include_edits() {
+    let _turn = serial();
+    let Some(chrome) = chrome() else { return };
+    let project = Project::new(&chrome);
+    let source = project.path("native.typ");
+    let original = fs::read_to_string(&source).unwrap();
+    let server = Server::start(&project, "native.typ", 0);
+    let mut page = open(&chrome, &server);
+    wait_for(&mut page, &server, PAGES_READY);
+    assert_eq!(
+        evaluate(&mut page, "window.__writerLiveReload.state.view"),
+        "pages"
+    );
+    let first =
+        evaluate(&mut page, "document.querySelector('.writer-page img').src");
+    let initial = build_id(&mut page);
+    write(
+        &source,
+        &format!(
+            "{original}\n#for index in range(2) [Native computed #index.]\n"
+        ),
+    );
+    wait_build(
+        &mut page,
+        &server,
+        initial,
+        "window.__writerLiveReload.state.views.pages.status === 'ok' && window.__writerLiveReload.state.views.web.status === 'error'",
+    );
+    wait_for(&mut page, &server, PAGES_READY);
+    assert_ne!(
+        evaluate(&mut page, "document.querySelector('.writer-page img').src"),
+        first
+    );
+    let failed = evaluate(
+        &mut page,
+        "({view: window.__writerLiveReload.state.view, text: document.querySelector('#writer-overlay').textContent, display: document.querySelector('#writer-overlay').style.display})",
+    );
+    assert_eq!(failed["view"], "pages");
+    assert_eq!(failed["display"], "block");
+    assert!(failed["text"].as_str().unwrap().contains("[web] build error"));
+    assert!(!failed["text"].as_str().unwrap().contains("[pages] build error"));
+    let outside = build_id(&mut page);
+    write(&source, &original);
+    wait_build(
+        &mut page,
+        &server,
+        outside,
+        "window.__writerLiveReload.state.views.web.status === 'ok' && window.__writerLiveReload.state.views.pages.status === 'ok'",
+    );
+    trigger_navigation(
+        &mut page,
+        "document.querySelector('#writer-view-toggle').click()",
+    );
+    wait_for(
+        &mut page,
+        &server,
+        "!!document.querySelector('[data-writer-document] math') && window.__writerLiveReload?.state.connected",
+    );
+    assert_eq!(evaluate(&mut page, READY), true);
+    let before = build_id(&mut page);
+    append(
+        &project.path("native-part.typ"),
+        "\nNative browser include revised.\n",
+    );
+    wait_build(
+        &mut page,
+        &server,
+        before,
+        "document.body.textContent.includes('Native browser include revised.') && window.__writerLiveReload.state.views.pages.status === 'ok'",
+    );
+    let facts = evaluate(
+        &mut page,
+        "({view: window.__writerLiveReload.state.view, mathml: document.querySelectorAll('[data-writer-document] math').length, katex: document.querySelectorAll('script[src*=katex]').length, web: window.__writerLiveReload.state.views.web.status, pages: window.__writerLiveReload.state.views.pages.status})",
+    );
+    assert_eq!(facts["view"], "web");
+    assert!(facts["mathml"].as_u64().unwrap() > 0);
+    assert_eq!(facts["katex"], 0);
+    assert_eq!(facts["web"], "ok");
+    assert_eq!(facts["pages"], "ok");
+    record("native Typst views", &facts);
+    assert_console_clean(&mut page);
+}

@@ -587,12 +587,18 @@ pub(crate) fn build_targets_with_count(
         Ok(prepared) => prepared,
         Err(failure) => return failed_report(failure, opts.cli.strict),
     };
-    match escalate_missing_assets(
-        prepared.diagnostics,
-        matches!(opts.mode, Mode::Build),
-    ) {
-        Ok(diagnostics) => prepared.diagnostics = diagnostics,
-        Err(failure) => return failed_report(failure, opts.cli.strict),
+    let native_pdf = prepared.document.source.kind == SourceKind::Typst
+        && targets.contains(&Target::Pdf);
+    let native_only =
+        native_pdf && targets.iter().all(|target| *target == Target::Pdf);
+    if !native_pdf {
+        match escalate_missing_assets(
+            prepared.diagnostics,
+            matches!(opts.mode, Mode::Build),
+        ) {
+            Ok(diagnostics) => prepared.diagnostics = diagnostics,
+            Err(failure) => return failed_report(failure, opts.cli.strict),
+        }
     }
     let world = match worlds.get(Some(&prepared), opts) {
         Ok(world) => world,
@@ -605,11 +611,46 @@ pub(crate) fn build_targets_with_count(
             unique.push(*target);
         }
     }
-    let mut diagnostics = prepared.diagnostics.clone();
+    // Native PDF consumes the original source; subset findings apply only to
+    // IR targets. Keep them on Prepared for provenance and later web views.
+    let mut diagnostics = if native_only {
+        Diagnostics::new()
+    } else {
+        prepared
+            .diagnostics
+            .clone()
+            .into_iter()
+            .map(|mut finding| {
+                if native_pdf
+                    && matches!(opts.mode, Mode::Build)
+                    && finding.code == "missing-asset"
+                {
+                    finding.level = Level::Error;
+                }
+                finding
+            })
+            .collect()
+    };
     let mut results = Vec::new();
     for target in &unique {
         let out = output_path(&prepared, opts, *target, requested_count);
-        let result = build_target(&prepared, opts, *target, &out, world);
+        let result = if native_pdf
+            && matches!(target, Target::Html | Target::Docx | Target::Latex)
+        {
+            match escalate_missing_assets(
+                prepared.diagnostics.clone(),
+                matches!(opts.mode, Mode::Build),
+            ) {
+                Ok(_) => build_target(&prepared, opts, *target, &out, world),
+                Err(mut failure) => {
+                    // The report already owns these preparation findings.
+                    failure.diagnostics = Diagnostics::new();
+                    Err(failure)
+                }
+            }
+        } else {
+            build_target(&prepared, opts, *target, &out, world)
+        };
         let written = match result {
             Ok((written, found)) => {
                 diagnostics.extend(found);
@@ -670,7 +711,7 @@ fn build_target(
     match target {
         Target::Html => html::build(prepared, opts, out, world),
         Target::Pdf if prepared.document.source.kind == SourceKind::Typst => {
-            typst_source::build(prepared, opts, out, world)
+            return typst_source::build_detailed(prepared, opts, out, world);
         }
         Target::Pdf if prepared.config.pdf.engine == PdfEngine::Chrome => {
             crate::pdf::chrome::build(prepared, opts, out, world)
