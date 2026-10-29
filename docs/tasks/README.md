@@ -53,7 +53,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | done (PR #26) |
 | T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | ready for review |
-| T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
+| T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | ready for review |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | ready for review |
@@ -435,3 +435,22 @@ Manual checks performed: …
 - Independent main-CI repair #27 now passes on Linux, macOS and Windows;
   #28 and #29 also pass all checks. #30 and #31 continue through CI.
   T34's portable export implementation and tests are staged while T43 publishes.
+
+
+- T43 is open in [PR #32](https://github.com/JBlaschke/writer_rs/pull/32)
+  (`3fc75ad`). T34 starts on `codex/typst-export` from that checked milestone.
+  Pending merge order is #28, #29, #30, #31, #32, then T34; #27 is an independent
+  repair. PRs #27–#31 now all pass CI. The export freeze preserves public APIs,
+  adds only crate-private naming helpers, materializes span-based includes and
+  copies resources with portable collision handling; §10 records the narrow
+  contract clarification. T52's brief is prepared in parallel.
+
+
+- T34 passes formatting, all-target/all-feature Clippy, default/feature rustdoc,
+  1,561 debug and 1,560 release tests. All eight planning units, 23 new real
+  library/CLI tests and 77 inherited emitter/CLI/watch regressions pass.
+  Physical trees compile after source removal, real include fixture variants
+  retain nested notes/assets, and all sidecar/input aliases are checked before
+  any writes. BOM/front-matter parity and portable filename collisions pass.
+- PRs #27–#32 now all pass CI. T52's native PDF, math-route, strict round-trip,
+  HTTP/browser and example drafts are ready for validation after T34 publishes.

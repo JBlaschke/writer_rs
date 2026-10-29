@@ -716,12 +716,12 @@ fn unavailable_target_results_do_not_terminate_the_watch_loop() {
     let (directory, input, _) = project("# HTML beside future target\n");
     let output = directory.path().join("out");
     let mut request = Request::html(&input, &output, Stop::Built(2));
-    request.targets = vec![Target::Html, Target::Typst];
+    request.targets = vec![Target::Html, Target::Latex];
     let mut running = Loop::spawn(request);
     for round in 0..2 {
         let targets = built(
             running.next("mixed target results"),
-            &[Target::Html, Target::Typst],
+            &[Target::Html, Target::Latex],
         );
         assert!(targets[0].written.is_some());
         assert!(targets[0].error.is_none());
@@ -730,7 +730,7 @@ fn unavailable_target_results_do_not_terminate_the_watch_loop() {
             targets[1]
                 .error
                 .as_ref()
-                .is_some_and(|error| error.contains("T34"))
+                .is_some_and(|error| error.contains("T61"))
         );
         if round == 0 {
             watching(running.next("watch set after target failure"));
@@ -744,7 +744,7 @@ fn unavailable_target_results_do_not_terminate_the_watch_loop() {
             .unwrap()
             .contains("Updated despite")
     );
-    assert!(!output.join("document.typ").exists());
+    assert!(!output.join("document.tex").exists());
 }
 
 #[test]

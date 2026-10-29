@@ -326,7 +326,7 @@ fn first_multi_target_clash_reports_other_target_results_once() {
         .current_dir(root)
         .timeout(TIMEOUT)
         .args([
-            "build", "document.md", "--watch", "--to", "html,docx,typst", "-o",
+            "build", "document.md", "--watch", "--to", "html,docx,latex", "-o",
             ".",
         ])
         .assert()
@@ -338,7 +338,7 @@ fn first_multi_target_clash_reports_other_target_results_once() {
     assert!(stdout.contains("Wrote "), "{stdout}");
     assert!(stdout.contains("document.html"), "{stdout}");
     assert_eq!(stderr.matches("refusing to write").count(), 1, "{stderr}");
-    assert!(stderr.contains("not implemented yet (T34)"), "{stderr}");
+    assert!(stderr.contains("not implemented yet (T61)"), "{stderr}");
     assert!(root.join("document.html").is_file());
     assert_eq!(std::fs::read(root.join("document.docx")).unwrap(), PNG);
 }
