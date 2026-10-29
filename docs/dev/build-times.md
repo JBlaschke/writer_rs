@@ -1154,7 +1154,6 @@ helpers and existing stub-test migrations cross task ownership; no dependencies,
 IR/config/public shapes or module lists change. The template's own imports are
 not copied, and Typst CLI package/template ejection remains T72.
 
-
 ## T52 native Typst document acceptance (2026-10-29)
 
 Measured on the same macOS arm64/Rust 1.99.1 checkout with warm dependencies,

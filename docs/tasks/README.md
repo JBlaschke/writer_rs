@@ -455,7 +455,7 @@ Manual checks performed: …
 - PRs #27–#32 now all pass CI. T52's native PDF, math-route, strict round-trip,
   HTTP/browser and example drafts are ready for validation after T34 publishes.
 
-
+  
 - T34 is open in [PR #33](https://github.com/JBlaschke/writer_rs/pull/33)
   (`20e2c8f`). T52 starts on `codex/native-typst` from that checked milestone.
   Pending feature merge order is #28, #29, #30, #31, #32, #33, then T52; #27
