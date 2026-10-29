@@ -1114,3 +1114,144 @@ fn native_explicit_web_view_updates_both_real_source_views() {
     assert_ne!(changed["pages"]["hashes"], initial["pages"]["hashes"]);
     assert_page_resource(&server, &changed, 0);
 }
+
+#[test]
+fn dynamic_markdown_include_recovers_nested_files_and_missing_images() {
+    let _turn = serial();
+    let dir = project();
+    write(
+        &dir.path().join("native.typ"),
+        concat!(
+            "#import \"@writer/doc:0.1.0\": *\n",
+            "#show: writer-doc.with(title: [Dynamic include watch])\n",
+            "#include (\"dynamic\" + \".md\")\n",
+        ),
+    );
+    write(
+        &dir.path().join("dynamic.md"),
+        "# Dynamic child\n\nInitial content.\n",
+    );
+    let mut server = Server::start(dir.path(), "native.typ", &[]);
+    let events = server.events();
+    let initial = events.hello(&server);
+    assert_eq!(initial["pages"]["status"], "ok");
+    assert_eq!(initial["web"]["status"], "error");
+    assert_page_resource(&server, &initial, 0);
+
+    write(&dir.path().join("dynamic.md"), ":::include created/part.md\n:::\n");
+    let missing = events.build(&server, id(&initial), |event| {
+        event["pages"]["status"] == "error"
+    });
+    assert_eq!(missing["pages"]["hashes"], initial["pages"]["hashes"]);
+    fs::create_dir(dir.path().join("created")).unwrap();
+    let directory = events.build(&server, id(&missing), |event| {
+        event["pages"]["status"] == "error"
+    });
+    write(&dir.path().join("created/part.md"), "Nested recovered.\n");
+    let recovered = events.build(&server, id(&directory), |event| {
+        event["pages"]["status"] == "ok"
+    });
+    assert_ne!(recovered["pages"]["hashes"], initial["pages"]["hashes"]);
+    assert_page_resource(&server, &recovered, 0);
+
+    write(
+        &dir.path().join("created/part.md"),
+        "![Watched missing image](../images/plot.png)\n",
+    );
+    let image_missing = events.build(&server, id(&recovered), |event| {
+        event["pages"]["status"] == "ok"
+            && event["warnings"].as_array().is_some_and(|warnings| {
+                warnings
+                    .iter()
+                    .any(|warning| warning["code"] == "missing-asset")
+            })
+    });
+    fs::create_dir(dir.path().join("images")).unwrap();
+    let image_directory = events.build(&server, id(&image_missing), |event| {
+        event["pages"]["status"] == "ok"
+    });
+    fs::copy(
+        fixture().join("figures/plot.png"),
+        dir.path().join("images/plot.png"),
+    )
+    .unwrap();
+    let imaged = events.build(&server, id(&image_directory), |event| {
+        event["pages"]["status"] == "ok"
+            && event["warnings"].as_array().is_some_and(|warnings| {
+                !warnings
+                    .iter()
+                    .any(|warning| warning["code"] == "missing-asset")
+            })
+    });
+    assert_ne!(imaged["pages"]["hashes"], image_missing["pages"]["hashes"]);
+    let image = assert_page_resource(&server, &imaged, 0);
+    assert!(String::from_utf8_lossy(&image).contains("data:image/png"));
+    assert!(!dir.path().join("dist").exists());
+}
+
+#[test]
+fn included_notebook_edits_and_late_cell_errors_keep_real_provenance() {
+    let _turn = serial();
+    let dir = project();
+    write(
+        &dir.path().join("native.typ"),
+        concat!(
+            "#import \"@writer/doc:0.1.0\": *\n",
+            "#show: writer-doc.with(title: [Notebook include watch])\n",
+            "#include-notebook(path(\"book.ipynb\"), cells: \"plot\", hide-input: true)\n",
+        ),
+    );
+    let plot = |colour: &str| {
+        json!({
+            "cell_type":"code", "id":"plot", "source":"print('saved plot')\n",
+            "metadata":{}, "execution_count":1, "outputs":[{
+                "output_type":"display_data", "metadata":{}, "data":{
+                    "image/svg+xml":format!(
+                        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"20\"><rect width=\"40\" height=\"20\" fill=\"{colour}\"/></svg>"
+                    ), "text/plain":"Saved plot"
+                }
+            }],
+        })
+    };
+    let mut notebook = json!({"nbformat":4,"nbformat_minor":5,
+        "metadata":{"language_info":{"name":"python"}}, "cells":[
+            {"cell_type":"markdown","id":"intro","source":"Notebook intro.\n","metadata":{}},
+            plot("#214d72"),
+        ]
+    });
+    let path = dir.path().join("book.ipynb");
+    write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
+    let mut server = Server::start(dir.path(), "native.typ", &[]);
+    let events = server.events();
+    let initial = events.hello(&server);
+    assert_eq!(initial["web"]["status"], "ok");
+    assert_eq!(initial["pages"]["status"], "ok");
+    assert_page_resource(&server, &initial, 0);
+    notebook["cells"][1] = plot("#723521");
+    write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
+    let updated = events.build(&server, id(&initial), |event| {
+        event["web"]["status"] == "ok" && event["pages"]["status"] == "ok"
+    });
+    assert_ne!(updated["pages"]["hashes"], initial["pages"]["hashes"]);
+    let good = assert_page_resource(&server, &updated, 0);
+    notebook["cells"][1] = json!({"cell_type":"raw","id":"plot",
+        "metadata":{"raw_mimetype":"text/typst"},
+        "source":"#t53_unknown_cell()\n"});
+    write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
+    let failed = events.build(&server, id(&updated), |event| {
+        event["pages"]["status"] == "error"
+    });
+    assert_eq!(failed["web"]["status"], "ok");
+    assert_eq!(failed["pages"]["error"]["file"], "book.ipynb");
+    assert_eq!(failed["pages"]["error"]["cell"], 1);
+    assert_eq!(failed["pages"]["error"]["line"], 1);
+    assert_eq!(failed["pages"]["hashes"], updated["pages"]["hashes"]);
+    assert_eq!(assert_page_resource(&server, &failed, 0), good);
+    notebook["cells"][1] = plot("#214d72");
+    write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
+    let recovered = events.build(&server, id(&failed), |event| {
+        event["web"]["status"] == "ok" && event["pages"]["status"] == "ok"
+    });
+    assert_eq!(recovered["pages"]["error"], Value::Null);
+    assert_page_resource(&server, &recovered, 0);
+}

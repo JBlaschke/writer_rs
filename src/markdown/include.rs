@@ -89,6 +89,20 @@ impl Context {
         }
     }
 
+    /// Carries canonical ancestors; `chain` excludes `source` itself.
+    pub(crate) fn in_chain(source: &SourceInfo, chain: &[PathBuf]) -> Self {
+        let mut context = Self::root(source, &DocMeta::default());
+        context.files = chain.iter().map(|path| canonical(path)).collect();
+        context.files.push(canonical(&source.path));
+        context.root_dir = context
+            .files
+            .first()
+            .and_then(|path| path.parent())
+            .unwrap_or(&source.base_dir)
+            .to_path_buf();
+        context
+    }
+
     pub(crate) fn with_meta(&self, meta: &DocMeta) -> Self {
         Self { meta: meta.clone(), ..self.clone() }
     }
@@ -266,7 +280,7 @@ fn in_included_file(error: Error, path: &Path) -> Error {
     }
 }
 
-fn tag_document(parsed: &mut Parsed, path: &Path) {
+pub(crate) fn tag_document(parsed: &mut Parsed, path: &Path) {
     ir::walk_blocks_mut(&mut parsed.document, &mut |block| {
         if let Some(span) = block_span_mut(block) {
             span.file.get_or_insert_with(|| path.to_path_buf());
@@ -386,7 +400,7 @@ const CONFIG_KEYS: &[&str] = &[
 ];
 
 /// Explicit fields, including empty lists, from source already loaded for parsing.
-fn explicit_keys(text: &str, kind: SourceKind) -> BTreeSet<String> {
+pub(crate) fn explicit_keys(text: &str, kind: SourceKind) -> BTreeSet<String> {
     let mut keys = BTreeSet::new();
     if kind == SourceKind::Markdown {
         front_keys(text, &mut keys);
@@ -446,7 +460,7 @@ fn record_key(key: &str, value: &Value, keys: &mut BTreeSet<String>) {
     }
 }
 
-fn differing_meta(
+pub(crate) fn differing_meta(
     included: &DocMeta, parent: &DocMeta, keys: &BTreeSet<String>,
 ) -> Vec<String> {
     keys.iter()
@@ -638,15 +652,7 @@ pub fn cell_includes(
 pub fn cell_includes_in(
     notebook: &SourceInfo, chain: &[PathBuf],
 ) -> Box<dyn crate::notebook::CellIncludes> {
-    let mut context = Context::root(notebook, &DocMeta::default());
-    context.files = chain.iter().map(|path| canonical(path)).collect();
-    context.files.push(canonical(&notebook.path));
-    context.root_dir = context
-        .files
-        .first()
-        .and_then(|path| path.parent())
-        .unwrap_or(&notebook.base_dir)
-        .to_path_buf();
+    let context = Context::in_chain(notebook, chain);
     Box::new(NotebookIncludes { state: State::new(notebook, context) })
 }
 

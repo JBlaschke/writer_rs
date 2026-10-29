@@ -11,6 +11,7 @@ use crate::ir::{
     OutputCandidate, OutputKind, RefForm, plain_text,
 };
 use crate::math::latex_source::{macros_as_newcommands, macros_from_config};
+use crate::notebook::{CellRef, Selection};
 
 use super::Context;
 use super::literals::{Args, Literal};
@@ -138,7 +139,7 @@ pub(super) fn call<'a>(
         "mi" | "mitex" => latex(ctx, &args, name == "mitex"),
         "listing" => listing(ctx, &args),
         "code-cell" => code_cell(ctx, &args),
-        "include-notebook" => pending_notebook(ctx, &args),
+        "include-notebook" => include_notebook(ctx, &args),
         _ => {
             ctx.error(
                 "E-TYP-CALL-UNKNOWN",
@@ -1059,7 +1060,7 @@ fn code_cell<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
     })])
 }
 
-fn pending_notebook<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
+fn include_notebook<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
     args.check_named(ctx, &["cells", "tags", "hide-input", "hide-output"], &[]);
     let Some(expr) = required(ctx, args, 0, "file") else {
         return Nodes::Ignored;
@@ -1083,36 +1084,106 @@ fn pending_notebook<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
             return Nodes::Ignored;
         }
     };
-    for name in ["cells", "tags", "hide-input", "hide-output"] {
+    let Some(selection) = notebook_selection(ctx, args) else {
+        return Nodes::Ignored;
+    };
+    Nodes::Blocks(ctx.notebook_blocks(&path, selection, args.node))
+}
+
+fn notebook_selection<'a>(
+    ctx: &mut Context<'a>, args: &Args<'a>,
+) -> Option<Selection> {
+    let mut selection = Selection::default();
+    if let Some(expr) = args.named("cells") {
+        let value = literal(ctx, expr)?;
+        selection.cells = match value {
+            Literal::Auto => None,
+            Literal::Array(items) => Some(
+                items
+                    .into_iter()
+                    .map(|item| {
+                        notebook_reference(ctx, expr.to_untyped(), item)
+                    })
+                    .collect::<Option<Vec<_>>>()?,
+            ),
+            item => {
+                Some(vec![notebook_reference(ctx, expr.to_untyped(), item)?])
+            }
+        };
+    }
+    if let Some(expr) = args.named("tags") {
+        selection.tags = match literal(ctx, expr)? {
+            Literal::None => None,
+            Literal::Str(tag) => Some(vec![tag]),
+            Literal::Array(items) => {
+                let mut tags = Vec::with_capacity(items.len());
+                for item in items {
+                    let Literal::Str(tag) = item else {
+                        wrong(
+                            ctx,
+                            expr.to_untyped(),
+                            "a string tag or array of strings",
+                        );
+                        return None;
+                    };
+                    tags.push(tag);
+                }
+                Some(tags)
+            }
+            _ => {
+                wrong(
+                    ctx,
+                    expr.to_untyped(),
+                    "none, a string tag or array of strings",
+                );
+                return None;
+            }
+        };
+    }
+    for (name, hidden) in [
+        ("hide-input", &mut selection.hide_input),
+        ("hide-output", &mut selection.hide_output),
+    ] {
         let Some(expr) = args.named(name) else {
             continue;
         };
-        let Some(value) = literal(ctx, expr) else {
-            continue;
+        *hidden = match literal(ctx, expr)? {
+            Literal::Auto => false,
+            Literal::Bool(value) => value,
+            _ => {
+                wrong(ctx, expr.to_untyped(), "auto or a boolean");
+                return None;
+            }
         };
-        let valid = match name {
-            "cells" => match &value {
-                Literal::Auto | Literal::Int(_) | Literal::Str(_) => true,
-                Literal::Array(items) => items.iter().all(|item| {
-                    matches!(item, Literal::Int(_) | Literal::Str(_))
-                }),
-                _ => false,
-            },
-            "tags" => match &value {
-                Literal::None | Literal::Str(_) => true,
-                Literal::Array(items) => {
-                    items.iter().all(|item| matches!(item, Literal::Str(_)))
-                }
-                _ => false,
-            },
-            _ => matches!(value, Literal::Auto | Literal::Bool(_)),
-        };
-        if !valid {
-            wrong(ctx, expr.to_untyped(), "a literal notebook selection value");
+    }
+    Some(selection)
+}
+
+fn notebook_reference(
+    ctx: &mut Context<'_>, node: &SyntaxNode, value: Literal<'_>,
+) -> Option<CellRef> {
+    match value {
+        Literal::Int(index) => match usize::try_from(index) {
+            Ok(index) => Some(CellRef::Index(index)),
+            Err(_) => {
+                ctx.error(
+                    INVALID,
+                    format!("notebook cell index {index} must be nonnegative and fit usize"),
+                    node,
+                );
+                None
+            }
+        },
+        Literal::Str(id) => Some(CellRef::Id(id)),
+        _ => {
+            wrong(
+                ctx,
+                node,
+                "auto, a nonnegative cell index, a string id or an array of refs",
+            );
+            None
         }
     }
-    ctx.pending_notebook(&path, args.node);
-    Nodes::Ignored
 }
 
 #[cfg(test)]

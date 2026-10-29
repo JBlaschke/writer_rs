@@ -716,36 +716,9 @@ impl<'a> Context<'a> {
                 return Vec::new();
             }
         };
-        let path = match self.resolve_path(&written) {
-            Ok(path) => path,
-            Err(message) => {
-                self.error("E-TYP-INCLUDE-MISSING", message, node);
-                return Vec::new();
-            }
+        let Some(path) = self.include_path(&written, node) else {
+            return Vec::new();
         };
-        self.remember_include(path.clone());
-        if self.chain.contains(&path) {
-            let mut chain = self
-                .chain
-                .iter()
-                .map(|path| path.display().to_string())
-                .collect::<Vec<_>>();
-            chain.push(path.display().to_string());
-            self.error(
-                "E-TYP-INCLUDE-CYCLE",
-                format!("include cycle: {}", chain.join(" → ")),
-                node,
-            );
-            return Vec::new();
-        }
-        if self.chain.len() > 8 {
-            self.error(
-                "E-TYP-INCLUDE-DEPTH",
-                "include nesting exceeds 8 levels",
-                node,
-            );
-            return Vec::new();
-        }
         let kind = match ir::detect_kind(&path) {
             Ok(kind) => kind,
             Err(error) => {
@@ -754,8 +727,13 @@ impl<'a> Context<'a> {
             }
         };
         if kind != SourceKind::Typst {
-            self.pending_notebook(&written, node);
-            return Vec::new();
+            return self.include_other(
+                &written,
+                &path,
+                kind,
+                Selection::default(),
+                node,
+            );
         }
         let text = match std::fs::read_to_string(&path) {
             Ok(text) => text,
@@ -796,19 +774,7 @@ impl<'a> Context<'a> {
         if child.explicit_meta {
             self.warning("include-meta-ignored", format!("`{written}` sets document metadata; an included file's document metadata is ignored"), node);
         }
-        let mut document = child.parsed.document;
-        if matches!(
-            document.blocks.first(),
-            Some(Block::Toc { span: None, .. })
-        ) {
-            document.blocks.remove(0);
-        }
-        self.assets.merge(child.parsed.assets);
-        self.diagnostics.extend(child.parsed.diagnostics);
-        for path in document.includes {
-            self.remember_include(path);
-        }
-        document.blocks
+        self.merge_included(child.parsed)
     }
 }
 

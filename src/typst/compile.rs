@@ -217,11 +217,14 @@ fn mapped_location(
     if !is_project(id) {
         return (Some(package_path(id)), Some(line_span(line)));
     }
-    let path = world.real_path(id);
     let span = match world.source_map(id) {
         Some(map) => map.lookup(line).cloned(),
         None => Some(line_span(line)),
     };
+    let path = span
+        .as_ref()
+        .and_then(|span| span.file.clone())
+        .or_else(|| world.real_path(id));
     (path, span)
 }
 

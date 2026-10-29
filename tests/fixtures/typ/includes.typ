@@ -7,3 +7,7 @@ Before the include and a forward note @writer-fn-shared.
 #include path("include/part.typ")
 
 After both includes.
+
+#include "include/part.md"
+
+#include "include/nb.ipynb"
