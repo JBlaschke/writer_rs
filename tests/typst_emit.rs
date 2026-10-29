@@ -1637,8 +1637,7 @@ fn md_fixture_corpus() {
 }
 
 #[test]
-fn export_asset_names_are_portable_on_case_insensitive_and_windows_filesystems()
-{
+fn export_asset_names_are_portable_on_case_insensitive_and_windows_filesystems() {
     let cases = [
         ("CON.png", "asset-CON.png"),
         ("lpt9.SVG", "asset-lpt9.SVG"),
@@ -1701,6 +1700,7 @@ fn export_asset_names_are_portable_on_case_insensitive_and_windows_filesystems()
             .len(),
         3,
     );
+}
 
 #[test]
 fn labelled_nested_footnotes_do_not_add_spaces_before_punctuation() {
