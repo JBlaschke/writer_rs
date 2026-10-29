@@ -229,6 +229,13 @@ pub fn for_typst(
     (output, removed)
 }
 
+/// Checks package-scoped LaTeX syntax without creating a compiler session.
+pub(crate) fn preflight_typst(prepared: &str) -> Result<(), String> {
+    mitex::convert_math(prepared, None).map(|_| ()).map_err(|message| {
+        message.trim().trim_start_matches("error: ").to_owned()
+    })
+}
+
 fn command_end(src: &str, start: usize) -> usize {
     let bytes = src.as_bytes();
     let mut end = start + 1;

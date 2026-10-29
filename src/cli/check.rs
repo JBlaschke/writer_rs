@@ -10,16 +10,20 @@ use serde::Serialize;
 
 use super::{
     CheckArgs, CheckFormat, Compatibility, EXIT_BUILD_ERROR, EXIT_OK,
-    GlobalArgs, display_path, print_stdout, report, report_diagnostics,
+    GlobalArgs, OutputTarget, display_path, print_stdout, report,
+    report_diagnostics,
 };
 use crate::check::{self, CheckOptions};
 use crate::error::{Diagnostic, Diagnostics, Error, Level};
 use crate::ir::{self, SourceKind};
 use crate::pipeline::{self, BuildOptions, Mode};
 
-/// Runs `writer check`; per-target checks remain the T71 milestone.
+/// Runs `writer check`, including the PDF parser preflight.
 pub fn run(args: &CheckArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
-    if args.target.is_some() {
+    if args.target.as_ref().is_some_and(|targets| {
+        targets.is_empty()
+            || targets.iter().any(|target| *target != OutputTarget::Pdf)
+    }) {
         return Err(pipeline::not_implemented("check --target", "T71").into());
     }
     let diagnostics = check_input(args, global)?;
@@ -47,6 +51,8 @@ fn check_input(
     opts.format = Some(kind);
     opts.config_path = global.config.clone();
     opts.mode = Mode::Check;
+    opts.cli.targets =
+        args.target.as_ref().map(|_| vec![OutputTarget::Pdf.into()]);
     let options = CheckOptions {
         compat_presenter: args.compat == Some(Compatibility::Presenter),
     };

@@ -1019,3 +1019,53 @@ and codex dependencies. Runtime creates no World and calls no external tool.
 DOCX borrows the session renderer and reuses picture/field/bookmark builders.
 Native `.typ` CLI dispatch and reference/manual Word validation remain T52/T43;
 no dependency, public config/IR schema or public module list changes.
+
+
+## T33 math PDF corpus and check preflight acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T42 plus T33. The final
+complete debug run follows a reviewed diagnostic snapshot refresh; its build
+cache is warm. Runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 0.46 s | 141.81 s | 41.17 s | 1,507 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 417 s | 497.54 s | 4285.13 s | 1,506 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. All 19 check/CLI private units and 78 focused library, CLI,
+corpus and existing emitter tests pass. Every one of the 37 LaTeX rows retains
+its DOCX classification and gains the specified PDF outcome: 34 compile;
+18/32/37 report preflight errors, while unbalanced-brace 19 remains accepted
+by mitex and diagnosed by math-core.
+
+The 34 supported equations compile into one actual PDF with embedded fonts,
+packages disabled and a fixed timestamp. Fresh and retained Worlds reproduce
+identical PDF bytes; compiled page count and XMP page_count agree. Each parser
+rejection emits the original source as native raw math in inline/numbered
+forms and still compiles, preserving labels/numbering. Bypassing preflight
+produces mapped plugin compiler errors. Prepared LaTeX, macro isolation for
+17/31, tag/environment preparation and both raw/string literals round-trip.
+Ordinary/strict mixed builds retain successful outputs and only conversion
+findings escalate; tag warnings keep their base severity.
+
+Check uses the exact shared mitex parser/error normalization without a World,
+fonts, package access or output files. Baseline math-core syntax covers visible
+source equations across HTML routes. Target-union notebook selection, hidden
+outputs, distinct-node identity, nested contexts, included files and notebook
+cells preserve diagnostics and avoid duplicate visits. Native Typst equations
+are skipped by both cheap LaTeX parsers. Macro warnings are once-only and
+prepared-source diagnostics agree with the emitter. PDF-only CLI lists,
+configured defaults, JSON/text/quiet/deny behavior and existing T71 stubs pass.
+
+The first full debug run exposed one expected existing golden change:
+math.md's line19 tag/label now reports math-tag-ignored. The seven added JSON
+lines were reviewed against the source; the corpus and both final full suites
+pass. An earlier library assertion assumed a canonical path spelling on macOS;
+it now compares file identities while preserving production source provenance.
+
+Only the private preflight helper and additive check/CLI seams change runtime
+code; emitter source and fallback bytes stay unchanged. Other explicit target
+lints, native `.typ` compilation/exports and references retain their existing
+milestone boundaries. No dependencies or public API/config/IR/module-list
+changes are introduced.

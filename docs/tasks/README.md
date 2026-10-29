@@ -51,8 +51,8 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | done (PR #23) |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
-| T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | ready for review |
-| T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | todo |
+| T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | done (PR #26) |
+| T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | ready for review |
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
@@ -399,3 +399,20 @@ Manual checks performed: …
   were independently reviewed. Native Typst/LaTeX equations remain editable,
   numbered frames preserve references and recovery, and actual Pandoc probes
   pass with exact documented aliases. T33 follows while CI runs.
+
+
+- T42 is open in [PR #30](https://github.com/JBlaschke/writer_rs/pull/30)
+  (`95267f8`). T33 starts on `codex/math-pdf-corpus` from that checked milestone.
+  Merge #26, #28, #29, then #30 before T33; #27 remains an independent repair.
+  The brief freezes a private shared preflight helper, existing CLI target
+  forwarding and source/PDF visibility without new public APIs.
+
+
+- T33 passes formatting, Clippy, default/feature rustdoc, 1,507 debug and
+  1,506 release tests. All 19 check/CLI private units and 78 focused public,
+  emitter and CLI tests pass. The 34 supported equations compile into one
+  deterministic PDF; all three parser failures retain printable source,
+  labels and numbering. Check adds the same parser without a World or output.
+- PR #26 merged into main (`c0e35d2`) while T33 was validated. Pending feature
+  order is #28, #29, #30, then T33; independent repair #27 proceeds separately.
+  T43's reference/style showcase is staged next while CI runs.

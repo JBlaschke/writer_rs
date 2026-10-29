@@ -2,114 +2,151 @@
 
 [latex."01-frac"]
 docx = "omml"
+pdf = "compile"
 
 [latex."02-sum-limits"]
 docx = "omml"
+pdf = "compile"
 
 [latex."03-integral-dx"]
 docx = "omml"
+pdf = "compile"
 
 [latex."04-root-index"]
 docx = "omml"
+pdf = "compile"
 
 [latex."05-mathbb"]
 docx = "omml"
+pdf = "compile"
 
 [latex."06-left-right-frac"]
 docx = "omml"
+pdf = "compile"
 
 [latex."07-pmatrix"]
 docx = "omml"
+pdf = "compile"
 
 [latex."08-aligned"]
 docx = "omml"
+pdf = "compile"
 
 [latex."09-text-if"]
 docx = "omml"
+pdf = "compile"
 
 [latex."10-accents"]
 docx = "omml"
+pdf = "compile"
 
 [latex."11-operatorname-argmax"]
 docx = "omml"
+pdf = "compile"
 
 [latex."12-color"]
 docx = "omml"
+pdf = "compile"
 
 [latex."13-boldsymbol-mathbf"]
 docx = "omml"
+pdf = "compile"
 
 [latex."14-lim"]
 docx = "omml"
+pdf = "compile"
 
 [latex."15-def-macro"]
 docx = "omml"
+pdf = "compile"
 
 [latex."16-newcommand-no-arity"]
 docx = "omml"
+pdf = "compile"
 
 [latex."17-newcommand-arity"]
 docx = "omml"
+pdf = "compile"
 
 [latex."18-unknown-command"]
 docx = "no-mathml"
+pdf = "preflight-error"
 
 [latex."19-unbalanced-brace"]
 docx = "no-mathml"
+pdf = "compile"
 
 [latex."20-cases"]
 docx = "omml"
+pdf = "compile"
 
 [latex."21-middle-delimiter"]
 docx = "omml"
+pdf = "compile"
 
 [latex."22-nary-inline"]
 docx = "omml"
+pdf = "compile"
 
 [latex."23-underbrace-overbrace"]
 docx = "omml"
+pdf = "compile"
 
 [latex."24-bmatrix-vmatrix"]
 docx = "omml"
+pdf = "compile"
 
 [latex."25-primes"]
 docx = "omml"
+pdf = "compile"
 
 [latex."26-spaces"]
 docx = "omml"
+pdf = "compile"
 
 [latex."27-tag-label"]
 docx = "omml"
+pdf = "compile"
 
 [latex."28-align-env"]
 docx = "omml"
+pdf = "compile"
 
 [latex."29-unicode-source"]
 docx = "omml"
+pdf = "compile"
 
 [latex."30-empty"]
 docx = "omml"
+pdf = "compile"
 
 [latex."31-macro-from-config"]
 docx = "omml"
+pdf = "compile"
 
 [latex."32-ce"]
 docx = "no-mathml"
+pdf = "preflight-error"
 
 [latex."33-sympy-displaystyle"]
 docx = "omml"
+pdf = "compile"
 
 [latex."34-empty-base-scripts"]
 docx = "omml"
+pdf = "compile"
 
 [latex."35-nested-fences-text"]
 docx = "omml"
+pdf = "compile"
 
 [latex."36-left-dot-right-bar"]
 docx = "omml"
+pdf = "compile"
 
 [latex."37-sideset"]
 docx = "unsupported"
+pdf = "preflight-error"
 
 [typst."01-frac"]
 docx = "omml"

@@ -320,7 +320,7 @@ writer_rs/                                                                    ow
 ├── src/typst/frontend.rs (stub: T01) and private frontend/{walker,literals,metadata,calls,tables,normalize}.rs → T50   {mod,world,compile,package,render,html,sourcemap}.rs: T03 (package.rs: T31 adds eject, install_dir)   emit.rs: T30   includes.rs: T53 (`MarkdownIncludes` stub: T16)
 ├── src/resolve/mod.rs (stub: T01) → T17   l10n.rs: T01   {labels,numbering,footnotes,toc}.rs: T17
 ├── src/cite/{mod,library,render}.rs  + the resolve hook that fills Cite.resolved   T70
-├── src/math/mod.rs: T00 (skeleton)   latex_source.rs: T30   latex_mathml.rs: T1A   omml.rs and private omml/{parse,fold,render,text}.rs: T42   typst_to_latex.rs and private typst_to_latex/{symbols,calls}.rs + assets/math/unicode-latex.toml: T51
+├── src/math/mod.rs: T00 (skeleton)   latex_source.rs: T30 (T33 adds private shared preflight)   latex_mathml.rs: T1A   omml.rs and private omml/{parse,fold,render,text}.rs: T42   typst_to_latex.rs and private typst_to_latex/{symbols,calls}.rs + assets/math/unicode-latex.toml: T51
 ├── src/html/{emit,highlight}.rs: T13   {mod,context,document,paths,styles}.rs: T15   math.rs: T1A
 ├── src/theme/{mod,manifest,resolve,templates}.rs                               T15
 ├── src/docx/{mod,package,styles,numbering,reference,validate}.rs: T04   {body,inline,footnotes}.rs: T40   {tables,images,fields,toc}.rs: T41   math.rs: T42   custom_style.rs: T43
