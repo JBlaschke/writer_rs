@@ -1,0 +1,10 @@
+---
+source: tests/docx_showcase.rs
+expression: counts
+---
+{
+  "paragraphs": 81,
+  "styles": 102,
+  "abstract_nums": 2,
+  "images": 1
+}

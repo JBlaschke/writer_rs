@@ -329,7 +329,7 @@ writer_rs/                                                                    ow
 ├── src/serve/{mod,server,files}.rs: T21   events.rs: T21 → T73 (ErrorPayload bodies)   watch.rs: T20   pages.rs: T21 (types, shell_html, PagesBuilder::build stub) → T24
 ├── src/check.rs  src/cli/check.rs: T1C (T33 adds the mitex pre-flight, additive) → T71 (typst and per-target lints, additive)
 ├── src/pdf/devtools.rs (browser-test client): T25   src/pdf/chrome.rs: T77
-├── src/cli/mod.rs (clap tree, stubs for every command): T16   build.rs, dump.rs: T16   serve.rs and private serve/session.rs: T23   init.rs, eject.rs: T72   report.rs: T16 (lift) → T73
+├── src/cli/mod.rs (clap tree, stubs for every command): T16   build.rs, dump.rs: T16   serve.rs and private serve/session.rs: T23   init.rs: T72   eject.rs: T43 (DocxReference arm) → T72 (other resources)   report.rs: T16 (lift) → T73
 └── tests/  fixtures/{md,ir,config,bib}: T01 (other tasks add files, named in §7)   ipynb: T18   typ: T50   math: T1A, T42, T51   themes/child-theme: T15   docx/reference.docx: T04 → T43   latex/template.tex: T61   live-reload: T22   serve: T23
             common/docx.rs (read-back helper): T04
             integration tests belong to the task whose feature they test (named in each task file)

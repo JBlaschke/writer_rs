@@ -57,7 +57,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | ready for review |
-| T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
+| T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | ready for review |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | ready for review |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | todo |
@@ -416,3 +416,22 @@ Manual checks performed: …
 - PR #26 merged into main (`c0e35d2`) while T33 was validated. Pending feature
   order is #28, #29, #30, then T33; independent repair #27 proceeds separately.
   T43's reference/style showcase is staged next while CI runs.
+
+
+- T33 is open in [PR #31](https://github.com/JBlaschke/writer_rs/pull/31)
+  (`e846503`). T43 starts on `codex/docx-reference` from that checked milestone.
+  Pending feature order is #28, #29, #30, #31, then T43; #26 is merged.
+  The showcase/reference generator, private fixture/test ownership and narrow
+  DocxReference-only CLI behavior are frozen in its brief. Manual Word checks
+  remain explicit release checklist items, without automation claims.
+
+
+- T43 passes formatting, all-target/all-feature Clippy, default/feature rustdoc,
+  1,529 debug and 1,528 release tests. The complete reference uses every one of
+  the 101 built-in styles and all 82 reachable styles. Both reproducible binary
+  fixtures, all 22 focused reference/showcase/CLI tests, actual Pandoc merging
+  and four dedicated platform/read-back smokes pass. Manual Word/LibreOffice/
+  Google Docs checks remain explicitly unperformed release QA.
+- Independent main-CI repair #27 now passes on Linux, macOS and Windows;
+  #28 and #29 also pass all checks. #30 and #31 continue through CI.
+  T34's portable export implementation and tests are staged while T43 publishes.

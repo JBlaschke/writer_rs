@@ -1,0 +1,256 @@
+---
+source: tests/docx_showcase.rs
+expression: uses
+---
+{
+  "Abstract": [
+    "word/document.xml"
+  ],
+  "Abstract Title": [
+    "word/document.xml"
+  ],
+  "AnnotationTok": [
+    "word/document.xml"
+  ],
+  "AttributeTok": [
+    "word/document.xml"
+  ],
+  "Author": [
+    "word/document.xml"
+  ],
+  "BaseNTok": [
+    "word/document.xml"
+  ],
+  "Bibliography": [
+    "word/document.xml"
+  ],
+  "Block Text": [
+    "word/document.xml"
+  ],
+  "Body Text": [
+    "word/document.xml"
+  ],
+  "BuiltInTok": [
+    "word/document.xml"
+  ],
+  "Callout": [
+    "word/document.xml"
+  ],
+  "Callout Caution": [
+    "word/document.xml"
+  ],
+  "Callout Example": [
+    "word/document.xml"
+  ],
+  "Callout Important": [
+    "word/document.xml"
+  ],
+  "Callout Note": [
+    "word/document.xml"
+  ],
+  "Callout Tip": [
+    "word/document.xml"
+  ],
+  "Callout Title": [
+    "word/document.xml"
+  ],
+  "Callout Warning": [
+    "word/document.xml"
+  ],
+  "Caption": [
+    "word/document.xml"
+  ],
+  "Captioned Figure": [
+    "word/document.xml"
+  ],
+  "Cell Output": [
+    "word/document.xml"
+  ],
+  "Cell Prompt": [
+    "word/document.xml"
+  ],
+  "CharTok": [
+    "word/document.xml"
+  ],
+  "Code Line Number": [
+    "word/document.xml"
+  ],
+  "CommentTok": [
+    "word/document.xml"
+  ],
+  "Compact": [
+    "word/document.xml"
+  ],
+  "ConstantTok": [
+    "word/document.xml"
+  ],
+  "ControlFlowTok": [
+    "word/document.xml"
+  ],
+  "DataTypeTok": [
+    "word/document.xml"
+  ],
+  "Date": [
+    "word/document.xml"
+  ],
+  "DecValTok": [
+    "word/document.xml"
+  ],
+  "Definition": [
+    "word/document.xml"
+  ],
+  "Definition Term": [
+    "word/document.xml"
+  ],
+  "DocumentationTok": [
+    "word/document.xml"
+  ],
+  "Equation": [
+    "word/document.xml"
+  ],
+  "ErrorTok": [
+    "word/document.xml"
+  ],
+  "Figure": [
+    "word/document.xml"
+  ],
+  "First Paragraph": [
+    "word/document.xml"
+  ],
+  "FloatTok": [
+    "word/document.xml"
+  ],
+  "Footnote Block Text": [
+    "word/footnotes.xml"
+  ],
+  "Footnote Reference": [
+    "word/document.xml",
+    "word/footnotes.xml"
+  ],
+  "Footnote Text": [
+    "word/footnotes.xml"
+  ],
+  "FunctionTok": [
+    "word/document.xml"
+  ],
+  "Heading 1 Unlisted": [
+    "word/document.xml"
+  ],
+  "Heading 2 Unlisted": [
+    "word/document.xml"
+  ],
+  "Heading 3 Unlisted": [
+    "word/document.xml"
+  ],
+  "Heading 4 Unlisted": [
+    "word/document.xml"
+  ],
+  "Heading 5 Unlisted": [
+    "word/document.xml"
+  ],
+  "Heading 6 Unlisted": [
+    "word/document.xml"
+  ],
+  "Horizontal Rule": [
+    "word/document.xml"
+  ],
+  "Hyperlink": [
+    "word/document.xml"
+  ],
+  "Image Caption": [
+    "word/document.xml"
+  ],
+  "ImportTok": [
+    "word/document.xml"
+  ],
+  "KeywordTok": [
+    "word/document.xml"
+  ],
+  "Normal Table": [
+    "word/document.xml"
+  ],
+  "NormalTok": [
+    "word/document.xml"
+  ],
+  "OperatorTok": [
+    "word/document.xml"
+  ],
+  "PreprocessorTok": [
+    "word/document.xml"
+  ],
+  "Section Number": [
+    "word/document.xml"
+  ],
+  "Source Code": [
+    "word/document.xml"
+  ],
+  "SpecialCharTok": [
+    "word/document.xml"
+  ],
+  "SpecialStringTok": [
+    "word/document.xml"
+  ],
+  "StringTok": [
+    "word/document.xml"
+  ],
+  "Subtitle": [
+    "word/document.xml"
+  ],
+  "TOC Heading": [
+    "word/document.xml"
+  ],
+  "Table": [
+    "word/document.xml"
+  ],
+  "Table Caption": [
+    "word/document.xml"
+  ],
+  "Title": [
+    "word/document.xml"
+  ],
+  "VariableTok": [
+    "word/document.xml"
+  ],
+  "Verbatim Char": [
+    "word/document.xml"
+  ],
+  "footer": [
+    "word/footer1.xml"
+  ],
+  "heading 1": [
+    "word/document.xml"
+  ],
+  "heading 2": [
+    "word/document.xml"
+  ],
+  "heading 3": [
+    "word/document.xml"
+  ],
+  "heading 4": [
+    "word/document.xml"
+  ],
+  "heading 5": [
+    "word/document.xml"
+  ],
+  "heading 6": [
+    "word/document.xml"
+  ],
+  "toc 1": [
+    "word/document.xml"
+  ],
+  "toc 2": [
+    "word/document.xml"
+  ],
+  "toc 3": [
+    "word/document.xml"
+  ],
+  "toc 4": [
+    "word/document.xml"
+  ],
+  "toc 5": [
+    "word/document.xml"
+  ],
+  "toc 6": [
+    "word/document.xml"
+  ]
+}
