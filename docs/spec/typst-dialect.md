@@ -600,6 +600,11 @@ map by hand, so `set_inputs` sees an equal map for an unchanged config and keeps
 mounted files, `File` assets, include sources plus the files their parse read, package files from disk
 roots); embedded and virtual files never appear. It feeds the watch set (live-reload.md).
 
+The original `MainFile::Path` is native Typst regardless of its extension,
+including an explicit `--format typ` on a `.md` or `.ipynb` filename. Its file
+kind remains native while render helpers temporarily switch the main source;
+other Markdown/notebook source IDs still use the include provider.
+
 ### 6.4 Includes of `.md`/`.ipynb` (trait and `Synthesized`: T03 in `src/typst/world.rs`; `MarkdownIncludes` stub and installation: T16; its body: T53)
 ```rust
 // src/typst/world.rs (T03)
@@ -680,8 +685,10 @@ splices `Div` and `Span` children; drops `Raw` of formats other than `typst`, an
 blocks when `resolved.bibliography` is `None`; clears `Attrs.classes`/`pairs` except the classes
 `unnumbered` and `notoc` (`unlisted` read as `notoc`) on headings, figures and display math (a
 heading's `unnumbered` only while that side's heading numbering is on, §5.4), image
-`width`/`height` (px and bare numbers converted to pt) and code attributes re-read through
-`CodeAttrs::from_attrs` (canonical `numbered`/`plain`/`start`/`highlight`); applies
+`width`/`height` (px and bare numbers converted to pt) and `CodeBlock` attributes re-read through
+`CodeAttrs::from_attrs` (canonical `numbered`/`plain`/`start`/`highlight`; inline
+`Code` follows the ordinary class/pair clearing rule, retaining its id and exact
+text because line controls apply only to blocks); applies
 `latex_source::prepare` to latex math sources (math.md §6); replaces each `Ref` with `form: Normal`
 and `resolved.number == ""` by `Link { inlines: resolved.text, url: "#" + target, title: None,
 attrs: {} }` (§5.6); drops `LabelKind::Footnote` entries of `resolved.labels` (a stripped
@@ -691,6 +698,16 @@ and terms into `Text(" ")`; sets `Image.title`/`Link.title` to `None` and `Image
 `☐ `/`☒ ` text; merges a term's definitions into one; lifts cite prefixes/suffixes out as §5.6
 writes them; treats `meta.lang == None` as `config.document.lang`; clears body-cell `header` flags;
 merges adjacent `Text`. Any other difference is an emitter or frontend bug.
+
+> **Round-trip refinement (coordinator, 2026-10-29):** canonicalize only
+> `features.notebook` to the presence of a surviving `Block::Cell` on each
+> normalized side. A Markdown document can include a notebook containing only
+> Markdown cells: its merged notebook feature records source provenance, while
+> the flattened Typst has no code-cell from which to recover that provenance.
+> Preserve every other feature bit. A dropped actual Cell still changes the
+> normalized notebook bit and remains a regression. No citation-placeholder
+> normalization is added; `R` with `library: None` already classifies unknown
+> citation keys to their visible placeholders.
 
 ## 8. Compile and the PDF pipeline (T03 §8.1–8.3, T32 §8.4)
 

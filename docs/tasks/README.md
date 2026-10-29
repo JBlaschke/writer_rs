@@ -60,7 +60,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | ready for review |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | ready for review |
-| T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | todo |
+| T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | ready for review |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | todo |
 | T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | todo |
 | T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | todo |
@@ -454,3 +454,30 @@ Manual checks performed: …
   any writes. BOM/front-matter parity and portable filename collisions pass.
 - PRs #27–#32 now all pass CI. T52's native PDF, math-route, strict round-trip,
   HTTP/browser and example drafts are ready for validation after T34 publishes.
+
+
+- T34 is open in [PR #33](https://github.com/JBlaschke/writer_rs/pull/33)
+  (`20e2c8f`). T52 starts on `codex/native-typst` from that checked milestone.
+  Pending feature merge order is #28, #29, #30, #31, #32, #33, then T52; #27
+  remains an independent repair. PRs #27–#32 pass CI. The native builder,
+  private target-aware reporting, consumed-input protection, strict round-trip
+  suite and actual math/serve/example tests are installed for validation.
+
+
+- T52 passes formatting, all-target/all-feature Clippy, default/feature rustdoc,
+  1,601 debug and 1,600 release tests. All 14 real Chrome preview tests run
+  successfully, without skips. All 15 exact Markdown round trips, four focused
+  normalizer controls, 37 emitter tests, 27 native/math integration tests, four
+  new private units and two native HTTP/SSE checks pass. New goldens and the
+  four removed footnote-label spaces were independently reviewed.
+- Main-CI repair #27 merged as `d6de622`; PR #28 was refreshed with that main
+  merge (`98f6d2e`) and is rerunning CI. Its tree differs only in six recovery
+  documentation lines. PRs #29–#33 pass all checks. T53 include-provider,
+  frontend/package, source-map and selection drafts are staged next.
+
+
+- T52's final explicit-format probe found and fixed `.md`/`.ipynb` native-main
+  interception. The original MainFile::Path identity now survives render scratch
+  changes and resets. All 22 native integration cases, 12 World units, final
+  1,601/1,600 debug/release tests and all 14 real browser tests pass; source bytes
+  and ordinary include interception remain protected by dedicated regressions.

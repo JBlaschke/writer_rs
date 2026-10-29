@@ -1029,3 +1029,88 @@ fn notebook_pages_compile_error_reports_the_markdown_cell_and_recovers() {
         events.build(&server, id(&failed), |event| event["status"] == "ok");
     assert_eq!(fixed["pages"]["error"], Value::Null);
 }
+
+#[test]
+fn native_pages_default_keeps_updating_during_subset_and_include_failures() {
+    let _turn = serial();
+    let dir = project();
+    let source = dir.path().join("native.typ");
+    let part = dir.path().join("native-part.typ");
+    let original = fs::read_to_string(&source).unwrap();
+    let original_part = fs::read_to_string(&part).unwrap();
+    let mut server = Server::start(dir.path(), "native.typ", &[]);
+    let events = server.events();
+    let initial = events.hello(&server);
+    assert_eq!(initial["web"]["status"], "ok");
+    assert_eq!(initial["pages"]["status"], "ok");
+    assert!(server.text("/").contains("data-writer-view=\"pages\""));
+    assert!(server.text("/?view=web").contains("Native root marker"));
+    assert_page_resource(&server, &initial, 0);
+
+    write(
+        &source,
+        &format!(
+            "{original}\n#for index in range(2) [Native computed #index.]\n"
+        ),
+    );
+    let outside = events.build(&server, id(&initial), |event| {
+        event["pages"]["status"] == "ok" && event["web"]["status"] == "error"
+    });
+    assert_ne!(outside["pages"]["hashes"], initial["pages"]["hashes"]);
+    assert_page_resource(&server, &outside, 0);
+
+    write(&part, &format!("{original_part}\nNative include changed.\n"));
+    let included = events.build(&server, id(&outside), |event| {
+        event["pages"]["status"] == "ok"
+            && event["pages"]["hashes"] != outside["pages"]["hashes"]
+    });
+    assert_page_resource(&server, &included, 0);
+    write(&part, "#t52_missing_native_function()\n");
+    let failed = events.build(&server, id(&included), |event| {
+        event["pages"]["status"] == "error"
+    });
+    assert_eq!(failed["pages"]["error"]["kind"], "compile");
+    assert_eq!(failed["pages"]["error"]["file"], "native-part.typ");
+    assert_eq!(failed["pages"]["hashes"], included["pages"]["hashes"]);
+    assert_page_resource(&server, &failed, 0);
+
+    write(&part, &original_part);
+    let repaired = events
+        .build(&server, id(&failed), |event| event["pages"]["status"] == "ok");
+    assert_eq!(repaired["pages"]["error"], Value::Null);
+    write(&source, &original);
+    let restored = events.build(&server, id(&repaired), |event| {
+        event["web"]["status"] == "ok" && event["pages"]["status"] == "ok"
+    });
+    assert_eq!(restored["web"]["error"], Value::Null);
+    assert!(server.text("/?view=web").contains("Native included marker"));
+    assert!(!dir.path().join("dist").exists());
+}
+
+#[test]
+fn native_explicit_web_view_updates_both_real_source_views() {
+    let _turn = serial();
+    let dir = project();
+    let source = dir.path().join("native.typ");
+    let original = fs::read_to_string(&source).unwrap();
+    let mut server =
+        Server::start(dir.path(), "native.typ", &["--view", "web"]);
+    let events = server.events();
+    let initial = events.hello(&server);
+    assert_eq!(initial["web"]["status"], "ok");
+    assert_eq!(initial["pages"]["status"], "ok");
+    let web = server.text("/");
+    assert!(web.contains("data-writer-document"));
+    assert!(web.contains("Native root marker"));
+    assert!(!web.contains("data-writer-view=\"pages\""));
+    write(
+        &source,
+        &original.replace("Native root marker", "Native web revised"),
+    );
+    let changed = events.build(&server, id(&initial), |event| {
+        event["web"]["status"] == "ok" && event["pages"]["status"] == "ok"
+    });
+    assert!(server.text("/").contains("Native web revised"));
+    assert_ne!(changed["pages"]["hashes"], initial["pages"]["hashes"]);
+    assert_page_resource(&server, &changed, 0);
+}

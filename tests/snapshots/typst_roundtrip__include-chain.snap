@@ -1,0 +1,252 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "meta": {
+    "title": "A mixed include chain",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": "en",
+    "vars": {}
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Mixed include root"
+        }
+      ],
+      "attrs": {
+        "id": "sec-include-root",
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "The chain crosses a notebook and returns to Markdown. See "
+        },
+        {
+          "type": "ref",
+          "target": "fig-part-b",
+          "supplement": null,
+          "form": "normal",
+          "resolved": {
+            "kind": "figure",
+            "number": "1",
+            "text": [
+              {
+                "type": "text",
+                "text": "Figure 1"
+              }
+            ],
+            "anchor": "fig-part-b"
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Notebook in the chain"
+        }
+      ],
+      "attrs": {
+        "id": "sec-chain-notebook",
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "This notebook includes the Markdown part below."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Part A keeps its own file-scoped note."
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "This note belongs to part-a.md, not the including notebook."
+                }
+              ]
+            }
+          ],
+          "label": "1",
+          "number": 1
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Part B"
+        }
+      ],
+      "attrs": {
+        "id": "part-b",
+        "classes": [],
+        "pairs": {}
+      }
+    },
+    {
+      "type": "figure",
+      "kind": "image",
+      "caption": [
+        {
+          "type": "text",
+          "text": "Part B"
+        }
+      ],
+      "body": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "image",
+              "alt": [
+                {
+                  "type": "text",
+                  "text": "Part B"
+                }
+              ],
+              "url": "asset:000000000001",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "id": "fig-part-b",
+        "classes": [],
+        "pairs": {}
+      },
+      "number": "1"
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "The root continues after the included notebook."
+        }
+      ]
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": false,
+    "footnotes": true
+  },
+  "resolved": {
+    "labels": {
+      "fig-part-b": {
+        "kind": "figure",
+        "number": "1",
+        "supplement": "Figure",
+        "text": "Part B",
+        "span": null
+      },
+      "part-b": {
+        "kind": "heading",
+        "number": null,
+        "supplement": "Section",
+        "text": "Part B",
+        "span": null
+      },
+      "sec-chain-notebook": {
+        "kind": "heading",
+        "number": null,
+        "supplement": "Section",
+        "text": "Notebook in the chain",
+        "span": null
+      },
+      "sec-include-root": {
+        "kind": "heading",
+        "number": null,
+        "supplement": "Section",
+        "text": "Mixed include root",
+        "span": null
+      }
+    },
+    "toc": [
+      {
+        "level": 1,
+        "number": null,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Mixed include root"
+          }
+        ],
+        "anchor": "sec-include-root"
+      },
+      {
+        "level": 2,
+        "number": null,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Notebook in the chain"
+          }
+        ],
+        "anchor": "sec-chain-notebook"
+      },
+      {
+        "level": 1,
+        "number": null,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Part B"
+          }
+        ],
+        "anchor": "part-b"
+      }
+    ],
+    "bibliography": null,
+    "footnotes": 1
+  }
+}

@@ -1093,7 +1093,7 @@ impl<'a> Emitter<'a> {
                         .definitions
                         .get(&(inline as *const Inline as usize))
                 {
-                    self.write(&format!(" <{final_label}>"));
+                    self.write(&format!("<{final_label}>"));
                 }
                 Ok(label.is_none())
             }

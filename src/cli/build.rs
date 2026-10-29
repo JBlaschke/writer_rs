@@ -146,7 +146,7 @@ fn print_watch_status(
                     }
                     Ok(_) => {}
                     Err(error)
-                        if compiler_error_reported(
+                        if target_error_reported(
                             error, &report.diagnostics,
                         ) => {}
                     Err(error) => match pipeline::refused_clash(error) {
@@ -265,7 +265,7 @@ fn build_result(
             }
             Ok(_) => {}
             Err(error) => {
-                let reported = compiler_error_reported(&error, &diagnostics);
+                let reported = target_error_reported(&error, &diagnostics);
                 let error = match pipeline::refused_clash(&error) {
                     Some(clash) => clash_error(clash, explicit),
                     None => super::locate(error, &opts.input),
@@ -280,8 +280,18 @@ fn build_result(
     Ok(ExitCode::from(exit))
 }
 
-/// Detailed target failures also carry the first compiler error as a finding.
-fn compiler_error_reported(error: &Error, diagnostics: &Diagnostics) -> bool {
+/// Detailed target failures can also carry their error as a reported finding.
+fn target_error_reported(error: &Error, diagnostics: &Diagnostics) -> bool {
+    if let Error::MissingAsset { path, span } = error {
+        return diagnostics.iter().any(|finding| {
+            finding.level == crate::error::Level::Error
+                && matches!(
+                    pipeline::missing_asset_as_error(finding),
+                    Some(Error::MissingAsset { path: found, span: located })
+                        if &found == path && &located == span
+                )
+        });
+    }
     let Error::Compile { path, line, message, .. } = error else {
         return false;
     };

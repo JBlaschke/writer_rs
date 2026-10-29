@@ -20,7 +20,7 @@ The chain crosses a notebook and returns to Markdown. See #ref(<fig-part-b>);.
 
 This notebook includes the Markdown part below.
 
-Part A keeps its own file-scoped note.#footnote[This note belongs to part-a.md, not the including notebook.] <writer-fn-1>
+Part A keeps its own file-scoped note.#footnote[This note belongs to part-a.md, not the including notebook.]<writer-fn-1>
 
 = Part B <part-b>
 

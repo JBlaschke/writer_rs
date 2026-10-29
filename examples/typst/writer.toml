@@ -1,0 +1,14 @@
+[build]
+out_dir = "dist"
+typst_targets = ["pdf"]
+
+[pdf]
+system_fonts = false
+allow_packages = false
+timestamp = "2026-10-29T10:34:56Z"
+
+[math]
+html = "mathml"
+
+[docx]
+math = "omml"

@@ -1702,3 +1702,149 @@ fn export_asset_names_are_portable_on_case_insensitive_and_windows_filesystems()
         3,
     );
 }
+
+#[test]
+fn labelled_nested_footnotes_do_not_add_spaces_before_punctuation() {
+    let nested = Inline::Footnote {
+        blocks: vec![paragraph("Inner body.")],
+        label: Some("inner".into()),
+        number: Some(2),
+    };
+    let outer = Inline::Footnote {
+        blocks: vec![
+            Block::paragraph(vec![
+                Inline::text("Nested"),
+                nested,
+                Inline::text("."),
+            ]),
+            paragraph("Second paragraph."),
+        ],
+        label: Some("outer".into()),
+        number: Some(1),
+    };
+    let doc = document(vec![Block::paragraph(vec![
+        Inline::text("Outer"),
+        outer,
+        Inline::text(", repeat"),
+        Inline::FootnoteRef { label: "outer".into(), number: Some(1) },
+        Inline::text(" , retained."),
+    ])]);
+    let emitted = render(&doc);
+    assert!(
+        emitted.text.contains("#footnote[Inner body.]<writer-fn-inner>."),
+        "{}",
+        emitted.text
+    );
+    assert!(
+        emitted.text.contains(
+            "]<writer-fn-outer>, repeat#footnote(<writer-fn-outer>) , retained."
+        ),
+        "{}",
+        emitted.text
+    );
+    assert!(!emitted.text.contains("] <writer-fn-"));
+    let source = SourceInfo {
+        path: "/docs/generated.typ".into(),
+        base_dir: "/docs".into(),
+        kind: SourceKind::Typst,
+    };
+    let parsed = writer::typst::frontend::parse(
+        &source,
+        &emitted.text,
+        &Config::default(),
+    )
+    .unwrap();
+    assert!(!parsed.diagnostics.has_errors(), "{:?}", parsed.diagnostics);
+    let Block::Paragraph { inlines, .. } = &parsed.document.blocks[0] else {
+        panic!("outer paragraph");
+    };
+    assert_eq!(inlines.len(), 5);
+    assert_eq!(inlines[0], Inline::text("Outer"));
+    assert_eq!(inlines[2], Inline::text(", repeat"));
+    assert_eq!(inlines[4], Inline::text(" , retained."));
+    assert!(
+        matches!(&inlines[3], Inline::FootnoteRef { label, .. } if label == "outer")
+    );
+    let Inline::Footnote { blocks, label, .. } = &inlines[1] else {
+        panic!("outer note");
+    };
+    assert_eq!(label.as_deref(), Some("outer"));
+    assert_eq!(blocks.len(), 2);
+    let Block::Paragraph { inlines, .. } = &blocks[0] else {
+        panic!("nested note paragraph");
+    };
+    assert_eq!(inlines.len(), 3);
+    assert_eq!(inlines[0], Inline::text("Nested"));
+    assert!(
+        matches!(&inlines[1], Inline::Footnote { label: Some(label), .. } if label == "inner")
+    );
+    assert_eq!(inlines[2], Inline::text("."));
+}
+
+#[test]
+fn named_and_anonymous_notes_preserve_actual_following_whitespace() {
+    for label in [Some("note"), None] {
+        for tail in [".", ",after", ";tail", " after", " , retained"] {
+            let doc = document(vec![Block::paragraph(vec![
+                Inline::text("Before"),
+                Inline::Footnote {
+                    blocks: vec![paragraph("Body.")],
+                    label: label.map(str::to_owned),
+                    number: Some(1),
+                },
+                Inline::text(tail),
+            ])]);
+            let emitted = render(&doc);
+            let source = SourceInfo {
+                path: "/docs/generated.typ".into(),
+                base_dir: "/docs".into(),
+                kind: SourceKind::Typst,
+            };
+            let parsed = writer::typst::frontend::parse(
+                &source,
+                &emitted.text,
+                &Config::default(),
+            )
+            .unwrap();
+            assert!(
+                !parsed.diagnostics.has_errors(),
+                "{:?}",
+                parsed.diagnostics
+            );
+            let Block::Paragraph { inlines, .. } = &parsed.document.blocks[0]
+            else {
+                panic!("paragraph");
+            };
+            assert_eq!(inlines.len(), 3, "{label:?} {tail:?}: {inlines:?}");
+            assert_eq!(inlines[0], Inline::text("Before"));
+            assert!(
+                matches!(&inlines[1], Inline::Footnote { label: actual, .. }
+                if actual.as_deref() == label)
+            );
+            assert_eq!(
+                inlines[2],
+                Inline::text(tail),
+                "{label:?}: {}",
+                emitted.text
+            );
+        }
+    }
+    // Whitespace supplied by a native author is content, including a space
+    // before a label. The frontend must not trim it to repair emitter output.
+    let source = SourceInfo {
+        path: "/docs/spaced.typ".into(),
+        base_dir: "/docs".into(),
+        kind: SourceKind::Typst,
+    };
+    let parsed = writer::typst::frontend::parse(
+        &source,
+        "Before#footnote[Body.] <writer-fn-note>,after",
+        &Config::default(),
+    )
+    .unwrap();
+    assert!(!parsed.diagnostics.has_errors(), "{:?}", parsed.diagnostics);
+    let Block::Paragraph { inlines, .. } = &parsed.document.blocks[0] else {
+        panic!("native paragraph");
+    };
+    assert_eq!(inlines[2], Inline::text(" ,after"));
+}

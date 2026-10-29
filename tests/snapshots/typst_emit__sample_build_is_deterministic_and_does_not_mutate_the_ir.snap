@@ -23,7 +23,7 @@ expression: emitted.text
 
 = Introduction <sec-intro>
 
-Demand doubled #emph[emph]#strong[strong]#strike[strikeout]#sub[subscript]#super[superscript]#underline[underline]#smallcaps[small\_caps]`sum(values)`#mi(`x^2`)$alpha^2$#link("https://example.com")[documentation]#box(image("/__assets/460c4d8bad9f.png", width: 70%, alt: "Inline plot"))#footnote[Every run used the pinned image.] <writer-fn-note-run>#footnote(<writer-fn-note-run>)@fig-throughput#ref(<sec-intro>, form: "page", supplement: [page])see @knuth1984[p. 12] also#h(0pt)see #cite(<knuth1984>, form: "prose", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: "year", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: "author", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: "full", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: none, supplement: [p. 12]) also \
+Demand doubled #emph[emph]#strong[strong]#strike[strikeout]#sub[subscript]#super[superscript]#underline[underline]#smallcaps[small\_caps]`sum(values)`#mi(`x^2`)$alpha^2$#link("https://example.com")[documentation]#box(image("/__assets/460c4d8bad9f.png", width: 70%, alt: "Inline plot"))#footnote[Every run used the pinned image.]<writer-fn-note-run>#footnote(<writer-fn-note-run>)@fig-throughput#ref(<sec-intro>, form: "page", supplement: [page])see @knuth1984[p. 12] also#h(0pt)see #cite(<knuth1984>, form: "prose", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: "year", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: "author", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: "full", supplement: [p. 12]) also#h(0pt)see #cite(<knuth1984>, form: none, supplement: [p. 12]) also \
 
 highlighted
 
