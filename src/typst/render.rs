@@ -135,7 +135,7 @@ fn latex_literal(source: &str) -> String {
     literal
 }
 
-fn image_extension(mime: &str) -> Result<&'static str> {
+pub(crate) fn image_extension(mime: &str) -> Result<&'static str> {
     match mime {
         "image/png" => Ok("png"),
         "image/jpeg" => Ok("jpg"),

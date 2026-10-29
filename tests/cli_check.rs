@@ -169,7 +169,19 @@ fn clean_examples_do_not_create_outputs_or_change_sources() {
         let before = inventory(&copied);
         let mut command = check(&copied.join(entry));
         command.current_dir(&copied);
-        assert!(checked_json(command, 0).is_empty(), "{name}");
+        let findings = checked_json(command, 0);
+        if name == "basic" {
+            assert_eq!(
+                findings,
+                [json!({
+                    "level": "info", "code": "raw-skipped",
+                    "message": "html: skipped raw latex content",
+                    "file": entry, "line": 49, "cell": null,
+                })]
+            );
+        } else {
+            assert!(findings.is_empty(), "{name}: {findings:?}");
+        }
         assert_eq!(inventory(&copied), before, "{name}: check wrote files");
     }
 }
@@ -393,18 +405,38 @@ fn presenter_compatibility_adds_the_three_frozen_warnings_once() {
 }
 
 #[test]
-fn explicit_targets_keep_their_milestone_stub() {
+fn explicit_targets_run_real_checks_without_output() {
     let dir = project(&[
         ("document.md", "# A report\n"),
         ("document.typ", "Hello\n"),
+        ("writer.toml", "[pdf]\nsystem_fonts = false\n"),
     ]);
-    for target in ["html", "html,docx"] {
-        check(&dir.path().join("document.md"))
-            .args(["--target", target])
-            .assert()
-            .code(2)
-            .stderr(contains("T71"));
+    let before = inventory(dir.path());
+    for input in ["document.md", "document.typ"] {
+        for target in ["html", "pdf", "docx", "latex", "typst", "html,docx"] {
+            let mut command = check(&dir.path().join(input));
+            command.args(["--target", target]);
+            let rows = checked_json(command, 0);
+            assert!(
+                rows.iter().all(|row| row["level"] != "error"),
+                "{rows:#?}"
+            );
+            assert_eq!(inventory(dir.path()), before);
+        }
     }
+}
+
+#[test]
+fn target_raw_information_remains_info_with_denied_warnings_and_quiet_json() {
+    let dir = project(&[("document.md", "```{=html}\n<p>Raw</p>\n```\n")]);
+    let mut command = quiet_check(&dir.path().join("document.md"));
+    command.args(["--target", "typst,typst", "--deny-warnings"]);
+    let rows = checked_json(command, 0);
+    let raw: Vec<_> =
+        rows.iter().filter(|row| row["code"] == "raw-skipped").collect();
+    assert_eq!(raw.len(), 1, "{rows:#?}");
+    assert_eq!(raw[0]["level"], "info");
+    assert!(raw[0]["message"].as_str().unwrap().starts_with("typst:"));
 }
 
 fn stable_file(file: &str) -> String {

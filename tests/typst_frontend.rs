@@ -1040,7 +1040,7 @@ fn simple_typst_prepares_and_feeds_the_existing_html_and_docx_library_paths() {
 }
 
 #[test]
-fn target_free_typst_check_exposes_subset_json_but_target_checks_remain_t71() {
+fn default_and_explicit_typst_checks_expose_real_subset_json_errors() {
     let dir = project(&[("main.typ", "= Good\n\n#unknown()\n")]);
     let output = assert_cmd::Command::new(env!("CARGO_BIN_EXE_writer"))
         .current_dir(dir.path())
@@ -1059,12 +1059,17 @@ fn target_free_typst_check_exposes_subset_json_but_target_checks_remain_t71() {
     );
     let target = assert_cmd::Command::new(env!("CARGO_BIN_EXE_writer"))
         .current_dir(dir.path())
-        .args(["check", "main.typ", "--target", "html"])
+        .args(["check", "main.typ", "--target", "html", "--format", "json"])
         .timeout(std::time::Duration::from_secs(10))
         .output()
         .unwrap();
-    assert_eq!(target.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&target.stderr).contains("T71"));
+    assert_eq!(target.status.code(), Some(1));
+    assert!(target.stderr.is_empty());
+    let diagnostics: Value = serde_json::from_slice(&target.stdout).unwrap();
+    assert!(diagnostics.as_array().unwrap().iter().any(|diagnostic| {
+        diagnostic["code"] == "E-TYP-CALL-UNKNOWN"
+            && diagnostic["level"] == "error"
+    }));
 }
 
 #[test]

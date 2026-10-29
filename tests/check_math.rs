@@ -105,7 +105,16 @@ fn baseline_syntax_is_checked_for_every_html_route_without_pdf_preflight() {
             syntax[0].message.contains("KaTeX may still render it"),
             route == HtmlMath::Katex
         );
-        assert!(findings(&diagnostics, "math-conversion-failed").is_empty());
+        let conversions = findings(&diagnostics, "math-conversion-failed");
+        if route == HtmlMath::Image {
+            assert_eq!(conversions.len(), 1, "{diagnostics:?}");
+            assert!(conversions[0].message.starts_with("html:"));
+            assert_eq!(conversions[0].level, Level::Warning);
+            assert_eq!(conversions[0].path, syntax[0].path);
+            assert_eq!(conversions[0].span, syntax[0].span);
+        } else {
+            assert!(conversions.is_empty(), "{diagnostics:?}");
+        }
     }
 }
 

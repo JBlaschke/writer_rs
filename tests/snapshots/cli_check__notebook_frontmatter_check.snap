@@ -18,6 +18,27 @@ expression: tuples
     "cell": 2
   },
   {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 1,
+    "cell": 6
+  },
+  {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 1,
+    "cell": 7
+  },
+  {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "tests/fixtures/ipynb/frontmatter.ipynb",
+    "line": 1,
+    "cell": 8
+  },
+  {
     "level": "warning",
     "code": "raw-cell-skipped",
     "file": "tests/fixtures/ipynb/frontmatter.ipynb",

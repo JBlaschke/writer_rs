@@ -90,14 +90,21 @@ writer check <INPUT> [--target LIST] [--deny-warnings] [--format text|json] [--c
 - Exit 0 when there are no errors (and, with `--deny-warnings`, no warnings); 1 otherwise.
   `--format json` prints `[{"level","code","message","file","line","cell"}]`.
 
-> **Coordinator clarification (2026-10-27):** T1C implements Markdown and
-> notebook frontend/lenient-resolve checks. Explicit `--target` remains the
-> T71 milestone stub, and Typst checking remains T50/T71, each exiting 2.
-> Other check failures, including configuration and unknown extensions, are
-> error diagnostics with exit 1. Informational findings are shown in text
-> without `-v` and never fail `--deny-warnings`. Quiet JSON remains complete;
-> quiet text hides informational notes and warnings, except that warnings
-> causing `--deny-warnings` failure are shown. JSON uses `file`, not `path`.
+> **Coordinator clarification (2026-10-29, T71):** Markdown, notebook and
+> Typst inputs run frontend/lenient-resolve checks and the selected target
+> passes. Target checks discard generated packages and resource plans; they
+> create no output files or sidecars. The DOCX pass uses the actual writer and
+> shared lazy compiler World, while HTML only renders visible native/image
+> equations. PDF and Typst source use cheap conversion checks, without a full
+> document compile. Missing assets remain warnings in check: a deferred DOCX
+> missing asset repeats no already-collected warning, and a newly missing asset
+> gains a located warning. A failed writer contributes no speculative later
+> findings. Genuine template/reference/resource/I/O failures remain errors.
+> Configuration and unknown extensions are error diagnostics with exit 1.
+> Informational findings are shown in text without `-v` and never fail
+> `--deny-warnings`. Quiet JSON remains complete; quiet text hides informational
+> notes and warnings, except that warnings causing `--deny-warnings` failure
+> are shown. JSON uses `file`, not `path`.
 
 ## dump
 ```

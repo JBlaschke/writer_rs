@@ -65,7 +65,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | ready for review |
 | T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | done |
 | T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | done |
-| T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | todo |
+| T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | done |
 | T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | todo |
 | T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | todo |
 | T74 | User documentation | M7 | M | T53, T61, T71, T72, T73 | todo |
@@ -551,3 +551,21 @@ Manual checks performed: …
   pass. All 12 positive TeX cases pass, with 8 real BibTeX backend proofs and
   two unavailable optional Biber variants. T71/T72/T73 drafts and independent
   review corrections are staged for their separate feature branches.
+
+
+- 2026-10-29: T70 published as [PR #38](https://github.com/JBlaschke/writer_rs/pull/38)
+  (`9eeea00`). T71 starts on `codex/target-checks` without waiting for CI.
+  Target adapters, exact selected-content visibility and CLI routing are
+  installed, including reviewed template-location and asset-URI corrections.
+  Full no-run typechecking passes; runtime acceptance has started. T72/T73
+  and complete T74 guide drafts remain staged separately for later branches.
+
+
+- 2026-10-29: T71 acceptance complete: 1,904 distinct debug cases verified
+  across the complete run and a 52-case frontend rerun; the full release suite
+  passes all 1,903 tests (three intentional ignores). Formatting and denied-
+  warning Clippy/rustdoc pass. All selected-target, source/asset provenance,
+  actual renderer and no-write controls pass; the four diagnostic goldens add
+  exactly eight raw infos and one HTML page-reference warning. Main is fully
+  green, #34/#35 are green, and #36–#38 have no failures in the fresh CI audit.
+  T72 scaffold/eject and its reviewed preflight corrections are staged next.

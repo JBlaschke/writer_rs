@@ -4,6 +4,13 @@ expression: stable(&diagnostics)
 ---
 [
   {
+    "level": "warning",
+    "code": "unsupported-construct",
+    "file": "md/references.md",
+    "line": 10,
+    "cell": null
+  },
+  {
     "level": "error",
     "code": "duplicate-label",
     "file": "md/references.md",

@@ -1,5 +1,5 @@
 //! Document lints and presenter compatibility (markdown-dialect.md §9–10).
-//! Frontend and resolver findings are reused; no output is rendered or written.
+//! Frontend and resolver findings are reused; target packages are discarded.
 //! Error conversion and position ordering are adapted from presenter_rs/check.rs.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -24,6 +24,9 @@ use crate::math::latex_source;
 use crate::notebook::nbformat::{self, CellType};
 use crate::pipeline::{self, BuildFailure, BuildOptions, Mode};
 
+mod targets;
+mod visible;
+
 /// Optional checks beyond the frontend and reference resolver.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CheckOptions {
@@ -41,10 +44,15 @@ pub fn run(
     let mut opts = opts.clone();
     opts.mode = Mode::Check;
     let prepared = pipeline::prepare(&opts)?;
-    let mut diagnostics = prepared.diagnostics.into_vec();
+    let mut diagnostics = prepared.diagnostics.clone().into_vec();
     let math = math_diagnostics(&prepared.document, &prepared.config);
     diagnostics.extend(pipeline::escalate_strict(
         math.into(),
+        opts.cli.strict,
+        &prepared.config,
+    ));
+    diagnostics.extend(pipeline::escalate_strict(
+        targets::run(&prepared, &opts).into(),
         opts.cli.strict,
         &prepared.config,
     ));
@@ -161,7 +169,11 @@ impl<'a> MathCollector<'a> {
         view: MathVisibility<'_>,
     ) {
         if dialect != MathDialect::Latex
-            || !view.baseline && !view.targets.contains(&Target::Pdf)
+            || !view.baseline
+                && !view
+                    .targets
+                    .iter()
+                    .any(|target| matches!(target, Target::Pdf | Target::Typst))
         {
             return;
         }
@@ -408,6 +420,48 @@ fn math_diagnostics(document: &Document, config: &Config) -> Vec<Diagnostic> {
         collector.blocks(abstract_, &location, view);
     }
     collector.blocks(&document.blocks, &location, view);
+    // Source traversal owns baseline checks. Backend visibility uses the actual
+    // emitted branch, including table clipping and resolved inline payloads.
+    for equation in &mut collector.equations {
+        equation
+            .targets
+            .retain(|target| !matches!(target, Target::Pdf | Target::Typst));
+    }
+    for target in targets
+        .iter()
+        .copied()
+        .filter(|target| matches!(target, Target::Pdf | Target::Typst))
+    {
+        visible::walk(document, target, config, |node, location| {
+            let (identity, source, dialect, display) = match node {
+                visible::Node::Block(
+                    block @ Block::Math { source, dialect, .. },
+                ) => (
+                    MathIdentity::Block(std::ptr::from_ref(block)),
+                    source.as_str(),
+                    *dialect,
+                    true,
+                ),
+                visible::Node::Inline(
+                    inline @ Inline::Math { source, dialect },
+                ) => (
+                    MathIdentity::Inline(std::ptr::from_ref(inline)),
+                    source.as_str(),
+                    *dialect,
+                    false,
+                ),
+                _ => return,
+            };
+            collector.equation(
+                identity,
+                source,
+                dialect,
+                display,
+                location,
+                MathVisibility { targets: &[target], baseline: false },
+            );
+        });
+    }
     let macros = latex_source::macros_from_config(&config.math.katex_options);
     let mut diagnostics = Vec::new();
     let mut macros_reported = false;
@@ -430,9 +484,18 @@ fn validate_math(
     macros: &BTreeMap<String, String>, diagnostics: &mut Vec<Diagnostic>,
 ) {
     let (prepared, removed) = latex_source::prepare(equation.source);
-    let pdf = equation.targets.contains(&Target::Pdf);
-    let tag_target = if pdf {
-        Some("pdf")
+    let backend = selected.iter().find_map(|target| {
+        if !equation.targets.contains(target) {
+            return None;
+        }
+        match target {
+            Target::Pdf => Some("pdf"),
+            Target::Typst => Some("typst"),
+            _ => None,
+        }
+    });
+    let tag_target = if backend.is_some() {
+        backend
     } else {
         selected.iter().find_map(|target| {
             if !equation.targets.contains(target) {
@@ -478,12 +541,12 @@ fn validate_math(
                 .attach(Diagnostic::warning("math-syntax", message)),
         );
     }
-    if pdf {
+    if let Some(target) = backend {
         let (prepared, _) = latex_source::for_typst(equation.source, macros);
         if let Err(reason) = latex_source::preflight_typst(&prepared) {
             diagnostics.push(equation.location.attach(Diagnostic::warning(
                 "math-conversion-failed",
-                format!("pdf: cannot convert equation ({reason}); used the source text"),
+                format!("{target}: cannot convert equation ({reason}); used the source text"),
             )));
         }
     }
