@@ -62,7 +62,9 @@ def main():
             encoding="utf-8", newline="\n"
         )
         if args.github_output:
-            with args.github_output.open("a", encoding="utf-8", newline="\n") as output:
+            with args.github_output.open(
+                "a", encoding="utf-8", newline="\n"
+            ) as output:
                 for key in ["version", "revision", "build_id", "epoch"]:
                     output.write(f"{key}={result[key]}\n")
     except (KeyError, OSError, ValueError, subprocess.CalledProcessError) as error:

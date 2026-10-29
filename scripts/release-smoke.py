@@ -94,8 +94,10 @@ def run(binary, arguments, cwd, epoch):
         timeout=180, check=False,
     )
     if result.returncode:
-        raise ValueError(f"writer {' '.join(arguments)} failed ({result.returncode}):\n"
-                         + result.stderr.decode("utf-8", errors="replace"))
+        raise ValueError(
+            f"writer {' '.join(arguments)} failed ({result.returncode}):\n"
+            + result.stderr.decode("utf-8", errors="replace")
+        )
     return result.stdout
 
 
@@ -120,8 +122,12 @@ def outputs(binary, temporary, epoch):
     project = temporary / "project"
     fixed_config(project, epoch)
     target_list = "html,pdf,docx,latex,typst"
-    check = run(binary, ["check", "document.md", "--target", target_list,
-                         "--format", "json", "--deny-warnings"], project, epoch)
+    check = run(
+        binary, [
+            "check", "document.md", "--target", target_list,
+            "--format", "json", "--deny-warnings"
+        ], project, epoch
+    )
     if any(finding["level"] == "error" for finding in json.loads(check)):
         raise ValueError("scaffold check contains an error")
     run(binary, ["build", "document.md", "--to", target_list], project, epoch)

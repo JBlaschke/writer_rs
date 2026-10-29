@@ -297,8 +297,11 @@ class Mapper:
     def repository_source(self, path: Path, fragment="", query="") -> str:
         relative = source_within(self.root, path).relative_to(self.root).as_posix()
         kind = "tree" if path.is_dir() else "blob"
-        return urlunsplit(("https", urlsplit(self.repo).netloc,
-            urlsplit(self.repo).path + f"/{kind}/{self.sha}/" + quote(relative, safe="/"), query, fragment))
+        return urlunsplit((
+            "https", urlsplit(self.repo).netloc,
+            urlsplit(self.repo).path + f"/{kind}/{self.sha}/" + quote(relative, safe="/"),
+            query, fragment
+        ))
 
     def resource(self, path: Path) -> str:
         source = source_within(self.root, path)
@@ -472,8 +475,10 @@ def command(
         stderr=subprocess.PIPE, check=False
     )
     if result.returncode:
-        raise SiteError(f"writer {' '.join(args)} failed ({result.returncode}):\n"
-            + result.stderr.decode("utf-8", errors="replace"))
+        raise SiteError(
+            f"writer {' '.join(args)} failed ({result.returncode}):\n"
+            + result.stderr.decode("utf-8", errors="replace")
+        )
     return result.stdout
 
 
@@ -532,8 +537,10 @@ def build(args) -> None:
                 root, environment
             )
             text = raw.read_bytes().decode("utf-8")
-            text = AttributeRewriter(text, lambda tag, name, value:
-                mapper.rewrite(page, tag, name, value)).result()
+            text = AttributeRewriter(
+                text, lambda tag, name, value:
+                    mapper.rewrite(page, tag, name, value)
+            ).result()
             destination = artifact / page.route
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(text, encoding="utf-8", newline="")

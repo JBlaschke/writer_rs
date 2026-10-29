@@ -74,8 +74,12 @@ def members(entries, root):
 
 def write_tar(path, entries, epoch):
     with Path(path).open("wb") as raw:
-        with gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=epoch) as compressed:
-            with tarfile.open(fileobj=compressed, mode="w", format=tarfile.PAX_FORMAT) as archive:
+        with gzip.GzipFile(
+            filename="", fileobj=raw, mode="wb", mtime=epoch
+        ) as compressed:
+            with tarfile.open(
+                fileobj=compressed, mode="w", format=tarfile.PAX_FORMAT
+            ) as archive:
                 for name, data, mode in entries:
                     entry = tarfile.TarInfo(name)
                     entry.uid = 0
@@ -94,7 +98,9 @@ def write_zip(path, entries, epoch):
     if date[0] > 2107:
         raise ValueError("ZIP timestamp exceeds year 2107")
     date = (*date[:5], date[5] // 2 * 2)
-    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    with zipfile.ZipFile(
+        path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as archive:
         for name, data, mode in entries:
             entry = zipfile.ZipInfo(name, date_time=date)
             entry.create_system = 3
@@ -144,8 +150,10 @@ def checksums(directory, version, verify=False):
     archives = {path.name for path in directory.iterdir()
                 if path.name.endswith((".tar.gz", ".zip"))}
     if archives != expected:
-        raise ValueError(f"expected six target archives; missing={sorted(expected - archives)}, "
-                         f"unexpected={sorted(archives - expected)}")
+        raise ValueError(
+            f"expected six target archives; missing={sorted(expected - archives)}, "
+            f"unexpected={sorted(archives - expected)}"
+        )
     content = "".join(
         f"{digest(directory / name)}  {name}\n" for name in sorted(expected)
     ).encode("ascii")
