@@ -862,6 +862,16 @@ by the main file. The tree compiles with `typst compile --package-path <eject ty
 > paths reuse one copy; distinct resources use the first six content-hash
 > characters and the same collision-counter rule when necessary.
 >
+> **Shared LaTeX namespace (T60, coordinator, 2026-10-29):** keep the
+> existing Typst referenced Image/Link set and its names first. Then reserve
+> LaTeX-only picked Image ids, MIME-corrected/rendition names and bibliography
+> names using latex-output.md §1.2's fixed priority, even in a standalone export.
+> The pure planner performs no reads. Physical Typst resources retain the
+> existing canonical reuse/content-hash allocator and may claim an ordinary
+> basename already reserved for the same written resource path. Auxiliary
+> resource names change only when a new LaTeX reservation blocks their exact
+> old destination. A raw asset and its rendition cannot share a byte owner.
+>
 > For notebook scanning, retained raw cells with MIME `text/markdown` follow
 > the same rules as Markdown cells. Span-based runs preserve block order and
 > contents: adjacent occurrences of the same file can coalesce, and a nested

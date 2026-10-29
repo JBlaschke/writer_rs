@@ -1,0 +1,19 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section*{Single quotes}\\label{_56c5c9ff6abd256733c872aface9d8e318deca7}\n\\addcontentsline{toc}{section}{Single quotes}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.5\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Single-quoted width}\n\\end{figure}\n\n\\href{https://example.org}{A bare path}\n\n\\texttt{A\\ bare\\ pipe}\n\n\\href{https://example.org}{A bare key}\\{bare\\}\n\n\\texttt{Comma-separated\\ classes}\n\n\\href{https://example.org}{Consecutive blocks}\\{k='v'\\}\n\n\\{this is not an attribute block\\}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: false,\n    table: false,\n    caption: true,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "plot.png",
+      "render": false
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": []
+}

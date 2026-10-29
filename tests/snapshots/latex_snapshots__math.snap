@@ -1,0 +1,26 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "Inline \\(\\frac{a}{b}\\).\n\n\\begin{equation}\n\\sum_{i=0}^{n} i\n\\label{_2208901df4a3a500cc06b38938d6b0101adb23b}\n\\end{equation}\n\nSee Equation~\\eqref{_2208901df4a3a500cc06b38938d6b0101adb23b}.\n\n\\begin{equation}\n\\begin{aligned} a &= b + c \\\\ &= d \\end{aligned}\n\\label{_06dc6986c6134a3a78d701f940f2cf7225af504}\n\\end{equation}\n\nAccents \\(\\hat{x} \\vec{v} \\dot{y}\\).\n\n\\[\nx = 1 \\tag{3} \\label{eq:t}\n\\]\n\nMacros \\(\\RR^n + \\half{x}\\).\n\nInline \\(x + y\\) and display \\(x^2\\).\n\n\\begin{equation}\nx = y\n\\label{_bf3da126b9f9c6c63fd6dd28017674a1e82a4b0}\n\\end{equation}\n\n\\(z = 2\\) trailing prose \\{\\#eq-misplaced\\}\n\nThe escaped dollar price is \\$5.\n\n\\section*{Energy \\texorpdfstring{\\(E = mc^2\\)}{E = mc\\textasciicircum{}2}}\\label{_ccb872cf26108029da3f0c4f75897f1b784bbc2}\n\\addcontentsline{toc}{section}{Energy \\texorpdfstring{\\(E = mc^2\\)}{E = mc\\textasciicircum{}2}}\n\n\\begin{itemize}\n\\tightlist\n\\item Math inside a list: \\(x_1\\).\n\\end{itemize}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: true,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "equation-label-misplaced",
+      "message": "place the equation and its label in a paragraph of their own",
+      "path": "[fixtures]/md/math.md",
+      "span": {
+        "start_line": 27,
+        "end_line": 27,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

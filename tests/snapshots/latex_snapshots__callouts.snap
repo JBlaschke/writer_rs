@@ -1,0 +1,13 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\begin{writercallout}{note}{Note}\nA note.\n\\end{writercallout}\n\n\\begin{writercallout}{tip}{Useful advice}\nA tip with a title.\n\\end{writercallout}\n\n\\begin{writercallout}{important}{Important}\nImportant information.\n\\end{writercallout}\n\n\\begin{writercallout}{warning}{Warning}\nA warning.\n\\end{writercallout}\n\n\\begin{writercallout}{caution}{Caution}\nA caution.\n\\end{writercallout}\n\n\\begin{writercallout}{note}{Mixed case}\nTags are case-insensitive.\n\\end{writercallout}\n\n\\begin{quote}\n{[}!UNKNOWN{]}\nAn unknown alert tag remains a block quote.\n\\end{quote}\n\n\\begin{writercallout}{warning}{Check the quota}\nAn explicit callout kind and title.\n\\end{writercallout}\n\n\\begin{quote}\nAn ordinary block quote.\n\\end{quote}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": []
+}

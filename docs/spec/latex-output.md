@@ -39,15 +39,36 @@ Determinism: same inputs → byte-identical `.tex` and files (no timestamps, ver
 
 ### 1.2 File names (T60, `emit.rs`)
 `build --to latex,typst` writes both exports into the same `<stem>_assets/` (cli.md), so a name both write must hold
-the same bytes. Base name: typst-dialect.md §10's export name, computed over the same set (every asset id an
-`Inline::Image` of the abstract or body references, whatever its MIME): `file_name_hint` with each character outside
-`[A-Za-z0-9._-]` replaced by `-`, assigned in asset-id order, a later duplicate getting `-<id[..6]>` before the
-extension. An asset with a §1.1 MIME is written under its base name when that ends, ASCII case-insensitively, in its
-MIME's extension (`.png`; `.jpg` or `.jpeg`; `.pdf`; graphicx reads all of them on both engines), else — always for
-the rendered MIMEs — under the base name plus `.png`, `.jpg` or `.pdf` (`diagram.svg` → `diagram.svg.pdf`; graphicx
-reads multi-dot names, verified with pdflatex and xelatex). An appended name that equals another asset's base name
-gets `-<id[..6]>` before the appended extension. `Emitted.images` lists them in first use order (abstract, then
-body). Bibliography copies: §7.3. Other image URLs: §4.5.
+the same bytes. A shared crate-private pure planner reserves names independently of the requested targets:
+
+1. Preserve the existing Typst export set and names first: Image/Link asset references in the abstract/body,
+   following visible code outputs through `pick("typst")`, allocated in asset-id order.
+2. Append additional Image asset identities selected through `pick("latex")`, in asset-id order. Shared ids reuse
+   their original basename. Unpicked and hidden candidates are never materialized for either target.
+3. Reserve all LaTeX MIME-corrected/rendition names after the complete base-name set, in asset-id order.
+4. Reserve LaTeX bibliography names in config order (§7.3), recording their source-path ownership.
+5. Typst's existing physical resource planner then allocates bibliography/CSL/template copies using that namespace,
+   preserving canonical-source reuse and its content-hash collision suffixes. It may claim a preferred basename
+   reserved by LaTeX for the same written resource path. Different owners remain occupied.
+
+The portable basename rule is typst-dialect.md §10's existing export allocator: characters outside `[A-Za-z0-9._-]`
+become `-`; trailing dots are trimmed; an empty/dot-only name becomes `asset`; Windows device basenames gain an
+`asset-` prefix; collisions compare ASCII case-insensitively. A later asset gets `-<id[..6]>` before its extension;
+repeated collisions add `-2`, `-3` after that suffix. No file read, canonicalization or rendition occurs in this
+pure planner. T34 resource reads, canonical aliases and content hashes remain in its I/O copy planner.
+
+An asset with a §1.1 MIME uses its base name when that ends, ASCII case-insensitively, in its MIME's extension
+(`.png`; `.jpg` or `.jpeg`; `.pdf`; graphicx reads all of them on both engines). Otherwise — always for rendered
+MIMEs — append `.png`, `.jpg` or `.pdf` (`diagram.svg` → `diagram.svg.pdf`; graphicx reads multi-dot names,
+verified with pdflatex and xelatex). A derived name already occupied by a base/derived name gets `-<id[..6]>` before
+the appended extension, using the same fallback. Raw bytes and a rendition of those bytes are different owners.
+`Emitted.images` lists only actual emitted images in first use order (abstract, then body). Unsupported-MIME Image
+ids still reserve their base names; other image URLs and unsupported MIME fallback follow §4.5.
+
+This priority preserves T34's existing asset names. A Typst auxiliary resource changes its previous name only
+when a newly reserved LaTeX-only name occupies that exact destination. Ordinary shared bibliography copies keep
+their names; their ownership does not force a needless suffix. Target order affects materialization, never naming.
+Bibliography copies: §7.3.
 
 ### 1.3 Module interface (exact)
 ```rust
@@ -649,8 +670,10 @@ Each `[references] bibliography` path (absolute after config loading): `.yaml`/`
 `latex-bib-yaml` (T61, "hayagriva YAML cannot feed BibTeX or biber; convert it to .bib"), not copied; any other file
 is BibTeX. T60 names those in config order into `Emitted.bibliography`: the file name with each character outside
 `[A-Za-z0-9._-]` replaced by `-` (typst-dialect.md §10's rule), plus `.bib` unless it already ends in `.bib`
-(BibTeX appends `.bib` to `\bibliography` names), a name already taken by an image (§1.2) or an earlier
-bibliography getting `-2`, `-3`, … before `.bib` (`refs.bib`, `refs-2.bib`). T61 turns each entry into
+(BibTeX appends `.bib` to `\bibliography` names), a name already taken by a shared base/rendition reservation
+(§1.2) or an earlier bibliography getting `-2`, `-3`, … before `.bib` (`refs.bib`, `refs-2.bib`). The reservation
+records the supplied normalized source path, allowing Typst to claim the same ordinary basename for that source
+without a second allocation; its actual I/O planner retains canonical-alias deduplication and content-hash suffixes. T61 turns each entry into
 `PlannedFile { name, source: FileSource::Bib(path) }`, copied byte for byte as `<stem>_assets/<name>`, and into the
 `bibliography` variable (§2.2). The template loads them (`\addbibresource`, `\bibliography`).
 

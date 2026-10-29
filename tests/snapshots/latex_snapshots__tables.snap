@@ -1,0 +1,38 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\begin{longtable}[]{@{}lcr@{}}\n\\caption{A caption before the table}\\label{_48440709133039a930e341f2c26c2021fd51662}\\tabularnewline\n\\toprule\nleft & center & right \\\\\n\\midrule\n\\endfirsthead\n\\toprule\nleft & center & right \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\none & two & three \\\\\n\\end{longtable}\n\n\\begin{longtable}[]{@{}lr@{}}\n\\caption{A caption after the table}\\label{_597161e9ff7e63d1444c370a4833d6e3ff0269b}\\tabularnewline\n\\toprule\nitem & count \\\\\n\\midrule\n\\endfirsthead\n\\toprule\nitem & count \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\nalpha & 1 \\\\\n\\end{longtable}\n\nTable: An orphan caption \\{\\#tbl-orphan\\}\n\nA paragraph separates the orphan from any table.\n\n{\\def\\LTcaptype{none}\n\\begin{longtable}[]{@{}ll@{}}\n\\toprule\npandoc & caption \\\\\n\\midrule\n\\endfirsthead\n\\toprule\npandoc & caption \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\na & b \\\\\n: A pandoc caption is retained with a compatibility warning. &  \\\\\n\\end{longtable}\n}\n\n\\begin{longtable}[]{@{}lr@{}}\n\\caption{A labelled table}\\label{_71f23a39c08d543d8648d126c0faa91f98089c4}\\tabularnewline\n\\toprule\ncolumn & value \\\\\n\\midrule\n\\endfirsthead\n\\toprule\ncolumn & value \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\nx & 2 \\\\\n\\end{longtable}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: true,\n    table: true,\n    caption: true,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: true,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "table-caption-orphan",
+      "message": "`Table:` caption has no adjacent table",
+      "path": "[fixtures]/md/tables.md",
+      "span": {
+        "start_line": 18,
+        "end_line": 18,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "table-caption-pandoc-colon",
+      "message": "use a separate `Table:` paragraph for a table caption",
+      "path": "[fixtures]/md/tables.md",
+      "span": {
+        "start_line": 22,
+        "end_line": 25,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

@@ -1590,64 +1590,26 @@ fn edge(inline: &Inline, first: bool) -> Option<char> {
 pub(crate) fn export_asset_paths(
     document: &Document, registry: &AssetRegistry, dir: &str,
 ) -> BTreeMap<String, String> {
-    asset_paths(document, registry, &AssetPaths::Export { dir: dir.into() })
+    crate::assets::export::assets(document, registry)
+        .typst
+        .into_iter()
+        .map(|(id, name)| (id, format!("{}/{name}", dir.trim_end_matches('/'))))
+        .collect()
 }
 
 /// Allocates a portable resource basename; occupied keys are ASCII-lowercase.
 pub(crate) fn export_name(
     hint: &str, suffix_key: &str, occupied: &mut BTreeSet<String>,
 ) -> String {
-    let mut original: String = hint
-        .rsplit(['/', '\\'])
-        .next()
-        .unwrap_or("asset")
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-') {
-                c
-            } else {
-                '-'
-            }
-        })
-        .collect();
-    original.truncate(original.trim_end_matches('.').len());
-    if original.is_empty() {
-        original = "asset".into();
-    }
-    let base = original.split('.').next().unwrap_or_default();
-    let upper = base.to_ascii_uppercase();
-    let numbered_device = upper
-        .strip_prefix("COM")
-        .or_else(|| upper.strip_prefix("LPT"))
-        .is_some_and(|digit| matches!(digit.as_bytes(), [b'1'..=b'9']));
-    if matches!(upper.as_str(), "CON" | "PRN" | "AUX" | "NUL")
-        || numbered_device
-    {
-        original.insert_str(0, "asset-");
-    }
-    let mut name = original.clone();
-    let mut collision = 1;
-    while !occupied.insert(name.to_ascii_lowercase()) {
-        let (stem, extension) =
-            original.rsplit_once('.').unwrap_or((&original, ""));
-        let suffix = if collision == 1 {
-            suffix_key.to_owned()
-        } else {
-            format!("{suffix_key}-{collision}")
-        };
-        name = if extension.is_empty() {
-            format!("{stem}-{suffix}")
-        } else {
-            format!("{stem}-{suffix}.{extension}")
-        };
-        collision += 1;
-    }
-    name
+    crate::assets::export::export_name(hint, suffix_key, occupied)
 }
 
 fn asset_paths(
     document: &Document, registry: &AssetRegistry, mode: &AssetPaths,
 ) -> BTreeMap<String, String> {
+    if let AssetPaths::Export { dir } = mode {
+        return export_asset_paths(document, registry, dir);
+    }
     let mut referenced = BTreeSet::new();
     visit_rendered(document, &mut |_| {}, &mut |inline| {
         if let Inline::Image { url, .. } | Inline::Link { url, .. } = inline
@@ -1664,19 +1626,11 @@ fn asset_paths(
         _ => document.source.base_dir.clone(),
     };
     let mut paths = BTreeMap::new();
-    let mut used = BTreeSet::new();
     for asset in registry.iter().filter(|asset| referenced.contains(&asset.id))
     {
         let path = match mode {
             AssetPaths::Virtual => virtual_path(asset),
-            AssetPaths::Export { dir } => {
-                let name = export_name(
-                    &asset.file_name_hint,
-                    &asset.id[..6],
-                    &mut used,
-                );
-                format!("{}/{name}", dir.trim_end_matches('/'))
-            }
+            AssetPaths::Export { .. } => unreachable!("handled above"),
             AssetPaths::Source => match &asset.data {
                 AssetData::File(path) => relative_path(path, &source_base),
                 AssetData::Bytes(_) => virtual_path(asset),

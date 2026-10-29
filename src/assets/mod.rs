@@ -8,6 +8,7 @@ use std::convert::Infallible;
 use std::ops::Range;
 
 pub mod emit;
+pub(crate) mod export;
 pub mod registry;
 
 /// Every start tag outside comments and raw-text elements, in order: its

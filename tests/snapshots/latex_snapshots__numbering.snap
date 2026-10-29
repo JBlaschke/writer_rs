@@ -1,0 +1,19 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/a.png}\n\\caption{before}\\label{_4f218681105ddb76490e7198caf5ee3d9f2f38e}\n\\end{figure}\n\n\\section{One}\\label{_e0a16d92852d7af319cab62b274496a6fafb2a1}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/a.png}\n\\caption{a}\\label{_3ea034c099679bbe7b93620746faecac9592659}\n\\end{figure}\n\n\\begin{longtable}[]{@{}l@{}}\n\\caption{t}\\label{_cae1e5b7b370e37debc7218b54c0b605630842f}\\tabularnewline\n\\toprule\nx \\\\\n\\midrule\n\\endfirsthead\n\\toprule\nx \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\n1 \\\\\n\\end{longtable}\n\n\\begingroup\n\\captionsetup{type=writerlisting}\n\\caption{code}\\label{_751264d5f0714356c77a95869026873ba1fe846}\n\\begin{Verbatim}\nfn main() {}\n\\end{Verbatim}\n\\endgroup\n\n\\begin{figure}[htbp]\n\\centering\nSome \\emph{other} content.\n\\caption{other}\\label{_d8d18e89595320e19367df34e36a1f2fbf91635}\n\\end{figure}\n\n\\[\nx = 1\n\\]\n\n\\begin{equation}\ny = 2\n\\label{_7466eee98c3eb23dea48fd468b101759cff4639}\n\\end{equation}\n\n\\subsection{Sub}\\label{_e6b4fe6ec89264be555c78f4ee7b560854b94a8}\n\n\\subsubsection{Deep}\\label{_0bddaaf51366f274a698b173fde26a31097a04f}\n\n\\section*{Interlude}\\label{_a4bb401385d6d765e1d07ace821233e4496629b}\n\\addcontentsline{toc}{section}{Interlude}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/a.png}\n\\caption{in interlude}\\label{_b9d6e72b5226c08d21a4290175821aca54e8bf8}\n\\end{figure}\n\n\\subsection{Under interlude}\\label{_1c4e5fdc16a1c6a3c24ea3deb2c4124beeb37b8}\n\n\\section{Two}\\label{_ee1833e1c2f4efb6a862c32a97de26740bd6545}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/a.png}\n\\caption{c}\\label{_250533b49f1f6ffdf2e53e59095d5ebaa40c964}\n\\end{figure}\n\n\\begin{equation}\nz = 3\n\\label{_08571fd46b62658e1180bd8fb90876437369216}\n\\end{equation}\n\nSee Section~\\ref{_e0a16d92852d7af319cab62b274496a6fafb2a1}, Figure~\\ref{_4f218681105ddb76490e7198caf5ee3d9f2f38e}, Equation~\\eqref{_7466eee98c3eb23dea48fd468b101759cff4639}, Eq.~\\eqref{_7466eee98c3eb23dea48fd468b101759cff4639}, \\eqref{_7466eee98c3eb23dea48fd468b101759cff4639}, Chapter~\\ref{_ee1833e1c2f4efb6a862c32a97de26740bd6545} and \\hyperref[_a4bb401385d6d765e1d07ace821233e4496629b]{Interlude}.\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: true,\n    table: true,\n    caption: true,\n    code: true,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: true,\n    uncaptioned_longtable: false,\n    math: true,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: Some(\n        3,\n    ),\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "a.png",
+      "render": false
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": []
+}

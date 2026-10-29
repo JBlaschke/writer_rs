@@ -9,6 +9,7 @@ use comrak::nodes::NodeValue;
 use comrak::{Arena, parse_document};
 
 use super::{BuildOptions, Prepared, find_clash, input_files, write_file};
+use crate::assets::export::{self, ExportNamespace};
 use crate::assets::registry::content_hash;
 use crate::error::{Diagnostics, Error, Result};
 use crate::ir::{Block, SourceKind};
@@ -46,10 +47,10 @@ pub fn build(
         })?;
     let parent = out.parent().unwrap_or(Path::new("."));
     let directory = format!("{stem}_assets");
-    let asset_paths = emit::export_asset_paths(
-        &prepared.document, &prepared.assets, &directory,
-    );
-    let mut resources = Resources::new(parent, &directory, &asset_paths);
+    let mut namespace =
+        export::assets(&prepared.document, &prepared.assets).namespace;
+    export::bibliography(&mut namespace, &prepared.config);
+    let mut resources = Resources::new(parent, &directory, namespace);
     let bibliography = prepared
         .config
         .references
@@ -115,29 +116,19 @@ pub fn build(
 struct Resources<'a> {
     parent: &'a Path,
     directory: &'a str,
-    occupied: BTreeSet<String>,
+    namespace: ExportNamespace,
     copied: BTreeMap<PathBuf, String>,
     files: Vec<File>,
 }
 
 impl<'a> Resources<'a> {
     fn new(
-        parent: &'a Path, directory: &'a str,
-        asset_paths: &BTreeMap<String, String>,
+        parent: &'a Path, directory: &'a str, namespace: ExportNamespace,
     ) -> Self {
-        let occupied = asset_paths
-            .values()
-            .filter_map(|path| {
-                Path::new(path)
-                    .file_name()?
-                    .to_str()
-                    .map(str::to_ascii_lowercase)
-            })
-            .collect();
         Self {
             parent,
             directory,
-            occupied,
+            namespace,
             copied: BTreeMap::new(),
             files: Vec::new(),
         }
@@ -153,7 +144,7 @@ impl<'a> Resources<'a> {
             .map_err(|error| super::io_error(error, "cannot read", source))?;
         let hint = source.file_name().unwrap_or_default().to_string_lossy();
         let hash = content_hash(&bytes);
-        let name = emit::export_name(&hint, &hash[..6], &mut self.occupied);
+        let name = self.namespace.resource_name(source, &hint, &hash[..6]);
         let path = format!("{}/{name}", self.directory);
         self.files.push(File { path: self.parent.join(&path), bytes });
         self.copied.insert(identity, path.clone());
@@ -614,11 +605,22 @@ mod tests {
             fs::create_dir_all(path.parent().unwrap()).unwrap();
             fs::write(path, "same bytes").unwrap();
         }
-        let asset_paths = [("id".into(), "report_assets/TEMPLATE.typ".into())]
-            .into_iter()
-            .collect();
+        let mut document = prepared(Path::new("/project/main.md"));
+        let id = document.assets.register_bytes(
+            vec![1],
+            "application/octet-stream",
+            "TEMPLATE.typ",
+        );
+        document.document.blocks.push(Block::paragraph(vec![Inline::Link {
+            inlines: Vec::new(),
+            url: format!("asset:{id}"),
+            title: None,
+            attrs: Default::default(),
+        }]));
+        let namespace =
+            export::assets(&document.document, &document.assets).namespace;
         let mut resources =
-            Resources::new(directory.path(), "report_assets", &asset_paths);
+            Resources::new(directory.path(), "report_assets", namespace);
         let hash = content_hash(b"same bytes");
         let one = resources.copy(&first).unwrap();
         assert_eq!(one, format!("report_assets/template-{}.typ", &hash[..6]));
@@ -633,6 +635,49 @@ mod tests {
             format!("report_assets/template-{}-2.typ", &hash[..6]),
         );
         assert_eq!(resources.files.len(), 2);
+    }
+
+    #[test]
+    fn resources_claim_shared_bibliography_and_avoid_latex_rendition_names() {
+        let directory = tempfile::tempdir().unwrap();
+        let refs = directory.path().join("refs.bib");
+        let derived = directory.path().join("aux/diagram.svg.pdf");
+        fs::write(&refs, b"bibliography bytes").unwrap();
+        fs::create_dir_all(derived.parent().unwrap()).unwrap();
+        fs::write(&derived, b"auxiliary bytes").unwrap();
+        let mut document = prepared(Path::new("/project/main.md"));
+        let id = document.assets.register_bytes(
+            vec![1],
+            "image/svg+xml",
+            "diagram.svg",
+        );
+        document.document.blocks.push(Block::paragraph(vec![Inline::Image {
+            alt: Vec::new(),
+            url: format!("asset:{id}"),
+            title: None,
+            attrs: Default::default(),
+        }]));
+        document.config.references.bibliography = vec![refs.clone()];
+        let mut plan = export::assets(&document.document, &document.assets);
+        let latex_bib =
+            export::bibliography(&mut plan.namespace, &document.config);
+        assert_eq!(latex_bib, [(refs.clone(), "refs.bib".into())]);
+        assert_eq!(plan.latex[&id].name, "diagram.svg.pdf");
+        let mut resources =
+            Resources::new(directory.path(), "report_assets", plan.namespace);
+        assert_eq!(resources.copy(&refs).unwrap(), "report_assets/refs.bib");
+        assert_eq!(
+            resources.copy(&directory.path().join("./refs.bib")).unwrap(),
+            "report_assets/refs.bib",
+        );
+        let hash = content_hash(b"auxiliary bytes");
+        assert_eq!(
+            resources.copy(&derived).unwrap(),
+            format!("report_assets/diagram.svg-{}.pdf", &hash[..6])
+        );
+        assert_eq!(resources.files.len(), 2);
+        assert_eq!(resources.files[0].bytes, b"bibliography bytes");
+        assert_eq!(resources.files[1].bytes, b"auxiliary bytes");
     }
 
     #[test]

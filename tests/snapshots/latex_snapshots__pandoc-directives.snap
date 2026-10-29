@@ -1,0 +1,38 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\begin{writercallout}{note}{A pandoc note}\nPandoc class syntax.\n\\end{writercallout}\n\n\\writerpagebreak\n\n\\begin{writercallout}{warning}{A title: with a colon}\nA colon after the fence requires the compatibility pre-pass.\n\\end{writercallout}\n\n\\begin{writercallout}{note}{Fig 1: x}\nAnother colon in a directive's info string.\n\\end{writercallout}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "code": "directive-colon-rewritten",
+      "message": "rewrote colons or closing colons on a directive line for comrak",
+      "path": "[fixtures]/md/pandoc-directives.md",
+      "span": {
+        "start_line": 13,
+        "end_line": 13,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "info",
+      "code": "directive-colon-rewritten",
+      "message": "rewrote colons or closing colons on a directive line for comrak",
+      "path": "[fixtures]/md/pandoc-directives.md",
+      "span": {
+        "start_line": 17,
+        "end_line": 17,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

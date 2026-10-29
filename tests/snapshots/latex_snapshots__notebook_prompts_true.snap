@@ -1,0 +1,198 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section*{Saved notebook outputs}\\label{_2fd4b25af374f7d3fa1eb7bb5ba5803d4805a89}\n\\addcontentsline{toc}{section}{Saved notebook outputs}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\includegraphics{paper.final_assets/outputs_cell1_out0.png}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\includegraphics[width=0.6667in,height=0.3333in]{paper.final_assets/outputs_cell1_out0.png}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\includegraphics[width=1.25in,height=\\textheight,keepaspectratio]{paper.final_assets/outputs_cell3_out0.svg.pdf}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\nImage fallback\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\[\n\\displaystyle x^2\n\\]\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n$x$ and $y$\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\textbf{Bold} and \\emph{italic}.\n\n\\includegraphics{paper.final_assets/pixel.png} outside missing\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\n{\n  \"name\": \"writer\",\n  \"nested\": {\n    \"ok\": true\n  },\n  \"values\": [\n    1,\n    2,\n    3\n  ]\n}\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\nChart fallback\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\nFigure({data: []})\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\nIntSlider(value=5)\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{writercell}{Out}{1}\n\\begin{Verbatim}\n<b>not bold</b> & co\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\nBefore output include.\n\nAfter output include.\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\ndisplay(saved_output)\n\\end{Verbatim}\n\\end{writercell}\n\n\\section*{Heading}\\label{_heading}\n\\addcontentsline{toc}{section}{Heading}\n\nNumbered content.\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\nprint(\"progress\")\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\na\nb\n100%\n\\end{Verbatim}\n\n\\begin{Verbatim}\nred warning: x < y\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\n1 / 0\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\n---------------------------------------------------------------------------\nZeroDivisionError                         Traceback (most recent call last)\nCell In[10], line 1\n----> 1 1/0\n\nZeroDivisionError: division by zero\n\\end{Verbatim}\n\n\\begin{writercell}{In}{1}\n\\begin{Verbatim}\nprint(\"ANSI effects\")\n\\end{Verbatim}\n\\end{writercell}\n\n\\begin{Verbatim}\nbold red\ninverse red\ninverse default\nRGB\n\\end{Verbatim}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: true,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: true,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: true,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "outputs_cell1_out0.png",
+      "render": false
+    },
+    {
+      "identity": "asset-2",
+      "name": "outputs_cell3_out0.svg.pdf",
+      "render": true
+    },
+    {
+      "identity": "asset-3",
+      "name": "pixel.png",
+      "render": false
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "output-invalid",
+      "message": "output 0: image/png: invalid base64: Invalid symbol 33, offset 9.",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 4,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-file-outside",
+      "message": "output 0: file `../md/images/plot.png` is outside the notebook directory",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "missing-asset",
+      "message": "output 0: image `images/missing.png` not found (looked for [fixtures]/ipynb/images/missing.png)",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-script",
+      "message": "output 0: HTML contains <script",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 9,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-unsupported",
+      "message": "output 0: no renderer for application/vnd.plotly.v1+json",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 10,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-script",
+      "message": "output 0: HTML contains <script",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 11,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-unsupported",
+      "message": "output 0: interactive application/vnd.plotly.v1+json rendered as text/html",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 11,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-script",
+      "message": "output 0: HTML contains <script",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 12,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-unsupported",
+      "message": "output 0: interactive application/vnd.plotly.v1+json rendered as text/html",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 12,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-unsupported",
+      "message": "output 0: interactive application/vnd.jupyter.widget-view+json rendered as text/plain",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 13,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-unsupported",
+      "message": "output 0: no renderer for application/x-writer-fixture",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 16,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "output-include",
+      "message": "output 0: :::include is not expanded in outputs",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 17,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unsupported-construct",
+      "message": "latex: image URL is not a registered local asset for `../md/images/plot.png`; emitted its alternative text",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unsupported-construct",
+      "message": "latex: image URL is not a registered local asset for `images/missing.png`; emitted its alternative text",
+      "path": "[fixtures]/ipynb/outputs.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 7,
+        "file": null
+      }
+    }
+  ]
+}

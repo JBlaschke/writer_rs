@@ -1,0 +1,37 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.5\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Caption with \\emph{emph}}\\label{_8cfc3813730ef88d32c81258f0c5cbd437c946d}\n\\end{figure}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.5\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Caption}\\label{_5073c1e3c0d76ad55e4cd59543788aa338d282b}\n\\end{figure}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Caption}\n\\end{figure}\n\n\\phantomsection\\label{_54112d13eb4f43727a590eaac9955ba39b2be15}\\includegraphics{paper.final_assets/plot.png} trailing text\n\n\\includegraphics{paper.final_assets/plot.png} \\includegraphics{paper.final_assets/diagram.svg.pdf}\n\n\\includegraphics{paper.final_assets/plot.png}\n\n\\href{https://example.org}{\\includegraphics{paper.final_assets/plot.png}}\n\n\\href{https://example.org}{\\includegraphics[width=0.1\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}}\n\n\\includegraphics{paper.final_assets/plot.png}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.45\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\par{\\small Left}\\par\n\n\\includegraphics[width=0.45\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/diagram.svg.pdf}\n\\par{\\small Right}\\par\n\\caption{Two panels}\\label{_27fc46cf7320723b1931ed163bdc6f464ba2683}\\label{_725babdec4502ee8615c106e49f9c29ab37dc26}\\label{_b664c84ac8c655e850685b89a1829b3922a98d2}\n\\end{figure}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Invalid dimension}\n\\end{figure}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: false,\n    table: false,\n    caption: true,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "plot.png",
+      "render": false
+    },
+    {
+      "identity": "asset-2",
+      "name": "diagram.svg.pdf",
+      "render": true
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "invalid-dimension",
+      "message": "invalid image width `huge`; use a number with %, px, pt, cm, mm, in or em",
+      "path": "[fixtures]/md/figures.md",
+      "span": {
+        "start_line": 30,
+        "end_line": 30,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

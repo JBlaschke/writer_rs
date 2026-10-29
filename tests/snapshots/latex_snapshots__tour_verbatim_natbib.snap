@@ -1,0 +1,143 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\setcounter{tocdepth}{2}\n\\tableofcontents\n\n\\section{Numbered heading}\\label{_49570af982b30b596d58d07ecab773e71c440e5}\n\nText \\ensuremath{\\geq} \\ensuremath{\\alpha}, escaped TeX characters \\& \\% \\# \\_ \\{ \\} \\textasciitilde{} \\textasciicircum{} , \\emph{emphasis}, \\textbf{strong},\n\\sout{struck text} and \\href{https://example.org/a?q=1&x=2}{a named link}.\n\nInline code \\texttt{value\\ \\ensuremath{\\geq}\\ \\ensuremath{\\alpha}}, an autolink \\url{https://example.org/\\%CE\\%B1?q=1}, and inline\nmath \\(x^2 + α ≥ 0\\).\n\n\\subsection[A heading with a note and math \\texorpdfstring{\\(x^2\\)}{x\\textasciicircum{}2}]{A heading with a note\\protect\\footnote{A heading note with \\sout{moving strikeout}.} and math \\texorpdfstring{\\(x^2\\)}{x\\textasciicircum{}2}}\\label{_205b9f77d3f0b49c5f411e74c9f1d07b8bac7c4}\n\n\\subsection*{An unnumbered heading}\\label{_76a20ca8ce7bf40e125da4827ecfd21f6768f7e}\n\\addcontentsline{toc}{subsection}{An unnumbered heading}\n\nA quote follows.\n\n\\begin{quote}\nQuoted prose with a second line.\nIts soft break stays inside the paragraph.\n\\end{quote}\n\n\\begin{itemize}\n\\tightlist\n\\item A tight bullet item.\n\\item Another item with a task list:\n\\begin{itemize}\n\\tightlist\n\\item[$\\square$] Pending task.\n\\item[$\\boxtimes$] Completed task.\n\\end{itemize}\n\\end{itemize}\n\n\\begin{enumerate}\n\\setcounter{enumi}{2}\n\\tightlist\n\\item Ordered item starting at three.\n\\item Another ordered item.\n\\end{enumerate}\n\n\\begin{description}\n\\item[{Term with \\emph{emphasis}}] First definition.\n\nSecond paragraph in the definition.\n\\end{description}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.5\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Raster plot}\\label{_fba68d637b950dddd2fa839b49fee024d186089}\n\\end{figure}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[height=2cm,width=\\linewidth,keepaspectratio]{paper.final_assets/diagram.svg.pdf}\n\\caption{SVG diagram}\\label{_b2abfa293b544a5663eaed9b4f38adb996fe8e6}\n\\end{figure}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/anim.gif.pdf}\n\\caption{GIF animation}\\label{_162e0bb7071c90aa0f6b07e542a10a25237a278}\n\\end{figure}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.45\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\par{\\small Left panel}\\par\n\n\\includegraphics[width=0.45\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/diagram.svg.pdf}\n\\par{\\small Right panel}\\par\n\\caption{A panel container}\\label{_27fc46cf7320723b1931ed163bdc6f464ba2683}\\label{_725babdec4502ee8615c106e49f9c29ab37dc26}\\label{_b664c84ac8c655e850685b89a1829b3922a98d2}\n\\end{figure}\n\n\\begin{longtable}[]{@{}lcr@{}}\n\\caption{A captioned table}\\label{_eecf78a5a8048100252d3f259c1df4049981fb0}\\tabularnewline\n\\toprule\nleft & center & right \\\\\n\\midrule\n\\endfirsthead\n\\toprule\nleft & center & right \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\none & two & three \\\\\n\\end{longtable}\n\n{\\def\\LTcaptype{none}\n\\begin{longtable}[]{@{}lr@{}}\n\\toprule\nbare & table \\\\\n\\midrule\n\\endfirsthead\n\\toprule\nbare & table \\\\\n\\midrule\n\\endhead\n\\bottomrule\n\\endlastfoot\nalpha & 1 \\\\\n\\end{longtable}\n}\n\n\\begin{Verbatim}[numbers=left,firstnumber=3]\nvalue = \"α\"\nprint(value, \"≥\")\n\\end{Verbatim}\n\n\\begin{Verbatim}\nfn main() {\n    println!(\"preserved source\");\n}\n\\end{Verbatim}\n\n\\begingroup\n\\captionsetup{type=writerlisting}\n\\caption{A captioned listing}\\label{_da23ec0b912315bc11aef399036017f5a1e3ce3}\n\\begin{Verbatim}\nprint(\"captioned\")\n\\end{Verbatim}\n\\endgroup\n\n\\begin{equation}\nx = 1\n\\label{_5cc8e3e6c35c84b5cd8feda34201a9d4b81ba8e}\n\\end{equation}\n\n\\begin{align}\\label{_0bcd3d477be4c762e5568aaca1672b48b83be7f}\na &= b \\\\\nc &= d\n\\end{align}\n\n\\[\nα ≥ 0\n\\]\n\n\\begin{writercallout}{note}{Note}\nA note callout.\n\\end{writercallout}\n\n\\begin{writercallout}{tip}{Tip}\nA tip callout.\n\\end{writercallout}\n\n\\begin{writercallout}{important}{Important}\nAn important callout.\n\\end{writercallout}\n\n\\begin{writercallout}{warning}{Warning}\nA warning callout.\n\\end{writercallout}\n\n\\begin{writercallout}{caution}{Caution}\nA caution callout.\n\\end{writercallout}\n\n\\begin{writercallout}{custom}{Boxed figures and tables}\n\\begin{center}\n\\captionsetup{type=figure}\n\\includegraphics[width=0.25\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Boxed image}\\label{_e528e240e661ce529b865b5dba048594c90a5c6}\n\\end{center}\n\n\\begin{center}\n\\captionsetup{type=table}\n\\caption{A boxed table}\\label{_ddbbfda9cdb70266298af784adc7efe76ad573a}\n\\begin{tabular}{@{}lr@{}}\n\\toprule\ncolumn & value \\\\\n\\midrule\nboxed & 2 \\\\\n\\bottomrule\n\\end{tabular}\n\\end{center}\n\\end{writercallout}\n\n\\begin{center}\n\\begingroup\\small\n\\begin{quote}\nCentered, small text wrapped by a quote environment.\n\\end{quote}\n\\par\\endgroup\n\\end{center}\n\nSee Section~\\ref{_49570af982b30b596d58d07ecab773e71c440e5}, Figure~\\ref{_fba68d637b950dddd2fa839b49fee024d186089}, Table~\\ref{_eecf78a5a8048100252d3f259c1df4049981fb0}, Listing~\\ref{_da23ec0b912315bc11aef399036017f5a1e3ce3} and Equation~\\eqref{_5cc8e3e6c35c84b5cd8feda34201a9d4b81ba8e}. An explicit\nsupplement Eq.~\\eqref{_5cc8e3e6c35c84b5cd8feda34201a9d4b81ba8e}, an empty supplement \\eqref{_5cc8e3e6c35c84b5cd8feda34201a9d4b81ba8e}, page page~\\pageref{_5cc8e3e6c35c84b5cd8feda34201a9d4b81ba8e},\nand an unnumbered heading \\hyperref[_76a20ca8ce7bf40e125da4827ecfd21f6768f7e]{An unnumbered heading} remain distinct.\n\nA repeated note\\footnote{\\label{writer-fn-2}A note containing a nested note\\footnote{Nested note body.}.}, its repeat\\footref{writer-fn-2}, and an inline note\\footnote{Inline note.}.\n\nCitations {[}?doe2020; lee2019{]}, {[}?knuth1984{]},\n{[}?knuth1984{]}, {[}?knuth1984{]}, {[}?knuth1984{]},\n{[}?knuth1984{]}, and {[}?knuth1984{]}.\n\n\\LaTeX{} raw source retains its \\% and {braces}.\n\n\\writerpagebreak\n\n\\writerhrule\n",
+  "abstract": "Abstract text with an image \\includegraphics[width=0.2\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}.\n",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: true,\n    table: true,\n    caption: true,\n    code: true,\n    highlighted: false,\n    listings: false,\n    ulem: true,\n    cells: false,\n    listing_caption: true,\n    uncaptioned_longtable: true,\n    math: true,\n    math_packages: [],\n    color: false,\n    newunicodechar: [\n        (\n            'α',\n            \"\\\\alpha\",\n        ),\n        (\n            '≥',\n            \"\\\\geq\",\n        ),\n    ],\n    secnumdepth: Some(\n        2,\n    ),\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "plot.png",
+      "render": false
+    },
+    {
+      "identity": "asset-2",
+      "name": "diagram.svg.pdf",
+      "render": true
+    },
+    {
+      "identity": "asset-3",
+      "name": "anim.gif.pdf",
+      "render": true
+    }
+  ],
+  "bibliography": [
+    {
+      "source": "../bib/refs.bib",
+      "name": "refs.bib"
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<doe2020>` does not exist in the document (configure a bibliography to cite `doe2020`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<lee2019>` does not exist in the document (configure a bibliography to cite `lee2019`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 134,
+        "end_line": 136,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "latex-nested-footnote",
+      "message": "latex: a footnote is nested inside another footnote",
+      "path": "[fixtures]/latex/tour.md",
+      "span": {
+        "start_line": 156,
+        "end_line": 156,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\clearpage\n\nInline raw .\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "raw-unknown-format",
+      "message": "unknown raw format `weird`",
+      "path": "[fixtures]/md/raw.md",
+      "span": {
+        "start_line": 22,
+        "end_line": 24,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}
