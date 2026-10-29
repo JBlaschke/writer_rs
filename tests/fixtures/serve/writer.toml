@@ -3,3 +3,4 @@ theme = 'theme'
 
 [pdf]
 system_fonts = false
+template = 'template.typ'

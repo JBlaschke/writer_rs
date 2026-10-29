@@ -350,7 +350,7 @@ fn every_generated_document_and_stylesheet_url_resolves() {
 }
 
 #[test]
-fn serves_the_exact_morphdom_wrapper_and_pages_placeholder() {
+fn serves_the_exact_morphdom_wrapper_and_pages_client() {
     let server = TestServer::start(empty_state(ServeView::Web, "Document"));
     let client = server.get("/__writer/live-reload.js");
     assert_eq!(client.status, 200);
@@ -366,7 +366,7 @@ fn serves_the_exact_morphdom_wrapper_and_pages_placeholder() {
     let pages = server.get("/__writer/pages.js");
     assert_eq!(pages.status, 200);
     pages.assert_headers("text/javascript; charset=utf-8", NO_STORE);
-    assert_eq!(pages.body, b"/* pages view: T24 */\n");
+    assert_eq!(pages.body, include_bytes!("../assets/writer/pages.js"));
 }
 
 #[test]

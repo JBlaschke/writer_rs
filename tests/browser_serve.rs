@@ -1070,3 +1070,478 @@ fn outage_backoff_restart_missed_builds_and_stale_tabs_follow_the_protocol() {
     );
     assert_eq!(logs, json!([]));
 }
+
+// The pages checks deliberately avoid READY: far lazy images must stay unloaded.
+const PAGES_READY: &str = r#"(() => {
+    if (!window.__writerPages || !window.__writerLiveReload?.state.connected
+        || window.__writerLiveReload.state.buildId === null) return false;
+    return [...document.querySelectorAll('.writer-page')]
+        .filter((el) => {
+            const rect = el.getBoundingClientRect();
+            return rect.bottom > 0 && rect.top < innerHeight;
+        })
+        .every((el) => [...el.querySelectorAll('img')]
+            .every((img) => img.complete && img.naturalWidth > 0));
+})()"#;
+
+fn pages_project(chrome: &Path, count: usize) -> Project {
+    let project = Project::new(chrome);
+    // A normal BYO template, kept in this test's private fixture copy. Small
+    // pages put page 5 within Chrome's lazy lookahead while reading page 7.
+    write(
+        &project.path("template.typ"),
+        "#let writer-doc(..args, body) = {\n\
+            set page(width: 450pt, height: 320pt, margin: 20pt)\n\
+            set text(font: \"New Computer Modern\", size: 11pt)\n\
+            body\n}\n",
+    );
+    let mut source =
+        String::from("---\ntitle: Pages acceptance\ntoc: false\n---\n\n");
+    for number in 1..=count {
+        if number > 1 {
+            source.push_str(":::pagebreak\n:::\n\n");
+        }
+        source.push_str(&format!(
+            "# Page {number}\n\nReading marker {number:02}: initial text.\n\n"
+        ));
+    }
+    write(&project.source(), &source);
+    project
+}
+
+fn open_pages(chrome: &Path, server: &Server) -> Page {
+    let mut page = Page::launch(chrome, WAIT).unwrap();
+    page.set_timeout(WAIT);
+    page.navigate(&format!("{}?view=pages", server.url)).unwrap();
+    wait_for(&mut page, server, PAGES_READY);
+    page
+}
+
+fn wait_pages_build(page: &mut Page, server: &Server, after: u64, extra: &str) {
+    wait_for(
+        page,
+        server,
+        &format!(
+            "window.__writerLiveReload?.state.buildId > {after} && ({extra})"
+        ),
+    );
+    wait_for(page, server, PAGES_READY);
+}
+
+#[test]
+fn pages_are_presized_lazy_and_refresh_only_changed_hashes_at_page_seven() {
+    let _turn = serial();
+    let Some(chrome) = chrome() else { return };
+    let project = pages_project(&chrome, 18);
+    let server = Server::start(&project, "document.md", 0);
+    let mut page = open_pages(&chrome, &server);
+    let initial = evaluate(
+        &mut page,
+        r#"(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        const data = await fetch('/__writer/state', {cache: 'no-store'}).then((r) => r.json());
+        const pages = [...document.querySelectorAll('.writer-page')];
+        const first = pages[0].querySelector('img');
+        const scale = parseFloat(first.style.width) / (data.pages.size_pt[0][0] * 4 / 3);
+        const requests = performance.getEntriesByType('resource')
+            .map((entry) => new URL(entry.name))
+            .filter((url) => url.pathname.startsWith('/__writer/pages/'))
+            .map((url) => url.pathname + url.search);
+        return {
+            count: pages.length,
+            allSized: pages.every((el, index) => {
+                const img = el.querySelector('img');
+                const [w, h] = data.pages.size_pt[index];
+                const rect = el.getBoundingClientRect();
+                return Number(img.getAttribute('width')) === Math.round(w * 4 / 3)
+                    && Number(img.getAttribute('height')) === Math.round(h * 4 / 3)
+                    && Math.abs(parseFloat(img.style.width) - w * 4 / 3 * scale) < .02
+                    && Math.abs(parseFloat(img.style.height) - h * 4 / 3 * scale) < .02
+                    && rect.width > 0 && rect.height > 0
+                    && img.loading === 'lazy' && img.decoding === 'async'
+                    && img.draggable === false && img.alt === `Page ${index + 1}`;
+            }),
+            distantUnloaded: pages.at(-1).querySelector('img').naturalWidth === 0,
+            distantUnrequested: !requests.some((url) => url.startsWith('/__writer/pages/18.svg?')),
+            requests
+        };
+    })()"#,
+    );
+    assert_eq!(initial["count"], 18);
+    assert_eq!(initial["allSized"], true);
+    assert_eq!(initial["distantUnloaded"], true);
+    assert_eq!(initial["distantUnrequested"], true);
+    evaluate(
+        &mut page,
+        r#"(() => {
+        const page = document.querySelector('.writer-page[data-page="7"]');
+        const rect = page.getBoundingClientRect();
+        scrollTo(0, scrollY + rect.top + rect.height * .2);
+        return true;
+    })()"#,
+    );
+    wait_for(
+        &mut page,
+        &server,
+        r#"document.querySelector('#writer-pages-counter').textContent === 'Page 7 / 18'
+        && [...document.querySelectorAll('.writer-page')].slice(4, 9)
+            .every((el) => el.querySelector('img').complete && el.querySelector('img').naturalWidth > 0)"#,
+    );
+    let before = evaluate(
+        &mut page,
+        r#"(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        window.__qaPagesBefore = [...document.querySelectorAll('.writer-page')]
+            .map((el) => ({el, img: el.querySelector('img'), hash: el.dataset.hash,
+                src: el.querySelector('img').getAttribute('src')}));
+        const rect = window.__qaPagesBefore[6].el.getBoundingClientRect();
+        window.__qaMarker = 'pages-alive';
+        performance.clearResourceTimings();
+        return {top: rect.top, height: rect.height};
+    })()"#,
+    );
+    let after = build_id(&mut page);
+    let source = fs::read_to_string(project.source()).unwrap();
+    assert!(source.contains("Reading marker 05: initial text."));
+    write(
+        &project.source(),
+        &source.replace(
+            "Reading marker 05: initial text.",
+            "Reading marker 05: revised text.",
+        ),
+    );
+    wait_pages_build(
+        &mut page,
+        &server,
+        after,
+        r#"document.querySelector('.writer-page[data-page="5"]').dataset.hash !== window.__qaPagesBefore[4].hash"#,
+    );
+    wait_for(
+        &mut page,
+        &server,
+        r#"(() => {
+        const el = document.querySelector('.writer-page[data-page="5"]');
+        return el.querySelectorAll('img').length === 1
+            && el.querySelector('img').complete && el.querySelector('img').naturalWidth > 0;
+    })()"#,
+    );
+    let changed = evaluate(
+        &mut page,
+        r#"(() => {
+        const pages = [...document.querySelectorAll('.writer-page')];
+        const old = window.__qaPagesBefore;
+        const changed = pages.flatMap((el, i) => old[i].hash === el.dataset.hash ? [] : [i + 1]);
+        const requests = performance.getEntriesByType('resource')
+            .map((entry) => new URL(entry.name))
+            .filter((url) => url.pathname.startsWith('/__writer/pages/'))
+            .map((url) => url.pathname + url.search);
+        return {
+            changed,
+            unchangedIdentity: pages.every((el, i) => changed.includes(i + 1)
+                || (el === old[i].el && el.querySelector('img') === old[i].img
+                    && el.querySelector('img').getAttribute('src') === old[i].src)),
+            requests,
+            changedUrl: pages[4].querySelector('img').getAttribute('src'),
+            top: pages[6].getBoundingClientRect().top,
+            counter: document.querySelector('#writer-pages-counter').textContent,
+            marker: window.__qaMarker
+        };
+    })()"#,
+    );
+    assert_eq!(changed["changed"], json!([5]));
+    assert_eq!(changed["unchangedIdentity"], true);
+    assert_eq!(changed["requests"], json!([changed["changedUrl"].clone()]));
+    assert_eq!(changed["counter"], "Page 7 / 18");
+    assert_eq!(changed["marker"], "pages-alive");
+    assert!(
+        (changed["top"].as_f64().unwrap() - before["top"].as_f64().unwrap())
+            .abs()
+            <= 1.0,
+        "before: {before}; after: {changed}"
+    );
+    record(
+        "pages lazy sizing and page7 anchor/page5 requests",
+        &json!({"initial":initial,"before":before,"after":changed}),
+    );
+    assert_console_clean(&mut page);
+}
+
+#[test]
+fn pages_zoom_keys_buttons_storage_and_fit_resize_preserve_the_anchor() {
+    let _turn = serial();
+    let Some(chrome) = chrome() else { return };
+    let project = pages_project(&chrome, 12);
+    let server = Server::start(&project, "document.md", 0);
+    let mut page = open_pages(&chrome, &server);
+    let keys = evaluate(
+        &mut page,
+        r#"(async () => {
+        const label = () => document.querySelector('#writer-pages-zoom').textContent;
+        const key = (key, target = document.body, extra = {}) => target.dispatchEvent(
+            new KeyboardEvent('keydown', {key, bubbles: true, cancelable: true, ...extra}));
+        const anchor = document.querySelector('.writer-page[data-page="7"]');
+        let rect = anchor.getBoundingClientRect();
+        scrollTo(0, scrollY + rect.top + rect.height * .2);
+        rect = anchor.getBoundingClientRect();
+        const fraction = -rect.top / rect.height;
+        const first = document.querySelector('.writer-page img');
+        const data = await fetch('/__writer/state', {cache:'no-store'}).then((r) => r.json());
+        const fit = parseFloat(first.style.width) / (data.pages.size_pt[0][0] * 4 / 3);
+        const levels = [.5,.67,.75,.9,1,1.1,1.25,1.5,1.75,2,2.5,3];
+        key('+');
+        const higher = levels.find((value) => value > fit);
+        const plus = label();
+        const after = anchor.getBoundingClientRect();
+        const anchorError = Math.abs(after.top + fraction * after.height);
+        key('0');
+        const reset = label();
+        key('-');
+        const lower = levels.filter((value) => value < fit).at(-1);
+        const minus = label();
+        document.querySelector('[data-zoom="in"]').click();
+        const button = label();
+        key('=');
+        const equal = label();
+        const expectedEqual = `${Math.round(levels.find((value) => value > parseInt(button) / 100) * 100)}%`;
+        return {equal, expectedEqual, plus, expectedPlus: `${Math.round(higher * 100)}%`,
+            minus, expectedMinus: `${Math.round(lower * 100)}%`, reset,
+            button, stored: sessionStorage.getItem('writer:pages-zoom'), anchorError};
+    })()"#,
+    );
+    assert_eq!(keys["plus"], keys["expectedPlus"]);
+    assert_eq!(keys["minus"], keys["expectedMinus"]);
+    assert_eq!(keys["reset"], "Fit");
+    assert_eq!(keys["equal"], keys["expectedEqual"]);
+    assert!(keys["anchorError"].as_f64().unwrap() <= 1.0, "{keys}");
+    page.navigate(&format!("{}?view=pages", server.url)).unwrap();
+    wait_for(&mut page, &server, PAGES_READY);
+    assert_eq!(
+        evaluate(
+            &mut page,
+            "document.querySelector('#writer-pages-zoom').textContent"
+        ),
+        keys["equal"]
+    );
+    assert_eq!(
+        evaluate(&mut page, "sessionStorage.getItem('writer:pages-zoom')"),
+        keys["stored"]
+    );
+    let ignored = evaluate(
+        &mut page,
+        r#"(() => {
+        const before = document.querySelector('#writer-pages-zoom').textContent;
+        for (const tag of ['input','textarea','select','div']) {
+            const target = document.body.appendChild(document.createElement(tag));
+            if (tag === 'div') target.contentEditable = 'true';
+            for (const key of ['+','-','0']) target.dispatchEvent(
+                new KeyboardEvent('keydown', {key, bubbles:true, cancelable:true}));
+            target.remove();
+        }
+        for (const modifier of ['ctrlKey','metaKey','altKey']) {
+            document.body.dispatchEvent(new KeyboardEvent('keydown', {key:'0', bubbles:true, [modifier]:true}));
+        }
+        const prevented = new KeyboardEvent('keydown', {key:'0', bubbles:true, cancelable:true});
+        prevented.preventDefault();
+        document.body.dispatchEvent(prevented);
+        return document.querySelector('#writer-pages-zoom').textContent === before;
+    })()"#,
+    );
+    assert_eq!(ignored, true);
+    let fit = evaluate(
+        &mut page,
+        r#"(async () => {
+        const root = document.querySelector('#writer-pages');
+        const anchor = document.querySelector('.writer-page[data-page="7"]');
+        let rect = anchor.getBoundingClientRect();
+        scrollTo(0, scrollY + rect.top + rect.height * .2);
+        document.querySelector('[data-zoom="fit"]').click();
+        rect = anchor.getBoundingClientRect();
+        const fraction = -rect.top / rect.height;
+        const before = document.querySelector('.writer-page img').style.width;
+        root.style.width = '450px';
+        window.dispatchEvent(new Event('resize'));
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const data = await fetch('/__writer/state', {cache:'no-store'}).then((r) => r.json());
+        const max = Math.max(...data.pages.size_pt.map(([width]) => width * 4 / 3));
+        const expected = Math.min(2, Math.max(.25, (root.clientWidth - 32) / max));
+        const actual = parseFloat(document.querySelector('.writer-page img').style.width)
+            / (data.pages.size_pt[0][0] * 4 / 3);
+        rect = anchor.getBoundingClientRect();
+        return {before, after: document.querySelector('.writer-page img').style.width,
+            expected, actual, anchorError: Math.abs(rect.top + fraction * rect.height),
+            label: document.querySelector('#writer-pages-zoom').textContent};
+    })()"#,
+    );
+    assert_eq!(fit["label"], "Fit");
+    assert_ne!(fit["before"], fit["after"]);
+    assert!(
+        (fit["expected"].as_f64().unwrap() - fit["actual"].as_f64().unwrap())
+            .abs()
+            < 0.001,
+        "{fit}"
+    );
+    assert!(fit["anchorError"].as_f64().unwrap() <= 1.0, "{fit}");
+    record("pages zoom/storage/typing/fit", &json!({"keys":keys,"fit":fit}));
+    assert_console_clean(&mut page);
+}
+
+#[test]
+fn pages_only_error_updates_web_keeps_last_good_images_and_clears_on_repair() {
+    let _turn = serial();
+    let Some(chrome) = chrome() else { return };
+    let project = pages_project(&chrome, 8);
+    let server = Server::start(&project, "document.md", 0);
+    let mut page = open(&chrome, &server);
+    let before = evaluate(
+        &mut page,
+        "fetch('/__writer/state', {cache:'no-store'}).then((r) => r.json())",
+    );
+    let original = fs::read_to_string(project.source()).unwrap();
+    let after = build_id(&mut page);
+    append(
+        &project.source(),
+        "\nPages browser failure marker.\n\n```{=typst}\n#t24_browser_unknown()\n```\n",
+    );
+    wait_build(
+        &mut page,
+        &server,
+        after,
+        "document.querySelector('[data-writer-document]').textContent.includes('Pages browser failure marker.') && document.querySelector('#writer-view-toggle').textContent.endsWith(' ●')",
+    );
+    let error = evaluate(
+        &mut page,
+        "document.querySelector('#writer-overlay').textContent",
+    );
+    assert!(
+        error.as_str().unwrap().contains("[pages] build error (compile)"),
+        "{error}"
+    );
+    let after = build_id(&mut page);
+    write(
+        &project.path("theme/styles/extra.css"),
+        ":root { --pages-error-probe: repaired-css; }\n",
+    );
+    wait_build(
+        &mut page,
+        &server,
+        after,
+        "getComputedStyle(document.documentElement).getPropertyValue('--pages-error-probe').trim() === 'repaired-css'",
+    );
+    assert!(
+        evaluate(
+            &mut page,
+            "document.querySelector('#writer-overlay').textContent"
+        )
+        .as_str()
+        .unwrap()
+        .contains("[pages] build error (compile)")
+    );
+    trigger_navigation(
+        &mut page,
+        "document.body.dispatchEvent(new KeyboardEvent('keydown', {key:'p', bubbles:true}))",
+    );
+    wait_for(&mut page, &server, PAGES_READY);
+    let retained = evaluate(
+        &mut page,
+        r#"({hashes:[...document.querySelectorAll('.writer-page')].map((el) => el.dataset.hash),
+            text:document.querySelector('#writer-pages-status').textContent,
+            hidden:document.querySelector('#writer-pages-status').hidden,
+            view:window.__writerLiveReload.state.view})"#,
+    );
+    assert_eq!(retained["hashes"], before["pages"]["hashes"]);
+    assert_eq!(
+        retained["text"],
+        "pages: build error, showing the last good pages"
+    );
+    assert_eq!(retained["hidden"], false);
+    assert_eq!(retained["view"], "pages");
+    let after = build_id(&mut page);
+    write(&project.source(), &original);
+    wait_pages_build(
+        &mut page,
+        &server,
+        after,
+        "document.querySelector('#writer-pages-status').hidden && getComputedStyle(document.querySelector('#writer-overlay')).display === 'none'",
+    );
+    record("pages error/CSS/last-good/recovery", &retained);
+    assert_console_clean(&mut page);
+}
+
+#[test]
+fn pages_apply_accepts_restart_ids_and_ignores_its_stale_startup_fetch() {
+    let _turn = serial();
+    let Some(chrome) = chrome() else { return };
+    let project = pages_project(&chrome, 8);
+    let server = Server::start(&project, "document.md", 0);
+    let mut page = open_pages(&chrome, &server);
+    let facts = evaluate(
+        &mut page,
+        r#"(async () => {
+        const [source, shell, live] = await Promise.all([
+            fetch('/__writer/pages.js').then((r) => r.text()),
+            fetch('/__writer/pages').then((r) => r.text()),
+            fetch('/__writer/state', {cache:'no-store'}).then((r) => r.json())
+        ]);
+        const parsed = new DOMParser().parseFromString(shell, 'text/html');
+        parsed.querySelectorAll('script').forEach((script) => script.remove());
+        const frame = document.createElement('iframe');
+        frame.style.display = 'none';
+        const loaded = new Promise((resolve) => { frame.onload = resolve; });
+        frame.srcdoc = '<!DOCTYPE html>' + parsed.documentElement.outerHTML;
+        document.body.appendChild(frame);
+        await loaded;
+        const win = frame.contentWindow;
+        const crop = (count) => ({...live.pages, status:'ok', error:null,
+            count, hashes:live.pages.hashes.slice(0,count), size_pt:live.pages.size_pt.slice(0,count)});
+        let release;
+        let stateFetches = 0;
+        let stateCache = null;
+        const nativeFetch = win.fetch.bind(win);
+        win.fetch = (url, options) => {
+            if (new URL(String(url), location.href).pathname === '/__writer/state') {
+                stateFetches += 1;
+                stateCache = options?.cache;
+                return new Promise((resolve) => { release = () => resolve(new win.Response(
+                    JSON.stringify({...live, build_id:0, pages:crop(1)}),
+                    {headers:{'Content-Type':'application/json'}})); });
+            }
+            return nativeFetch(url, options);
+        };
+        const script = win.document.createElement('script');
+        script.textContent = source;
+        win.document.body.appendChild(script);
+        const deadline = performance.now() + 5000;
+        while (!win.__writerPages || !release) {
+            if (performance.now() > deadline) throw new Error('pages startup did not fetch state');
+            await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        const count = () => win.document.querySelectorAll('.writer-page').length;
+        await win.__writerPages.apply({...crop(0), status:'error'}, 17);
+        const empty = {
+            count:count(), text:win.document.querySelector('.writer-pages-empty').textContent,
+            status:win.document.querySelector('#writer-pages-status').textContent
+        };
+        await win.__writerPages.apply(crop(4), 18);
+        const first = count();
+        await win.__writerPages.apply(crop(2), 1);
+        const restart = count();
+        release();
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const afterStale = count();
+        const statusHidden = win.document.querySelector('#writer-pages-status').hidden;
+        frame.remove();
+        return {empty, first, restart, afterStale, statusHidden, stateFetches, stateCache};
+    })()"#,
+    );
+    assert_eq!(facts["empty"]["count"], 0);
+    assert_eq!(facts["empty"]["text"], "No pages yet.");
+    assert_eq!(facts["empty"]["status"], "pages: build error, no pages yet");
+    assert_eq!(facts["first"], 4);
+    assert_eq!(facts["restart"], 2);
+    assert_eq!(facts["afterStale"], 2);
+    assert_eq!(facts["statusHidden"], true);
+    assert_eq!(facts["stateFetches"], 1);
+    assert_eq!(facts["stateCache"], "no-store");
+    record("pages apply restart and startup race", &facts);
+    assert_console_clean(&mut page);
+}

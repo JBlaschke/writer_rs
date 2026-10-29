@@ -419,7 +419,10 @@ fn serve_exposes_the_protocol_and_rebuilds_source_include_css_and_image() {
     assert_eq!(initial["status"], "ok");
     assert_eq!(initial["web"]["status"], "ok");
     assert_eq!(initial["pages"]["status"], "ok");
-    assert_eq!(initial["pages"]["count"], 0, "T24 owns actual pages");
+    let count = initial["pages"]["count"].as_u64().unwrap() as usize;
+    assert!(count >= 2, "the real serve fixture must span multiple pages");
+    assert_eq!(initial["pages"]["hashes"].as_array().unwrap().len(), count);
+    assert_eq!(initial["pages"]["size_pt"].as_array().unwrap().len(), count);
     let events = server.events();
     assert_eq!(events.hello(&server), initial);
     assert!(
@@ -443,6 +446,8 @@ fn serve_exposes_the_protocol_and_rebuilds_source_include_css_and_image() {
         json!({"file":"document.md", "source":0, "line":line})
     );
     assert!(server.text("/").contains("the revised report ends here"));
+    assert_eq!(changed["pages"]["status"], "ok");
+    assert_eq!(changed["pages"]["hashes"][0], initial["pages"]["hashes"][0]);
 
     let chapter = dir.path().join("chapter.md");
     let old = fs::read_to_string(&chapter).unwrap();
@@ -464,7 +469,7 @@ fn serve_exposes_the_protocol_and_rebuilds_source_include_css_and_image() {
     assert_eq!(css["changed"], Value::Null);
     assert_eq!(css["web"]["status"], "ok");
     assert_eq!(css["pages"]["status"], "skipped");
-    assert_eq!(css["pages"]["hashes"], initial["pages"]["hashes"]);
+    assert_eq!(css["pages"]["hashes"], included["pages"]["hashes"]);
     assert!(
         server.text("/__writer/theme.css").contains("--serve-probe: after")
     );
@@ -890,4 +895,137 @@ fn interrupt_during_the_first_build_exits_zero_without_binding() {
         server.stdout.try_iter().next().is_none(),
         "signal arrived after bind"
     );
+}
+
+fn assert_page_resource(
+    server: &Server, state: &Value, index: usize,
+) -> Vec<u8> {
+    let hash = state["pages"]["hashes"][index].as_str().unwrap();
+    let response =
+        server.get(&format!("/__writer/pages/{}.svg?v={hash}", index + 1));
+    assert_eq!(response.status, 200);
+    assert_eq!(response.header("content-type"), Some("image/svg+xml"));
+    assert_eq!(
+        response.header("cache-control"),
+        Some("public, max-age=31536000, immutable")
+    );
+    assert_eq!(response.header("x-content-type-options"), Some("nosniff"));
+    assert_eq!(writer::serve::pages::page_hash(&response.body), hash);
+    assert!(String::from_utf8_lossy(&response.body).contains("<svg"));
+    response.body
+}
+
+#[test]
+fn template_edits_and_pages_errors_keep_bounded_good_svg_resources() {
+    let _turn = serial();
+    let dir = project();
+    let mut server = Server::start(dir.path(), "document.md", &[]);
+    let events = server.events();
+    let initial = events.hello(&server);
+    assert!(initial["pages"]["count"].as_u64().unwrap() >= 2);
+    let first = assert_page_resource(&server, &initial, 0);
+    let old_hash = initial["pages"]["hashes"][0].as_str().unwrap();
+    let old_url = format!("/__writer/pages/1.svg?v={old_hash}");
+    let fallback = server.get("/__writer/pages/1.svg?v=bogus");
+    assert_eq!(fallback.status, 200);
+    assert_eq!(fallback.header("cache-control"), Some("no-store"));
+    assert_eq!(fallback.body, first);
+    for path in ["0.svg", "999.svg", "x.svg"] {
+        assert_eq!(server.get(&format!("/__writer/pages/{path}")).status, 404);
+    }
+
+    let template_path = dir.path().join("template.typ");
+    let template = fs::read_to_string(&template_path).unwrap();
+    assert!(template.contains("#1a3a8a"));
+    write(&template_path, &template.replace("#1a3a8a", "#8a1a3a"));
+    let templated = events.build(&server, id(&initial), |event| {
+        event["kind"] == "pages" && event["pages"]["status"] == "ok"
+    });
+    assert_eq!(templated["web"]["status"], "skipped");
+    assert_ne!(templated["pages"]["hashes"][0], initial["pages"]["hashes"][0]);
+    let current = assert_page_resource(&server, &templated, 0);
+    assert_ne!(current, first);
+    let previous = server.get(&old_url);
+    assert_eq!(previous.status, 200);
+    assert_eq!(previous.body, first);
+    assert!(previous.header("cache-control").unwrap().contains("immutable"));
+
+    let source = dir.path().join("document.md");
+    let original = fs::read_to_string(&source).unwrap();
+    let broken = format!(
+        "{original}\nPages-only failure marker.\n\n```{{=typst}}\n#t24_unknown_function()\n```\n"
+    );
+    let line = source_line(&broken, "```{=typst}");
+    write(&source, &broken);
+    let failed = events.build(&server, id(&templated), |event| {
+        event["pages"]["status"] == "error"
+    });
+    assert_eq!(failed["status"], "error");
+    assert_eq!(failed["web"]["status"], "ok");
+    assert_eq!(failed["pages"]["error"]["kind"], "compile");
+    assert_eq!(failed["pages"]["error"]["file"], "document.md");
+    assert_eq!(failed["pages"]["error"]["line"], line);
+    assert_eq!(failed["pages"]["hashes"], templated["pages"]["hashes"]);
+    assert!(server.text("/").contains("Pages-only failure marker."));
+    assert_eq!(server.get(&old_url).body, first);
+    assert_page_resource(&server, &failed, 0);
+
+    write(
+        &dir.path().join("theme/styles/extra.css"),
+        ":root { --pages-failed-css: changed; }\n",
+    );
+    let css =
+        events.build(&server, id(&failed), |event| event["kind"] == "css");
+    assert_eq!(css["web"]["status"], "ok");
+    assert_eq!(css["pages"]["status"], "skipped");
+    assert_eq!(css["pages"]["error"], failed["pages"]["error"]);
+    assert_eq!(css["pages"]["hashes"], failed["pages"]["hashes"]);
+    assert!(server.text("/__writer/theme.css").contains("--pages-failed-css"));
+
+    write(&source, &original);
+    let fixed =
+        events.build(&server, id(&css), |event| event["status"] == "ok");
+    assert_eq!(fixed["pages"]["error"], Value::Null);
+    let recovered = assert_page_resource(&server, &fixed, 0);
+    // Only current and previous successful sets are retained. The initial
+    // colour is now outside that window, so its old URL uses current no-store.
+    let expired = server.get(&old_url);
+    assert_eq!(expired.status, 200);
+    assert_eq!(expired.header("cache-control"), Some("no-store"));
+    assert_eq!(expired.body, recovered);
+    assert!(!dir.path().join("dist").exists());
+}
+
+#[test]
+fn notebook_pages_compile_error_reports_the_markdown_cell_and_recovers() {
+    let _turn = serial();
+    let dir = project();
+    let mut server = Server::start(dir.path(), "notebook.ipynb", &[]);
+    let events = server.events();
+    let initial = events.hello(&server);
+    assert_eq!(initial["pages"]["status"], "ok");
+    assert!(initial["pages"]["count"].as_u64().unwrap() > 0);
+    let path = dir.path().join("notebook.ipynb");
+    let original = fs::read_to_string(&path).unwrap();
+    let mut notebook: Value = serde_json::from_str(&original).unwrap();
+    notebook["cells"][0]["source"] = json!([
+        "# Notebook pages error\n", "\n", "```{=typst}\n",
+        "#t24_notebook_unknown()\n", "```\n"
+    ]);
+    write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
+    let failed = events.build(&server, id(&initial), |event| {
+        event["pages"]["status"] == "error"
+    });
+    assert_eq!(failed["web"]["status"], "ok");
+    let payload = &failed["pages"]["error"];
+    assert_eq!(payload["kind"], "compile");
+    assert_eq!(payload["file"], "notebook.ipynb");
+    assert_eq!(payload["cell"], 0);
+    assert_eq!(payload["line"], 3);
+    assert_eq!(failed["pages"]["hashes"], initial["pages"]["hashes"]);
+    assert_page_resource(&server, &failed, 0);
+    write(&path, &original);
+    let fixed =
+        events.build(&server, id(&failed), |event| event["status"] == "ok");
+    assert_eq!(fixed["pages"]["error"], Value::Null);
 }

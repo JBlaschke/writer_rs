@@ -44,11 +44,11 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T1B | References/citations syntax and `:::include` | M1 | M | T12, T16, T18 | done (PR #18) |
 | T1C | `writer check` with Markdown and notebook lints | M1 | S | T16, T1B | done (PR #19) |
 | T20 | File watcher and the document watch set | M2 | M | T16 | done (PR #21) |
-| T21 | Dev server: routes, events, per-view state | M2 | M | T16 | ready for review |
+| T21 | Dev server: routes, events, per-view state | M2 | M | T16 | done (PR #22) |
 | T22 | Live-reload client | M2 | M | T00 | done (PR #16) |
-| T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | ready for review |
-| T24 | Pages view | M2 | M | T21, T23, T32 | todo |
-| T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | ready for review |
+| T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | done (PR #24) |
+| T24 | Pages view | M2 | M | T21, T23, T32 | ready for review |
+| T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | done (PR #23) |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | ready for review |
@@ -58,7 +58,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
 | T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
-| T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | ready for review |
+| T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | todo |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | todo |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | todo |
@@ -347,3 +347,26 @@ Manual checks performed: …
   completion barrier as config recovery. Its focused real-process test passes;
   T50 includes equivalent `f32603f` and T32 includes `8fd053f`. Both final T32 full
   suites include that repair; remote CI proceeds independently.
+
+
+- T32 is open in [PR #26](https://github.com/JBlaschke/writer_rs/pull/26)
+  (`eb16145`). T24 starts on `codex/pages-view` from that checked feature.
+  Merge #22, #23, #24, #25, then #26 before T24. All PRs target main while
+  CI runs; its brief records builder/client/test ownership and no duplicate
+  include-provider diagnostics.
+
+
+- T24 passes formatting, Clippy, default/feature rustdoc, 1,401 debug and 1,400
+  release tests. Twelve builder units, 26 watcher units, 47 real process/server
+  tests, 13 actual Chrome cases and 26 mock/Chrome checks cover separate SVGs,
+  key/byte reuse, lazy sizing, source anchors, selective requests, zoom and
+  last-good/error/recovery behavior. T51 follows to enable later DOCX math.
+- Independent [PR #27](https://github.com/JBlaschke/writer_rs/pull/27)
+  (`fd233f1`) fixes main's macOS stale-directory event race and backports the
+  existing PR22 harness guard; 1,185 debug/1,184 release tests pass on main.
+  T24 includes equivalent `dbb25e5` and retains the already present guard.
+
+
+- PRs #22–25 merged into main (`38fa4b3`) while the pages milestone was being
+  validated. T24 retains their checked code. Pending feature order is #26,
+  then T24; #27 repairs the independent watcher race and is included here.

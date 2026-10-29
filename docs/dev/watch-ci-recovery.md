@@ -38,7 +38,6 @@ Validated on macOS arm64, Rust 1.99.1:
 Formatting, all-target/all-feature Clippy and rustdoc with warnings denied pass.
 The repair is based directly on main and does not depend on pending feature PRs.
 
-
 After PRs #22–25 merged, the repair was reconciled with main `38fa4b3` and its
 private update_planned helper. The existing harness guard is already present
 there. All 26 watcher units, 16 real serve cases and 17 watch-loop cases pass on

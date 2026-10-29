@@ -25,9 +25,13 @@ struct Running {
 
 impl Running {
     fn start(directory: &Path, extra: &[&str]) -> Self {
+        Self::start_targets(directory, "html", extra)
+    }
+
+    fn start_targets(directory: &Path, targets: &str, extra: &[&str]) -> Self {
         let mut child = Command::new(env!("CARGO_BIN_EXE_writer"))
             .current_dir(directory)
-            .args(["build", "document.md", "--watch", "--to", "html"])
+            .args(["build", "document.md", "--watch", "--to", targets])
             .args(extra)
             .env_remove("RUST_LOG")
             .env_remove("CLICOLOR_FORCE")
@@ -337,4 +341,68 @@ fn first_multi_target_clash_reports_other_target_results_once() {
     assert!(stderr.contains("not implemented yet (T34)"), "{stderr}");
     assert!(root.join("document.html").is_file());
     assert_eq!(std::fs::read(root.join("document.docx")).unwrap(), PNG);
+}
+
+#[test]
+fn html_pdf_watch_keeps_pdf_on_css_and_rewrites_both_on_content() {
+    let directory = project("# Initial dual output\n");
+    let root = directory.path();
+    write(
+        &root.join("template.typ"),
+        include_str!("../assets/typst/writer-doc/template.typ"),
+    );
+    let theme = root.join("theme");
+    let mut running = Running::start_targets(
+        root,
+        "html,pdf",
+        &["--theme", theme.to_str().unwrap()],
+    );
+    running.wait_line(0, Stream::Out, "document.html");
+    running.wait_line(0, Stream::Out, "document.pdf");
+    running.wait_line(0, Stream::Err, "Watching for changes");
+    let html = output(root);
+    let pdf = root.join("dist/document.pdf");
+    let pdf_before = std::fs::read(&pdf).unwrap();
+    assert!(pdf_before.starts_with(b"%PDF-"));
+    // Set an old known timestamp so even coarse filesystem resolution can
+    // distinguish a write, without a timing-dependent sleep between edits.
+    let sentinel = std::time::UNIX_EPOCH + Duration::from_secs(86_400);
+    for path in [&html, &pdf] {
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(path)
+            .unwrap()
+            .set_modified(sentinel)
+            .unwrap();
+    }
+    let mark = running.mark();
+    write(&root.join("theme/styles/x.css"), "body { color: #667788; }\n");
+    running.wait_line(mark, Stream::Err, "Rebuilding (css):");
+    running.wait_line(mark, Stream::Out, "document.html");
+    wait_file(&html, "#667788");
+    assert_ne!(html.metadata().unwrap().modified().unwrap(), sentinel);
+    assert_eq!(pdf.metadata().unwrap().modified().unwrap(), sentinel);
+    assert_eq!(std::fs::read(&pdf).unwrap(), pdf_before);
+    running.drain();
+    assert!(!running.lines[mark..].iter().any(|(stream, line)| {
+        *stream == Stream::Out
+            && line.starts_with("Wrote ")
+            && line.contains("document.pdf")
+    }));
+
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&html)
+        .unwrap()
+        .set_modified(sentinel)
+        .unwrap();
+    let mark = running.mark();
+    write(&root.join("document.md"), "# Changed dual output\n");
+    running.wait_line(mark, Stream::Err, "Rebuilding (content):");
+    running.wait_line(mark, Stream::Out, "document.html");
+    running.wait_line(mark, Stream::Out, "document.pdf");
+    wait_file(&html, "Changed dual output");
+    assert_ne!(html.metadata().unwrap().modified().unwrap(), sentinel);
+    assert_ne!(pdf.metadata().unwrap().modified().unwrap(), sentinel);
+    assert_ne!(std::fs::read(&pdf).unwrap(), pdf_before);
 }

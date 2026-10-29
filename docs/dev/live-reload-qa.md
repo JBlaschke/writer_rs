@@ -171,3 +171,42 @@ empty successful PagesBuilder contract. The CLI suite separately exercises
 source/cell event payloads, invalid/missing config/theme/include repair,
 versioned assets, math-image registry routes, Host checks, port errors, quiet
 output and SIGINT before/after binding.
+
+
+## T24 pages acceptance (2026-10-28)
+
+Executed all 13 real-server Chrome cases with required Chrome 156.0.8078.48 on
+macOS arm64, including the nine T23 web regressions and four actual pages cases.
+Final full result: 13 passed in 44.91 s. The client mock script's complete A–K
+suite also passes 26 checks with real Chrome and isolated loopback servers.
+Transcripts/screenshots are retained under ignored target/task-prep/crash-recovery.
+
+| Checklist | Actual pages evidence |
+|---|---|
+| 11: independent compiler failure | Web updates while pages compilation fails; last-good SVG hashes and visible pages stay. CSS rebuild preserves the pages error, and source repair clears it. HTTP tests verify compile file/line and notebook-cell payloads. |
+| 17: pre-sized/lazy pages | Eighteen real pages have final intrinsic attributes and scaled CSS dimensions before far-page loading. Page 18 has neither a decoded image nor a resource request while the first four pages load. |
+| 18: page 7/page 5 update | Page 7 stays at −102.9375 px before/after the page 5 edit. Only page 5 changes hash and exactly its new versioned URL is fetched; all unchanged page/image nodes and URLs survive, with counter Page 7 / 18. |
+| 19: zoom/status/client races | Zoom and fit changes keep fractional anchors within 0.398 px and 0.020 px respectively. Stored zoom 1.5 survives navigation; buttons/+ = - 0, typing/modifier exclusions and fit resize work. Error/empty status text, public 18→1 calls and stale startup-fetch rejection pass. |
+| 16: browser errors | All 13 actual cases reject unexpected runtime/console errors; all 26 mock checks pass the same prefixed-log rule. |
+
+The controlled startup-race case executes the shipped pages script in a
+same-origin script-free shell iframe. It holds that script's no-store state
+fetch, applies an empty error then four pages at 18 and two at 1, and releases a
+stale one-page response: two pages remain. The existing real-server restart
+case remains separate evidence for actual reconnects.
+
+Mock-only stress cases verify that a changed distant decoded page remains lazy
+and keeps its old pixels until replacement load/decode, that a stale decode
+cannot replace a newer revision, and that reverting to displayed content keeps
+its image without a redundant request. Those cases use explicit HTTP/decode
+barriers and do not introduce a production test hook.
+
+Initial sizing assertions read img.width/height, whose DOM values reflect CSS
+zoom. Corrected checks read the intrinsic content attributes and independently
+check rendered geometry. The mock's page 5 refresh check first preserves the
+page 7 anchor, then deliberately reveals page 5 when it lies beyond lazy lookahead;
+revision-only requests and navigation requests are measured separately. The
+production client did not need a behavior change for these test corrections.
+
+Full .typ build/serve end-to-end acceptance remains T52. Direct TypstFile
+compilation is covered by the pages builder's embedded-compiler tests here.
