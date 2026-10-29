@@ -1701,7 +1701,6 @@ fn export_asset_names_are_portable_on_case_insensitive_and_windows_filesystems()
             .len(),
         3,
     );
-}
 
 #[test]
 fn labelled_nested_footnotes_do_not_add_spaces_before_punctuation() {
