@@ -531,10 +531,59 @@ writer-v<version>-<target>/THIRD-PARTY-LICENSES/
 ├── crates.txt       "<name> <version>: <license> (<crates.io URL or path>)" per linked crate, sorted
 └── crates/<name>-<version>/   LICENSE*, COPYING*, NOTICE*, UNLICENSE* of each linked crate
 ```
-"Linked" = `cargo tree -e normal,no-proc-macro --target <target>`; a crate without license files whose
-expression includes MIT gets a generated `LICENSE-MIT` (presenter's rule). The step fails when a linked
-crate is missing from `cargo metadata`, when the `assets/` copies differ from the `==> … <==` headers
-of `EMBEDDED.txt`, or when the binary exceeds the §6 ceiling. `docs/dev/release.md` (T75) describes it.
+"Linked" = `cargo tree -e normal,no-proc-macro --target <target>`. Join that target's
+uncolored package identities to metadata exactly. Registry notices are searched
+recursively; workspace/path crates use root notices plus explicit license_file,
+without sweeping build/test/embedded-asset trees. Copy actual notices byte-exact.
+
+If no notices exist, generated `LICENSE-MIT` is permitted only when the parsed
+Cargo expression can be satisfied by plain MIT alone. OR and Cargo's legacy
+`/` allow a choice; AND preserves all obligations. Thus `Apache-2.0/MIT`
+qualifies but `MIT AND Apache-2.0` does not. SPDX grouping/precedence and
+case-sensitive operators apply; canonical MIT identity is case-insensitive.
+WITH-qualified terms, MIT-0, LicenseRef/DocumentRef, substrings, exception tokens,
+ANSI and malformed syntax cannot stand in for plain MIT. This is syntax/choice
+evaluation, not a complete SPDX identifier/exception registry validator. Preserve
+the declared expression in crates.txt and invent no copyright owner or non-MIT
+license. Sources: [Cargo legacy convention](https://doc.rust-lang.org/stable/style-guide/cargo.html#metadata-conventions),
+[Cargo operators](https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields)
+and [SPDX syntax/case/precedence](https://spdx.github.io/spdx-spec/v2.3.1/SPDX-license-expressions/).
+
+**Reviewed immutable source-copy exceptions:** only the exact 21 package/version
+records in [release notice sources](../dev/release-notice-sources.json) may copy
+the following additional reviewed notices when published source notices are absent:
+
+- mitex, mitex-glob, mitex-lexer, mitex-parser, mitex-spec and mitex-spec-gen 0.2.4:
+  existing embedded mitex package LICENSE, verified identical to their pinned
+  workspace root LICENSE; no upstream NOTICE exists.
+- roman-numerals-rs 3.1.0: exact upstream `LICENCE.rst`, retaining both declared
+  0BSD/CC0 alternatives and attribution.
+- typst, typst-eval, typst-html, typst-kit, typst-layout, typst-library, typst-pdf,
+  typst-realize, typst-render, typst-svg, typst-syntax, typst-timing and typst-utils
+  0.15.1: existing embedded typst-assets LICENSE (verified identical) plus exact
+  upstream Typst NOTICE. The typst-assets NOTICE is a different file and is not
+  a replacement for this NOTICE.
+- selectors 0.41.0: exact official versioned MPL 2.0 full text, its verbatim
+  published source header and source provenance. No upstream root LICENSE is
+  invented. Its normal crates.txt URL field must contain the pinned complete
+  source archive URL `https://static.crates.io/crates/selectors/selectors-0.41.0.crate`;
+  a landing-page-only attribution is insufficient.
+
+One shared guard requires exact package source/repository/license declarations
+and absent license_file, unique Cargo.lock identity and reviewed checksum,
+actual cached archive SHA-256, one regular archive VCS record identical to
+extracted source bytes, and exact clean revision/package path. Each reused
+notice must match its reviewed runtime SHA-256. Release-only copies live under
+`docs/release/notice-sources/<project-version>/`, canonically confined beneath
+the helper checkout; metadata's workspace root still owns lock/cache guards.
+They remain outside embedded assets, with `-text -whitespace` preserving their
+exact legal bytes. There is no runtime notice download or broad non-MIT
+generation. Each linked crate retains its own declared expression/attribution;
+unlinked pin records add no rows. Other missing notices or evidence fail.
+
+The step also fails when a linked crate is absent or ambiguous in metadata,
+when embedded copies/stdout differ, or when the binary exceeds the §6 ceiling.
+`docs/dev/release.md` (T75) describes archive validation and evidence boundaries.
 
 ## 9. Upgrade procedure
 Each upgrade ends with `cargo test`, `cargo test --release` and a contract-change update of this spec.

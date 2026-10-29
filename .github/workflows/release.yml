@@ -1,0 +1,253 @@
+name: Release artifacts (no publication)
+
+on:
+    workflow_dispatch:
+        inputs:
+            revision:
+                description: Existing revision to build (empty uses this workflow revision)
+                required: false
+                default: ''
+                type: string
+            tag:
+                description: Optional existing v<Cargo version> tag to verify
+                required: false
+                default: ''
+                type: string
+    pull_request:
+        paths:
+            - .github/workflows/release.yml
+            - scripts/release*.py
+            - scripts/test-release-notices.py
+            - tests/release/**
+            - docs/release/**
+            - docs/dev/release-notice-sources.json
+            - assets/licenses/**
+            - .gitattributes
+    push:
+        branches: [main]
+        paths:
+            - .github/workflows/release.yml
+            - scripts/release*.py
+            - scripts/test-release-notices.py
+            - tests/release/**
+            - docs/release/**
+            - docs/dev/release-notice-sources.json
+            - assets/licenses/**
+            - .gitattributes
+
+permissions:
+    contents: read
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CARGO_TERM_COLOR: always
+    PYTHONUTF8: '1'
+
+jobs:
+    tools:
+        name: Release helper tests
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.revision || github.sha }}
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: '3.13'
+            - name: Pure archive, metadata and smoke-helper tests
+              run: python -m unittest discover -s tests/release -p 'test_*.py'
+            - name: Pure notice-helper tests
+              run: python scripts/test-release-notices.py
+
+    label:
+        name: Verify existing revision and optional tag
+        if: github.event_name == 'workflow_dispatch'
+        needs: tools
+        runs-on: ubuntu-24.04
+        outputs:
+            version: ${{ steps.info.outputs.version }}
+            revision: ${{ steps.info.outputs.revision }}
+            build_id: ${{ steps.info.outputs.build_id }}
+            epoch: ${{ steps.info.outputs.epoch }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.revision || github.sha }}
+                  fetch-depth: 0
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: '3.13'
+            - name: Read immutable build inputs
+              id: info
+              env:
+                  RELEASE_TAG: ${{ inputs.tag }}
+              run: >-
+                  python scripts/release-metadata.py --source .
+                  --tag "$RELEASE_TAG" --out target/release-info.json
+                  --github-output "$GITHUB_OUTPUT"
+
+    build:
+        name: Native archive (${{ matrix.target }})
+        needs: label
+        timeout-minutes: 120
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - target: aarch64-apple-darwin
+                      os: macos-15
+                      executable: writer
+                    - target: x86_64-apple-darwin
+                      os: macos-15-intel
+                      executable: writer
+                    - target: x86_64-unknown-linux-gnu
+                      os: ubuntu-24.04
+                      executable: writer
+                    - target: aarch64-unknown-linux-gnu
+                      os: ubuntu-24.04-arm
+                      executable: writer
+                    - target: x86_64-pc-windows-msvc
+                      os: windows-2025
+                      executable: writer.exe
+                    - target: aarch64-pc-windows-msvc
+                      os: windows-11-arm
+                      executable: writer.exe
+        runs-on: ${{ matrix.os }}
+        env:
+            TARGET: ${{ matrix.target }}
+            EXECUTABLE: ${{ matrix.executable }}
+            RELEASE_VERSION: ${{ needs.label.outputs.version }}
+            WRITER_GIT_SHA: ${{ needs.label.outputs.build_id }}
+            SOURCE_DATE_EPOCH: ${{ needs.label.outputs.epoch }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.label.outputs.revision }}
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: ${{ matrix.target }}
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: '3.13'
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  key: release-${{ matrix.target }}
+            - name: Select fresh runner-local artifact paths
+              run: |
+                  python - <<'PY'
+                  import os
+                  from pathlib import Path
+                  with Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as output:
+                      for name, suffix in [
+                          ('RELEASE_STAGE', 'writer-release-stage'),
+                          ('RELEASE_OUT', 'writer-release-dist'),
+                          ('RELEASE_REPEAT', 'writer-release-repeat'),
+                      ]:
+                          path = Path(os.environ['RUNNER_TEMP']) / suffix
+                          if path.exists() or path.is_symlink():
+                              raise ValueError(f'artifact staging path already exists: {path}')
+                          output.write(f'{name}={path.as_posix()}\n')
+                  PY
+            - name: Record compiler and Python versions
+              run: |
+                  rustc --version --verbose
+                  python --version
+            - name: Release tests (embedded assets)
+              run: cargo test --release --locked --target "$TARGET" --no-fail-fast
+            - name: Build native release executable
+              run: cargo build --release --locked --target "$TARGET" --bin writer
+            - name: Capture the same target's normal runtime crate set
+              run: |
+                  mkdir -p target/release-inputs
+                  cargo --color never metadata --locked --format-version 1 \
+                      --filter-platform "$TARGET" > target/release-inputs/metadata.json
+                  cargo --color never tree --locked --target "$TARGET" \
+                      -e normal,no-proc-macro --prefix none --charset ascii \
+                      --no-dedupe --format '{p}' > target/release-inputs/tree.txt
+            - name: Assemble exact embedded and linked-crate notices
+              run: >-
+                  python scripts/release-notices.py
+                  --binary "target/$TARGET/release/$EXECUTABLE" --target "$TARGET"
+                  --metadata-json target/release-inputs/metadata.json
+                  --tree-text target/release-inputs/tree.txt --assets assets
+                  --out "$RELEASE_STAGE/THIRD-PARTY-LICENSES"
+            - name: Create deterministic archive with 64 MiB binary gate
+              run: >-
+                  python scripts/release-archive.py pack
+                  --binary "target/$TARGET/release/$EXECUTABLE"
+                  --readme docs/release/README.md --license LICENSE
+                  --notices "$RELEASE_STAGE/THIRD-PARTY-LICENSES"
+                  --version "$RELEASE_VERSION" --target "$TARGET"
+                  --epoch "$SOURCE_DATE_EPOCH" --out "$RELEASE_OUT"
+            - name: Prove same-input archive byte reproducibility
+              run: |
+                  python scripts/release-archive.py pack \
+                      --binary "target/$TARGET/release/$EXECUTABLE" \
+                      --readme docs/release/README.md --license LICENSE \
+                      --notices "$RELEASE_STAGE/THIRD-PARTY-LICENSES" \
+                      --version "$RELEASE_VERSION" --target "$TARGET" \
+                      --epoch "$SOURCE_DATE_EPOCH" --out "$RELEASE_REPEAT"
+                  python - <<'PY'
+                  import os
+                  from pathlib import Path
+                  first = list(Path(os.environ['RELEASE_OUT']).iterdir())
+                  second = list(Path(os.environ['RELEASE_REPEAT']).iterdir())
+                  assert len(first) == len(second) == 1
+                  assert first[0].name == second[0].name
+                  assert first[0].read_bytes() == second[0].read_bytes()
+                  PY
+            - name: Smoke unpacked native executable in a disposable working directory
+              run: >-
+                  python scripts/release-smoke.py --directory "$RELEASE_OUT"
+                  --version "$RELEASE_VERSION" --target "$TARGET"
+                  --build-id "$WRITER_GIT_SHA" --epoch "$SOURCE_DATE_EPOCH"
+                  --report "$RELEASE_STAGE/report.json"
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: archive-${{ matrix.target }}
+                  path: ${{ env.RELEASE_OUT }}/*
+                  if-no-files-found: error
+                  compression-level: 0
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: report-${{ matrix.target }}
+                  path: ${{ env.RELEASE_STAGE }}/report.json
+                  if-no-files-found: error
+
+    bundle:
+        name: Verify six archives and checksums
+        needs: [label, build]
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.label.outputs.revision }}
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: '3.13'
+            - uses: actions/download-artifact@v8
+              with:
+                  pattern: archive-*
+                  path: target/release-bundle
+                  merge-multiple: true
+            - name: Create and verify sorted SHA256SUMS
+              env:
+                  RELEASE_VERSION: ${{ needs.label.outputs.version }}
+              run: |
+                  python scripts/release-archive.py checksums \
+                      --directory target/release-bundle --version "$RELEASE_VERSION"
+                  python scripts/release-archive.py checksums \
+                      --directory target/release-bundle --version "$RELEASE_VERSION" --verify
+            - name: Include prepared initial notes without publishing
+              env:
+                  RELEASE_VERSION: ${{ needs.label.outputs.version }}
+              run: cp "docs/release/NOTES-$RELEASE_VERSION.md" target/release-bundle/RELEASE-NOTES.md
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: writer-release-bundle
+                  path: target/release-bundle/*
+                  if-no-files-found: error
+                  compression-level: 0

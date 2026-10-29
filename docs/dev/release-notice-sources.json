@@ -1,0 +1,270 @@
+{
+    "verified_date": "2026-10-29",
+    "scope": "Exact reviewed source copies for missing published notices; no generated non-MIT license.",
+    "source_registry": "registry+https://github.com/rust-lang/crates.io-index",
+    "groups": {
+        "mitex": {
+            "repository": "https://github.com/mitex-rs/mitex",
+            "license": "Apache-2.0",
+            "revision": "f69eb43b52372e141b35661c049ce522567adbf0",
+            "upstream_tree_url": "https://api.github.com/repos/mitex-rs/mitex/git/trees/f69eb43b52372e141b35661c049ce522567adbf0?recursive=1",
+            "upstream_tree_truncated": false,
+            "upstream_legal_paths": [
+                "LICENSE",
+                "packages/mitex/LICENSE"
+            ],
+            "files": [
+                {
+                    "archive_name": "LICENSE",
+                    "kind": "embedded",
+                    "source_path": "vendor/typst-packages/preview/mitex/0.2.7/LICENSE",
+                    "sha256": "95bd3988beee069fa2848f648dab43cc6e0b2add2ad6bcb17360caf749802bcc",
+                    "bytes": 9722,
+                    "upstream_url": "https://raw.githubusercontent.com/mitex-rs/mitex/f69eb43b52372e141b35661c049ce522567adbf0/LICENSE"
+                }
+            ]
+        },
+        "roman-numerals-rs": {
+            "repository": "https://github.com/AA-Turner/roman-numerals/",
+            "license": "0BSD OR CC0-1.0",
+            "revision": "ec81337f99d8b557a6fce10f674c054050551444",
+            "upstream_tree_url": "https://api.github.com/repos/AA-Turner/roman-numerals/git/trees/ec81337f99d8b557a6fce10f674c054050551444?recursive=1",
+            "upstream_tree_truncated": false,
+            "upstream_legal_paths": [
+                "LICENCE.rst"
+            ],
+            "files": [
+                {
+                    "archive_name": "LICENCE.rst",
+                    "kind": "release",
+                    "source_path": "docs/release/notice-sources/roman-numerals-rs-3.1.0/LICENCE.rst",
+                    "sha256": "c744ffc7e120b22e6620b613298dc003a2613c0ae489ee414fb1d473f24f916f",
+                    "bytes": 7505,
+                    "upstream_url": "https://raw.githubusercontent.com/AA-Turner/roman-numerals/ec81337f99d8b557a6fce10f674c054050551444/LICENCE.rst"
+                }
+            ]
+        },
+        "typst": {
+            "repository": "https://github.com/typst/typst",
+            "license": "Apache-2.0",
+            "revision": "9dfd3a08500b7896045f907433cf7b4b02434fad",
+            "upstream_tree_url": "https://api.github.com/repos/typst/typst/git/trees/9dfd3a08500b7896045f907433cf7b4b02434fad?recursive=1",
+            "upstream_tree_truncated": false,
+            "upstream_legal_paths": [
+                "LICENSE",
+                "NOTICE"
+            ],
+            "files": [
+                {
+                    "archive_name": "LICENSE",
+                    "kind": "embedded",
+                    "source_path": "vendor/crates/typst-assets/LICENSE",
+                    "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+                    "bytes": 9723,
+                    "upstream_url": "https://raw.githubusercontent.com/typst/typst/9dfd3a08500b7896045f907433cf7b4b02434fad/LICENSE"
+                },
+                {
+                    "archive_name": "NOTICE",
+                    "kind": "release",
+                    "source_path": "docs/release/notice-sources/typst-0.15.1/NOTICE",
+                    "sha256": "1778244777547c281b6f5fa9fc0c18ab21f8d4491c803f64e09046800f5fcb26",
+                    "bytes": 21066,
+                    "upstream_url": "https://raw.githubusercontent.com/typst/typst/9dfd3a08500b7896045f907433cf7b4b02434fad/NOTICE"
+                }
+            ]
+        },
+        "selectors": {
+            "repository": "https://github.com/servo/stylo",
+            "license": "MPL-2.0",
+            "revision": "34d25f741765a0bdb894f8271852e633299352d8",
+            "source_archive_notice": true,
+            "source_archive_url": "https://static.crates.io/crates/selectors/selectors-0.41.0.crate",
+            "upstream_tree_url": "https://api.github.com/repos/servo/stylo/git/trees/34d25f741765a0bdb894f8271852e633299352d8?recursive=1",
+            "upstream_tree_truncated": false,
+            "upstream_legal_paths": [],
+            "provenance": "Published source headers plus exact official versioned MPL 2.0 full text; no fabricated upstream root notice.",
+            "files": [
+                {
+                    "archive_name": "LICENSE-MPL-2.0.txt",
+                    "kind": "release",
+                    "source_path": "docs/release/notice-sources/selectors-0.41.0/LICENSE-MPL-2.0.txt",
+                    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+                    "bytes": 16726
+                },
+                {
+                    "archive_name": "PROVENANCE.json",
+                    "kind": "release",
+                    "source_path": "docs/release/notice-sources/selectors-0.41.0/PROVENANCE.json",
+                    "sha256": "49d2ecec5ead108ad3745ecaed6adf65f9054231d113d9f1bd04e8c9bb89cb8d",
+                    "bytes": 9431
+                },
+                {
+                    "archive_name": "SOURCE-HEADER.txt",
+                    "kind": "release",
+                    "source_path": "docs/release/notice-sources/selectors-0.41.0/SOURCE-HEADER.txt",
+                    "sha256": "766674381e88a468d55e07de3596987391cf0e8beebe51baf4fddf11078785b3",
+                    "bytes": 206
+                }
+            ]
+        }
+    },
+    "packages": [
+        {
+            "name": "mitex",
+            "version": "0.2.4",
+            "group": "mitex",
+            "vcs_path": "crates/mitex",
+            "crate_sha256": "81f1eb466efdd212fe624f8bf24083f21d582f2d08e3b879bc4a059b25969d6c"
+        },
+        {
+            "name": "mitex-glob",
+            "version": "0.2.4",
+            "group": "mitex",
+            "vcs_path": "crates/mitex-glob",
+            "crate_sha256": "c3074187856f137e3392e906daefa2fdc993175d1c7d55ff1348e3bb9321d415"
+        },
+        {
+            "name": "mitex-lexer",
+            "version": "0.2.4",
+            "group": "mitex",
+            "vcs_path": "crates/mitex-lexer",
+            "crate_sha256": "0fd0a245774eed6cbf0df25bc3a9c6cc64445a5ea2c3a241f1c9691d83ae214b"
+        },
+        {
+            "name": "mitex-parser",
+            "version": "0.2.4",
+            "group": "mitex",
+            "vcs_path": "crates/mitex-parser",
+            "crate_sha256": "1a42a2f86c46d250802262387dfb1d6bb18affd2d99328bbe4dbd12ce294c3a4"
+        },
+        {
+            "name": "mitex-spec",
+            "version": "0.2.4",
+            "group": "mitex",
+            "vcs_path": "crates/mitex-spec",
+            "crate_sha256": "12ecaa5f36d60e2d64ea5508d1be44b1c19daa50518f5b8425f36697fdc60509"
+        },
+        {
+            "name": "mitex-spec-gen",
+            "version": "0.2.4",
+            "group": "mitex",
+            "vcs_path": "crates/mitex-spec-gen",
+            "crate_sha256": "a1e9ef918ec9c2a14e60ebb20275684b483d23afb5c3314127c9eb46ce74ae68"
+        },
+        {
+            "name": "roman-numerals-rs",
+            "version": "3.1.0",
+            "group": "roman-numerals-rs",
+            "vcs_path": "rust",
+            "crate_sha256": "c85cd47a33a4510b1424fe796498e174c6a9cf94e606460ef022a19f3e4ff85e"
+        },
+        {
+            "name": "selectors",
+            "version": "0.41.0",
+            "group": "selectors",
+            "vcs_path": "selectors",
+            "crate_sha256": "8322aebea94a6cc288ff884e8a49bdbceef60206c400c6c46d22e62fc4fd91a6",
+            "source_url": "https://static.crates.io/crates/selectors/selectors-0.41.0.crate"
+        },
+        {
+            "name": "typst",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst",
+            "crate_sha256": "d1cb79435d128de5d5443a058a983f6dcc16738760fa55ed703762bc278b1fd3"
+        },
+        {
+            "name": "typst-eval",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-eval",
+            "crate_sha256": "a8823e1822bd181d8bee47b05632d16bf3a0a8ab042e01d815826350d7ae16c3"
+        },
+        {
+            "name": "typst-html",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-html",
+            "crate_sha256": "f41bcfbe480b640c4447d8bf9bb59020da610f239aa032d53328651a03572c09"
+        },
+        {
+            "name": "typst-kit",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-kit",
+            "crate_sha256": "27ee52e27dfab0da5ac3d19e7e43a21fbc7ff83af9301119468bae89fa857a8b"
+        },
+        {
+            "name": "typst-layout",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-layout",
+            "crate_sha256": "1916c407baf8f8815e5d50030eed6d5ac6a0702d927b3c156e38db7a618499e2"
+        },
+        {
+            "name": "typst-library",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-library",
+            "crate_sha256": "12becd02464849f1507f3c4ef3f401a4d28d5938cc74b6acc6f1d703458bf393"
+        },
+        {
+            "name": "typst-pdf",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-pdf",
+            "crate_sha256": "3aef841ff3e606542f3057ce5dd0ff264d53a439e00ed4a91ec00ec8568b3b7f"
+        },
+        {
+            "name": "typst-realize",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-realize",
+            "crate_sha256": "a8f2eb73ab25add88cab03b26effabc657977fe850ff81556b28c6b137ff4bf1"
+        },
+        {
+            "name": "typst-render",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-render",
+            "crate_sha256": "de8a657a5fa5b9b7d3d458f482978674de910b54889d46f3bb55ca89f570f83e"
+        },
+        {
+            "name": "typst-svg",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-svg",
+            "crate_sha256": "5df6dc785695aae085678bd6657aa04a1d26058a76ed042e738658078bca681e"
+        },
+        {
+            "name": "typst-syntax",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-syntax",
+            "crate_sha256": "92a20d79df5d10c7fb0b4f7c18e4b2671edfc21e5ed9ad9894e18cccefd1c70f"
+        },
+        {
+            "name": "typst-timing",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-timing",
+            "crate_sha256": "ab6ee5110f671a23164c61caa85dbc476043d503103dedd36f16d93f970f3f59"
+        },
+        {
+            "name": "typst-utils",
+            "version": "0.15.1",
+            "group": "typst",
+            "vcs_path": "crates/typst-utils",
+            "crate_sha256": "b33ad1675497b45ae9d960a16e95207c35c2c46330d1a6249a9a977670c8c160"
+        }
+    ],
+    "guards": [
+        "Exact package name/version/source/repository/license and absent license_file.",
+        "One matching Cargo.lock identity with reviewed checksum; actual cached crate SHA-256.",
+        "Exactly one regular archive VCS record equal to extracted source bytes; exact clean revision/path.",
+        "Each embedded/release notice is copied byte-exact after its reviewed runtime SHA-256 check.",
+        "Release sources are confined beneath the helper checkout; no runtime notice download.",
+        "Only missing published source notices trigger reviewed source-copy exceptions.",
+        "Selected selectors row requires its exact full version source archive URL."
+    ]
+}

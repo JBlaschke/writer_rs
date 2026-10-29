@@ -1,0 +1,55 @@
+name: Site artifact
+
+on:
+    workflow_dispatch:
+    pull_request:
+        paths:
+            - ".github/workflows/site.yml"
+            - "scripts/site.py"
+            - "scripts/tests/test_site.py"
+            - "docs/guide/**"
+            - "docs/site/**"
+            - "README.md"
+            - "examples/**"
+            - "assets/themes/**"
+            - "src/**"
+            - "Cargo.toml"
+            - "Cargo.lock"
+
+permissions:
+    contents: read
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: "3.13"
+            - uses: dtolnay/rust-toolchain@stable
+            - uses: Swatinem/rust-cache@v2
+            - name: Pure site tests
+              run: python3 -I -m unittest discover -s scripts/tests -p test_site.py
+            - name: Validate complete guide and built CLI
+              run: cargo test --locked --test guide
+            - name: Build site executable
+              run: cargo build --locked --release
+            - name: Build portable site artifact
+              run: |
+                  SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
+                      python3 -I scripts/site.py \
+                      --binary target/release/writer \
+                      --source . --out target/site \
+                      --repo-url https://github.com/JBlaschke/writer_rs \
+                      --revision "${{ github.sha }}"
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: writer-site
+                  path: target/site
+                  if-no-files-found: error
+                  retention-days: 14
