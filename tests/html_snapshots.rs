@@ -11,6 +11,9 @@ use writer::ir::{SourceInfo, SourceKind};
 use writer::pipeline::{self, BuildOptions, Mode, WorldSlot};
 use writer::resolve::{ResolveOptions, resolve};
 
+#[path = "common/citations.rs"]
+mod citation_library;
+
 fn fixture_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/md")
 }
@@ -92,9 +95,14 @@ fn md_fixtures() {
             }
         };
         config.merge_front_matter(&parsed.document.meta).unwrap();
+        let library = citation_library::load(&parsed.document, &config);
         parsed.diagnostics.extend(resolve(
             &mut parsed.document,
-            &ResolveOptions { config: &config, library: None, lenient: true },
+            &ResolveOptions {
+                config: &config,
+                library: library.as_ref(),
+                lenient: true,
+            },
         ));
         assert!(
             parsed.document.invariant_violations().is_empty(),

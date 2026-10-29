@@ -1,0 +1,332 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Note-style citations",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {
+      "bibliography": "../bib/refs.bib",
+      "cite_style": "chicago-notes"
+    }
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Notes and citations"
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 7,
+        "end_line": 7
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A regular note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "An ordinary footnote with "
+                },
+                {
+                  "type": "emph",
+                  "inlines": [
+                    {
+                      "type": "text",
+                      "text": "emphasis"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ],
+              "span": {
+                "start_line": 23,
+                "end_line": 23
+              }
+            }
+          ],
+          "label": "ordinary"
+        },
+        {
+          "type": "text",
+          "text": " precedes a note citation "
+        },
+        {
+          "type": "ref",
+          "target": "doe2020",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 9,
+            "end_line": 9
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 9,
+        "end_line": 9
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A second note citation "
+        },
+        {
+          "type": "ref",
+          "target": "knuth1984",
+          "supplement": [
+            {
+              "type": "text",
+              "text": "p. 12"
+            }
+          ],
+          "form": "normal",
+          "span": {
+            "start_line": 11,
+            "end_line": 11
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 11,
+        "end_line": 11
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "The ordinary note is repeated"
+        },
+        {
+          "type": "footnote_ref",
+          "label": "ordinary"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 13,
+        "end_line": 13
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A parent note contains another citation"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Parent note text with a nested note citation "
+                },
+                {
+                  "type": "ref",
+                  "target": "lee2019",
+                  "supplement": null,
+                  "form": "normal",
+                  "span": {
+                    "start_line": 24,
+                    "end_line": 24
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ],
+              "span": {
+                "start_line": 24,
+                "end_line": 24
+              }
+            }
+          ],
+          "label": "parent"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 15,
+        "end_line": 15
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A grouped note citation "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 17,
+            "end_line": 17
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 17,
+        "end_line": 17
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Prose in a note style "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "prose",
+          "span": {
+            "start_line": 19,
+            "end_line": 19
+          }
+        },
+        {
+          "type": "text",
+          "text": " retains the engine's output."
+        }
+      ],
+      "span": {
+        "start_line": 19,
+        "end_line": 19
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Hidden "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "none",
+          "span": {
+            "start_line": 21,
+            "end_line": 21
+          }
+        },
+        {
+          "type": "text",
+          "text": " adds no note."
+        }
+      ],
+      "span": {
+        "start_line": 21,
+        "end_line": 21
+      }
+    },
+    {
+      "type": "bibliography",
+      "span": {
+        "start_line": 26,
+        "end_line": 27
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": true,
+    "footnotes": true
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

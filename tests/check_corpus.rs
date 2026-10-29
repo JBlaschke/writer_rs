@@ -63,10 +63,9 @@ fn every_markdown_fixture_has_reviewed_check_codes() {
         ("callouts", &[]),
         ("code", &["invalid-code-attr"]),
         ("math", &["equation-label-misplaced"]),
-        (
-            "references",
-            &["duplicate-label", "label-reserved", "unresolved-reference"],
-        ),
+        ("references", &["duplicate-label", "label-reserved"]),
+        ("citations", &["ambiguous-label", "unresolved-reference"]),
+        ("citations-notes", &["cite-prose-note-style"]),
         ("footnotes", &["footnote-unreferenced"]),
         ("includes", &["parse-error"]),
         ("include-chain", &["include-meta-ignored"]),

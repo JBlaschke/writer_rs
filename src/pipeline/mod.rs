@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::assets::emit::OutputMode;
 use crate::assets::registry::{AssetData, AssetRegistry, normalize_lexically};
+use crate::cite;
 use crate::config::{CliOverrides, Config, PdfEngine, Target};
 use crate::error::{Diagnostic, Diagnostics, Error, Level, Result};
 use crate::html::BuildInfo;
@@ -251,16 +252,59 @@ pub fn prepare(
     opts: &BuildOptions,
 ) -> std::result::Result<Prepared, BuildFailure> {
     let mut prepared = parse_only(opts)?;
+    let library = load_citation_library(&mut prepared, opts.mode)?;
     let diagnostics = resolve::resolve(
         &mut prepared.document,
         &ResolveOptions {
             config: &prepared.config,
-            library: None,
+            library: library.as_ref(),
             lenient: !matches!(opts.mode, Mode::Build),
         },
     );
     prepared.diagnostics.extend(diagnostics);
     Ok(prepared)
+}
+
+fn load_citation_library(
+    prepared: &mut Prepared, mode: Mode,
+) -> std::result::Result<Option<cite::Library>, BuildFailure> {
+    if prepared.config.references.bibliography.is_empty() {
+        return Ok(None);
+    }
+    let loaded = cite::Library::load(&prepared.config.references.bibliography)
+        .and_then(|mut library| {
+            library.set_style(
+                &prepared.config.references.style,
+                &prepared.document.source.base_dir,
+            )?;
+            Ok(library)
+        });
+    match loaded {
+        Ok(library) => Ok(Some(library)),
+        Err(error) if matches!(mode, Mode::Build) => Err(BuildFailure {
+            error: Box::new(error),
+            diagnostics: std::mem::take(&mut prepared.diagnostics),
+        }),
+        Err(error) => {
+            let (code, path, message) = match &error {
+                Error::Resource { what: "citation style", path, message } => {
+                    ("citation-style-invalid", path.clone(), message.clone())
+                }
+                Error::Resource { path, message, .. } => {
+                    ("bibliography-error", path.clone(), message.clone())
+                }
+                _ => (
+                    "bibliography-error",
+                    prepared.document.source.path.clone(),
+                    error.to_string(),
+                ),
+            };
+            prepared
+                .diagnostics
+                .push(Diagnostic::error(code, message).with_path(path));
+            Ok(None)
+        }
+    }
 }
 
 /// Loads the explicit or nearest project config and applies CLI overrides.
@@ -338,9 +382,7 @@ fn absolutize(path: &mut PathBuf, dir: &Path) {
 }
 
 fn is_csl(style: &str) -> bool {
-    Path::new(style)
-        .extension()
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("csl"))
+    Path::new(style).extension().is_some()
 }
 
 fn sets_key(path: &Path, table: &str, key: &str) -> bool {
@@ -646,8 +688,20 @@ fn build_targets_observed(
     }
     // Native PDF consumes the original source; subset findings apply only to
     // IR targets. Keep them on Prepared for provenance and later web views.
-    let mut diagnostics = if native_only {
-        Diagnostics::new()
+    let mut diagnostics: Diagnostics = if native_only {
+        // Collected configured-resource failures remain global in Serve/Check.
+        // Build returned those as fatal preparation errors before this point.
+        prepared
+            .diagnostics
+            .clone()
+            .into_iter()
+            .filter(|finding| {
+                matches!(
+                    finding.code,
+                    "bibliography-error" | "citation-style-invalid"
+                )
+            })
+            .collect()
     } else {
         prepared
             .diagnostics
@@ -1637,8 +1691,10 @@ mod tests {
             ),
         ]);
         let root = absolute(dir.path()).unwrap();
+        // These intentionally absent resources test configuration provenance,
+        // not bibliography loading or document resolution.
         let plain =
-            prepare(&BuildOptions::new(root.join("doc/plain.md"))).unwrap();
+            parse_only(&BuildOptions::new(root.join("doc/plain.md"))).unwrap();
         assert_eq!(plain.config.pdf.template, root.join("project.typ"));
         assert_eq!(plain.config.docx.reference_doc, root.join("project.docx"));
         assert_eq!(plain.config.latex.template, root.join("project.tex"));
@@ -1653,7 +1709,7 @@ mod tests {
         assert_eq!(plain.config.pdf.font_paths, [root.join("fonts")]);
         assert_eq!(plain.config.typst.package_paths, [root.join("packages")]);
         let mut opts = BuildOptions::new(root.join("doc/front.md"));
-        let front = prepare(&opts).unwrap();
+        let front = parse_only(&opts).unwrap();
         assert_eq!(front.config.pdf.template, root.join("doc/front.typ"));
         assert_eq!(
             front.config.docx.reference_doc,
@@ -1671,7 +1727,7 @@ mod tests {
         opts.cli.template = Some("cli.typ".into());
         opts.cli.reference_doc = Some("cli.docx".into());
         opts.cli.latex_template = Some("cli.tex".into());
-        let cli = prepare(&opts).unwrap();
+        let cli = parse_only(&opts).unwrap();
         let cwd = absolute(Path::new(".")).unwrap();
         assert_eq!(cli.config.pdf.template, cwd.join("cli.typ"));
         assert_eq!(cli.config.docx.reference_doc, cwd.join("cli.docx"));
@@ -2039,5 +2095,114 @@ mod tests {
         assert!(names_directory(&dir.path().join("new/.")));
         assert!(names_directory(&dir.path().join("new/..")));
         assert!(!names_directory(&dir.path().join("new.html")));
+    }
+
+    #[test]
+    fn configured_library_failures_preserve_findings_and_follow_the_mode_boundary()
+     {
+        let root = tempfile::tempdir().unwrap();
+        let warning = Diagnostic::warning("prior", "kept frontend finding");
+        for mode in [Mode::Build, Mode::Check, Mode::Serve { build_id: 1 }] {
+            let (_, mut prepared) = prepared(root.path());
+            let missing = root.path().join("missing.bib");
+            prepared.config.references.bibliography = vec![missing.clone()];
+            prepared.diagnostics.push(warning.clone());
+            let result = load_citation_library(&mut prepared, mode);
+            if matches!(mode, Mode::Build) {
+                let failure = result.unwrap_err();
+                assert_eq!(
+                    failure.diagnostics.into_vec(),
+                    std::slice::from_ref(&warning)
+                );
+                assert!(matches!(*failure.error, Error::Resource {
+                    what: "bibliography", path, ..
+                } if path == missing));
+            } else {
+                assert!(result.unwrap().is_none());
+                let findings = prepared.diagnostics.into_vec();
+                assert_eq!(findings[0], warning);
+                assert_eq!(findings.len(), 2);
+                assert_eq!(findings[1].code, "bibliography-error");
+                assert_eq!(findings[1].level, Level::Error);
+                assert_eq!(findings[1].path.as_ref(), Some(&missing));
+                assert!(findings[1].span.is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn configured_style_errors_are_distinct_and_empty_bibliographies_skip_loading()
+     {
+        let root = tempfile::tempdir().unwrap();
+        let (_, mut prepared) = prepared(root.path());
+        prepared.config.references.style = "not-an-archived-style".into();
+        assert!(
+            load_citation_library(&mut prepared, Mode::Build)
+                .unwrap()
+                .is_none()
+        );
+        let path = root.path().join("empty.BIB");
+        std::fs::write(&path, "").unwrap();
+        prepared.config.references.bibliography = vec![path];
+        assert!(
+            load_citation_library(&mut prepared, Mode::Check)
+                .unwrap()
+                .is_none()
+        );
+        let findings = prepared.diagnostics.into_vec();
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].code, "citation-style-invalid");
+        assert_eq!(
+            findings[0].path.as_deref(),
+            Some(Path::new("not-an-archived-style"))
+        );
+        assert!(findings[0].message.contains("unknown style"));
+    }
+
+    #[test]
+    fn every_style_extension_is_normalized_watched_and_protected_as_a_resource()
+    {
+        let root = tempfile::tempdir().unwrap();
+        let (_, mut prepared) = prepared(root.path());
+        prepared.config.references.style = "styles/../custom.xml".into();
+        normalize_resources(&mut prepared.config, root.path());
+        let style = root.path().join("custom.xml");
+        assert_eq!(Path::new(&prepared.config.references.style), style);
+        std::fs::write(&style, "not parsed by path inventory").unwrap();
+        assert!(
+            watch_inputs(&prepared)
+                .contains(&(style.clone(), InputRole::Bibliography))
+        );
+        let clash =
+            find_clash([style.as_path()], &input_files(&prepared)).unwrap();
+        assert_eq!(clash.role, InputRole::Bibliography);
+        assert_eq!(clash.input, style);
+        for name in ["ieee", "apa", "chicago-notes"] {
+            assert!(!is_csl(name));
+        }
+        for path in ["style.csl", "style.XML", "style.other"] {
+            assert!(is_csl(path));
+        }
+    }
+
+    #[test]
+    fn pipeline_keeps_configured_bibliography_occurrences_for_duplicate_detection()
+     {
+        let root = tempfile::tempdir().unwrap();
+        let (_, mut prepared) = prepared(root.path());
+        let file = root.path().join("refs.BIB");
+        std::fs::write(
+            &file,
+            include_str!("../../tests/fixtures/bib/refs.bib"),
+        )
+        .unwrap();
+        let files = vec![file.clone(), file];
+        prepared.config.references.bibliography = files.clone();
+        let failure =
+            load_citation_library(&mut prepared, Mode::Build).unwrap_err();
+        assert!(
+            failure.error.to_string().contains("duplicate bibliography keys:")
+        );
+        assert_eq!(prepared.config.references.bibliography, files);
     }
 }

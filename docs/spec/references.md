@@ -454,6 +454,13 @@ impl Library {
     pub fn files(&self) -> &[PathBuf];         // absolute, for the watch set and LaTeX copies
 }
 ```
+`files()` contains bibliography files only, in configured occurrence order,
+with absolute, lexically normalized paths; CSL paths remain separate pipeline
+inputs. Repeated inputs are parsed rather than deduplicated. Within-file
+duplicate-key errors come from the pinned parser. Cross-file duplicates stop
+at the first conflicting file: report its sorted unique duplicate keys and
+attribute the Resource error to that file before reading subsequent inputs.
+
 Errors are `Error::Resource { what: "bibliography" | "citation style", path, message }`
 (`check`/report codes `bibliography-error`, `citation-style-invalid`). The pipeline (T70 wiring)
 resolves `[references] bibliography` and `style` paths per config.md §3, calls `load` then

@@ -701,7 +701,7 @@ typst cannot decode, and a `Bibliography` block without sources; T33's `mitex` p
 **Round trip** (T52, `tests/typst_roundtrip.rs`: it needs `markdown::parse` T12, `emit` T30 and
 this frontend T50): for every `tests/fixtures/md/*.md` except `presenter-deck.md`, `includes.md` and
 `raw.md`, with `R(x) = resolve(x, &ResolveOptions { config: <that side's config after
-merge_front_matter>, library: None, lenient: true })`: `normalize(R(md)) ==
+merge_front_matter>, library: <effective configured Library, or None>, lenient: true })`: `normalize(R(md)) ==
 normalize(R(typ_frontend(emit(R(md), AssetPaths::Source))))`. `normalize` (one function, applied to
 both sides) compares `meta`, `blocks`, `features` and `resolved` only, and: sets every `span` to
 `None`; clears `meta.vars` (config keys act through `R`'s config; of the other vars only §3's
@@ -724,6 +724,24 @@ and terms into `Text(" ")`; sets `Image.title`/`Link.title` to `None` and `Image
 writes them; treats `meta.lang == None` as `config.document.lang`; clears body-cell `header` flags;
 merges adjacent `Text`. Any other difference is an emitter or frontend bug.
 
+> **Citation round-trip representation (coordinator, T70):** compare two
+> test-only views after resolve. The canonical view keeps subgroup items,
+> modes, lifted affixes, cache presence and the cache's `note` flag, while the
+> rendered view keeps the complete rendered abstract/body/TOC/bibliography
+> inline and block trees. Build the rendered view from the original caches
+> before clearing their content in the canonical view: replace each `Cite`
+> recursively with its existing `resolved.inlines`, applying the same
+> normalization rules to that content. This compares a combined cache with the
+> reparsed individual caches plus lifted affixes without guessing text
+> boundaries or rerendering stateful groups. Every rendered text, formatting,
+> order, Footnote body and number remains compared; every other feature and
+> resolved fact remains in the canonical comparison. Cache content is moved
+> between comparison views, not discarded. No runtime or public API changes,
+> additional normalization loss, independent subgroup rerender or new fixture
+> exclusion is allowed. Positive combined/split controls and cache content,
+> number, formatting, order, presence and note-flag tamper controls guard this
+> representation.
+
 > **Round-trip refinement (coordinator, 2026-10-29):** canonicalize only
 > `features.notebook` to the presence of a surviving `Block::Cell` on each
 > normalized side. A Markdown document can include a notebook containing only
@@ -731,7 +749,7 @@ merges adjacent `Text`. Any other difference is an emitter or frontend bug.
 > the flattened Typst has no code-cell from which to recover that provenance.
 > Preserve every other feature bit. A dropped actual Cell still changes the
 > normalized notebook bit and remains a regression. No citation-placeholder
-> normalization is added; `R` with `library: None` already classifies unknown
+> normalization is added; `R` without a configured library already classifies unknown
 > citation keys to their visible placeholders.
 
 ## 8. Compile and the PDF pipeline (T03 §8.1–8.3, T32 §8.4)

@@ -811,8 +811,8 @@ in that text.
 | `sample-biblatex` | `tests/fixtures/latex/tour.md`, built-in template, `cite = "biblatex"` |
 | `sample-natbib` | same, `cite = "natbib"`, `code = "listings"`, `cleveref = true`; xelatex only (pdflatex cannot read tour.md's non-ASCII code inside `lstlisting`, §5.4) |
 | `sample-highlighted` | same, `code = "highlighted"`, `tables = "tabular"`, `booktabs = false`, `unicode = "keep"`; xelatex only |
-| `minimal` | `tour.md`, `--latex-template tests/fixtures/latex/template.tex` (the generated preamble alone, fallback hooks) |
-| `byo` | `tour.md`, `--latex-template tests/fixtures/latex/byo-template.tex`, default `code` (its `\renewcommand{\WrKeyword}` meets the always-defined `\Wr*` macros without highlighted code); also asserts `Test venue` in the text |
+| `minimal` | `tour.md`, `--latex-template tests/fixtures/latex/template.tex`, `cite = "plain"`, `emit_bibliography = true` (the generated preamble alone, fallback hooks; standard citation commands and body bibliography) |
+| `byo` | `tour.md`, `--latex-template tests/fixtures/latex/byo-template.tex`, `cite = "plain"`, `emit_bibliography = true`, default `code` (its `\renewcommand{\WrKeyword}` meets the always-defined `\Wr*` macros without highlighted code); also asserts `Test venue` in the text |
 | `empty` | `<tmp>/empty.md` holding one paragraph, `--latex-template tests/fixtures/latex/template.tex` (the preamble without conditional lines) |
 | `notebook` | `tests/fixtures/ipynb/outputs.ipynb`, `cell_prompts = true` |
 

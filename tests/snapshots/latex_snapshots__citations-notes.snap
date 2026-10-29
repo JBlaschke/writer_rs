@@ -1,0 +1,31 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section*{Notes and citations}\\label{_c3c51dd58cef133e9da77eade43a5767ab41260}\n\\addcontentsline{toc}{section}{Notes and citations}\n\nA regular note\\footnote{\\label{writer-fn-1}An ordinary footnote with \\emph{emphasis}.} precedes a note citation \\autocite{doe2020}.\n\nA second note citation \\autocite[p.~12]{knuth1984}.\n\nThe ordinary note is repeated\\footref{writer-fn-1}.\n\nA parent note contains another citation\\footnote{Parent note text with a nested note citation \\autocite{lee2019}.}.\n\nA grouped note citation \\autocite{doe2020,lee2019}.\n\nProse in a note style \\textcite{doe2020} retains the engine's output.\n\nHidden \\nocite{lee2019} adds no note.\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [
+    {
+      "source": "../bib/refs.bib",
+      "name": "refs.bib"
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "cite-prose-note-style",
+      "message": "prose citations render oddly in note styles (`chicago-notes`)",
+      "path": "[fixtures]/md/citations-notes.md",
+      "span": {
+        "start_line": 19,
+        "end_line": 19,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

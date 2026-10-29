@@ -1,0 +1,20 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "error",
+    "code": "ambiguous-label",
+    "file": "md/citations.md",
+    "line": 36,
+    "cell": null
+  },
+  {
+    "level": "warning",
+    "code": "unresolved-reference",
+    "file": "md/citations.md",
+    "line": 38,
+    "cell": null
+  }
+]

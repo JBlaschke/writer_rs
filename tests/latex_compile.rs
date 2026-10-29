@@ -1,14 +1,17 @@
 //! Optional real latexmk protocol; production code never invokes TeX engines.
 //!
-//! T70 boundary: the unmodified tour's eight real unresolved citation findings
-//! currently make writer exit 1 while preserving useful TeX placeholders. This
-//! exact gate must be refreshed when T70 implements the citation library.
+//! The original tour uses a real library and must exit successfully. Engine
+//! evidence includes the actual BibTeX/Biber result, not source commands alone.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 use regex::Regex;
+use writer::config::LatexCite;
+
+#[path = "common/latex_citations.rs"]
+mod latex_citations;
 
 const CONFIG: &str = "[pdf]\nsystem_fonts=false\nallow_packages=false\ntimestamp='2026-10-29T00:00:00Z'\n";
 
@@ -49,7 +52,7 @@ const CASES: &[Case] = &[
     Case {
         name: "minimal",
         source: "latex/tour.md",
-        settings: "",
+        settings: "cite='plain'\nemit_bibliography=true\n",
         template: Some("template.tex"),
         xelatex_only: false,
         tour: true,
@@ -57,7 +60,7 @@ const CASES: &[Case] = &[
     Case {
         name: "byo",
         source: "latex/tour.md",
-        settings: "",
+        settings: "cite='plain'\nemit_bibliography=true\n",
         template: Some("byo-template.tex"),
         xelatex_only: false,
         tour: true,
@@ -159,48 +162,54 @@ fn run_writer(
     command.output().unwrap()
 }
 
-fn known_tour_findings(source: &str, output: &Output, tex: &str) {
+fn tour_citations(case: &Case, source: &str, output: &Output, tex: &str) {
     let known = Regex::new(r"@(doe2020|lee2019|knuth1984)\b").unwrap();
-    let expected = known.find_iter(source).count();
-    assert!(expected > 0, "tour must continue exercising the T70 boundary");
-    assert_eq!(
-        output.status.code(),
-        Some(1),
-        "T70 has changed: refresh this exact deferred-citation gate under PLAN §7"
+    assert_eq!(known.find_iter(source).count(), 8, "keep the original tour");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr),
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let errors: Vec<_> =
-        stderr.lines().filter(|line| line.contains(": error:")).collect();
-    assert_eq!(errors.len(), expected, "{stderr}");
-    for error in &errors {
-        assert!(error.contains("does not exist in the document"), "{error}");
+    assert!(!stderr.contains(": error:"), "{stderr}");
+    let family = match case.name {
+        "minimal" | "byo" => LatexCite::Plain,
+        "sample-natbib" => LatexCite::Natbib,
+        _ => LatexCite::Biblatex,
+    };
+    latex_citations::assert_tour_commands(tex, family);
+    if family == LatexCite::Plain {
+        assert!(tex.contains("\\bibliographystyle{plain}"));
+        assert!(tex.contains("\\bibliography{"));
+        assert!(!tex.contains("\\usepackage{natbib}"));
+        assert!(!tex.contains("{biblatex}"));
+    }
+}
+
+fn bibliography_evidence(
+    root: &Path, outdir: &str, label: &str, evidence: &Path, biber: bool,
+) {
+    let directory = root.join(outdir);
+    let bbl =
+        fs::read_to_string(directory.join(format!("{label}.bbl"))).unwrap();
+    let blg =
+        fs::read_to_string(directory.join(format!("{label}.blg"))).unwrap();
+    fs::write(evidence.join("document.bbl"), &bbl).unwrap();
+    fs::write(evidence.join("document.blg"), &blg).unwrap();
+    for key in ["doe2020", "lee2019", "knuth1984"] {
         assert!(
-            ["doe2020", "lee2019", "knuth1984"]
-                .iter()
-                .any(|key| error.contains(&format!("label `<{key}>`"))),
-            "{error}"
+            bbl.contains(&format!("{{{key}}}")),
+            "{label}: missing {key}: {bbl}",
         );
     }
-    for key in ["doe2020", "lee2019", "knuth1984"] {
-        let expected = known
-            .captures_iter(source)
-            .filter(|capture| &capture[1] == key)
-            .count();
-        let actual = errors
-            .iter()
-            .filter(|error| error.contains(&format!("label `<{key}>`")))
-            .count();
-        assert_eq!(actual, expected, "{key}: {stderr}");
-    }
     assert!(
-        tex.contains("{[}?doe2020; lee2019{]}"),
-        "missing current grouped citation placeholder"
+        blg.contains(if biber {
+            "This is Biber"
+        } else {
+            "This is BibTeX"
+        }),
+        "{label}: expected actual bibliography backend: {blg}",
     );
-    let knuth = known
-        .captures_iter(source)
-        .filter(|capture| &capture[1] == "knuth1984")
-        .count();
-    assert_eq!(tex.matches("{[}?knuth1984{]}").count(), knuth);
 }
 
 fn missing_characters(log: &str, build_stderr: &str) {
@@ -239,7 +248,7 @@ fn execute(engine: &str, case: &Case, biber: bool) {
     let label =
         format!("{}{}-{engine}", case.name, if biber { "-biber" } else { "" });
     let evidence = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("target/task-prep/crash-recovery/t61/tex")
+        .join("target/task-prep/crash-recovery/t70/tex")
         .join(format!("{label}-{}", std::process::id()));
     fs::create_dir_all(&evidence).unwrap();
     let input = root.join(case.source);
@@ -263,10 +272,7 @@ fn execute(engine: &str, case: &Case, biber: bool) {
     assert!(output.is_file(), "{}", String::from_utf8_lossy(&built.stderr));
     let tex = fs::read_to_string(&output).unwrap();
     if case.tour {
-        known_tour_findings(&source, &built, &tex);
-        eprintln!(
-            "{label}: original-tour CLI citation success remains T70-deferred; exact current placeholders checked"
-        );
+        tour_citations(case, &source, &built, &tex);
     } else {
         assert!(
             built.status.success(),
@@ -280,7 +286,7 @@ fn execute(engine: &str, case: &Case, biber: bool) {
     record(&evidence, "writer-repeat", &repeated);
     assert_eq!(fs::read_to_string(&output).unwrap(), tex);
     if case.tour {
-        known_tour_findings(&source, &repeated, &tex);
+        tour_citations(case, &source, &repeated, &tex);
     } else {
         assert!(
             repeated.status.success(),
@@ -318,6 +324,14 @@ fn execute(engine: &str, case: &Case, biber: bool) {
         String::from_utf8_lossy(&compiled.stderr)
     );
     assert!(!log.lines().any(|line| line.starts_with('!')), "{label}: {log}");
+    if case.tour {
+        bibliography_evidence(root, &outdir, &label, &evidence, biber);
+        let undefined = Regex::new(
+            r"(?im)^.*(?:citation.*undefined|undefined citations).*$",
+        )
+        .unwrap();
+        assert!(!undefined.is_match(&log), "{label}: {log}");
+    }
     if engine == "pdflatex" {
         assert!(!log.contains("Missing character"), "{label}: {log}");
     } else {
@@ -356,11 +370,19 @@ fn protocol(engine: &str) {
         }
     }
     let biber = available("biber");
+    let bibtex = available("bibtex");
     for case in CASES {
         if case.xelatex_only && engine != "xelatex" {
             continue;
         }
-        execute(engine, case, false);
+        if !case.tour || bibtex {
+            execute(engine, case, false);
+        } else {
+            eprintln!(
+                "skipping: {} BibTeX protocol; bibtex not found",
+                case.name
+            );
+        }
         if case.name == "sample-biblatex" && biber {
             execute(engine, case, true);
         }

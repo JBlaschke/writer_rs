@@ -25,6 +25,9 @@ use writer::typst::world::{
     world_inputs,
 };
 
+#[path = "common/citations.rs"]
+mod citation_library;
+
 const BIB: &str = include_str!("fixtures/bib/refs.bib");
 const SVG: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="12"><rect width="24" height="12" fill="#537da5"/></svg>"##;
 
@@ -1591,9 +1594,14 @@ fn md_fixture_corpus() {
             }
         };
         config.merge_front_matter(&parsed.document.meta).unwrap();
+        let library = citation_library::load(&parsed.document, &config);
         parsed.diagnostics.extend(resolve(
             &mut parsed.document,
-            &ResolveOptions { config: &config, library: None, lenient: true },
+            &ResolveOptions {
+                config: &config,
+                library: library.as_ref(),
+                lenient: true,
+            },
         ));
         assert!(
             parsed.document.invariant_violations().is_empty(),

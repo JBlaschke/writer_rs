@@ -4,7 +4,3 @@ expression: stable_diagnostics
 ---
 error duplicate-label [fixtures]/references.md:38 label `<sec-duplicate>` occurs multiple times in the document (first defined at [fixtures]/references.md:36)
 warning label-reserved [fixtures]/references.md:40 label `<fn-1>` is reserved for generated anchors (rename it)
-warning unresolved-reference [fixtures]/references.md:30 label `<doe2020>` does not exist in the document (configure a bibliography to cite `doe2020`)
-warning unresolved-reference [fixtures]/references.md:30 label `<lee2019>` does not exist in the document (configure a bibliography to cite `lee2019`)
-warning unresolved-reference [fixtures]/references.md:30 label `<knuth1984>` does not exist in the document (configure a bibliography to cite `knuth1984`)
-warning unresolved-reference [fixtures]/references.md:30 label `<doe2020>` does not exist in the document (configure a bibliography to cite `doe2020`)

@@ -3,182 +3,333 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "Attributes on document elements",
-    "subtitle": null,
-    "authors": [],
-    "date": null,
-    "abstract_": null,
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "heading",
-      "level": 1,
-      "inlines": [
-        {
-          "type": "text",
-          "text": "An attributed heading"
-        }
-      ],
-      "attrs": {
-        "id": "sec-attrs",
-        "classes": [],
-        "pairs": {}
-      }
+  "canonical": {
+    "meta": {
+      "title": "Attributes on document elements",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
     },
-    {
-      "type": "paragraph",
-      "inlines": [
+    "blocks": [
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An attributed heading"
+          }
+        ],
+        "attrs": {
+          "id": "sec-attrs",
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "link",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "An attributed link"
+              }
+            ],
+            "url": "https://example.org",
+            "title": null,
+            "attrs": {
+              "id": "link-example",
+              "classes": [],
+              "pairs": {}
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "figure",
+        "kind": "image",
+        "caption": [
+          {
+            "type": "text",
+            "text": "An attributed image"
+          }
+        ],
+        "body": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "image",
+                "alt": [
+                  {
+                    "type": "text",
+                    "text": "An attributed image"
+                  }
+                ],
+                "url": "asset:000000000001",
+                "title": null,
+                "attrs": {
+                  "id": null,
+                  "classes": [],
+                  "pairs": {
+                    "width": "50%"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": "fig-attrs",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An attributed "
+          },
+          {
+            "type": "code",
+            "text": "inline code",
+            "attrs": {
+              "id": "code-inline",
+              "classes": [],
+              "pairs": {}
+            }
+          },
+          {
+            "type": "text",
+            "text": " span."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An invalid label"
+          }
+        ],
+        "attrs": {
+          "id": "an-invalid-label",
+          "classes": [],
+          "pairs": {}
+        }
+      }
+    ],
+    "features": {
+      "math": false,
+      "code": false,
+      "notebook": false,
+      "citations": false,
+      "footnotes": false
+    },
+    "resolved": {
+      "labels": {
+        "an-invalid-label": {
+          "kind": "heading",
+          "number": null,
+          "supplement": "Section",
+          "text": "An invalid label",
+          "span": null
+        },
+        "code-inline": {
+          "kind": "other",
+          "number": null,
+          "supplement": "",
+          "text": null,
+          "span": null
+        },
+        "fig-attrs": {
+          "kind": "figure",
+          "number": "1",
+          "supplement": "Figure",
+          "text": "An attributed image",
+          "span": null
+        },
+        "link-example": {
+          "kind": "other",
+          "number": null,
+          "supplement": "",
+          "text": null,
+          "span": null
+        },
+        "sec-attrs": {
+          "kind": "heading",
+          "number": null,
+          "supplement": "Section",
+          "text": "An attributed heading",
+          "span": null
+        }
+      },
+      "toc": [
         {
-          "type": "link",
+          "level": 1,
+          "number": null,
           "inlines": [
             {
               "type": "text",
-              "text": "An attributed link"
+              "text": "An attributed heading"
             }
           ],
-          "url": "https://example.org",
-          "title": null,
-          "attrs": {
-            "id": "link-example",
-            "classes": [],
-            "pairs": {}
-          }
+          "anchor": "sec-attrs"
         },
         {
-          "type": "text",
-          "text": "."
-        }
-      ]
-    },
-    {
-      "type": "figure",
-      "kind": "image",
-      "caption": [
-        {
-          "type": "text",
-          "text": "An attributed image"
-        }
-      ],
-      "body": [
-        {
-          "type": "paragraph",
+          "level": 2,
+          "number": null,
           "inlines": [
             {
-              "type": "image",
-              "alt": [
-                {
-                  "type": "text",
-                  "text": "An attributed image"
-                }
-              ],
-              "url": "asset:000000000001",
-              "title": null,
-              "attrs": {
-                "id": null,
-                "classes": [],
-                "pairs": {
-                  "width": "50%"
+              "type": "text",
+              "text": "An invalid label"
+            }
+          ],
+          "anchor": "an-invalid-label"
+        }
+      ],
+      "bibliography": null,
+      "footnotes": 0
+    }
+  },
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An attributed heading"
+          }
+        ],
+        "attrs": {
+          "id": "sec-attrs",
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "link",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "An attributed link"
+              }
+            ],
+            "url": "https://example.org",
+            "title": null,
+            "attrs": {
+              "id": "link-example",
+              "classes": [],
+              "pairs": {}
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "figure",
+        "kind": "image",
+        "caption": [
+          {
+            "type": "text",
+            "text": "An attributed image"
+          }
+        ],
+        "body": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "image",
+                "alt": [
+                  {
+                    "type": "text",
+                    "text": "An attributed image"
+                  }
+                ],
+                "url": "asset:000000000001",
+                "title": null,
+                "attrs": {
+                  "id": null,
+                  "classes": [],
+                  "pairs": {
+                    "width": "50%"
+                  }
                 }
               }
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": "fig-attrs",
-        "classes": [],
-        "pairs": {}
-      },
-      "number": "1"
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "An attributed "
-        },
-        {
-          "type": "code",
-          "text": "inline code",
-          "attrs": {
-            "id": "code-inline",
-            "classes": [],
-            "pairs": {}
+            ]
           }
+        ],
+        "attrs": {
+          "id": "fig-attrs",
+          "classes": [],
+          "pairs": {}
         },
-        {
-          "type": "text",
-          "text": " span."
+        "number": "1"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An attributed "
+          },
+          {
+            "type": "code",
+            "text": "inline code",
+            "attrs": {
+              "id": "code-inline",
+              "classes": [],
+              "pairs": {}
+            }
+          },
+          {
+            "type": "text",
+            "text": " span."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An invalid label"
+          }
+        ],
+        "attrs": {
+          "id": "an-invalid-label",
+          "classes": [],
+          "pairs": {}
         }
-      ]
-    },
-    {
-      "type": "heading",
-      "level": 2,
-      "inlines": [
-        {
-          "type": "text",
-          "text": "An invalid label"
-        }
-      ],
-      "attrs": {
-        "id": "an-invalid-label",
-        "classes": [],
-        "pairs": {}
       }
-    }
-  ],
-  "features": {
-    "math": false,
-    "code": false,
-    "notebook": false,
-    "citations": false,
-    "footnotes": false
-  },
-  "resolved": {
-    "labels": {
-      "an-invalid-label": {
-        "kind": "heading",
-        "number": null,
-        "supplement": "Section",
-        "text": "An invalid label",
-        "span": null
-      },
-      "code-inline": {
-        "kind": "other",
-        "number": null,
-        "supplement": "",
-        "text": null,
-        "span": null
-      },
-      "fig-attrs": {
-        "kind": "figure",
-        "number": "1",
-        "supplement": "Figure",
-        "text": "An attributed image",
-        "span": null
-      },
-      "link-example": {
-        "kind": "other",
-        "number": null,
-        "supplement": "",
-        "text": null,
-        "span": null
-      },
-      "sec-attrs": {
-        "kind": "heading",
-        "number": null,
-        "supplement": "Section",
-        "text": "An attributed heading",
-        "span": null
-      }
-    },
+    ],
     "toc": [
       {
         "level": 1,
@@ -203,7 +354,6 @@ expression: "stable_snapshot(actual, &right.assets)"
         "anchor": "an-invalid-label"
       }
     ],
-    "bibliography": null,
-    "footnotes": 0
+    "bibliography": null
   }
 }

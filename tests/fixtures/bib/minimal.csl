@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2026 writer contributors. SPDX-License-Identifier: MIT -->
+<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" class="in-text">
+  <info>
+    <title>Writer minimal test style</title>
+    <id>https://example.org/writer/minimal-test-style</id>
+    <updated>2026-10-29T00:00:00+00:00</updated>
+  </info>
+  <citation>
+    <layout prefix="(" suffix=")" delimiter=", ">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+  <bibliography>
+    <layout>
+      <text variable="title" font-style="italic"/>
+    </layout>
+  </bibliography>
+</style>

@@ -19,8 +19,8 @@ use crate::config::{
 use crate::error::{Diagnostic, Diagnostics, Level};
 use crate::ir::{
     Attrs, Block, CiteItem, CiteMode, Document, FigureKind, Inline, Inlines,
-    LabelInfo, LabelKind, RefForm, Resolved, ResolvedRef, SourceInfo,
-    SourceKind, SourceSpan, TocEntry, detect_kind,
+    LabelInfo, LabelKind, RefForm, Resolved, ResolvedCite, ResolvedRef,
+    SourceInfo, SourceKind, SourceSpan, TocEntry, detect_kind,
 };
 use footnotes::{Footnotes, NoteKey};
 use labels::{auto_id, label_text, merge_text, reserved, text_inline};
@@ -134,8 +134,17 @@ struct LabelRecord {
 }
 
 struct OwnedRequest {
+    // Structural path after this inline list's Number classification/merge.
+    // Setup removals precede Number; Finish replaces nodes in place; the
+    // bibliography append follows Finish. No allocation address is used.
+    position: String,
     items: Vec<CiteItem>,
     mode: CiteMode,
+    note_number: Option<u32>,
+}
+
+struct RenderedGroup {
+    inlines: Inlines,
     note_number: Option<u32>,
 }
 
@@ -154,6 +163,7 @@ struct Resolver<'a> {
     notes: Footnotes,
     candidate_notes: BTreeMap<String, Footnotes>,
     requests: Vec<OwnedRequest>,
+    rendered_citations: BTreeMap<String, Vec<RenderedGroup>>,
     toc: Vec<TocEntry>,
     bibliography_seen: bool,
     has_bibliography: bool,
@@ -181,6 +191,7 @@ impl<'a> Resolver<'a> {
             notes: Footnotes::default(),
             candidate_notes: BTreeMap::new(),
             requests: Vec::new(),
+            rendered_citations: BTreeMap::new(),
             toc: Vec::new(),
             bibliography_seen: false,
             has_bibliography: false,
@@ -977,6 +988,7 @@ impl<'a> Resolver<'a> {
                         && *mode == CiteMode::Normal)
                         .then(|| self.notes.next(None));
                     self.requests.push(OwnedRequest {
+                        position: context.position.clone(),
                         items: subgroup.to_vec(),
                         mode: *mode,
                         note_number,
@@ -987,19 +999,127 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn render_citations(&mut self, _document: &mut Document) {
-        if self.opts.library.is_none() || self.requests.is_empty() {
+    fn render_citations(&mut self, document: &mut Document) {
+        let Some(library) = self.opts.library else {
+            return;
+        };
+        if self.requests.is_empty() {
             return;
         }
-        // T70 implements references.md §5 here: render these owned subgroups,
-        // build note-style Footnotes using note_number, and set Cite.resolved.
-        for request in &self.requests {
-            let _ = (&request.items, request.mode, request.note_number);
+        let locale = self.citation_locale();
+        let output = {
+            let requests = self
+                .requests
+                .iter()
+                .map(|request| cite::render::Request {
+                    items: &request.items,
+                    mode: request.mode,
+                })
+                .collect::<Vec<_>>();
+            cite::render::render(library, &locale, &requests)
+        };
+        document.resolved.bibliography = output.bibliography;
+        self.accept_citations(output.citations);
+    }
+
+    fn citation_locale(&mut self) -> String {
+        let configured = self.opts.config.references.locale.clone();
+        if configured.is_empty() {
+            self.lang.locale_code()
+        } else if let Some(locale) = LangTag::parse(&configured) {
+            locale.locale_code()
+        } else {
+            let fallback = self.lang.locale_code();
+            self.warn(
+                "lang-invalid",
+                format!("unknown citation locale tag `{configured}`; using `{fallback}`"),
+                &self.root(false),
+            );
+            fallback
         }
+    }
+
+    fn accept_citations(&mut self, citations: Vec<Inlines>) {
+        debug_assert_eq!(citations.len(), self.requests.len());
+        self.rendered_citations.clear();
+        for (request, inlines) in self.requests.iter().zip(citations) {
+            self.rendered_citations
+                .entry(request.position.clone())
+                .or_default()
+                .push(RenderedGroup {
+                    inlines,
+                    note_number: request.note_number,
+                });
+        }
+    }
+
+    fn finish_citation(
+        &mut self, items: &[CiteItem], mode: CiteMode,
+        resolved: &mut Option<ResolvedCite>, context: &Context,
+    ) {
+        let Some(groups) = self.rendered_citations.remove(&context.position)
+        else {
+            return;
+        };
+        if self.note_style && mode == CiteMode::Prose {
+            let style = self.opts.library.map_or(
+                self.opts.config.references.style.as_str(),
+                |library| library.style_spec(),
+            );
+            self.warn(
+                "cite-prose-note-style",
+                format!(
+                    "prose citations render oddly in note styles (`{style}`)"
+                ),
+                context,
+            );
+        }
+        debug_assert_eq!(groups.len(), cite_sub_groups(items).len());
+        let note = groups.iter().any(|group| group.note_number.is_some());
+        let mut inlines = Vec::new();
+        for (index, (items, group)) in
+            cite_sub_groups(items).into_iter().zip(groups).enumerate()
+        {
+            if index > 0 {
+                inlines.push(text_inline(" "));
+            }
+            if let Some(prefix) =
+                items.first().and_then(|item| item.prefix.as_ref())
+            {
+                inlines.extend(prefix.clone());
+                inlines.push(text_inline(" "));
+            }
+            if let Some(number) = group.note_number {
+                inlines.push(Inline::Footnote {
+                    blocks: vec![Block::Paragraph {
+                        inlines: group.inlines,
+                        span: None,
+                    }],
+                    label: None,
+                    number: Some(number),
+                });
+            } else {
+                inlines.extend(group.inlines);
+            }
+            if let Some(suffix) =
+                items.last().and_then(|item| item.suffix.as_ref())
+            {
+                inlines.push(text_inline(" "));
+                inlines.extend(suffix.clone());
+            }
+        }
+        *resolved = Some(ResolvedCite { inlines, note });
     }
 
     fn finish_inline(&mut self, inline: &mut Inline, context: &Context) {
         match inline {
+            // Source descendants have already finished. Structural positions
+            // were recorded after local classification/merge during Number;
+            // Finish replaces nodes in place and never changes sequence shape.
+            // Generated citation payloads are not source children or requests.
+            Inline::Cite { items, mode, resolved, .. } => {
+                self.finish_citation(items, *mode, resolved, context);
+            }
             Inline::Ref { target, supplement, form, resolved, .. } => {
                 if let Some(record) = self.labels.get(target) {
                     let info = &record.info;
@@ -1174,7 +1294,14 @@ fn has_toc(document: &Document) -> bool {
 
 fn document_features(inline: &Inline, features: &mut (bool, bool)) {
     features.0 |= matches!(inline, Inline::Cite { .. });
-    features.1 |= matches!(inline, Inline::Footnote { .. });
+    features.1 |= matches!(inline, Inline::Footnote { .. })
+        || matches!(
+            inline,
+            Inline::Cite {
+                resolved: Some(ResolvedCite { note: true, .. }),
+                ..
+            }
+        );
 }
 
 fn special_alt(inlines: &[Inline]) -> bool {
@@ -1515,5 +1642,422 @@ mod tests {
             &resolved.text[2],
             Inline::FootnoteRef { number: Some(1), .. }
         ));
+    }
+
+    fn numbered_citations<'a>(
+        document: &mut Document, opts: &'a ResolveOptions<'a>, keys: &[&str],
+        note_style: bool,
+    ) -> Resolver<'a> {
+        let mut resolver = Resolver::new(document, opts);
+        // Exercise classification/numbering/replay independently of engine
+        // typography. Public T70 tests supply the real Library/driver.
+        resolver.keys = keys.iter().map(|key| (*key).into()).collect();
+        resolver.taken.extend(resolver.keys.iter().cloned());
+        resolver.note_style = note_style;
+        for phase in
+            [Phase::Setup, Phase::Labels, Phase::AutoIds, Phase::Number]
+        {
+            resolver.document(document, phase);
+        }
+        resolver
+    }
+
+    #[test]
+    fn postorder_subgroup_fill_keeps_finished_nested_prefixes_and_preallocated_notes()
+     {
+        let mut config = Config::default();
+        config.numbering.headings = HeadingNumbering::Pattern("1".into());
+        let opts =
+            ResolveOptions { config: &config, library: None, lenient: false };
+        let mut first = CiteItem { key: "a".into(), ..CiteItem::default() };
+        first.prefix = Some(vec![
+            Inline::Ref {
+                target: "target".into(),
+                supplement: None,
+                form: RefForm::Normal,
+                resolved: None,
+                span: None,
+            },
+            cite(&["c"], CiteMode::Author),
+            note(
+                "prefix",
+                vec![Block::paragraph(vec![cite(&["d"], CiteMode::Normal)])],
+            ),
+        ]);
+        first.suffix = Some(vec![Inline::FootnoteRef {
+            label: "later".into(),
+            number: None,
+        }]);
+        let second = CiteItem {
+            key: "b".into(),
+            prefix: Some(vec![text_inline("second")]),
+            ..CiteItem::default()
+        };
+        let mut document = document(vec![
+            Block::Paragraph {
+                inlines: vec![
+                    Inline::Cite {
+                        items: vec![first, second],
+                        mode: CiteMode::Normal,
+                        resolved: None,
+                        span: Some(SourceSpan {
+                            start_line: 3,
+                            end_line: 3,
+                            cell: Some(2),
+                            file: None,
+                        }),
+                    },
+                    note("later", Vec::new()),
+                ],
+                span: None,
+            },
+            heading("target"),
+        ]);
+        let mut resolver = numbered_citations(
+            &mut document,
+            &opts,
+            &["a", "b", "c", "d"],
+            true,
+        );
+        assert_eq!(
+            resolver
+                .requests
+                .iter()
+                .map(|request| request.items[0].key.as_str())
+                .collect::<Vec<_>>(),
+            ["a", "b", "c", "d"]
+        );
+        assert_eq!(
+            resolver
+                .requests
+                .iter()
+                .map(|request| request.note_number)
+                .collect::<Vec<_>>(),
+            [Some(1), Some(2), None, Some(4)]
+        );
+        assert_eq!(resolver.notes.count, 5);
+        assert_eq!(
+            resolver.requests[0].position,
+            resolver.requests[1].position
+        );
+        let rendered = (0..4)
+            .map(|index| vec![text_inline(format!("R{index}"))])
+            .collect();
+        resolver.accept_citations(rendered);
+        resolver.document(&mut document, Phase::Finish);
+        assert_eq!(resolver.requests.len(), 4);
+        assert_eq!(resolver.notes.count, 5);
+        assert!(resolver.rendered_citations.is_empty());
+        assert!(resolver.diagnostics.is_empty(), "{:?}", resolver.diagnostics);
+        let Block::Paragraph { inlines, .. } = &document.blocks[0] else {
+            panic!()
+        };
+        let Inline::Cite { items, resolved: Some(rendered), .. } = &inlines[0]
+        else {
+            panic!()
+        };
+        assert!(rendered.note);
+        let prefix = items[0].prefix.as_ref().unwrap();
+        let Inline::Ref { resolved: Some(reference), .. } = &prefix[0] else {
+            panic!()
+        };
+        assert_eq!(reference.number, "1");
+        let Inline::Cite { resolved: Some(nested), .. } = &prefix[1] else {
+            panic!()
+        };
+        assert_eq!(crate::ir::plain_text(&nested.inlines), "R2");
+        assert!(!nested.note);
+        assert_eq!(&rendered.inlines[..prefix.len()], prefix.as_slice());
+        assert!(matches!(
+            items[0].suffix.as_deref(),
+            Some([Inline::FootnoteRef { number: Some(5), .. }])
+        ));
+        let generated = rendered
+            .inlines
+            .iter()
+            .filter_map(|inline| {
+                if let Inline::Footnote { blocks, number, label: None } = inline
+                {
+                    let Block::Paragraph { inlines, span } = &blocks[0] else {
+                        panic!()
+                    };
+                    assert!(span.is_none());
+                    Some((*number, crate::ir::plain_text(inlines)))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(generated, [(Some(1), "R0".into()), (Some(2), "R1".into())]);
+    }
+
+    #[test]
+    fn structural_request_paths_survive_classification_merges_setup_and_all_candidates()
+     {
+        use crate::ir::{Cell, CellOutput, OutputCandidate};
+        let config = Config::default();
+        let opts =
+            ResolveOptions { config: &config, library: None, lenient: false };
+        let mut document = document(vec![
+            Block::Bibliography { span: None },
+            Block::Bibliography { span: None },
+            heading("h1"),
+            heading("h2"),
+            Block::Paragraph {
+                inlines: vec![
+                    cite(&["h1", "h2"], CiteMode::Normal),
+                    text_inline(" gap "),
+                    Inline::Ref {
+                        target: "a".into(),
+                        supplement: None,
+                        form: RefForm::Normal,
+                        resolved: None,
+                        span: None,
+                    },
+                    text_inline(" "),
+                    cite(&["b"], CiteMode::Normal),
+                    note(
+                        "shared",
+                        vec![Block::paragraph(vec![cite(
+                            &["c"],
+                            CiteMode::Normal,
+                        )])],
+                    ),
+                    note(
+                        "shared",
+                        vec![Block::paragraph(vec![cite(
+                            &["discarded"],
+                            CiteMode::Normal,
+                        )])],
+                    ),
+                ],
+                span: None,
+            },
+            Block::Figure {
+                kind: FigureKind::Image,
+                caption: Some(vec![cite(&["e"], CiteMode::Normal)]),
+                body: vec![Block::paragraph(vec![cite(
+                    &["d"],
+                    CiteMode::Normal,
+                )])],
+                attrs: Attrs::default(),
+                number: None,
+                span: None,
+            },
+            Block::Figure {
+                kind: FigureKind::Table,
+                caption: Some(vec![cite(&["f"], CiteMode::Normal)]),
+                body: vec![Block::paragraph(vec![cite(
+                    &["g"],
+                    CiteMode::Normal,
+                )])],
+                attrs: Attrs::default(),
+                number: None,
+                span: None,
+            },
+            Block::Cell(Cell {
+                outputs: vec![CellOutput {
+                    candidates: vec![
+                        OutputCandidate {
+                            mime: "text/html".into(),
+                            blocks: vec![Block::paragraph(vec![cite(
+                                &["i"],
+                                CiteMode::Normal,
+                            )])],
+                        },
+                        OutputCandidate {
+                            mime: "text/plain".into(),
+                            blocks: vec![Block::paragraph(vec![cite(
+                                &["j"],
+                                CiteMode::Normal,
+                            )])],
+                        },
+                    ],
+                    ..CellOutput::default()
+                }],
+                ..Cell::default()
+            }),
+        ]);
+        document.meta.abstract_ = Some(vec![Block::paragraph(vec![cite(
+            &["abstract"],
+            CiteMode::Normal,
+        )])]);
+        let mut resolver = numbered_citations(
+            &mut document,
+            &opts,
+            &[
+                "abstract", "a", "b", "c", "d", "e", "f", "g", "i", "j",
+                "discarded",
+            ],
+            false,
+        );
+        let keys = resolver
+            .requests
+            .iter()
+            .map(|request| {
+                request
+                    .items
+                    .iter()
+                    .map(|item| item.key.as_str())
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            keys,
+            [
+                vec!["abstract"],
+                vec!["a", "b"],
+                vec!["c"],
+                vec!["d"],
+                vec!["e"],
+                vec!["f"],
+                vec!["g"],
+                vec!["i"],
+                vec!["j"]
+            ]
+        );
+        let positions = resolver
+            .requests
+            .iter()
+            .map(|request| request.position.clone())
+            .collect::<BTreeSet<_>>();
+        assert_eq!(positions.len(), resolver.requests.len());
+        let expected = resolver
+            .requests
+            .iter()
+            .enumerate()
+            .map(|(index, request)| {
+                (request.items[0].key.clone(), format!("R{index}"))
+            })
+            .collect::<BTreeMap<_, _>>();
+        resolver.accept_citations(
+            (0..expected.len())
+                .map(|index| vec![text_inline(format!("R{index}"))])
+                .collect(),
+        );
+        resolver.document(&mut document, Phase::Finish);
+        assert!(resolver.rendered_citations.is_empty());
+        let mut actual = BTreeMap::new();
+        crate::ir::walk_inlines(&document, &mut |inline| {
+            if let Inline::Cite { items, resolved: Some(resolved), .. } = inline
+            {
+                actual.insert(
+                    items[0].key.clone(),
+                    crate::ir::plain_text(&resolved.inlines),
+                );
+            }
+        });
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn citation_locale_uses_override_or_document_and_reports_invalid_override_once()
+     {
+        for (override_, expected, warning) in [
+            ("", "fr-CA", false),
+            ("de_AT", "de-AT", false),
+            ("!", "fr-CA", true),
+        ] {
+            let mut config = Config::default();
+            config.document.lang = "fr-CA".into();
+            config.references.locale = override_.into();
+            let opts = ResolveOptions {
+                config: &config,
+                library: None,
+                lenient: false,
+            };
+            let mut document = document(Vec::new());
+            let mut resolver = Resolver::new(&mut document, &opts);
+            assert_eq!(resolver.citation_locale(), expected);
+            assert_eq!(resolver.diagnostics.len(), usize::from(warning));
+            if warning {
+                let finding = resolver.diagnostics.iter().next().unwrap();
+                assert_eq!(finding.code, "lang-invalid");
+                assert_eq!(finding.path.as_ref(), Some(&document.source.path));
+                assert!(finding.span.is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn prose_note_warning_is_per_cite_and_hidden_or_prose_groups_create_no_note()
+     {
+        let config = Config::default();
+        let opts =
+            ResolveOptions { config: &config, library: None, lenient: false };
+        let mut first = CiteItem {
+            key: "a".into(),
+            suffix: Some(vec![text_inline("end")]),
+            ..CiteItem::default()
+        };
+        first.locator = Some("p. 12".into());
+        let mut document = document(vec![Block::paragraph(vec![
+            Inline::Cite {
+                items: vec![
+                    first,
+                    CiteItem { key: "b".into(), ..CiteItem::default() },
+                ],
+                mode: CiteMode::Prose,
+                resolved: None,
+                span: None,
+            },
+            text_inline(" / "),
+            cite(&["a"], CiteMode::None),
+        ])]);
+        let mut resolver =
+            numbered_citations(&mut document, &opts, &["a", "b"], true);
+        assert!(
+            resolver
+                .requests
+                .iter()
+                .all(|request| request.note_number.is_none())
+        );
+        resolver.accept_citations(vec![
+            vec![text_inline("prose1")],
+            vec![text_inline("prose2")],
+            Vec::new(),
+        ]);
+        resolver.document(&mut document, Phase::Finish);
+        assert_eq!(resolver.notes.count, 0);
+        assert_eq!(
+            resolver
+                .diagnostics
+                .iter()
+                .filter(|finding| finding.code == "cite-prose-note-style")
+                .count(),
+            1
+        );
+        let mut features = (false, false);
+        crate::ir::walk_inlines(&document, &mut |inline| {
+            document_features(inline, &mut features)
+        });
+        assert_eq!(features, (true, false));
+    }
+
+    #[test]
+    fn generated_note_citations_set_features_without_rewalking_or_renumbering_payloads()
+     {
+        let config = Config::default();
+        let opts =
+            ResolveOptions { config: &config, library: None, lenient: false };
+        let mut document = document(vec![Block::paragraph(vec![cite(
+            &["a"],
+            CiteMode::Normal,
+        )])]);
+        let mut resolver =
+            numbered_citations(&mut document, &opts, &["a"], true);
+        resolver.accept_citations(vec![vec![text_inline("rendered")]]);
+        resolver.document(&mut document, Phase::Finish);
+        assert_eq!(resolver.notes.count, 1);
+        assert_eq!(resolver.requests.len(), 1);
+        let mut source_notes = 0;
+        let mut features = (false, false);
+        crate::ir::walk_inlines(&document, &mut |inline| {
+            source_notes +=
+                usize::from(matches!(inline, Inline::Footnote { .. }));
+            document_features(inline, &mut features);
+        });
+        assert_eq!(source_notes, 0);
+        assert_eq!(features, (true, true));
     }
 }

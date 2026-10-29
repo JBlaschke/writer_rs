@@ -1,0 +1,5 @@
+---
+source: tests/markdown_snapshots.rs
+expression: diagnostics
+---
+

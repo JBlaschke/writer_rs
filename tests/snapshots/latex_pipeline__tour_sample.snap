@@ -293,9 +293,9 @@ and an unnumbered heading \hyperref[_76a20ca8ce7bf40e125da4827ecfd21f6768f7e]{An
 
 A repeated note\footnote{\label{writer-fn-2}A note containing a nested note\footnote{Nested note body.}.}, its repeat\footref{writer-fn-2}, and an inline note\footnote{Inline note.}.
 
-Citations {[}?doe2020; lee2019{]}, {[}?knuth1984{]},
-{[}?knuth1984{]}, {[}?knuth1984{]}, {[}?knuth1984{]},
-{[}?knuth1984{]}, and {[}?knuth1984{]}.
+Citations \autocites{doe2020}[p.~12]{lee2019}, \autocite[see][]{knuth1984},
+\textcite{knuth1984}, \autocite*{knuth1984}, \citeauthor{knuth1984},
+\fullcite{knuth1984}, and \autocite*{knuth1984}.
 
 \LaTeX{} raw source retains its \% and {braces}.
 
@@ -304,4 +304,5 @@ Citations {[}?doe2020; lee2019{]}, {[}?knuth1984{]},
 \writerhrule
 
 
+\printbibliography
 \end{document}

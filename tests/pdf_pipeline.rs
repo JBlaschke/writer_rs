@@ -7,7 +7,7 @@ use assert_cmd::Command;
 use typst::foundations::Datetime;
 use writer::config::Target;
 use writer::error::Level;
-use writer::ir::{Attrs, Bibliography, Block, Inline, SourceSpan};
+use writer::ir::{Attrs, Block, Inline, SourceSpan};
 use writer::pipeline::{self, BuildOptions, Prepared, WorldSlot, pdf};
 use writer::typst::compile::{PdfOptions, compile_document, compile_pdf};
 
@@ -267,18 +267,21 @@ fn custom_template_resolves_relative_imports_and_retained_world_replacement() {
     assert!(!world.accessed().iter().any(|path| path.ends_with("helper.typ")));
 }
 
-// T70 has not populated resolved bibliographies yet. Supply only that IR
-// fixture state so these tests exercise the real emitter and resource mounts.
+// Both structural and native raw citations exercise the real resource mounts.
 fn bibliography_pdf(
     root: &Path, worlds: &mut WorldSlot,
 ) -> (BuildOptions, Prepared) {
-    let (opts, mut prepared) = raw_prepared(root);
-    prepared.document.resolved.bibliography = Some(Bibliography {
-        style: prepared.config.references.style.clone(),
-        hanging_indent: false,
-        entries: Vec::new(),
-    });
-    prepared.document.blocks.push(Block::Bibliography { span: None });
+    let (opts, prepared) = raw_prepared(root);
+    assert!(!prepared.diagnostics.has_errors(), "{:?}", prepared.diagnostics);
+    assert!(prepared.document.features.citations);
+    assert!(
+        prepared
+            .document
+            .resolved
+            .bibliography
+            .as_ref()
+            .is_some_and(|bibliography| !bibliography.entries.is_empty())
+    );
     let world = worlds.get(Some(&prepared), &opts).unwrap();
     world.reset();
     let output = root.join("out/document.pdf");
@@ -294,7 +297,7 @@ fn bibliography_pdf(
 #[test]
 fn bibliography_mounts_keep_identical_basenames_separate() {
     let dir = project(
-        "# References\n\n```{=typst}\n#cite(<alpha>) #cite(<beta>)\n```\n",
+        "# References\n\n[@alpha; @beta].\n\n```{=typst}\n#cite(<alpha>) #cite(<beta>)\n```\n",
     );
     for (name, key) in [("first", "alpha"), ("second", "beta")] {
         let root = dir.path().join(name);
@@ -411,8 +414,10 @@ const CSL: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 
 #[test]
 fn csl_path_mount_is_distinct_from_a_named_style_and_is_watched() {
-    // Native raw citations exercise resource loading without implementing T70.
-    let dir = project("# CSL resource\n\n```{=typst}\n#cite(<alpha>)\n```\n");
+    // Keep the native raw call while resolving a real source Cite as well.
+    let dir = project(
+        "# CSL resource\n\n@alpha.\n\n```{=typst}\n#cite(<alpha>)\n```\n",
+    );
     fs::write(dir.path().join("refs.bib"), "@book{alpha, author={Writer, A.}, title={CSL resource}, year={2026}}\n").unwrap();
     fs::create_dir(dir.path().join("styles")).unwrap();
     let csl = dir.path().join("styles/local.csl");

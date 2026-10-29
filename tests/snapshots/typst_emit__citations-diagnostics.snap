@@ -1,0 +1,6 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+error ambiguous-label [fixtures]/citations.md:36 citation group mixes labels and bibliography keys
+warning unresolved-reference [fixtures]/citations.md:38 label `<missing-key>` does not exist in the document (`missing-key` is no bibliography key either)
