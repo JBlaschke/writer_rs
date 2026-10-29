@@ -156,16 +156,13 @@ fn output_over_input_is_refused() {
 #[test]
 fn stub_targets_exit_2() {
     let dir = tempfile::tempdir().unwrap();
-    for (target, task) in [("latex", "T61"), ("typst", "T34")] {
-        writer()
-            .args(["build", "examples/basic/document.md", "--to", target, "-o"])
-            .arg(dir.path().join(format!("out.{target}")))
-            .assert()
-            .code(2)
-            .stderr(contains(format!(
-                "{target}: not implemented yet ({task})"
-            )));
-    }
+    writer()
+        .args(["build", "examples/basic/document.md", "--to", "latex", "-o"])
+        .arg(dir.path().join("out.tex"))
+        .assert()
+        .code(2)
+        .stderr(contains("latex: not implemented yet (T61)"));
+
     writer()
         .args([
             "build", "examples/basic/document.md", "--to", "pdf", "--engine",

@@ -808,6 +808,23 @@ by the main file. The tree compiles with `typst compile --package-path <eject ty
 > for referenced assets only, in asset-id order. If `-<id[..6]>` itself
 > collides with an allocated name, try `-<id[..6]>-2`, then `-3`, etc., before
 > the extension. A generated name must never overwrite another asset.
+>
+> **Portability clarification (T34, 2026-10-28):** compare allocated basenames
+> using ASCII lowercase while preserving their chosen spelling. Trim trailing
+> dots, use `asset` for an empty result, and prefix Windows device basenames
+> (`CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`, `LPT1`–`LPT9`, including an
+> extension) with `asset-`. This changes only otherwise conflicting or
+> unrepresentable Export names; Virtual and Source paths retain their rules.
+> Copied resources share this occupied-name set after referenced assets, in
+> bibliography order, then path CSL, then template. Repeated canonical resource
+> paths reuse one copy; distinct resources use the first six content-hash
+> characters and the same collision-counter rule when necessary.
+>
+> For notebook scanning, retained raw cells with MIME `text/markdown` follow
+> the same rules as Markdown cells. Span-based runs preserve block order and
+> contents: adjacent occurrences of the same file can coalesce, and a nested
+> file also named by a first-level include can start a separate run. Export
+> does not reconstruct occurrence ancestry from flattened source spans.
 
 `eject typst-package DIR [--install]` (T31: `typst::package::eject(dir: &Path) -> Result<Vec<PathBuf>>`,
 `install_dir() -> Result<PathBuf>`; T72 wires both eject commands in `src/cli/eject.rs`) writes

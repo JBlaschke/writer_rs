@@ -1108,3 +1108,48 @@ reference fixtures reproduce exactly; copied header/theme image closure, high
 IDs and localized style-name lookup pass. No dependency, IR/config or module-list
 changes were needed; the narrow DocxReference eject arm is the sole T72-owned
 integration seam, and other eject resources remain T72.
+
+
+## T34 portable Typst export acceptance (2026-10-29)
+
+Measured on the same macOS arm64/Rust 1.99.1 checkout with cached dependencies,
+the lockfile and offline registry. The long release wall measurement differs
+from Cargo's build duration plus individual test timings; preserve the observed
+values without treating it as a clean compile benchmark.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 17.37 s | 299.22 s | 174.58 s | 1,561 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 1,108 s | 2,964.83 s | 11,294.61 s | 1,560 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. Eight planning units, 23 new integration/CLI cases and 77 inherited
+emitter/CLI/watch regressions pass. The actual basic CLI source export succeeds.
+No external Typst executable, network, host font or renderer is needed to export.
+
+Fresh physical Worlds compile moved include/figure/notebook/resource trees after
+the original input project is removed. Shared references, nested scoped notes,
+figure numbers, referenced file/byte assets and custom template shadowing remain
+correct. Actual bibliography/CSL copies compile through a hand-resolved fixture
+without pretending T70 citation resolution exists. Package ejection uses its
+library API, and embedded-package priority remains unchanged.
+
+All sidecars are preflighted through actual build calls: Unix symlink/hardlink
+aliases for include/asset/bib/CSL/template, same-path resource clashes on every
+OS, and new/../ aliases leave previous main bytes, resources, empty directories
+and symlink targets unchanged. Missing reads write nothing. Byte-identical
+repeated exports preserve unrelated files. Quiet, strict math fallback, output
+naming, format override, mixed-target independence and native-input refusal pass.
+
+The valid private includes.md derivative keeps its actual A→B/note/image chain;
+the unchanged cycle/nested-include fixture remains negative. Notebook markers
+and exact occurrence counts independently protect Markdown and raw-Markdown
+content. Number oracles are explicitly enabled in test Worlds. The reviewed
+BOM/empty-front-matter scanner correction matches the frontend for BOM/no-BOM
+with LF/CRLF/CR. Existing output/source/virtual emitter behavior remains covered.
+
+The narrow §10 contract clarification shares case-folded, Windows-safe names
+between referenced assets and copied resources. Only two crate-private emitter
+helpers and existing stub-test migrations cross task ownership; no dependencies,
+IR/config/public shapes or module lists change. The template's own imports are
+not copied, and Typst CLI package/template ejection remains T72.

@@ -86,7 +86,7 @@ pub fn emit(
     document: &Document, assets: &AssetRegistry, opts: &EmitOptions<'_>,
 ) -> Result<Emitted> {
     let notes = NoteLabels::collect(document, &opts.footnote_prefix);
-    let paths = asset_paths(document, assets, opts);
+    let paths = asset_paths(document, assets, &opts.assets);
     let mut emitter = Emitter::new(document, assets, opts, &notes, &paths);
     emitter.header(!opts.fragment)?;
     emitter.blocks(&document.blocks, 0)?;
@@ -103,7 +103,7 @@ pub fn emit_split(
 ) -> Result<(Emitted, Vec<Emitted>)> {
     validate_runs(runs, document.blocks.len())?;
     let notes = NoteLabels::collect(document, &opts.footnote_prefix);
-    let paths = asset_paths(document, assets, opts);
+    let paths = asset_paths(document, assets, &opts.assets);
     let mut main = Emitter::new(document, assets, opts, &notes, &paths);
     main.header(!opts.fragment)?;
     let mut parts = Vec::with_capacity(runs.len());
@@ -1586,8 +1586,67 @@ fn edge(inline: &Inline, first: bool) -> Option<char> {
     }
 }
 
+/// Reserves the same referenced asset names used by complete and split exports.
+pub(crate) fn export_asset_paths(
+    document: &Document, registry: &AssetRegistry, dir: &str,
+) -> BTreeMap<String, String> {
+    asset_paths(document, registry, &AssetPaths::Export { dir: dir.into() })
+}
+
+/// Allocates a portable resource basename; occupied keys are ASCII-lowercase.
+pub(crate) fn export_name(
+    hint: &str, suffix_key: &str, occupied: &mut BTreeSet<String>,
+) -> String {
+    let mut original: String = hint
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or("asset")
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-') {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    original.truncate(original.trim_end_matches('.').len());
+    if original.is_empty() {
+        original = "asset".into();
+    }
+    let base = original.split('.').next().unwrap_or_default();
+    let upper = base.to_ascii_uppercase();
+    let numbered_device = upper
+        .strip_prefix("COM")
+        .or_else(|| upper.strip_prefix("LPT"))
+        .is_some_and(|digit| matches!(digit.as_bytes(), [b'1'..=b'9']));
+    if matches!(upper.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || numbered_device
+    {
+        original.insert_str(0, "asset-");
+    }
+    let mut name = original.clone();
+    let mut collision = 1;
+    while !occupied.insert(name.to_ascii_lowercase()) {
+        let (stem, extension) =
+            original.rsplit_once('.').unwrap_or((&original, ""));
+        let suffix = if collision == 1 {
+            suffix_key.to_owned()
+        } else {
+            format!("{suffix_key}-{collision}")
+        };
+        name = if extension.is_empty() {
+            format!("{stem}-{suffix}")
+        } else {
+            format!("{stem}-{suffix}.{extension}")
+        };
+        collision += 1;
+    }
+    name
+}
+
 fn asset_paths(
-    document: &Document, registry: &AssetRegistry, opts: &EmitOptions<'_>,
+    document: &Document, registry: &AssetRegistry, mode: &AssetPaths,
 ) -> BTreeMap<String, String> {
     let mut referenced = BTreeSet::new();
     visit_rendered(document, &mut |_| {}, &mut |inline| {
@@ -1600,7 +1659,7 @@ fn asset_paths(
     });
     // File assets are canonicalized during registration. Source paths must
     // use the same directory identity, including /tmp and other symlink roots.
-    let source_base = match &opts.assets {
+    let source_base = match mode {
         AssetPaths::Source => resolve_path(&document.source.base_dir),
         _ => document.source.base_dir.clone(),
     };
@@ -1608,45 +1667,14 @@ fn asset_paths(
     let mut used = BTreeSet::new();
     for asset in registry.iter().filter(|asset| referenced.contains(&asset.id))
     {
-        let path = match &opts.assets {
+        let path = match mode {
             AssetPaths::Virtual => virtual_path(asset),
             AssetPaths::Export { dir } => {
-                let mut name: String = asset
-                    .file_name_hint
-                    .rsplit(['/', '\\'])
-                    .next()
-                    .unwrap_or("asset")
-                    .chars()
-                    .map(|c| {
-                        if c.is_ascii_alphanumeric()
-                            || matches!(c, '.' | '_' | '-')
-                        {
-                            c
-                        } else {
-                            '-'
-                        }
-                    })
-                    .collect();
-                if name.is_empty() || name == "." || name == ".." {
-                    name = "asset".into();
-                }
-                let original = name.clone();
-                let mut collision = 1;
-                while !used.insert(name.clone()) {
-                    let (stem, extension) =
-                        original.rsplit_once('.').unwrap_or((&original, ""));
-                    let suffix = if collision == 1 {
-                        asset.id[..6].to_string()
-                    } else {
-                        format!("{}-{collision}", &asset.id[..6])
-                    };
-                    name = if extension.is_empty() {
-                        format!("{stem}-{suffix}")
-                    } else {
-                        format!("{stem}-{suffix}.{extension}")
-                    };
-                    collision += 1;
-                }
+                let name = export_name(
+                    &asset.file_name_hint,
+                    &asset.id[..6],
+                    &mut used,
+                );
                 format!("{}/{name}", dir.trim_end_matches('/'))
             }
             AssetPaths::Source => match &asset.data {

@@ -1635,3 +1635,70 @@ fn md_fixture_corpus() {
         );
     }
 }
+
+#[test]
+fn export_asset_names_are_portable_on_case_insensitive_and_windows_filesystems()
+{
+    let cases = [
+        ("CON.png", "asset-CON.png"),
+        ("lpt9.SVG", "asset-lpt9.SVG"),
+        ("AUX", "asset-AUX"),
+        ("image.svg...", "image.svg"),
+        ("..", "asset"),
+        ("COM10.svg", "COM10.svg"),
+    ];
+    let mut assets = AssetRegistry::new();
+    let mut ids = Vec::new();
+    for (index, (hint, _)) in cases.iter().enumerate() {
+        let mut bytes = SVG.to_vec();
+        bytes.extend(std::iter::repeat_n(b' ', index));
+        ids.push(assets.register_bytes(bytes, "image/svg+xml", hint));
+    }
+    let doc = document(vec![Block::paragraph(
+        ids.iter()
+            .map(|id| image(&AssetRegistry::placeholder(id), Attrs::default()))
+            .collect(),
+    )]);
+    let config = Config::default();
+    let mut opts = options(&config);
+    opts.assets = AssetPaths::Export { dir: "document_assets".into() };
+    let emitted = emit(&doc, &assets, &opts).unwrap();
+    for (id, (_, expected)) in ids.iter().zip(cases) {
+        assert_eq!(emitted.assets[id], format!("document_assets/{expected}"));
+    }
+
+    let data = ordered_asset_bytes();
+    let mut assets = AssetRegistry::new();
+    let suffix_hint = format!("PLOT-{}.SVG", &data[2].0[..6]);
+    for ((_, bytes), hint) in
+        data.iter().zip([suffix_hint.as_str(), "Plot.svg", "plot.svg"])
+    {
+        assets.register_bytes(bytes.clone(), "image/svg+xml", hint);
+    }
+    let doc = document(vec![Block::paragraph(
+        data.iter()
+            .map(|(id, _)| {
+                image(&AssetRegistry::placeholder(id), Attrs::default())
+            })
+            .collect(),
+    )]);
+    let emitted = emit(&doc, &assets, &opts).unwrap();
+    assert_eq!(
+        emitted.assets[&data[0].0],
+        format!("document_assets/{suffix_hint}")
+    );
+    assert_eq!(emitted.assets[&data[1].0], "document_assets/Plot.svg");
+    assert_eq!(
+        emitted.assets[&data[2].0],
+        format!("document_assets/plot-{}-2.svg", &data[2].0[..6]),
+    );
+    assert_eq!(
+        emitted
+            .assets
+            .values()
+            .map(|p| p.to_ascii_lowercase())
+            .collect::<BTreeSet<_>>()
+            .len(),
+        3,
+    );
+}
