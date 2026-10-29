@@ -1069,3 +1069,42 @@ code; emitter source and fallback bytes stay unchanged. Other explicit target
 lints, native `.typ` compilation/exports and references retain their existing
 milestone boundaries. No dependencies or public API/config/IR/module-list
 changes are introduced.
+
+
+## T43 Word reference and showcase acceptance (2026-10-28–29)
+
+Measured on the same macOS arm64/Rust 1.99.1 checkout, using the lockfile,
+offline registry and warm dependency cache. The release command completed
+across the overnight session; its recorded wall time differs substantially
+from Cargo's own build duration and the individual test durations. Retain the
+raw measurement, but do not use that wall time as a clean compile benchmark.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 24.88 s | 313.74 s | 172.82 s | 1,529 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 615 s | 5,115.55 s | 6,779.32 s | 1,528 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. All 22 focused CLI/reference/showcase tests and both ignored
+fixture generators pass. The reviewed package goldens cover all 101 built-in
+styles, every one of the 82 reachable styles and one semantic custom callout.
+Independent docx-rs reading records 81 top-level paragraphs, 102 styles, two
+abstract numbering definitions and one shared media part. XML and python-docx
+agree on 81 paragraphs, two tables and two inline drawings.
+
+Actual system textutil import, isolated python-docx 1.2.0, QuickLook thumbnail
+creation and portable read-back all pass in the dedicated four-test smoke run.
+The first-page PNG was inspected. Actual Pandoc 3.12.1 reference merging also
+passes without committing its reference. The default Python lacks python-docx;
+the dedicated run used the bundled interpreter rather than installing a package.
+Manual Word, LibreOffice and Google Docs checks remain unperformed release QA,
+with commands, exact capabilities and retained evidence documented separately
+in `docx-validation.md`.
+
+The CLI generates complete bytes before atomic no-clobber creation, preserves
+existing files/directories/symlinks, prints correctly escaped TOML guidance,
+and keeps bytes independent of config/environment timestamps. Both hand-written
+reference fixtures reproduce exactly; copied header/theme image closure, high
+IDs and localized style-name lookup pass. No dependency, IR/config or module-list
+changes were needed; the narrow DocxReference eject arm is the sole T72-owned
+integration seam, and other eject resources remain T72.

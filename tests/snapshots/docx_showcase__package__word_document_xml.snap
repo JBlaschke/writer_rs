@@ -1,0 +1,3371 @@
+---
+source: tests/docx_showcase.rs
+expression: snapshot
+---
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+    <w:body>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Title"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Writer DOCX style showcase</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Subtitle"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Subtitle.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Author"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Author.</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Writer style examples</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:hyperlink r:id="rId6" w:history="1">
+                <w:r>
+                    <w:rPr>
+                        <w:rStyle w:val="Hyperlink"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">writer@example.invalid</w:t>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Date"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Date.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="AbstractTitle"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Abstract Title style</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Abstract"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Abstract.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading2Unlisted"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Abstract heading (unlisted)</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Abstract"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This Abstract paragraph follows an unlisted heading.</w:t>
+            </w:r>
+        </w:p>
+        <w:sdt>
+            <w:sdtPr>
+                <w:docPartObj>
+                    <w:docPartGallery w:val="Table of Contents"/>
+                    <w:docPartUnique/>
+                </w:docPartObj>
+            </w:sdtPr>
+            <w:sdtContent>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOCHeading"/>
+                    </w:pPr>
+                    <w:r>
+                        <w:t xml:space="preserve">TOC Heading style</w:t>
+                    </w:r>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC1"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:r>
+                        <w:fldChar w:fldCharType="begin"/>
+                    </w:r>
+                    <w:r>
+                        <w:instrText xml:space="preserve"> TOC \o &quot;1-6&quot; \h \z \u </w:instrText>
+                    </w:r>
+                    <w:r>
+                        <w:fldChar w:fldCharType="separate"/>
+                    </w:r>
+                    <w:hyperlink w:anchor="_dadd0d964a7892b739fc1a420dbcfb1668a98ed" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Heading 1 (numbered)</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _dadd0d964a7892b739fc1a420dbcfb1668a98ed \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC2"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:hyperlink w:anchor="_5612c18280d1bf6727fe2d6b65feae3efd9f11e" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1.1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Heading 2 (numbered)</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _5612c18280d1bf6727fe2d6b65feae3efd9f11e \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC3"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:hyperlink w:anchor="_6a3aa69c14fad3b5891f740dd36db9690f15627" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1.1.1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Heading 3 (numbered)</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _6a3aa69c14fad3b5891f740dd36db9690f15627 \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC4"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:hyperlink w:anchor="_be7d5860e6e2bf5217ecb6871e60ec99049444e" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1.1.1.1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Heading 4 (numbered)</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _be7d5860e6e2bf5217ecb6871e60ec99049444e \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC5"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:hyperlink w:anchor="_b703da864371140189e031aaff5d7fd9ce4069a" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1.1.1.1.1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Heading 5 (numbered)</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _b703da864371140189e031aaff5d7fd9ce4069a \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                </w:p>
+                <w:p>
+                    <w:pPr>
+                        <w:pStyle w:val="TOC6"/>
+                        <w:tabs>
+                            <w:tab w:val="right" w:leader="dot" w:pos="9026"/>
+                        </w:tabs>
+                    </w:pPr>
+                    <w:hyperlink w:anchor="_ac413f6029628fbd8ac6d5e7195f9f8223f8cf3" w:history="1">
+                        <w:r>
+                            <w:t xml:space="preserve">1.1.1.1.1.1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve"> </w:t>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">Heading 6 (numbered)</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:tab/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> PAGEREF _ac413f6029628fbd8ac6d5e7195f9f8223f8cf3 \h </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                    </w:hyperlink>
+                    <w:r>
+                        <w:fldChar w:fldCharType="end"/>
+                    </w:r>
+                </w:p>
+            </w:sdtContent>
+        </w:sdt>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading1"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="1" w:name="_dadd0d964a7892b739fc1a420dbcfb1668a98ed"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SectionNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Heading 1 (numbered)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="1"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading1Unlisted"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="2" w:name="_da3d32f5bc893416ad4addab963579491aca672"/>
+            <w:r>
+                <w:t xml:space="preserve">Heading 1 (unlisted)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="2"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading2"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="3" w:name="_5612c18280d1bf6727fe2d6b65feae3efd9f11e"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SectionNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.1</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Heading 2 (numbered)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="3"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading2Unlisted"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="4" w:name="_4d509dfa5fcedda35f828e9dcbc212fd7a63f6f"/>
+            <w:r>
+                <w:t xml:space="preserve">Heading 2 (unlisted)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="4"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading3"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="5" w:name="_6a3aa69c14fad3b5891f740dd36db9690f15627"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SectionNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.1.1</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Heading 3 (numbered)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="5"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading3Unlisted"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="6" w:name="_8e0e8071c94b20da151697860253f8415498e6b"/>
+            <w:r>
+                <w:t xml:space="preserve">Heading 3 (unlisted)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="6"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading4"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="7" w:name="_be7d5860e6e2bf5217ecb6871e60ec99049444e"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SectionNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.1.1.1</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Heading 4 (numbered)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="7"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading4Unlisted"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="8" w:name="_5d53dfdfe7f23feb87ab8e49dbe50cab042f113"/>
+            <w:r>
+                <w:t xml:space="preserve">Heading 4 (unlisted)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="8"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading5"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="9" w:name="_b703da864371140189e031aaff5d7fd9ce4069a"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SectionNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.1.1.1.1</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Heading 5 (numbered)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="9"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading5Unlisted"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="10" w:name="_5f268925d776a5d491c584aaa0f91f9a9fa277e"/>
+            <w:r>
+                <w:t xml:space="preserve">Heading 5 (unlisted)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="10"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading6"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="11" w:name="_ac413f6029628fbd8ac6d5e7195f9f8223f8cf3"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SectionNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.1.1.1.1.1</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Heading 6 (numbered)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="11"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading6Unlisted"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="12" w:name="_0489992d44fc72861217987e57dff9465300e9b"/>
+            <w:r>
+                <w:t xml:space="preserve">Heading 6 (unlisted)</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="12"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses First Paragraph after a heading.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="BodyText"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Body Text, </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VerbatimChar"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Verbatim Char</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">, and </w:t>
+            </w:r>
+            <w:hyperlink r:id="rId7" w:tooltip="External Hyperlink example" w:history="1">
+                <w:r>
+                    <w:rPr>
+                        <w:rStyle w:val="Hyperlink"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">Hyperlink</w:t>
+                </w:r>
+            </w:hyperlink>
+            <w:r>
+                <w:t xml:space="preserve">. The internal </w:t>
+            </w:r>
+            <w:hyperlink w:anchor="_dadd0d964a7892b739fc1a420dbcfb1668a98ed" w:history="1">
+                <w:r>
+                    <w:rPr>
+                        <w:rStyle w:val="Hyperlink"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">heading link</w:t>
+                </w:r>
+            </w:hyperlink>
+            <w:r>
+                <w:t xml:space="preserve"> and Footnote Reference also work</w:t>
+            </w:r>
+            <w:bookmarkStart w:id="13" w:name="_Fn000001"/>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:footnoteReference w:id="1"/>
+            </w:r>
+            <w:bookmarkEnd w:id="13"/>
+            <w:r>
+                <w:t xml:space="preserve">; a repeated note reference follows</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> NOTEREF _Fn000001 \f \h </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FootnoteReference"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="BlockText"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Block Text inside a quote.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="BlockText"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This nested quote also uses Block Text.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="0"/>
+                    <w:numId w:val="1001"/>
+                </w:numPr>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This bullet uses Compact.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="1"/>
+                    <w:numId w:val="1002"/>
+                </w:numPr>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This nested bullet uses Compact.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="2"/>
+                    <w:numId w:val="1003"/>
+                </w:numPr>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This third-level bullet uses Compact.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="0"/>
+                    <w:numId w:val="1001"/>
+                </w:numPr>
+            </w:pPr>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="0"/>
+                    <w:numId w:val="1004"/>
+                </w:numPr>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This ordered item uses Compact.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="0"/>
+                    <w:numId w:val="1004"/>
+                </w:numPr>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This Compact item continues the ordered sequence.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="0"/>
+                    <w:numId w:val="1005"/>
+                </w:numPr>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This Compact ordered list restarts at seven.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:numPr>
+                    <w:ilvl w:val="0"/>
+                    <w:numId w:val="1005"/>
+                </w:numPr>
+            </w:pPr>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:ind w:left="720" w:hanging="360"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+                </w:rPr>
+                <w:t xml:space="preserve">☐</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">This unchecked task uses Compact.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Compact"/>
+                <w:ind w:left="720" w:hanging="360"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+                </w:rPr>
+                <w:t xml:space="preserve">☒</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">This checked task uses Compact.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="DefinitionTerm"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This term uses Definition Term.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Definition"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Definition.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Source Code and Code Line Number: rust syntax token styles.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DocumentationTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">/// DocumentationTok: a documented type.</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 2 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="AnnotationTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">#[</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">derive</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="AnnotationTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(Debug)]</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 3 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">pub</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">struct</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> Example {</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 4 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">pub</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">count</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">u32</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">,</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 5 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">}</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 6 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">fn</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FunctionTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">example</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">value</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&amp;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Example) -&gt; </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">char</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> {</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 7 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">let</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> hexadecimal </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BaseNTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">0xff</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 8 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">let</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> floating </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FloatTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.5</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> 9 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">let</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> enabled </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ConstantTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">true</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">10 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">let</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> escaped </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;StringTok</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SpecialCharTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">\n</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">11 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CommentTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">// CommentTok: ordinary comment.</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">12 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ControlFlowTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">if</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> enabled { </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">'x'</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> } </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ControlFlowTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">else</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> { </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">'</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SpecialCharTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">\n</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">'</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> }</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">13 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">}</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Source Code and Code Line Number: python syntax token styles.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ImportTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">import</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> math</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="AnnotationTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">@</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BuiltInTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">staticmethod</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">3 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">def</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FunctionTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">example</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">value</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">int</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DecValTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">7</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">):</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">4 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DocumentationTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;&quot;&quot;DocumentationTok: a documented function.&quot;&quot;&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">5 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CommentTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"># CommentTok: ordinary comment.</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">6 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    message </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;StringTok</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SpecialCharTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">\n</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">7 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ControlFlowTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">if</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> value </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">is</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">not</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ConstantTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">None</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">:</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">8 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">        </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ControlFlowTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">return</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BuiltInTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">print</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(value </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">+</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BuiltInTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">len</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(message))</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Source Code and Code Line Number: c syntax token styles.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ImportTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">#include</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="PreprocessorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&lt;stdio.h&gt;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ImportTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">#define</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="PreprocessorTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> SCALE </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DecValTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">3 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">static</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">const</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">double</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> value </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FloatTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.5</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">4 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">char</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> letter </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">'x'</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">5 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">const</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">char</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">*</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">message </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;StringTok</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SpecialCharTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">\n</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">6 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">int</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FunctionTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">example</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">int</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">input</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">) {</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">7 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ControlFlowTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">return</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> input </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">+</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BaseNTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">0xff</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">8 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">}</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Source Code and Code Line Number: javascript syntax token styles.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">const</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">matcher</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SpecialStringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">/SpecialStringTok</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ConstantTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">\w</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">+</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="SpecialStringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">/</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">gi</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">function</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FunctionTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">example</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">value</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">) {</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">3 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DataTypeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">let</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">enabled</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ConstantTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">true</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">4 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ControlFlowTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">return</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">enabled</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="OperatorTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&amp;&amp;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">matcher</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">.</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">test</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VariableTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">value</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">);</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">5 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">}</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Source Code and Code Line Number: html syntax token styles.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&lt;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">article</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="AttributeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">class</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;AttributeTok&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="AttributeTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">data-value</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">=</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;1&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&gt;</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">    NormalTok </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CharTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&amp;amp;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> text</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">3 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&lt;/</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="KeywordTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">article</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&gt;</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Source Code and Code Line Number: json syntax token styles.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">{</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;StringTok&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ConstantTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">true</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">, </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;DecValTok&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="DecValTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">7</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">,</w:t>
+            </w:r>
+            <w:r>
+                <w:br/>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CodeLineNumber"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">2 </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;ErrorTok&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="ErrorTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">invalid,</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;FloatTok&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="FloatTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">1.5</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                    <w:shd w:val="clear" w:color="auto" w:fill="FFF3BF"/>
+                </w:rPr>
+                <w:t xml:space="preserve">}</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">The uncaptioned PNG paragraph uses Figure.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Figure"/>
+            </w:pPr>
+            <w:r>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="609600" cy="304800"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="1" name="Picture 1" descr="Built-in 64 by 32 grey PNG" title="The same PNG demonstrates both figure styles."/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="609600" cy="304800"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">The captioned PNG paragraph uses Captioned Figure.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CaptionedFigure"/>
+            </w:pPr>
+            <w:r>
+                <w:drawing>
+                    <wp:inline distT="0" distB="0" distL="0" distR="0">
+                        <wp:extent cx="609600" cy="304800"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:docPr id="2" name="Picture 2" descr="Built-in 64 by 32 grey PNG" title="The same PNG demonstrates both figure styles."/>
+                        <wp:cNvGraphicFramePr>
+                            <a:graphicFrameLocks noChangeAspect="1"/>
+                        </wp:cNvGraphicFramePr>
+                        <a:graphic>
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic>
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="w1.png"/>
+                                        <pic:cNvPicPr>
+                                            <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                                        </pic:cNvPicPr>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId8">
+                                        </a:blip>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr bwMode="auto">
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="609600" cy="304800"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:noFill/>
+                                        <a:ln w="9525">
+                                            <a:noFill/>
+                                            <a:headEnd/>
+                                            <a:tailEnd/>
+                                        </a:ln>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                    </wp:inline>
+                </w:drawing>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="ImageCaption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="14" w:name="_c09731d9e9a305fda45db37cf31fd839f72b1d6"/>
+            <w:r>
+                <w:t xml:space="preserve">Figure</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="14"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">This caption uses Image Caption.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="TableCaption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="15" w:name="_98c0d0ce6bac9ce8e4faa3b85ddd6d30ba24396"/>
+            <w:r>
+                <w:t xml:space="preserve">Table</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Table \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="15"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">This caption uses Table Caption.</w:t>
+            </w:r>
+        </w:p>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="Table"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="1" w:lastRow="1" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0" w:val="0060"/>
+                <w:tblCaption w:val="This caption uses Table Caption."/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="4513"/>
+                <w:gridCol w:w="4513"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:trPr>
+                    <w:tblHeader/>
+                </w:trPr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Table style</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Compact cell paragraphs</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">This editable table uses Table.</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">64 × 32</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="left"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Footer row</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4513" w:type="dxa"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">Compact</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Caption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="16" w:name="_84f1beeb7f8bf710c30079eca6c6044f3f1140d"/>
+            <w:r>
+                <w:t xml:space="preserve">Listing</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Listing \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">1</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="16"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">This listing caption uses Caption.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VerbatimChar"/>
+                </w:rPr>
+                <w:t xml:space="preserve">This plain Source Code run uses Verbatim Char.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This figure contains ordinary First Paragraph text.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Caption"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="17" w:name="_0547f1167637ab2162c0784364215797e73d5f2"/>
+            <w:r>
+                <w:t xml:space="preserve">Figure</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r>
+                <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC </w:instrText>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">2</w:t>
+            </w:r>
+            <w:r>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+            <w:bookmarkEnd w:id="17"/>
+            <w:r>
+                <w:t xml:space="preserve">: </w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">This generic figure uses Caption.</w:t>
+            </w:r>
+        </w:p>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="TableNormal"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblBorders>
+                    <w:top w:val="nil"/>
+                    <w:left w:val="nil"/>
+                    <w:bottom w:val="nil"/>
+                    <w:right w:val="nil"/>
+                    <w:insideH w:val="nil"/>
+                    <w:insideV w:val="nil"/>
+                </w:tblBorders>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1" w:val="0600"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="902"/>
+                <w:gridCol w:w="7222"/>
+                <w:gridCol w:w="902"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:trPr>
+                    <w:cantSplit/>
+                </w:trPr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="500" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4000" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Equation"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <m:oMathPara>
+                            <m:oMathParaPr>
+                                <m:jc m:val="center"/>
+                            </m:oMathParaPr>
+                            <m:oMath>
+                                <m:f>
+                                    <m:fPr>
+                                        <m:type m:val="bar"/>
+                                    </m:fPr>
+                                    <m:num>
+                                        <m:r>
+                                            <m:t>a</m:t>
+                                        </m:r>
+                                    </m:num>
+                                    <m:den>
+                                        <m:r>
+                                            <m:t>b</m:t>
+                                        </m:r>
+                                    </m:den>
+                                </m:f>
+                            </m:oMath>
+                        </m:oMathPara>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="500" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Equation"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">(</w:t>
+                        </w:r>
+                        <w:bookmarkStart w:id="18" w:name="_307098ede4ecfdff1c9823dcc4bb31a45678f53"/>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> SEQ Equation \* ARABIC </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                        <w:bookmarkEnd w:id="18"/>
+                        <w:r>
+                            <w:t xml:space="preserve">)</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">The editable Equation and Normal Table frame above are </w:t>
+            </w:r>
+            <w:hyperlink w:anchor="_307098ede4ecfdff1c9823dcc4bb31a45678f53" w:history="1">
+                <w:r>
+                    <w:t xml:space="preserve">Equation 1</w:t>
+                </w:r>
+            </w:hyperlink>
+            <w:r>
+                <w:t xml:space="preserve">.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Callout"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses the base Callout style.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutNote"/>
+                <w:keepNext/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CalloutTitle"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Callout Title: Note</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutNote"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Callout Note.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutTip"/>
+                <w:keepNext/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CalloutTitle"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Callout Title: Tip</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutTip"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Callout Tip.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutImportant"/>
+                <w:keepNext/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CalloutTitle"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Callout Title: Important</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutImportant"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Callout Important.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutWarning"/>
+                <w:keepNext/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CalloutTitle"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Callout Title: Warning</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutWarning"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Callout Warning.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutCaution"/>
+                <w:keepNext/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CalloutTitle"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Callout Title: Caution</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutCaution"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Callout Caution.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutExample"/>
+                <w:keepNext/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="CalloutTitle"/>
+                </w:rPr>
+                <w:t xml:space="preserve">Callout Title: Example</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CalloutExample"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">This paragraph uses Callout Example.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CellPrompt"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">In [1]:</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="SourceCode"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="BuiltInTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">print</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">(</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="StringTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">&quot;Cell Prompt and Cell Output&quot;</w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="NormalTok"/>
+                </w:rPr>
+                <w:t xml:space="preserve">)</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CellPrompt"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">Out [1]:</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="CellOutput"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rStyle w:val="VerbatimChar"/>
+                </w:rPr>
+                <w:t xml:space="preserve">This output uses Cell Output and Verbatim Char.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">A resolved citation precedes Bibliography [1].</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Heading1"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="19" w:name="_refs"/>
+            <w:r>
+                <w:t xml:space="preserve">Bibliography</w:t>
+            </w:r>
+            <w:bookmarkEnd w:id="19"/>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="Bibliography"/>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="720"/>
+                </w:tabs>
+                <w:ind w:left="720" w:hanging="720"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">[1]</w:t>
+            </w:r>
+            <w:r>
+                <w:tab/>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">Writer. </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:i/>
+                    <w:iCs/>
+                </w:rPr>
+                <w:t xml:space="preserve">Bibliography style guide</w:t>
+            </w:r>
+            <w:r>
+                <w:t xml:space="preserve">. This entry uses Bibliography.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="FirstParagraph"/>
+            </w:pPr>
+            <w:r>
+                <w:t xml:space="preserve">An empty Horizontal Rule paragraph follows. The footer uses a PAGE field.</w:t>
+            </w:r>
+        </w:p>
+        <w:p>
+            <w:pPr>
+                <w:pStyle w:val="HorizontalRule"/>
+            </w:pPr>
+        </w:p>
+        <w:sectPr>
+            <w:footerReference w:type="default" r:id="rId5"/>
+            <w:footnotePr>
+                <w:numRestart w:val="eachSect"/>
+            </w:footnotePr>
+            <w:pgSz w:w="11906" w:h="16838"/>
+            <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>
+            <w:cols w:space="720"/>
+        </w:sectPr>
+    </w:body>
+</w:document>
