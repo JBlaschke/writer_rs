@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+\mathbb{R}, \mathbb{R}, \mathcal{F}

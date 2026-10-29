@@ -931,3 +931,43 @@ macOS historical directory creation is filtered by identity; the already
 present PR22 child-lifetime guard is retained. Its main-only validation is in
 docs/dev/watch-ci-recovery.md and its standalone PR27 has no feature dependency.
 Full .typ build/serve acceptance and compiler-side includes retain T52/T53.
+
+
+## T51 Typst math conversion acceptance (2026-10-28)
+
+Measured on macOS arm64 with Rust 1.99.1 at checked T24 plus T51.
+Cached-dependency runs use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall time | CPU time | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 19.35 s | 258.85 s | 149.88 s | 1,428 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 372 s | 444.06 s | 3709.87 s | 1,427 passed |
+
+Formatting, all-target/all-feature Clippy and denied-warning default/feature
+rustdoc pass. All 14 public converter tests and 13 private symbol/call units
+pass. All 72 source/diagnostic snapshots were reviewed against the 36 equation
+bodies. Actual Pandoc 3.12.1 reproduces 33 recorded successes and three reader
+failures; comparisons use only whitespace/braces normalization and consumed,
+exact per-form exceptions. Eight Tylax records remain historical oracle data;
+Tylax was not executed. All 36 Writer bodies compile with pdflatex.
+
+Default generation and `--check` reproduce 527 names and 1,296 character rows
+from the three hash-verified archives. All 38 shorthands are represented. All
+11 Python tests pass, including pdflatex for all 1,058 distinct expressions
+under amsmath/amssymb plus only the declared extra package. TLS verification
+stayed enabled; this host's Python used its installed Homebrew CA bundle.
+No generator, compiler, filesystem or network call occurs in runtime lookup.
+
+Initial integration tests found styled Unicode digits classified as Number,
+missing scalable double brackets, and malformed call arguments omitted by a
+typed syntax iterator. These now use the character table, mapped delimiters
+and source-preserving recovery respectively. Pinned parser evidence corrected
+the negative named-literal whitelist to native `#(-3)` / `#(-1pt)` syntax;
+compound expressions and malformed direct forms retain exclusive code fallback.
+Parser-depth recovery, UTF-8 equation-relative ranges and TeX control-word
+boundaries pass. The complete final suites include these repairs.
+
+The converter returns a body and warnings only; package discovery remains a
+lookup consumed by T60. DOCX compiler MathML/OMML, native `.typ` dispatch and
+LaTeX target composition retain T42/T52/T60 ownership. Dependencies, public
+module exports and config/IR schemas are unchanged.

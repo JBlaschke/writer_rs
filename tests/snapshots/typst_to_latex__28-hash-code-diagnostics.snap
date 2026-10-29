@@ -1,0 +1,13 @@
+---
+source: tests/typst_to_latex.rs
+expression: diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "E-TYP-MATH-CODE",
+    "message": "embedded code is outside convertible math at bytes 0..1 of the equation",
+    "path": null,
+    "span": null
+  }
+]

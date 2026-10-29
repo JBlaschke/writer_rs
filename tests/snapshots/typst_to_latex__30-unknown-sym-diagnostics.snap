@@ -1,0 +1,13 @@
+---
+source: tests/typst_to_latex.rs
+expression: diagnostics
+---
+[
+  {
+    "level": "warning",
+    "code": "W-TYP-MATH-SYM-UNKNOWN",
+    "message": "unknown math symbol `planck.reduce` at bytes 0..13 of the equation",
+    "path": null,
+    "span": null
+  }
+]

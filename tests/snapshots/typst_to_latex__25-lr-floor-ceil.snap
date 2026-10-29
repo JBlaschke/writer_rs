@@ -1,0 +1,5 @@
+---
+source: tests/typst_to_latex.rs
+expression: tex
+---
+\left(\frac{a}{b}\right) + | x | + \left\lfloor{}x\right\rfloor + \left\lceil{}x\right\rceil
