@@ -139,6 +139,19 @@ struct Emitter<'a> {
 pub fn emit(
     document: &Document, registry: &AssetRegistry, config: &Config, stem: &str,
 ) -> Emitted {
+    emit_with_unicode(document, registry, config, stem).0
+}
+
+/// Complete, untruncated IR inventory for a template's deferred summary.
+/// The public emitter and its already finalized diagnostics stay unchanged.
+pub(crate) struct UnicodeInventory {
+    pub(crate) characters: Vec<char>,
+    pub(crate) span: Option<SourceSpan>,
+}
+
+pub(crate) fn emit_with_unicode(
+    document: &Document, registry: &AssetRegistry, config: &Config, stem: &str,
+) -> (Emitted, UnicodeInventory) {
     let mut assets = export::assets(document, registry);
     let bibliography = export::bibliography(&mut assets.namespace, config);
     let map = config.latex.unicode == LatexUnicode::Map
@@ -200,7 +213,11 @@ pub fn emit(
     }
     let body = final_text(rendered.join("\n\n"));
     emitter.finish();
-    Emitted {
+    let inventory = UnicodeInventory {
+        characters: emitter.unicode,
+        span: emitter.unicode_span,
+    };
+    let emitted = Emitted {
         body,
         abstract_: final_text(abstract_),
         toc,
@@ -208,7 +225,8 @@ pub fn emit(
         images: emitter.images,
         bibliography: emitter.bibliography,
         diagnostics: emitter.diagnostics,
-    }
+    };
+    (emitted, inventory)
 }
 
 impl Emitter<'_> {

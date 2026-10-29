@@ -566,6 +566,18 @@ for each line of a footnote-context code block (§4.2).
   `engine = "pdflatex"` (pdflatex stops at the first one); **info** for xelatex/lualatex (they drop glyphs the
   template's fonts lack; the user greps `Missing character` in the log).
 
+**Template Unicode clarification (T61, 2026-10-29):** diagnostics inventory
+emitted IR first (abstract, then body), followed by executed `tex` filter
+evaluations in their evaluation order. The filter inventories unsupported
+glyphs that survive escaping. An evaluated capture counts even if a template
+later discards it. Normal strings lose origin through arbitrary template
+joins/filters, so preescaped metadata, direct unfiltered variables, template
+literals and raw TeX are not scanned as final output. Their existing string
+and filter semantics remain intact. A structured full-character inventory
+merges these findings into one summary without parsing a truncated message.
+The §2.2 package preflight is deliberately conservative: recursive vars string
+values and object keys both count because templates can filter either.
+
 ### 5.5 Mapping table (134 entries; each macro verified in text, `\texttt`, `Verbatim` and math, pdflatex)
 ```
 0391 Α \mathrm{A} · 0392 Β \mathrm{B} · 0393 Γ \Gamma · 0394 Δ \Delta · 0395 Ε \mathrm{E} · 0396 Ζ \mathrm{Z} · 0397 Η \mathrm{H} · 0398 Θ \Theta
@@ -740,12 +752,12 @@ where there is none (§2.3).
 \VAR{preamble}
 \BLOCK{if has_code}\fvset{frame=lines,framesep=2mm,fontsize=\small}\BLOCK{endif}
 \hypersetup{colorlinks=true,linkcolor=blue!60!black,citecolor=green!40!black,urlcolor=blue!60!black,pdftitle={\VAR{title}},pdflang={\VAR{lang}}}
-\BLOCK{if cite == "biblatex"}
+\BLOCK{if bibliography and cite == "biblatex"}
 \usepackage[backend=\VAR{vars.biblatex_backend | default("biber")},style=authoryear]{biblatex}
 \BLOCK{for b in bibliography}
 \addbibresource{\VAR{b}}
 \BLOCK{endfor}
-\BLOCK{elif cite == "natbib"}
+\BLOCK{elif bibliography and cite == "natbib"}
 \usepackage[round]{natbib}
 \BLOCK{endif}
 
@@ -776,7 +788,10 @@ where there is none (§2.3).
 \end{document}
 ```
 biblatex's standard backend is biber; front matter `biblatex_backend: bibtex` (a `vars` entry) selects bibtex. An
-empty `\date{}` stops LaTeX printing today's date. The framed branch was forced once and compiled.
+empty `\date{}` stops LaTeX printing today's date. The sample loads biblatex/natbib
+only with a nonempty bibliography list; a document with no bibliography needs neither package nor bibliography
+tool. Raw LaTeX that needs a bibliography package without configured bibliography must load it in its own
+template. The framed branch was forced once and compiled.
 
 ### 9.2 latexmk protocol (`tests/latex_compile.rs`)
 Engines: `pdflatex` (latexmk flag `-pdf`) and `xelatex` (flag `-xelatex`). Without `latexmk` or the engine on

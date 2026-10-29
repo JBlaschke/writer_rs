@@ -1,0 +1,74 @@
+\#{ writer sample template. backslash-VAR prints, backslash-BLOCK runs a statement, backslash-hash comments; a comment ends at its first closing brace. }
+\#{ Order: class and packages, the writer hooks you restyle, the preamble slot, then whatever needs the slot's packages. }
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{parskip}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,showstringspaces=false,frame=single}
+\colorlet{writercalloutnote}{blue!60!black}\colorlet{writercallouttip}{green!50!black}\colorlet{writercalloutimportant}{violet}
+\colorlet{writercalloutwarning}{orange!80!black}\colorlet{writercalloutcaution}{red!70!black}
+\makeatletter
+\newcommand{\writercalloutcolor}[1]{%
+  \@ifundefinedcolor{writercallout#1}{\colorlet{writercalloutcurrent}{writercalloutnote}}{\colorlet{writercalloutcurrent}{writercallout#1}}}
+\newif\ifwritertcolorbox
+\IfFileExists{tcolorbox.sty}{\writertcolorboxtrue}{\writertcolorboxfalse}
+\ifwritertcolorbox
+  \usepackage{tcolorbox}
+  \tcbuselibrary{skins,breakable}
+  \newenvironment{writercallout}[2]{\writercalloutcolor{#1}%
+    \begin{tcolorbox}[enhanced,breakable,colframe=writercalloutcurrent,colback=writercalloutcurrent!5!white,
+      coltitle=white,fonttitle=\bfseries,title={#2}]}{\end{tcolorbox}}
+\else
+  \usepackage{framed}
+  \newenvironment{writercallout}[2]{\writercalloutcolor{#1}%
+    \def\FrameCommand{{\color{writercalloutcurrent}\vrule width 3pt}\hspace{6pt}}%
+    \MakeFramed{\advance\hsize-\width\FrameRestore}\noindent\textbf{#2}\par\nobreak}{\endMakeFramed}
+\fi
+\makeatother
+\newenvironment{writercell}[2]{\par\noindent{\ttfamily\color{gray}#1\,[#2]:}\par\nobreak}{\par}
+\VAR{preamble}
+\BLOCK{if has_code}\fvset{frame=lines,framesep=2mm,fontsize=\small}\BLOCK{endif}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,citecolor=green!40!black,urlcolor=blue!60!black,pdftitle={\VAR{title}},pdflang={\VAR{lang}}}
+\BLOCK{if bibliography and cite == "biblatex"}
+\usepackage[backend=\VAR{vars.biblatex_backend | default("biber")},style=authoryear]{biblatex}
+\BLOCK{for b in bibliography}
+\addbibresource{\VAR{b}}
+\BLOCK{endfor}
+\BLOCK{elif bibliography and cite == "natbib"}
+\usepackage[round]{natbib}
+\BLOCK{endif}
+
+\title{\VAR{title}\BLOCK{if subtitle}\\[0.5em]\large \VAR{subtitle}\BLOCK{endif}}
+\author{\BLOCK{for a in authors}\VAR{a.name}\BLOCK{if a.affiliation}\\\small \VAR{a.affiliation}\BLOCK{endif}\BLOCK{if not loop.last} \and \BLOCK{endif}\BLOCK{endfor}}
+\date{\VAR{date}}
+
+\begin{document}
+\BLOCK{if title}\maketitle\BLOCK{endif}
+\BLOCK{if abstract}
+\begin{abstract}
+\VAR{abstract}
+\end{abstract}
+\BLOCK{endif}
+\BLOCK{if keywords}\noindent\textbf{Keywords:} \VAR{keywords | join(", ")}\par\BLOCK{endif}
+\BLOCK{if toc}\tableofcontents\BLOCK{endif}
+
+\VAR{body}
+
+\BLOCK{if bibliography and has_citations and not emit_bibliography}
+\BLOCK{if cite == "biblatex"}
+\printbibliography
+\BLOCK{else}
+\bibliographystyle{\BLOCK{if cite == "natbib"}plainnat\BLOCK{else}plain\BLOCK{endif}}
+\bibliography{\BLOCK{for b in bibliography}\VAR{b[:-4]}\BLOCK{if not loop.last},\BLOCK{endif}\BLOCK{endfor}}
+\BLOCK{endif}
+\BLOCK{endif}
+\end{document}

@@ -3,6 +3,8 @@
 //! A build prepares one document, shares one compiler world across its targets,
 //! and refuses to overwrite any source or resource it consumes.
 
+mod export;
+
 pub mod docx;
 pub mod html;
 pub mod latex;
@@ -583,6 +585,37 @@ pub(crate) fn build_targets_with_count(
     opts: &BuildOptions, targets: &[Target], worlds: &mut WorldSlot,
     requested_count: usize,
 ) -> BuildReport {
+    build_targets_observed(opts, targets, worlds, requested_count, &mut |_| {})
+}
+
+/// A successfully written LaTeX directory, measured from unique materialized bytes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct WrittenDirectory {
+    pub(crate) path: PathBuf,
+    pub(crate) files: usize,
+    pub(crate) bytes: usize,
+}
+
+/// Keeps reporting metadata private and scoped to this exact completed build.
+pub(crate) fn build_targets_recording(
+    opts: &BuildOptions, targets: &[Target], worlds: &mut WorldSlot,
+    requested_count: usize,
+) -> (BuildReport, Vec<WrittenDirectory>) {
+    let mut directories = Vec::new();
+    let report = build_targets_observed(
+        opts,
+        targets,
+        worlds,
+        requested_count,
+        &mut |directory| directories.push(directory),
+    );
+    (report, directories)
+}
+
+fn build_targets_observed(
+    opts: &BuildOptions, targets: &[Target], worlds: &mut WorldSlot,
+    requested_count: usize, record: &mut dyn FnMut(WrittenDirectory),
+) -> BuildReport {
     let mut prepared = match prepare(opts) {
         Ok(prepared) => prepared,
         Err(failure) => return failed_report(failure, opts.cli.strict),
@@ -641,7 +674,9 @@ pub(crate) fn build_targets_with_count(
                 prepared.diagnostics.clone(),
                 matches!(opts.mode, Mode::Build),
             ) {
-                Ok(_) => build_target(&prepared, opts, *target, &out, world),
+                Ok(_) => {
+                    build_target(&prepared, opts, *target, &out, world, record)
+                }
                 Err(mut failure) => {
                     // The report already owns these preparation findings.
                     failure.diagnostics = Diagnostics::new();
@@ -649,7 +684,7 @@ pub(crate) fn build_targets_with_count(
                 }
             }
         } else {
-            build_target(&prepared, opts, *target, &out, world)
+            build_target(&prepared, opts, *target, &out, world, record)
         };
         let written = match result {
             Ok((written, found)) => {
@@ -713,7 +748,7 @@ fn failed_report(
 
 fn build_target(
     prepared: &Prepared, opts: &BuildOptions, target: Target, out: &Path,
-    world: &mut WriterWorld,
+    world: &mut WriterWorld, record: &mut dyn FnMut(WrittenDirectory),
 ) -> std::result::Result<(Vec<PathBuf>, Diagnostics), BuildFailure> {
     let file_output = target != Target::Html || prepared.config.html.standalone;
     if file_output && names_directory(out) {
@@ -755,7 +790,7 @@ fn build_target(
             )?;
             Ok((vec![out.to_path_buf()], diagnostics))
         }
-        Target::Latex => latex::build(prepared, opts, out, world),
+        Target::Latex => return latex::build_observed(prepared, opts, out, world, record),
         Target::Typst if prepared.document.source.kind == SourceKind::Typst => Err(Error::Other("cannot export a .typ input to typst; use writer build part.md --to typst".into())),
         Target::Typst => typst::build(prepared, opts, out, world),
     }.map_err(Into::into)

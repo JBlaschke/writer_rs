@@ -154,14 +154,17 @@ fn output_over_input_is_refused() {
 }
 
 #[test]
-fn stub_targets_exit_2() {
+fn latex_builds_while_chrome_pdf_remains_pending() {
     let dir = tempfile::tempdir().unwrap();
     writer()
         .args(["build", "examples/basic/document.md", "--to", "latex", "-o"])
         .arg(dir.path().join("out.tex"))
         .assert()
-        .code(2)
-        .stderr(contains("latex: not implemented yet (T61)"));
+        .success();
+    let latex = std::fs::read_to_string(dir.path().join("out.tex")).unwrap();
+    assert!(latex.contains("\\documentclass"), "{latex}");
+    assert!(latex.contains("\\begin{document}"), "{latex}");
+    assert!(dir.path().join("out_assets").is_dir());
 
     writer()
         .args([

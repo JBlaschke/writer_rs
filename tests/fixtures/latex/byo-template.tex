@@ -1,0 +1,8 @@
+\documentclass{article}
+\newenvironment{writercallout}[2]{\begin{quote}\textbf{#2}\par}{\end{quote}}
+\VAR{preamble}
+\renewcommand{\WrKeyword}[1]{\textbf{#1}}
+\begin{document}
+\VAR{vars.venue | default("") | tex}
+\VAR{body}
+\end{document}

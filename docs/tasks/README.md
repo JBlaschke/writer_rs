@@ -63,7 +63,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | ready for review |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | ready for review |
 | T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | ready for review |
-| T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | todo |
+| T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | done |
 | T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | todo |
 | T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | todo |
 | T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | todo |
@@ -512,3 +512,21 @@ Manual checks performed: …
   now merged. #34/#35 remain pending without failures. T61 renderer, templates,
   asset materializer, pipeline/CLI/reporting and tests are staged independently
   for the next branch; optional TeX tools are present except biber.
+
+- 2026-10-29: T60 published as PR #36 (`d82475f`, main sync `5cea390`),
+  with an empty-tree main merge after validation. T61 starts from that head on
+  `codex/latex-export` without waiting for CI. Templates/preamble, actual image
+  and bibliography materialization, shared safe preflight, detailed findings,
+  exact CLI dump, per-write status records and tests are installed for runtime
+  validation. T70 citation loader/renderer/resolver/test drafts are independent.
+
+
+- 2026-10-29: T61 validated on `codex/latex-export`: complete templates,
+  usage-driven preamble, copied/rendered resources, exact dump bytes, safe
+  preflight and per-write status records. All 1,800 debug / 1,799 release tests
+  pass (three intentional ignores), plus formatting and denied-warning
+  Clippy/rustdoc. Twelve actual PDFLaTeX/XeLaTeX cases and the new custom-template
+  example compile successfully; two optional Biber variants are unavailable.
+  The full tour golden received independent review. Its eight unresolved
+  citation findings remain an explicit T70 boundary. Existing PRs #34–#36 have
+  no failed checks in the latest snapshot; #34 is green. T70 drafts are ready.

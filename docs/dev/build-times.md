@@ -1262,3 +1262,38 @@ package order, source attribution and deterministic immutability.
 Configured formatter, denied-warning Clippy (all targets/features), rustdoc
 with denied warnings and `git diff --check` pass. Full templates, physical
 LaTeX resources/CLI and optional TeX engines remain T61 acceptance.
+
+
+## T61 LaTeX template and source-export acceptance (2026-10-29)
+
+Measured from T60 feature `d82475f` / synced head `5cea390` plus the T61
+working tree, macOS arm64, Rust 1.99.1, cached dependencies and incremental
+target directories. These are suite timings, not cold-build benchmarks.
+Both final commands use `/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 21.12 s | 485.57 s | 203.94 s | 1,800 passed, 3 ignored |
+| `cargo test --release --locked --offline --no-fail-fast` | 8m 37s | 624.40 s | 5,408.57 s | 1,799 passed, 3 ignored |
+
+Configured formatting, all-target/all-feature denied-warning Clippy and
+all-feature rustdoc with denied warnings pass. The focused filter has 123
+passes; public pipeline/status/dump cases have 18, cross-target regressions
+85, and reconciled CLI/watch suites 52 (plus one ignored private driver).
+The full sample document golden received independent semantic review.
+
+Twelve actual engine cases pass: five PDFLaTeX and seven XeLaTeX, with two
+optional Biber variants explicitly skipped because Biber is unavailable.
+The original tour keeps its exact eight T70-deferred citation findings;
+these runs do not claim positive citation resolution or a live bibliography
+backend. Citation-free cases require successful writer exit. Each engine
+case checks repeated TeX bytes, actual logs/PDFs, glyph diagnostics and
+Ghostscript text for references, tables, listings and the custom venue.
+
+The sample-derived example also passes actual writer export, its documented
+PDFLaTeX latexmk command, and PDF/log/text checks for venue, figure, table,
+equation and highlighted listing. Its SVG sidecar uses embedded fonts with
+package downloads disabled. Production export never invokes a TeX engine.
+
+Full debug/release acceptance passes. The existing debug-only adversarial
+frontend test accounts for the one-test difference between modes.

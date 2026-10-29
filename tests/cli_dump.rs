@@ -84,13 +84,34 @@ fn dump_default_config() {
 }
 
 #[test]
-fn dump_latex_remains_pending() {
-    writer()
-        .args(["dump", "examples/basic/document.md", "--latex"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(contains("(T61)"));
+fn dump_latex_is_deterministic_source_without_writes() {
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::write(
+        directory.path().join("document.md"),
+        "A dumped paragraph.\n",
+    )
+    .unwrap();
+    let run = || {
+        writer()
+            .current_dir(directory.path())
+            .args(["dump", "document.md", "--latex"])
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone()
+    };
+    let first = run();
+    assert_eq!(first, run());
+    let source = String::from_utf8(first).unwrap();
+    assert!(source.contains("\\documentclass"), "{source}");
+    assert!(source.contains("\\begin{document}"), "{source}");
+    assert!(source.contains("A dumped paragraph."), "{source}");
+    let files: Vec<_> = std::fs::read_dir(directory.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .collect();
+    assert_eq!(files, [std::ffi::OsString::from("document.md")]);
 }
 
 #[test]
