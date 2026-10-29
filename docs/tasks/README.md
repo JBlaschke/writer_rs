@@ -56,7 +56,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | todo |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
-| T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | todo |
+| T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | ready for review |
 | T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | todo |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | ready for review |
@@ -384,3 +384,18 @@ Manual checks performed: …
   bodies and all 1,058 distinct generated table expressions pass their gates.
   Pure conversion preserves unsupported source with located warnings and never
   evaluates code. T42 follows for editable DOCX math while CI runs.
+
+
+- T51 is open in [PR #29](https://github.com/JBlaschke/writer_rs/pull/29)
+  (`df800ce`). T42 starts on `codex/docx-math` from that checked milestone.
+  Merge #26, #28, then #29 before T42; #27 remains an independent CI repair.
+  T42's private XML/folding/renderer split is frozen in its brief; root owns
+  DOCX integration, with independent corpus and route tests.
+
+
+- T42 passes formatting, Clippy, default/feature rustdoc, 1,475 debug and
+  1,474 release tests. Fourteen private units, 44 focused public/package tests
+  and 20 package snapshot tests pass; all 73 OMML and 19 DOCX package goldens
+  were independently reviewed. Native Typst/LaTeX equations remain editable,
+  numbered frames preserve references and recovery, and actual Pandoc probes
+  pass with exact documented aliases. T33 follows while CI runs.

@@ -1,0 +1,18 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="bi"/>
+        </m:rPr>
+        <m:t>α</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="b"/>
+        </m:rPr>
+        <m:t>x</m:t>
+    </m:r>
+</m:oMath>

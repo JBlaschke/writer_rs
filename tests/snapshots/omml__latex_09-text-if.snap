@@ -1,0 +1,27 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:r>
+        <m:rPr>
+            <m:nor/>
+        </m:rPr>
+        <m:t xml:space="preserve">if </m:t>
+    </m:r>
+    <m:r>
+        <m:t>x</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>&gt;</m:t>
+    </m:r>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>0</m:t>
+    </m:r>
+</m:oMath>

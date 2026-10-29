@@ -510,9 +510,41 @@ reason.
   monospace`+`sty p`. pandoc (texmath) agrees on `\mathrm{d}` → `sty p` and `\mathcal{F}` → `scr
   script`+`sty p`, but writes `\mathbf{A}` as `sty bi` and `\bar{z}` as `m:acc` with `chr ‾`
   (U+203E) (R3 §4.1, pandoc 3.12.1); writer deliberately writes `sty b` (math-core's `𝐀` U+1D400
-  is bold upright) and U+0304. T42's pandoc comparison lists exactly these two as exceptions.
+  is bold upright) and U+0304. T42's pandoc comparison includes these two intentional styling differences;
+further recorded representation aliases follow below.
 - Text runs (`mtext`) → `m:nor`; `xml:space="preserve"` whenever the text has leading/trailing
   spaces.
+
+#### T42 recorded oracle forms (2026-10-28)
+
+The two intentional styling decisions above remain `\mathbf{x}` as upright
+bold (`b` versus Pandoc `bi`) and the bar accent U+0304 versus U+203E. The T42
+comparison also records the following **observed representation aliases** from
+21 actual Pandoc 3.12.1 probes, executed with
+`pandoc -f markdown+tex_math_dollars -t docx`. Every probe exited successfully
+and contained one `m:oMath`; exact inputs/commands/results were retained in the
+T42 preparation artifacts. These refine the prior assertion that there were
+only two comparison exceptions. They change comparison only, not Writer output.
+
+| Exact fixture/form | Comparison alias and reason |
+|---|---|
+| `03-integral-dx`, standalone U+2009 run | Default versus plain p space style; after this alias, ordinary adjacent equal-style runs merge. No whitespace character is removed or changed. |
+| `08-aligned`, row two beginning with U+200B then alignment `&` | The required empty-cell placeholder is absent from Pandoc; only that first run is compared without U+200B. |
+| `09-text-if`, `20-cases`, `35-nested-fences-text`, exact normal-text `if` followed by NBSP | math-core's literal NBSP is compared with Pandoc's ASCII text space. Production preserves the MathML text exactly. |
+| `14-lim`, standalone infinity run | math-core's mi infinity has default style; Pandoc writes plain p. Other identifier styles are compared unchanged. |
+| `23-underbrace-overbrace`, exact lower-limit node whose whole limit is one plain U+23DF run | Pandoc's nested limLow underbrace is compared with Writer's required groupChr(chr=U+23DF,pos=bot,vertJc=top). The complete brace body, outer label and all other limits remain compared. This is an additional observed structural oracle exception. |
+| `24-bmatrix-vmatrix`, begChr/endChr U+2223 | Pandoc's delimiter character is compared with Writer's U+007C. Ordinary relation text and separator attributes are unchanged. |
+
+Aliases are restricted to the named fixture and exact form. The comparator
+retains all other nodes, attributes, characters, delimiters and limits; negative
+regressions enforce that unrelated names, nearly matching text, added
+attributes, ordinary vertical-bar relations, separator characters and changed
+outer labels still differ. No fixture or construct is exempted from comparison.
+
+Fixture35's inner `\mid` separator was a production bug, not an oracle alias:
+its bare `<mo>∣</mo>` must stay an ordinary interior relation. Only explicit
+`stretchy="true"` inner bars (such as `\middle`) split delimiter parts. Outer
+fence ends continue to allow omitted stretchy, as specified by §3.2.
 
 ### 5.3 Fallback cascade (`[docx] math = "omml"`)
 

@@ -146,12 +146,28 @@ expression: snapshot
                 </w:rPr>
                 <w:t xml:space="preserve">sum(values)</w:t>
             </w:r>
-            <w:r>
-                <w:t xml:space="preserve">x^2</w:t>
-            </w:r>
-            <w:r>
-                <w:t xml:space="preserve">alpha^2</w:t>
-            </w:r>
+            <m:oMath>
+                <m:sSup>
+                    <m:e>
+                        <m:r>
+                            <m:t>x</m:t>
+                        </m:r>
+                    </m:e>
+                    <m:sup>
+                        <m:r>
+                            <m:rPr>
+                                <m:sty m:val="p"/>
+                            </m:rPr>
+                            <m:t>2</m:t>
+                        </m:r>
+                    </m:sup>
+                </m:sSup>
+            </m:oMath>
+            <m:oMath>
+                <m:r>
+                    <m:t>x</m:t>
+                </m:r>
+            </m:oMath>
             <w:hyperlink r:id="rId7" w:tooltip="Reference" w:history="1">
                 <w:r>
                     <w:rPr>
@@ -940,22 +956,240 @@ expression: snapshot
                 <w:t xml:space="preserve">Throughput per node</w:t>
             </w:r>
         </w:p>
-        <w:p>
-            <w:pPr>
-                <w:pStyle w:val="BodyText"/>
-            </w:pPr>
-            <w:r>
-                <w:t xml:space="preserve">T(n) = \frac{W}{n} + c</w:t>
-            </w:r>
-        </w:p>
-        <w:p>
-            <w:pPr>
-                <w:pStyle w:val="BodyText"/>
-            </w:pPr>
-            <w:r>
-                <w:t xml:space="preserve">sum_(i=0)^n i</w:t>
-            </w:r>
-        </w:p>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="TableNormal"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblBorders>
+                    <w:top w:val="nil"/>
+                    <w:left w:val="nil"/>
+                    <w:bottom w:val="nil"/>
+                    <w:right w:val="nil"/>
+                    <w:insideH w:val="nil"/>
+                    <w:insideV w:val="nil"/>
+                </w:tblBorders>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1" w:val="0600"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="902"/>
+                <w:gridCol w:w="7222"/>
+                <w:gridCol w:w="902"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:trPr>
+                    <w:cantSplit/>
+                </w:trPr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="500" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4000" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Equation"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <m:oMathPara>
+                            <m:oMathParaPr>
+                                <m:jc m:val="center"/>
+                            </m:oMathParaPr>
+                            <m:oMath>
+                                <m:r>
+                                    <m:t>T</m:t>
+                                </m:r>
+                                <m:r>
+                                    <m:rPr>
+                                        <m:sty m:val="p"/>
+                                    </m:rPr>
+                                    <m:t>(</m:t>
+                                </m:r>
+                                <m:r>
+                                    <m:t>n</m:t>
+                                </m:r>
+                                <m:r>
+                                    <m:rPr>
+                                        <m:sty m:val="p"/>
+                                    </m:rPr>
+                                    <m:t>)</m:t>
+                                </m:r>
+                                <m:r>
+                                    <m:rPr>
+                                        <m:sty m:val="p"/>
+                                    </m:rPr>
+                                    <m:t>=</m:t>
+                                </m:r>
+                                <m:f>
+                                    <m:fPr>
+                                        <m:type m:val="bar"/>
+                                    </m:fPr>
+                                    <m:num>
+                                        <m:r>
+                                            <m:t>W</m:t>
+                                        </m:r>
+                                    </m:num>
+                                    <m:den>
+                                        <m:r>
+                                            <m:t>n</m:t>
+                                        </m:r>
+                                    </m:den>
+                                </m:f>
+                                <m:r>
+                                    <m:rPr>
+                                        <m:sty m:val="p"/>
+                                    </m:rPr>
+                                    <m:t>+</m:t>
+                                </m:r>
+                                <m:r>
+                                    <m:t>c</m:t>
+                                </m:r>
+                            </m:oMath>
+                        </m:oMathPara>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="500" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Equation"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">(</w:t>
+                        </w:r>
+                        <w:bookmarkStart w:id="9" w:name="_95455e9980643d72247c07ae8d04d0033fa6569"/>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> SEQ Equation \* ARABIC </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">1</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                        <w:bookmarkEnd w:id="9"/>
+                        <w:r>
+                            <w:t xml:space="preserve">)</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p/>
+        <w:tbl>
+            <w:tblPr>
+                <w:tblStyle w:val="TableNormal"/>
+                <w:tblW w:w="5000" w:type="pct"/>
+                <w:tblBorders>
+                    <w:top w:val="nil"/>
+                    <w:left w:val="nil"/>
+                    <w:bottom w:val="nil"/>
+                    <w:right w:val="nil"/>
+                    <w:insideH w:val="nil"/>
+                    <w:insideV w:val="nil"/>
+                </w:tblBorders>
+                <w:tblLayout w:type="fixed"/>
+                <w:tblLook w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1" w:val="0600"/>
+            </w:tblPr>
+            <w:tblGrid>
+                <w:gridCol w:w="902"/>
+                <w:gridCol w:w="7222"/>
+                <w:gridCol w:w="902"/>
+            </w:tblGrid>
+            <w:tr>
+                <w:trPr>
+                    <w:cantSplit/>
+                </w:trPr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="500" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Compact"/>
+                        </w:pPr>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4000" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Equation"/>
+                            <w:jc w:val="center"/>
+                        </w:pPr>
+                        <m:oMathPara>
+                            <m:oMathParaPr>
+                                <m:jc m:val="center"/>
+                            </m:oMathParaPr>
+                            <m:oMath>
+                                <m:r>
+                                    <m:t>x</m:t>
+                                </m:r>
+                            </m:oMath>
+                        </m:oMathPara>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="500" w:type="pct"/>
+                        <w:vAlign w:val="center"/>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:pStyle w:val="Equation"/>
+                            <w:jc w:val="right"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:t xml:space="preserve">(</w:t>
+                        </w:r>
+                        <w:bookmarkStart w:id="10" w:name="_2208901df4a3a500cc06b38938d6b0101adb23b"/>
+                        <w:r>
+                            <w:fldChar w:fldCharType="begin"/>
+                        </w:r>
+                        <w:r>
+                            <w:instrText xml:space="preserve"> SEQ Equation \* ARABIC </w:instrText>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="separate"/>
+                        </w:r>
+                        <w:r>
+                            <w:t xml:space="preserve">2</w:t>
+                        </w:r>
+                        <w:r>
+                            <w:fldChar w:fldCharType="end"/>
+                        </w:r>
+                        <w:bookmarkEnd w:id="10"/>
+                        <w:r>
+                            <w:t xml:space="preserve">)</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
         <w:p>
             <w:pPr>
                 <w:pStyle w:val="CalloutNote"/>
@@ -1062,11 +1296,11 @@ expression: snapshot
             <w:pPr>
                 <w:pStyle w:val="Heading1"/>
             </w:pPr>
-            <w:bookmarkStart w:id="9" w:name="_refs"/>
+            <w:bookmarkStart w:id="11" w:name="_refs"/>
             <w:r>
                 <w:t xml:space="preserve">Bibliography</w:t>
             </w:r>
-            <w:bookmarkEnd w:id="9"/>
+            <w:bookmarkEnd w:id="11"/>
         </w:p>
         <w:p>
             <w:pPr>

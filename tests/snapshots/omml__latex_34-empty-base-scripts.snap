@@ -1,0 +1,32 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:sSubSup>
+        <m:e>
+            <m:r>
+                <m:t>&#x200B;</m:t>
+            </m:r>
+        </m:e>
+        <m:sub>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>1</m:t>
+            </m:r>
+        </m:sub>
+        <m:sup>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>2</m:t>
+            </m:r>
+        </m:sup>
+    </m:sSubSup>
+    <m:r>
+        <m:t>X</m:t>
+    </m:r>
+</m:oMath>

@@ -1,0 +1,72 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:limUpp>
+        <m:e>
+            <m:groupChr>
+                <m:groupChrPr>
+                    <m:chr m:val="⏞"/>
+                    <m:pos m:val="top"/>
+                    <m:vertJc m:val="bot"/>
+                </m:groupChrPr>
+                <m:e>
+                    <m:r>
+                        <m:t>a</m:t>
+                    </m:r>
+                    <m:r>
+                        <m:rPr>
+                            <m:sty m:val="p"/>
+                        </m:rPr>
+                        <m:t>+</m:t>
+                    </m:r>
+                    <m:r>
+                        <m:t>b</m:t>
+                    </m:r>
+                </m:e>
+            </m:groupChr>
+        </m:e>
+        <m:lim>
+            <m:r>
+                <m:t>n</m:t>
+            </m:r>
+        </m:lim>
+    </m:limUpp>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:limLow>
+        <m:e>
+            <m:groupChr>
+                <m:groupChrPr>
+                    <m:chr m:val="⏟"/>
+                    <m:pos m:val="bot"/>
+                    <m:vertJc m:val="top"/>
+                </m:groupChrPr>
+                <m:e>
+                    <m:r>
+                        <m:t>c</m:t>
+                    </m:r>
+                    <m:r>
+                        <m:rPr>
+                            <m:sty m:val="p"/>
+                        </m:rPr>
+                        <m:t>+</m:t>
+                    </m:r>
+                    <m:r>
+                        <m:t>d</m:t>
+                    </m:r>
+                </m:e>
+            </m:groupChr>
+        </m:e>
+        <m:lim>
+            <m:r>
+                <m:t>m</m:t>
+            </m:r>
+        </m:lim>
+    </m:limLow>
+</m:oMath>

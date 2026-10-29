@@ -1,0 +1,21 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:f>
+        <m:fPr>
+            <m:type m:val="bar"/>
+        </m:fPr>
+        <m:num>
+            <m:r>
+                <m:t>a</m:t>
+            </m:r>
+        </m:num>
+        <m:den>
+            <m:r>
+                <m:t>b</m:t>
+            </m:r>
+        </m:den>
+    </m:f>
+</m:oMath>

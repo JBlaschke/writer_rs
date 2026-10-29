@@ -316,9 +316,14 @@ impl Emitter<'_> {
         } else {
             self.styles.ensure(name, StyleKind::Paragraph)
         };
+        let previous = self.math_state.custom_div_style.clone();
+        if custom {
+            self.math_state.custom_div_style = Some(style.clone());
+        }
         self.containers.push(Container::Style(style));
         self.blocks(blocks);
         self.containers.pop();
+        self.math_state.custom_div_style = previous;
     }
 
     fn definitions(&mut self, items: &[DefinitionItem]) {

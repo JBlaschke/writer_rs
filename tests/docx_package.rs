@@ -228,18 +228,15 @@ fn all_styles_writes_the_vocabulary() {
 }
 
 #[test]
-fn math_stub_diagnostics_keep_their_owner_and_source_span() {
+fn editable_latex_math_uses_a_number_frame_without_a_renderer() {
     let result = output(&Config::default(), None, None, false).unwrap();
-    let diagnostics: Vec<_> = result
-        .diagnostics
-        .iter()
-        .filter(|d| d.code == "unsupported-construct")
-        .collect();
-    assert_eq!(diagnostics.len(), 1);
-    let diagnostic = diagnostics[0];
-    assert!(diagnostic.message.contains("T42"));
-    assert!(diagnostic.message.starts_with("display math"));
-    assert_eq!(diagnostic.span.as_ref().unwrap().start_line, 13);
+    assert!(!result.diagnostics.iter().any(|diagnostic| {
+        matches!(diagnostic.code, "math-syntax" | "math-conversion-failed")
+    }));
+    let xml = &parts(&result.bytes)["word/document.xml"];
+    assert_eq!(xml.matches("<m:oMath>").count(), 1);
+    assert!(xml.contains("<m:oMathPara>"));
+    assert!(xml.contains("SEQ Equation \\* ARABIC"));
 }
 
 #[test]

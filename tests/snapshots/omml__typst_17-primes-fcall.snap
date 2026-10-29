@@ -1,0 +1,76 @@
+---
+source: tests/omml.rs
+expression: "math_xml::xml_pretty(&fragment)"
+---
+<m:oMath>
+    <m:sSup>
+        <m:e>
+            <m:r>
+                <m:t>x</m:t>
+            </m:r>
+        </m:e>
+        <m:sup>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>′</m:t>
+            </m:r>
+        </m:sup>
+    </m:sSup>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:sSup>
+        <m:e>
+            <m:r>
+                <m:t>x</m:t>
+            </m:r>
+        </m:e>
+        <m:sup>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>″</m:t>
+            </m:r>
+        </m:sup>
+    </m:sSup>
+    <m:r>
+        <m:rPr>
+            <m:sty m:val="p"/>
+        </m:rPr>
+        <m:t>+</m:t>
+    </m:r>
+    <m:sSup>
+        <m:e>
+            <m:r>
+                <m:t>f</m:t>
+            </m:r>
+        </m:e>
+        <m:sup>
+            <m:r>
+                <m:rPr>
+                    <m:sty m:val="p"/>
+                </m:rPr>
+                <m:t>′</m:t>
+            </m:r>
+        </m:sup>
+    </m:sSup>
+    <m:d>
+        <m:dPr>
+            <m:begChr m:val="("/>
+            <m:sepChr m:val=""/>
+            <m:endChr m:val=")"/>
+            <m:grow/>
+        </m:dPr>
+        <m:e>
+            <m:r>
+                <m:t>x</m:t>
+            </m:r>
+        </m:e>
+    </m:d>
+</m:oMath>
