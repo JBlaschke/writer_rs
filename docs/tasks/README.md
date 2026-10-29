@@ -68,7 +68,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | done |
 | T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | done |
 | T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | done |
-| T74 | User documentation | M7 | M | T53, T61, T71, T72, T73 | todo |
+| T74 | User documentation | M7 | M | T53, T61, T71, T72, T73 | done |
 | T75 | Release builds and site | M7 | S | T16 | todo |
 | T76 | *Stretch:* code and CSV includes | M7 | S | T1B | todo |
 | T77 | *Stretch:* Chrome print engine | M7 | M | T16 | todo |
@@ -597,3 +597,18 @@ Manual checks performed: …
   the focused T72 parent-repair integration above. Both actual required-Chrome
   overlay/repair checks pass. T74 guide and T75 release/site installations are
   next; their independently reviewed drafts are ready.
+
+
+- 2026-10-29: T73 published as [PR #41](https://github.com/JBlaschke/writer_rs/pull/41)
+  (`ece9db6`). T74 guide acceptance is complete on `codex/user-guide`: ten pages,
+  actual twelve-command help/default references, nine read-only drift checks,
+  54 copied-project command cases, two clean bounded preview startups, isolated
+  source installation and actual latexmk PDF/log/text proof. All 1,954 distinct
+  debug cases pass across the full run and a 55-case rerun; all 1,953 release
+  cases pass in one run (three intentional ignores). One spec comment was
+  synchronized; the earlier watcher timeout remains unattributed, with its
+  source/deadlines unchanged. Formatting and denied-warning Clippy/rustdoc pass.
+  Both Windows debug jobs on #40's repair and #41 pass; release jobs remain
+  pending in the last step snapshot. T75's combined 28-file artifact-only
+  release/site bundle passes 59 pure tests; preliminary site validation is
+  reconciling the spec's intentionally retained KaTeX font fallbacks.

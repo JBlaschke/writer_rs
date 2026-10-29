@@ -1454,3 +1454,50 @@ assertion or original deadline was relaxed. Full baseline counts above and
 focused integration below are distinct evidence, not a claim that the full
 suite reran after the parent repair. Native Windows CI is still required for
 that platform; local integration runs were on macOS arm64.
+
+
+## T74 user-documentation acceptance (2026-10-29)
+
+Measured from T73 `ece9db6` plus the T74 working tree on macOS arm64,
+Rust 1.99.1, cached dependencies and incremental targets. Commands use
+`/usr/bin/time -p`. The release wall measurement includes host sleep; Cargo reported 14m 23s
+for compilation. These are not cold-build or feature-performance comparisons.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 31.62 s | 617.54 s | 278.97 s | 1,952 passed; two failures; 3 ignored |
+| `cargo test --locked --offline --test watch --test config --test guide` | 4.56s | 72.60 s | 2.60 s | 55 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 14m 23s | 2,029.31 s | 7,549.09 s | 1,953 passed, 3 ignored |
+
+All 1,954 distinct debug cases are verified across the complete run and the
+55-case rerun. The spec's default-config block needed the same single comment
+cleanup as the source/guide; no defaults changed. The existing watcher outer
+completion timeout did not reproduce in the final original 20-case suite.
+No repeated case is counted twice, and this records full-plus-focused debug
+acceptance rather than a single clean full invocation. The complete release
+suite passes in one run; its original watcher source was restored byte-exact.
+
+Temporary phase instrumentation and two copied native probes passed, measuring
+variable backend teardown but no failed phase. The cause of the earlier
+watcher timeout remains unproven; original deadlines/order/assertions remain.
+No diagnostic instrumentation or copied executable enters the feature commit.
+
+Configured formatting, all-target/all-feature denied-warning Clippy (26.60s)
+and all-feature denied-warning rustdoc (3.89s) pass. All nine guide checks pass
+in explicit update mode, then read-only mode; the latter preserves fifteen
+source hashes. Twelve recursive help blocks and complete default configuration
+come from the actual binary. The pinned Anchorizer and parsed links/defaults
+have meaningful negative controls.
+
+The actual walkthrough passes 54 fixed command cases in copied examples and
+four fresh scaffold variants, with original source hashes unchanged. Two
+bounded HTTP startup probes pass, including native/Markdown default views,
+state, explicit views and immutable published-hash SVG. Both processes exit 0
+on SIGINT and are reaped; copied/source inventories match. These checks do not
+claim interactive browser or notebook execution.
+
+The isolated source-install command passes (66.04s wall; 202.78s CPU) and its
+installed binary passes version/notices, bibliography scaffold and HTML/PDF
+smoke. Actual documented latexmk PDFLaTeX succeeds with final PDF/log/text
+checks; Ghostscript's joined title projection is checked against the exact
+spaced TeX title. No Biber use is claimed for this citation-free walkthrough.

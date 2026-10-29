@@ -72,7 +72,7 @@ standalone = true          # false → <stem>/index.html + assets/ (site mode)
 [pdf]
 template = ""              # a .typ file exporting `writer-doc` (typst-dialect.md §4); "" → built-in
 paper = "a4"               # any typst paper name ("us-letter", …)
-engine = "typst"           # "typst" | "chrome" (stretch T77; needs Chrome)
+engine = "typst"           # use the embedded Typst compiler
 allow_packages = false     # let the compiler download @preview packages (network)
 system_fonts = true        # scan the system's fonts after the embedded ones (false for byte-identical PDFs)
 font_paths = []            # extra font directories, searched after the embedded fonts and before the system's
