@@ -69,7 +69,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | done |
 | T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | done |
 | T74 | User documentation | M7 | M | T53, T61, T71, T72, T73 | done |
-| T75 | Release builds and site | M7 | S | T16 | todo |
+| T75 | Release builds and site | M7 | S | T16 | ready for review |
 | T76 | *Stretch:* code and CSV includes | M7 | S | T1B | todo |
 | T77 | *Stretch:* Chrome print engine | M7 | M | T16 | todo |
 | T78 | *Stretch:* typst HTML export web view | M7 | M | T52 | todo |
@@ -612,3 +612,17 @@ Manual checks performed: …
   pending in the last step snapshot. T75's combined 28-file artifact-only
   release/site bundle passes 59 pure tests; preliminary site validation is
   reconciling the spec's intentionally retained KaTeX font fallbacks.
+
+- 2026-10-29: T74 published as [PR #42](https://github.com/JBlaschke/writer_rs/pull/42).
+  T75 release/site implementation is locally accepted on `codex/release-site`
+  (`5e3062d`): 62 helper cases, formatting and denied-warning Clippy/rustdoc
+  pass. All 1,954 distinct debug cases pass across the complete run and one
+  unchanged watcher rerun; all 1,953 release cases pass in one run, with three
+  intentional ignores. The earlier watcher timeout remains unexplained and
+  its source/deadlines/assertions unchanged. Actual macOS arm64 notices,
+  deterministic archive/unpacked smoke and both 14-page site prefixes pass;
+  all 1,324 source hashes are preserved. The 57,153,472-byte binary is under
+  the 64 MiB ceiling. Main remains green in the final background audit; open
+  dependency PRs have passing or pending checks without failures. Six hosted
+  native jobs/publication remain unperformed. The user chose finishing after
+  core milestones, so T76–T79 stay unimplemented.

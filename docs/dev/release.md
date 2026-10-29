@@ -166,14 +166,52 @@ activities complete because the default smoke passed.
 
 ## Validation status
 
-The T75 scripts/workflows initially enter as unexecuted drafts. Add measured
-per-target rows to `docs/dev/build-times.md` only after actual native runs;
-retain the run/revision/toolchain identity. One earlier local T70 working-tree
-macOS arm64 release binary was 57,019,632 bytes on 2026-10-29 (T61 head22adf47
-plus uncommitted T70), which is under the budget. That is not a final T75 size
-or evidence for another architecture.
+Local acceptance passed on 2026-10-29, using source revision
+`5e3062d913d514c87621d4c2f2d391382b8d4b69`, macOS 26.7 arm64, Rust 1.99.1
+and Python 3.15.2. The binary identifies that full revision; packaging uses its
+commit epoch `1793294143`. Later acceptance-record edits do not change the
+artifact's source identity. Timings are in [build-times.md](build-times.md).
 
-The project site is a separate artifact-only build over the complete T74
-source tree. Its generator must validate links/prefixes, map repository source
-URLs to the supplied immutable revision and keep code/help/default-config bytes
-intact. No hostname, release download URL or deployed-site status is assumed.
+| Local native result | Measured value |
+|---|---|
+| Target | `aarch64-apple-darwin` |
+| Uncompressed executable | 57,153,472 bytes; below 67,108,864 |
+| Exact notices | 420 linked-crate rows/directories; 749 notice files |
+| Archive | `writer-v0.1.0-aarch64-apple-darwin.tar.gz`; 28,068,371 bytes |
+| Same-input repeated archive | Complete bytes identical |
+| Unpacked native smoke | Passed; all five outputs, repeated bytes and native Typst PDF |
+
+Binary SHA-256:
+`c5e86a4dc47d411db0e97964ab78b1c22dcfe35baddcef2b132548555664ae98`.
+Archive SHA-256:
+`22a5b74e8e4e4aa121ec3cead971e24b29411bdafbdeed2e230339c66b10d3c9`.
+
+The matching release binary builds both relative and `/writer_rs/` site
+artifacts. Each has 14 HTML pages and 17 files; the relative artifact is
+3,042,863 bytes. Production validation passes 149 local references and 20
+fragments, with 114 IDs and 44 data URLs. Exact canonical rules and source
+WOFF2 bytes prove 80 inactive legacy font fallback occurrences; unrelated
+missing resources remain errors. Local Git object/byte checks verify all 24
+repository source URLs against the recorded commit and all 1,324 tracked
+source files. No remote GitHub URL or external anchor is fetched.
+
+Actual help, default-config and basic-example code/style blocks match raw
+Writer output byte for byte. The native archive/site run preserves every
+tracked source hash and the binary hash. Local detailed reports/inventories
+are retained under ignored
+`target/task-prep/crash-recovery/t75/native-final-v2/`; the workflows produce
+their own independently measured artifacts/reports.
+
+All 62 pure helper cases pass, as do formatting, denied-warning Clippy and
+rustdoc, JavaScript syntax and the pinned Unicode-table check. All 1,954
+distinct debug cases are verified across the complete run and an unchanged
+20-case watcher rerun. The initial existing cross-thread watcher timeout
+remains unexplained; no deadline/assertion changed. The complete release
+suite passes 1,953 cases in one run, with three intentional ignores per mode.
+The task brief records the exact debug/final-source boundary.
+
+The six-native manual workflow is still pending on every hosted runner;
+this local arm64 result does not establish a hosted matrix result or an
+aggregate six-archive SHA256SUMS. No workflow was dispatched, tag/release
+created, site deployed, binary signed or package published. The site is a
+portable artifact with no assumed hostname or release-download URL.
