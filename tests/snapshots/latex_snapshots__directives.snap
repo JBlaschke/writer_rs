@@ -1,0 +1,56 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\begin{writercallout}{note}{Outer container}\nOuter content.\n\n\\begin{writercallout}{tip}{Tip}\nNested content with a longer outer fence.\n\\end{writercallout}\n\\end{writercallout}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{A container figure}\\label{_f207b53139c15c88e6f184526219f401a85e621}\n\\end{figure}\n\n\\writerpagebreak\n\n\\setcounter{tocdepth}{2}\n\\tableofcontents\n\n\\smallskip\n\nAn unknown directive is retained as a generic container.\n\n\\begin{writercallout}{warning}{An unclosed directive}\nThe document deliberately ends inside this directive.\n\\end{writercallout}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: false,\n    table: false,\n    caption: true,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "plot.png",
+      "render": false
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "unclosed-directive",
+      "message": "directive has no closing `:::` fence",
+      "path": "[fixtures]/md/directives.md",
+      "span": {
+        "start_line": 43,
+        "end_line": 46,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "invalid-directive",
+      "message": "a directive needs a name; its children are kept",
+      "path": "[fixtures]/md/directives.md",
+      "span": {
+        "start_line": 43,
+        "end_line": 46,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unclosed-directive",
+      "message": "directive has no closing `:::` fence",
+      "path": "[fixtures]/md/directives.md",
+      "span": {
+        "start_line": 45,
+        "end_line": 46,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

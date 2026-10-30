@@ -1,0 +1,5 @@
+---
+source: tests/latex_snapshots.rs
+expression: parse_error(&error)
+---
+[fixtures]/md/include/cycle-b.md:1 include cycle: includes.md → include/cycle-a.md → include/cycle-b.md → include/cycle-a.md

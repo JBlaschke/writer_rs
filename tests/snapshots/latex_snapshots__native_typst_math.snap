@@ -1,0 +1,26 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\[\n\\frac{a}{b}\n\\]\n\n\\[\n\\sum_{i=0}^{n} x_{i}\n\\]\n\n\\[\na^{2} + b^{2} = c^{2}\n\\]\n\n\\[\n\\sqrt{x} + \\sqrt[3]{x}\n\\]\n\n\\[\n\\begin{pmatrix}1 & 2 \\\\ 3 & 4\\end{pmatrix}\n\\]\n\n\\[\n\\begin{cases}1 \\text{if} x > 0 \\\\ 0 \\text{else}\\end{cases}\n\\]\n\n\\[\nx' + x'' + f'\\left(x\\right)\n\\]\n\n\\[\n\\left\\lvert{}x\\right\\rvert + \\left\\lVert{}v\\right\\rVert + \\left(\\frac{a}{b}\\right]\n\\]\n\n\\[\n\\alpha + \\beta + \\rightarrow + \\longleftarrow + \\cdot + \\mathbb{R} + \\mathbb{N}\n\\]\n\n\\[\n\\int_{0}^{\\infty} e^{-x} \\mathrm{d} x\n\\]\n\n\\[\n\\begin{pmatrix}1 \\\\ 2 \\\\ 3\\end{pmatrix} + \\binom{n}{k}\n\\]\n\n\\[\n\\hat{x} + \\tilde{y} + \\overline{z} + \\mathbf{v} + \\mathbb{R} + \\mathcal{F}\n\\]\n\n\\[\n\\text{text} + \\operatorname{foo} + \\lim_{x \\rightarrow 0}\n\\]\n\n\\[\nx_{1}^{2} + x_{i j} + e^{i \\pi}\n\\]\n\n\\[\n\\begin{aligned}a & = b \\\\ c & = d\\end{aligned}\n\\]\n\n\\[\n\\begin{matrix}1 & 2 \\\\ 3 & 4\\end{matrix}\n\\]\n\n\\[\n\\text{[typst math: \\#text[kept code] + x]}\n\\]\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: true,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "E-TYP-MATH-CODE",
+      "message": "embedded code is outside convertible math at bytes 0..1 of the equation",
+      "path": "[fixtures]/typ/math.typ",
+      "span": {
+        "start_line": 33,
+        "end_line": 33,
+        "cell": null,
+        "file": "[fixtures]/typ/math.typ"
+      }
+    }
+  ]
+}

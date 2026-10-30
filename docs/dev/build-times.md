@@ -1233,3 +1233,31 @@ independent review. Existing export/round-trip/native-source regressions pass.
 Configured formatting, denied-warning Clippy (all targets/features), rustdoc
 with denied warnings and `git diff --check` pass. No external TeX or browser
 installation is required by this milestone's acceptance tests.
+
+## T60 LaTeX body emitter acceptance (2026-10-29)
+
+Measured from T53 `377e6ec` plus the T60 working tree, macOS arm64,
+Rust 1.99.1, with cached dependencies and incremental target directories.
+These are suite timings, not cold-build benchmarks. Both final commands used
+`/usr/bin/time -p`.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 21.77 s | 430.72 s | 189.99 s | 1,741 passed, 3 ignored |
+| `cargo test --release --locked --offline --no-fail-fast` | 10m 00s | 691.11 s | 5,443.20 s | 1,740 passed, 3 ignored |
+
+The existing debug-only adversarial frontend case accounts for the one-test
+mode difference. The emitter has no World, asset reads or external engine.
+Its 25 public cases cover the full Markdown corpus, all code/cite tour modes,
+notebook prompt selection, contexts, references/notes, tables, pure resource
+planning and all 37 LaTeX / 36 Typst math cases. The 31 new goldens received
+independent semantic review. Three known diagnostic-path fields were later
+stabilized with component-boundary written/canonical/Windows-extended roots;
+a byte-level comparison confirmed body/code/math data stayed unchanged.
+All 60 existing Typst emitter/export/CLI regressions and six namespace units
+pass. Private controls check the exact mapping/safe tables, stateful lexer,
+pinned palette, grid recovery, moving arguments, note visibility, Unicode and
+package order, source attribution and deterministic immutability.
+Configured formatter, denied-warning Clippy (all targets/features), rustdoc
+with denied warnings and `git diff --check` pass. Full templates, physical
+LaTeX resources/CLI and optional TeX engines remain T61 acceptance.

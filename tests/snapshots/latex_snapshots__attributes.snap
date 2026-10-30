@@ -1,0 +1,32 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section*{An attributed heading}\\label{_6e3b9058b1b3efbb3c5adfa16a9d507b691261e}\n\\addcontentsline{toc}{section}{An attributed heading}\n\n\\phantomsection\\label{_8792b06d0b90376465730d51157d1ae467dd643}\\href{https://example.org}{An attributed link}.\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=0.5\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{An attributed image}\\label{_f5f74e4872b494004b05407f7a75a7a246e0a2d}\n\\end{figure}\n\nAn attributed \\phantomsection\\label{_bc2d2d48b4d9a8efd3031716b9123f543288305}\\texttt{inline\\ code} span.\n\n\\subsection*{An invalid label}\\label{_04b7587e8a542bb54937f79f27d8037c9841fb2}\n\\addcontentsline{toc}{subsection}{An invalid label}\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: false,\n    table: false,\n    caption: true,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "plot.png",
+      "render": false
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "error",
+      "code": "label-invalid",
+      "message": "label `with space` is invalid; use letters, digits, `_`, `-`, `:` or `.`, e.g. `#fig-x`",
+      "path": "[fixtures]/md/attributes.md",
+      "span": {
+        "start_line": 14,
+        "end_line": 14,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

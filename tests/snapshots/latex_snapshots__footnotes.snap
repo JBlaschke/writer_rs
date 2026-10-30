@@ -1,0 +1,38 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "A named note\\footnote{\\label{writer-fn-1}The first paragraph of a named note refers to another note\\footnote{A nested footnote reference's content.}.\n\nA second paragraph in the same note.}, the same note again\\footref{writer-fn-1}, and an inline note\\footnote{Inline content.}.\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "footnote-unreferenced",
+      "message": "footnote `unused` is never referenced",
+      "path": "[fixtures]/md/footnotes.md",
+      "span": {
+        "start_line": 14,
+        "end_line": 14,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "latex-nested-footnote",
+      "message": "latex: a footnote is nested inside another footnote",
+      "path": "[fixtures]/md/footnotes.md",
+      "span": {
+        "start_line": 8,
+        "end_line": 8,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

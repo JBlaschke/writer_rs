@@ -47,22 +47,22 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T21 | Dev server: routes, events, per-view state | M2 | M | T16 | done (PR #22) |
 | T22 | Live-reload client | M2 | M | T00 | done (PR #16) |
 | T23 | `serve` CLI, session runtime, integration tests | M2 | S | T1A, T20, T21, T22, T25 | done (PR #24) |
-| T24 | Pages view | M2 | M | T21, T23, T32 | ready for review |
+| T24 | Pages view | M2 | M | T21, T23, T32 | done (PR #28) |
 | T25 | Headless-browser smoke tests (opt-in) | M2 | M | T16 | done (PR #23) |
 | T30 | IR → typst emitter with source map | M3 | L | T01, T03, T17 | done (PR #13) |
 | T31 | `@writer/doc` typst package | M3 | M | T03 | done (PR #12) |
 | T32 | PDF pipeline, diagnostics, `dump --typst`, reproducibility, numbering oracle | M3 | L | T03, T16, T30, T31, T50 | done (PR #26) |
-| T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | ready for review |
-| T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | ready for review |
+| T33 | Math corpus through mitex, `check` pre-flight | M3 | S | T1A, T1C, T32, T42 | done (PR #31) |
+| T34 | BYO typst template and `--to typst` export | M3 | M | T1B, T32 | done (PR #33) |
 | T40 | DOCX body, bookmarks and internal links | M4 | L | T04, T13, T17 | done (PR #15) |
 | T41 | DOCX tables, figures, captions, TOC, bibliography; `--to docx` | M4 | L | T16, T40 | done (PR #20) |
-| T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | ready for review |
-| T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | ready for review |
+| T42 | DOCX math (OMML, numbered equations, image fallback) | M4 | M | T03, T1A, T41, T51 | done (PR #30) |
+| T43 | Reference documents and the DOCX validation suite | M4 | M | T41, T42 | done (PR #32) |
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
-| T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | ready for review |
+| T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | done (PR #29) |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | ready for review |
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | ready for review |
-| T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | todo |
+| T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | ready for review |
 | T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | todo |
 | T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | todo |
 | T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | todo |
@@ -498,3 +498,17 @@ Manual checks performed: …
   formatting, denied-warning Clippy/rustdoc and independently reviewed goldens.
   PRs #28–#33 are green; #34 is pending without failures. The next branch is
   T60 LaTeX body emission; its independent source drafts are prepared.
+
+- 2026-10-29: T53 published as PR #35 (`377e6ec`), stacked after #34.
+  T60 starts on `codex/latex-emitter` without waiting for CI. Its body emitter,
+  escaping, highlighting, table/figure helpers, pure export namespace and
+  corpus tests are being installed for compiler-backed validation. T61's
+  template and materialisation sources remain independent ignored drafts.
+
+- 2026-10-29: T60 validated on `codex/latex-emitter`: all 1,741 debug / 1,740
+  release tests pass (three intentional ignores), plus formatting and denied-
+  warning Clippy/rustdoc. Its 31 new goldens received independent review; known
+  message path fields have cross-platform boundary controls. PRs #28–#33 are
+  now merged. #34/#35 remain pending without failures. T61 renderer, templates,
+  asset materializer, pipeline/CLI/reporting and tests are staged independently
+  for the next branch; optional TeX tools are present except biber.

@@ -1,0 +1,74 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section*{A document heading}\\label{_719555befb1acf0aaf237a985a2d3e60fcfd57e}\n\\addcontentsline{toc}{section}{A document heading}\n\n\\writerhrule\n\n\\section*{A slide shorthand}\\label{_08c3672b6b271f59fda2fad02c7e1d55e98acda}\n\\addcontentsline{toc}{section}{A slide shorthand}\n\nA fragment becomes ordinary document content.\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "code": "presenter-separator",
+      "message": "presenter separator is omitted",
+      "path": "[fixtures]/md/presenter-deck.md",
+      "span": {
+        "start_line": 10,
+        "end_line": 10,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "info",
+      "code": "presenter-separator",
+      "message": "presenter separator is omitted",
+      "path": "[fixtures]/md/presenter-deck.md",
+      "span": {
+        "start_line": 12,
+        "end_line": 12,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "presenter-attr-dropped",
+      "message": "presenter heading attribute `background` is omitted",
+      "path": "[fixtures]/md/presenter-deck.md",
+      "span": {
+        "start_line": 14,
+        "end_line": 14,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "presenter-attr-dropped",
+      "message": "presenter heading attribute `layout` is omitted",
+      "path": "[fixtures]/md/presenter-deck.md",
+      "span": {
+        "start_line": 14,
+        "end_line": 14,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "presenter-attr-dropped",
+      "message": "presenter heading attribute `transition` is omitted",
+      "path": "[fixtures]/md/presenter-deck.md",
+      "span": {
+        "start_line": 14,
+        "end_line": 14,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

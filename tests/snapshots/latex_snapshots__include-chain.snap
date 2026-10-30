@@ -1,0 +1,32 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section*{Mixed include root}\\label{_ee9e2e312259dcbf00117d7885b2e6eec3f9ebb}\n\\addcontentsline{toc}{section}{Mixed include root}\n\nThe chain crosses a notebook and returns to Markdown. See Figure~\\ref{_2dcf73d91276a31c78b4fd2478de23580a6f508}.\n\n\\subsection*{Notebook in the chain}\\label{_ff174fcb6156c430867aee7ad4e8f65f6035888}\n\\addcontentsline{toc}{subsection}{Notebook in the chain}\n\nThis notebook includes the Markdown part below.\n\nPart A keeps its own file-scoped note.\\footnote{This note belongs to part-a.md, not the including notebook.}\n\n\\section*{Part B}\\label{_ac0360d2ceb1f6555754d2e2633ee67a1f60eca}\n\\addcontentsline{toc}{section}{Part B}\n\n\\begin{figure}[htbp]\n\\centering\n\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]{paper.final_assets/plot.png}\n\\caption{Part B}\\label{_2dcf73d91276a31c78b4fd2478de23580a6f508}\n\\end{figure}\n\nThe root continues after the included notebook.\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: true,\n    longtable: false,\n    table: false,\n    caption: true,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: None,\n    tocdepth: None,\n}",
+  "images": [
+    {
+      "identity": "asset-1",
+      "name": "plot.png",
+      "render": false
+    }
+  ],
+  "bibliography": [],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "include-meta-ignored",
+      "message": "`../../md/include/part-a.md` sets `title`; an included file's document metadata is ignored",
+      "path": "[fixtures]/ipynb/include/chain.ipynb",
+      "span": {
+        "start_line": 1,
+        "end_line": 2,
+        "cell": 1,
+        "file": "[fixtures]/ipynb/include/chain.ipynb"
+      }
+    }
+  ]
+}
