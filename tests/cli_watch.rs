@@ -321,13 +321,14 @@ fn first_multi_target_clash_reports_other_target_results_once() {
     let directory = project("![Protected](document.docx)\n");
     let root = directory.path();
     std::fs::write(root.join("document.docx"), PNG).unwrap();
+    write(&root.join("bad.tex"), "\\VAR{body}\n");
     let mut command = assert_cmd::Command::new(env!("CARGO_BIN_EXE_writer"));
     let result = command
         .current_dir(root)
         .timeout(TIMEOUT)
         .args([
             "build", "document.md", "--watch", "--to", "html,docx,latex", "-o",
-            ".",
+            ".", "--latex-template", "bad.tex",
         ])
         .assert()
         .code(2)
@@ -338,9 +339,11 @@ fn first_multi_target_clash_reports_other_target_results_once() {
     assert!(stdout.contains("Wrote "), "{stdout}");
     assert!(stdout.contains("document.html"), "{stdout}");
     assert_eq!(stderr.matches("refusing to write").count(), 1, "{stderr}");
-    assert!(stderr.contains("not implemented yet (T61)"), "{stderr}");
+    assert!(stderr.contains("has no \\VAR{preamble}"), "{stderr}");
     assert!(root.join("document.html").is_file());
     assert_eq!(std::fs::read(root.join("document.docx")).unwrap(), PNG);
+    assert!(!root.join("document.tex").exists());
+    assert!(!root.join("document_assets").exists());
 }
 
 #[test]

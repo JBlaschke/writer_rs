@@ -28,9 +28,13 @@ pub fn run(args: &BuildArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
         return watch(args, global);
     }
     let (opts, targets) = build_options(args, global)?;
-    let report =
-        pipeline::build_targets(&opts, &targets, &mut WorldSlot::new());
-    build_result(report, &opts, args.out.is_some(), global)
+    let (report, directories) = pipeline::build_targets_recording(
+        &opts,
+        &targets,
+        &mut WorldSlot::new(),
+        targets.len(),
+    );
+    build_result(report, &opts, args.out.is_some(), global, &directories)
 }
 
 /// Watches inputs and reports rebuilds until interrupted.
@@ -48,26 +52,36 @@ pub fn watch(
     let mut first = true;
     let mut refused = false;
     let mut stopped = None;
-    watcher::run_build_watch_with(&opts, &targets, |status| {
-        let stop_for_clash = match &status {
-            WatchStatus::Built(report) => {
-                std::mem::take(&mut first) && initial_clash(report).is_some()
+    watcher::run_build_watch_recording(
+        &opts,
+        &targets,
+        |status, directories| {
+            let stop_for_clash = match &status {
+                WatchStatus::Built(report) => {
+                    std::mem::take(&mut first)
+                        && initial_clash(report).is_some()
+                }
+                _ => false,
+            };
+            if !(announced && matches!(status, WatchStatus::Watching(_)))
+                && let Err(error) = print_watch_status(
+                    status,
+                    &opts,
+                    args.out.is_some(),
+                    global,
+                    directories,
+                )
+            {
+                stopped = Some(error);
+                return ControlFlow::Break(());
             }
-            _ => false,
-        };
-        if !(announced && matches!(status, WatchStatus::Watching(_)))
-            && let Err(error) =
-                print_watch_status(status, &opts, args.out.is_some(), global)
-        {
-            stopped = Some(error);
-            return ControlFlow::Break(());
-        }
-        if stop_for_clash {
-            refused = true;
-            return ControlFlow::Break(());
-        }
-        ControlFlow::Continue(())
-    })?;
+            if stop_for_clash {
+                refused = true;
+                return ControlFlow::Break(());
+            }
+            ControlFlow::Continue(())
+        },
+    )?;
     match stopped {
         Some(error) => Err(error),
         None if refused => Ok(ExitCode::from(super::EXIT_USAGE)),
@@ -123,7 +137,7 @@ fn wait_for_config(
 
 fn print_watch_status(
     status: WatchStatus<'_>, opts: &BuildOptions, explicit: bool,
-    global: &GlobalArgs,
+    global: &GlobalArgs, directories: &[pipeline::WrittenDirectory],
 ) -> anyhow::Result<()> {
     match status {
         WatchStatus::Built(report) => {
@@ -141,7 +155,9 @@ fn print_watch_status(
                 match &target.written {
                     Ok(paths) if !global.quiet => {
                         for path in paths {
-                            print_stdout(&wrote_line(path)?)?;
+                            print_stdout(&wrote_target_line(
+                                path, target.target, directories,
+                            )?)?;
                         }
                     }
                     Ok(_) => {}
@@ -240,7 +256,7 @@ fn base_options(
 
 fn build_result(
     report: BuildReport, opts: &BuildOptions, explicit: bool,
-    global: &GlobalArgs,
+    global: &GlobalArgs, directories: &[pipeline::WrittenDirectory],
 ) -> anyhow::Result<ExitCode> {
     let BuildReport { prepared, targets, diagnostics } = report;
     if let Err(failure) = prepared {
@@ -260,7 +276,9 @@ fn build_result(
         match target.written {
             Ok(paths) if !global.quiet => {
                 for path in paths {
-                    print_stdout(&wrote_line(&path)?)?;
+                    print_stdout(&wrote_target_line(
+                        &path, target.target, directories,
+                    )?)?;
                 }
             }
             Ok(_) => {}
@@ -292,6 +310,14 @@ fn target_error_reported(error: &Error, diagnostics: &Diagnostics) -> bool {
                 )
         });
     }
+    if let Error::Parse { path, line, message } = error {
+        return diagnostics.iter().any(|finding| {
+            finding.level == crate::error::Level::Error
+                && finding.path.as_deref() == Some(path.as_path())
+                && finding.span.as_ref().map(|span| span.start_line) == *line
+                && finding.message == *message
+        });
+    }
     let Error::Compile { path, line, message, .. } = error else {
         return false;
     };
@@ -303,6 +329,23 @@ fn target_error_reported(error: &Error, diagnostics: &Diagnostics) -> bool {
             && diagnostic.message.split("\n  hint: ").next()
                 == Some(message.as_str())
     })
+}
+
+fn wrote_target_line(
+    path: &Path, target: Target, directories: &[pipeline::WrittenDirectory],
+) -> anyhow::Result<String> {
+    if target == Target::Latex
+        && let Some(directory) =
+            directories.iter().find(|entry| entry.path.as_path() == path)
+    {
+        return Ok(format!(
+            "Wrote {} ({} files, {})",
+            display_path(path).display(),
+            directory.files,
+            format_size(directory.bytes),
+        ));
+    }
+    wrote_line(path)
 }
 
 fn wrote_line(path: &Path) -> anyhow::Result<String> {
@@ -417,5 +460,64 @@ mod tests {
             kind: ChangeKind::Content,
         };
         assert_eq!(rebuilding_line(&batch), "Rebuilding (content): only.md");
+    }
+
+    #[test]
+    fn target_parse_error_suppression_requires_the_same_reported_error_identity()
+     {
+        let error = Error::Parse {
+            path: "source.ipynb".into(),
+            line: Some(4),
+            message: "bad LaTeX source".into(),
+        };
+        let finding = crate::error::Diagnostic::error(
+            "latex-verbatim-end", "bad LaTeX source",
+        )
+        .with_path("source.ipynb")
+        .with_span(crate::ir::SourceSpan {
+            start_line: 4,
+            end_line: 4,
+            cell: Some(3),
+            file: None,
+        });
+        assert!(target_error_reported(&error, &vec![finding.clone()].into()));
+        let mut variants =
+            vec![finding.clone(), finding.clone(), finding.clone(), finding];
+        variants[0].level = crate::error::Level::Warning;
+        variants[1].path = Some("other.ipynb".into());
+        variants[2].span.as_mut().unwrap().start_line = 5;
+        variants[3].message.push('!');
+        for different in variants {
+            assert!(!target_error_reported(&error, &vec![different].into()));
+        }
+    }
+
+    #[test]
+    fn successful_latex_directory_statistics_override_only_that_targets_directory()
+     {
+        let root = tempfile::tempdir().unwrap();
+        let directory = root.path().join("paper_assets");
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("stale.bin"), b"stale bytes").unwrap();
+        let records = [pipeline::WrittenDirectory {
+            path: directory.clone(),
+            files: 1,
+            bytes: 3,
+        }];
+        assert!(
+            wrote_target_line(&directory, Target::Latex, &records)
+                .unwrap()
+                .ends_with("(1 files, 3 B)")
+        );
+        assert!(
+            wrote_target_line(&directory, Target::Typst, &records)
+                .unwrap()
+                .ends_with("(1 files, 11 B)")
+        );
+        assert!(
+            wrote_target_line(&directory, Target::Latex, &[])
+                .unwrap()
+                .ends_with("(1 files, 11 B)")
+        );
     }
 }

@@ -2,13 +2,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
 
 use comrak::nodes::NodeValue;
 use comrak::{Arena, parse_document};
 
-use super::{BuildOptions, Prepared, find_clash, input_files, write_file};
+use super::{BuildOptions, Prepared, input_files, write_file};
 use crate::assets::export::{self, ExportNamespace};
 use crate::assets::registry::content_hash;
 use crate::error::{Diagnostics, Error, Result};
@@ -322,85 +321,9 @@ fn include_runs(
 fn preflight(
     files: &[File], assets: Option<&Path>, prepared: &Prepared,
 ) -> Result<()> {
-    let outputs = files.iter().map(|file| file.path.as_path()).chain(assets);
-    if let Some(clash) = find_clash(outputs, &input_files(prepared)) {
-        return Err(Error::Io(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            clash,
-        )));
-    }
-    for (index, file) in files.iter().enumerate() {
-        check_file(&file.path)?;
-        for previous in &files[..index] {
-            let resolved = super::path_after_creating_dirs(&file.path);
-            let other = super::path_after_creating_dirs(&previous.path);
-            if super::same_file(&file.path, &previous.path)
-                || resolved.is_some() && resolved == other
-            {
-                return Err(Error::Config(format!(
-                    "Typst export outputs {} and {} name the same file",
-                    previous.path.display(),
-                    file.path.display(),
-                )));
-            }
-        }
-        if let Some(parent) = file.path.parent() {
-            check_directory(parent)?;
-        }
-    }
-    if let Some(assets) = assets {
-        check_directory(assets)?;
-    }
-    Ok(())
-}
-
-fn check_file(path: &Path) -> Result<()> {
-    match fs::metadata(path) {
-        Ok(metadata) if !metadata.is_file() => Err(Error::Config(format!(
-            "Typst export output {} is not a regular file",
-            path.display(),
-        ))),
-        Ok(_) => Ok(()),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {
-            // A dangling link cannot be checked for planned-output aliases.
-            if fs::symlink_metadata(path).is_ok() {
-                return Err(Error::Config(format!(
-                    "Typst export output {} is a dangling symlink",
-                    path.display(),
-                )));
-            }
-            Ok(())
-        }
-        Err(error) => Err(super::io_error(error, "cannot write", path)),
-    }
-}
-
-fn check_directory(path: &Path) -> Result<()> {
-    for directory in
-        path.ancestors().filter(|path| !path.as_os_str().is_empty())
-    {
-        match fs::metadata(directory) {
-            Ok(metadata) if metadata.is_dir() => return Ok(()),
-            Ok(_) => {
-                return Err(Error::Io(io::Error::new(
-                    io::ErrorKind::NotADirectory,
-                    format!(
-                        "cannot create directory {}: not a directory",
-                        directory.display()
-                    ),
-                )));
-            }
-            Err(error)
-                if error.kind() == io::ErrorKind::NotFound
-                    && fs::symlink_metadata(directory).is_err() => {}
-            Err(error) => {
-                return Err(super::io_error(
-                    error, "cannot create directory", directory,
-                ));
-            }
-        }
-    }
-    Ok(())
+    let paths =
+        files.iter().map(|file| file.path.as_path()).collect::<Vec<_>>();
+    super::export::preflight(&paths, assets, &input_files(prepared), "Typst")
 }
 
 #[cfg(test)]

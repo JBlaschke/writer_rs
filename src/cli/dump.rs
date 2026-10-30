@@ -1,6 +1,7 @@
 //! `writer dump`: resolved or parsed IR, template context and source exports.
 //! Owner: T16. Error handling follows presenter_rs's dump command.
 
+use std::io::{self, Write};
 use std::process::ExitCode;
 
 use super::{
@@ -38,23 +39,31 @@ pub fn run(args: &DumpArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
                 locate(error, input)
             })?;
         serde_json::to_string_pretty(&context)?
-    } else if args.typst || args.latex {
-        let (text, extra) = if args.typst {
-            pipeline::pdf::dump(&prepared, &opts)
-        } else {
-            pipeline::latex::dump(&prepared, &opts)
-        }
-        .map_err(|error| {
-            report_diagnostics(&diagnostics, global);
-            locate(error, input)
-        })?;
+    } else if args.latex {
+        let (text, extra) = pipeline::latex::dump_detailed(&prepared, &opts)
+            .map_err(|mut failure| {
+                let mut found = diagnostics.clone();
+                found.extend(failure.diagnostics);
+                failure.diagnostics = found;
+                report::report_build_failure(failure, input, global)
+            })?;
+        diagnostics.extend(extra);
+        text
+    } else if args.typst {
+        let (text, extra) =
+            pipeline::pdf::dump(&prepared, &opts).map_err(|error| {
+                report_diagnostics(&diagnostics, global);
+                locate(error, input)
+            })?;
         diagnostics.extend(extra);
         text
     } else {
         serde_json::to_string_pretty(&prepared.document)?
     };
     report_diagnostics(&diagnostics, global);
-    if !text.is_empty() {
+    if args.latex {
+        print_latex(io::stdout().lock(), &text)?;
+    } else if !text.is_empty() {
         print_stdout(&text)?;
     }
     Ok(if diagnostics.has_errors() {
@@ -62,6 +71,14 @@ pub fn run(args: &DumpArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
     } else {
         ExitCode::SUCCESS
     })
+}
+
+// LaTeX is a complete template result, not line-oriented command output.
+fn print_latex(mut output: impl Write, text: &str) -> io::Result<()> {
+    match output.write_all(text.as_bytes()).and_then(|()| output.flush()) {
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => Ok(()),
+        result => result,
+    }
 }
 
 fn prepared(
@@ -75,4 +92,56 @@ fn prepared(
     result.map_err(|failure| {
         report::report_build_failure(failure, &opts.input, global)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn latex_stdout_preserves_empty_and_every_trailing_newline_byte() {
+        for source in ["", "no final line feed", "one\n", "two\n\n"] {
+            let mut output = Vec::new();
+            print_latex(&mut output, source).unwrap();
+            assert_eq!(output, source.as_bytes());
+        }
+    }
+
+    struct Failing {
+        kind: io::ErrorKind,
+        flush_only: bool,
+    }
+
+    impl Write for Failing {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            if self.flush_only {
+                Ok(bytes.len())
+            } else {
+                Err(io::Error::from(self.kind))
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Err(io::Error::from(self.kind))
+        }
+    }
+
+    #[test]
+    fn latex_stdout_ignores_only_broken_pipes_in_write_or_flush() {
+        for flush_only in [false, true] {
+            assert!(
+                print_latex(
+                    Failing { kind: io::ErrorKind::BrokenPipe, flush_only },
+                    "complete source"
+                )
+                .is_ok()
+            );
+            let error = print_latex(
+                Failing { kind: io::ErrorKind::PermissionDenied, flush_only },
+                "complete source",
+            )
+            .unwrap_err();
+            assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        }
+    }
 }

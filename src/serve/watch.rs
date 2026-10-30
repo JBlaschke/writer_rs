@@ -981,6 +981,17 @@ pub fn run_build_watch_with(
     opts: &BuildOptions, targets: &[Target],
     mut report: impl FnMut(WatchStatus<'_>) -> ControlFlow<()>,
 ) -> Result<()> {
+    run_build_watch_recording(opts, targets, |status, _| report(status))
+}
+
+/// Supplies per-build successful directory statistics without changing statuses.
+pub(crate) fn run_build_watch_recording(
+    opts: &BuildOptions, targets: &[Target],
+    mut report: impl FnMut(
+        WatchStatus<'_>,
+        &[pipeline::WrittenDirectory],
+    ) -> ControlFlow<()>,
+) -> Result<()> {
     let mut state = BuildLoop::new(opts, targets);
     let (tx, rx) = mpsc::channel();
     let mut watcher = Watcher::start(&watch_set_before_build(&state.opts), tx)?;
@@ -990,7 +1001,7 @@ pub fn run_build_watch_with(
     else {
         return Ok(());
     };
-    if report(WatchStatus::Watching(&set)).is_break() {
+    if report(WatchStatus::Watching(&set), &[]).is_break() {
         return Ok(());
     }
     while let Some(batch) = next_batch(&rx, &state.outputs, &set) {
@@ -1000,7 +1011,7 @@ pub fn run_build_watch_with(
         if targets.is_empty() {
             continue;
         }
-        if report(WatchStatus::Changed(&batch)).is_break() {
+        if report(WatchStatus::Changed(&batch), &[]).is_break() {
             return Ok(());
         }
         let ControlFlow::Continue(next) =
@@ -1053,9 +1064,12 @@ impl BuildLoop {
 
     fn build(
         &mut self, targets: &[Target], watcher: &mut Watcher,
-        report: &mut impl FnMut(WatchStatus<'_>) -> ControlFlow<()>,
+        report: &mut impl FnMut(
+            WatchStatus<'_>,
+            &[pipeline::WrittenDirectory],
+        ) -> ControlFlow<()>,
     ) -> ControlFlow<(), WatchSet> {
-        let build = pipeline::build_targets_with_count(
+        let (build, directories) = pipeline::build_targets_recording(
             &self.opts,
             targets,
             &mut self.worlds,
@@ -1067,7 +1081,7 @@ impl BuildLoop {
         if let Err(error) = watcher.update(&set) {
             tracing::warn!("{error}");
         }
-        report(WatchStatus::Built(&build))?;
+        report(WatchStatus::Built(&build), &directories)?;
         ControlFlow::Continue(set)
     }
 

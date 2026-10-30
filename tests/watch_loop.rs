@@ -712,10 +712,15 @@ fn pages_only_changes_with_no_requested_target_are_ignored_before_reporting() {
 }
 
 #[test]
-fn unavailable_target_results_do_not_terminate_the_watch_loop() {
-    let (directory, input, _) = project("# HTML beside future target\n");
+fn template_target_failures_do_not_terminate_the_watch_loop() {
+    let (directory, input, _) =
+        project("# HTML beside invalid LaTeX template\n");
     let output = directory.path().join("out");
+    let config = directory.path().join("writer.toml");
+    write(&config, "[pdf]\nsystem_fonts=false\n[latex]\ntemplate='bad.tex'\n");
+    write(&directory.path().join("bad.tex"), "\\VAR{body}\n");
     let mut request = Request::html(&input, &output, Stop::Built(2));
+    request.config = Some(config);
     request.targets = vec![Target::Html, Target::Latex];
     let mut running = Loop::spawn(request);
     for round in 0..2 {
@@ -730,11 +735,11 @@ fn unavailable_target_results_do_not_terminate_the_watch_loop() {
             targets[1]
                 .error
                 .as_ref()
-                .is_some_and(|error| error.contains("T61"))
+                .is_some_and(|error| error.contains("has no \\VAR{preamble}"))
         );
         if round == 0 {
             watching(running.next("watch set after target failure"));
-            append(&input, "\nUpdated despite unavailable target.\n");
+            append(&input, "\nUpdated despite template failure.\n");
             changed(running.next("source edit"), ChangeKind::Content, &input);
         }
     }
@@ -745,6 +750,7 @@ fn unavailable_target_results_do_not_terminate_the_watch_loop() {
             .contains("Updated despite")
     );
     assert!(!output.join("document.tex").exists());
+    assert!(!output.join("document_assets").exists());
 }
 
 #[test]

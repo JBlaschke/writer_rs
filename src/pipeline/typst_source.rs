@@ -78,7 +78,8 @@ fn compiler_result(
         .map_err(|error| BuildFailure { error: Box::new(error), diagnostics })
 }
 
-fn consumed_inputs(
+/// Adds actual compiler-consumed resources without changing prepared roles.
+pub(crate) fn consumed_inputs(
     prepared: &Prepared, accessed: BTreeSet<PathBuf>,
 ) -> Vec<(PathBuf, InputRole)> {
     let mut inputs = super::input_files(prepared);

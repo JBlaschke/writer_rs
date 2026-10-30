@@ -1,0 +1,14 @@
+[build]
+targets = ["latex"]
+out_dir = "dist"
+
+[latex]
+template = "writer-template.tex"
+code = "highlighted"
+engine = "pdflatex"
+
+[pdf]
+# The SVG sidecar uses the embedded compiler without system fonts or downloads.
+system_fonts = false
+allow_packages = false
+timestamp = "2026-10-29T00:00:00Z"
