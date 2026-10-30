@@ -48,9 +48,14 @@ jobs:
                       assets/vendor/katex/._katex.min.js \
                       assets/themes/default/Thumbs.db \
                       assets/writer/.math.js.swp assets/writer/math.js~
+            # A hung test fails its step instead of reaching the 6 h job
+            # limit. Each limit is about 2-3x the slowest observed step
+            # (windows-latest: 10 min debug, 143 min release, mostly LTO).
             - name: cargo test
+              timeout-minutes: 30
               run: cargo test --locked --no-fail-fast
             - name: cargo test --release (embedded assets)
+              timeout-minutes: 300
               run: cargo test --locked --release --no-fail-fast
 
     vendor-drift:
