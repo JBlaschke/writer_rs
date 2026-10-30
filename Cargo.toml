@@ -25,7 +25,7 @@ toml = "1.1.8"
 serde_norway = "0.9.42"
 comrak = { version = "=0.57.0", default-features = false, features = ["attributes"] }
 rust-embed = { version = "8.13.0", features = ["include-exclude"] }
-notify = "8.2"
+notify = "=9.0.0-rc.7"
 axum = "0.8.9"
 tokio-stream = { version = "0.1.19", features = ["sync"] }
 tracing = "0.1.44"
