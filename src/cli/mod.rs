@@ -3,6 +3,7 @@
 
 pub mod build;
 pub mod check;
+mod create;
 pub mod dump;
 pub mod eject;
 pub mod init;
@@ -325,7 +326,7 @@ pub struct InitArgs {
     /// Add a bibliography and an example citation.
     #[arg(long)]
     pub bib: bool,
-    /// Allow scaffolding in a non-empty directory.
+    /// Allow unrelated files; existing scaffold files are never replaced.
     #[arg(long)]
     pub force: bool,
 }

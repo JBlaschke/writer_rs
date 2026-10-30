@@ -1,0 +1,6 @@
+name = "writer-project"
+description = "The report's local child theme"
+extends = "default"
+
+[styles]
+entries = ["styles/custom.css"]

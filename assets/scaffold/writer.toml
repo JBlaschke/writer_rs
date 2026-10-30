@@ -1,0 +1,10 @@
+[build]
+out_dir = "dist"
+
+[html]
+theme = "theme"
+standalone = true
+
+[pdf]
+system_fonts = false
+allow_packages = false

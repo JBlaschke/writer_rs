@@ -132,6 +132,8 @@ writer init [DIR] [--typst] [--bib] [--force]
 - Writes `writer.toml`, `document.md` (or `document.typ` with `--typst`), `figures/plot.png`,
   `theme/` (a child theme extending `default`), `.gitignore`; `--bib` adds `refs.bib` and a
   citation to the document. Refuses non-empty directories without `--force`.
+- `--force` permits unrelated existing files; it never replaces a selected
+  scaffold file. All expected collisions are checked before creating outputs.
 
 ## eject
 ```
