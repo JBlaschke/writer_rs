@@ -16,6 +16,12 @@ use writer::latex::emit::{Emitted, Usage, emit};
 use writer::math::typst_to_latex;
 use writer::resolve::{ResolveOptions, anchor, resolve};
 
+#[path = "common/citations.rs"]
+mod citation_library;
+
+#[path = "common/latex_citations.rs"]
+mod latex_citations;
+
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
 }
@@ -314,9 +320,14 @@ fn case(
 ) -> Result<(Emitted, Diagnostics), Error> {
     let mut parsed = parsed(path, &config)?;
     config.merge_front_matter(&parsed.document.meta).unwrap();
+    let library = citation_library::load(&parsed.document, &config);
     parsed.diagnostics.extend(resolve(
         &mut parsed.document,
-        &ResolveOptions { config: &config, library: None, lenient: true },
+        &ResolveOptions {
+            config: &config,
+            library: library.as_ref(),
+            lenient: true,
+        },
     ));
     assert!(
         parsed.document.invariant_violations().is_empty(),
@@ -350,7 +361,7 @@ fn every_top_level_markdown_fixture_emits_a_body_and_honest_diagnostics() {
         })
         .collect::<Vec<_>>();
     paths.sort();
-    assert_eq!(paths.len(), 18);
+    assert_eq!(paths.len(), 20);
     for path in paths {
         let name = path.file_stem().unwrap().to_str().unwrap();
         match case(&path, Config::default()) {
@@ -364,7 +375,7 @@ fn every_top_level_markdown_fixture_emits_a_body_and_honest_diagnostics() {
 }
 
 #[test]
-fn tour_covers_every_code_and_citation_mode_without_fabricating_a_library() {
+fn tour_covers_every_code_and_citation_mode_with_the_configured_library() {
     for (code_name, code) in [
         ("verbatim", LatexCode::Verbatim),
         ("highlighted", LatexCode::Highlighted),
@@ -380,10 +391,22 @@ fn tour_covers_every_code_and_citation_mode_without_fabricating_a_library() {
             config.latex.cite = cite;
             let (output, diagnostics) =
                 case(&fixtures().join("latex/tour.md"), config).unwrap();
-            assert!(output.body.contains("{[}?doe2020; lee2019{]}"));
-            assert!(
-                !output.body.contains("\\autocite")
-                    && !output.body.contains("\\citep")
+            assert!(!diagnostics.has_errors(), "{diagnostics:?}");
+            latex_citations::assert_tour_commands(&output.body, cite);
+            let unsupported = diagnostics
+                .iter()
+                .filter(|finding| {
+                    finding.code == "unsupported-construct"
+                        && finding.message.starts_with("latex: citation mode ")
+                })
+                .count();
+            assert_eq!(
+                unsupported,
+                match cite {
+                    LatexCite::Biblatex => 0,
+                    LatexCite::Natbib => 1,
+                    LatexCite::Plain => 4,
+                }
             );
             assert!(!output.abstract_.is_empty());
             insta::assert_json_snapshot!(

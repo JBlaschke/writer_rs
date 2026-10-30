@@ -1,0 +1,13 @@
+---
+source: tests/check_corpus.rs
+expression: stable(&diagnostics)
+---
+[
+  {
+    "level": "warning",
+    "code": "cite-prose-note-style",
+    "file": "md/citations-notes.md",
+    "line": 19,
+    "cell": null
+  }
+]

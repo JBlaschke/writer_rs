@@ -1,0 +1,5 @@
+---
+source: tests/typst_emit.rs
+expression: stable_diagnostics
+---
+warning cite-prose-note-style [fixtures]/citations-notes.md:19 prose citations render oddly in note styles (`chicago-notes`)

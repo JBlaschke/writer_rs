@@ -1,0 +1,5 @@
+---
+source: tests/html_snapshots.rs
+expression: "diagnostics_text(&parsed.diagnostics, &source.path)"
+---
+warning cite-prose-note-style [fixtures]/citations-notes.md:19 prose citations render oddly in note styles (`chicago-notes`)

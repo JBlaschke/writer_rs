@@ -35,7 +35,7 @@ See #link(<results-and-discussion>)[the results];.
 
 A label group @fig-a, #ref(<fig-b>);.
 
-Citations \[?doe2020; lee2019\], \[?knuth1984\], and \[?doe2020\].
+Citations #cite(<doe2020>, form: "prose") #cite(<lee2019>, form: "prose", supplement: [p. 12]), #cite(<knuth1984>, form: "year"), and see @doe2020.
 
 Write \@literal for an at sign and keep the dot after #ref(<x>);.
 
@@ -46,3 +46,5 @@ Write \@literal for an at sign and keep the dot after #ref(<x>);.
 === Another duplicate label <sec-duplicate>
 
 === A reserved label <fn-1>
+
+#bibliography(("/__writer/bib/0/refs.bib",), style: "ieee")

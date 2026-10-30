@@ -3,117 +3,213 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "Footnotes and repeated references",
-    "subtitle": null,
-    "authors": [],
-    "date": null,
-    "abstract_": null,
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "A named note"
-        },
-        {
-          "type": "footnote",
-          "blocks": [
-            {
-              "type": "paragraph",
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "The first paragraph of a named note refers to another note"
-                },
-                {
-                  "type": "footnote",
-                  "blocks": [
-                    {
-                      "type": "paragraph",
-                      "inlines": [
-                        {
-                          "type": "text",
-                          "text": "A nested footnote reference's content."
-                        }
-                      ]
-                    }
-                  ],
-                  "label": "b",
-                  "number": 2
-                },
-                {
-                  "type": "text",
-                  "text": "."
-                }
-              ]
-            },
-            {
-              "type": "paragraph",
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "A second paragraph in the same note."
-                }
-              ]
-            }
-          ],
-          "label": "a",
-          "number": 1
-        },
-        {
-          "type": "text",
-          "text": ", the same note again"
-        },
-        {
-          "type": "footnote_ref",
-          "label": "a",
-          "number": 1
-        },
-        {
-          "type": "text",
-          "text": ", and an inline note"
-        },
-        {
-          "type": "footnote",
-          "blocks": [
-            {
-              "type": "paragraph",
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "Inline content."
-                }
-              ]
-            }
-          ],
-          "label": null,
-          "number": 3
-        },
-        {
-          "type": "text",
-          "text": "."
-        }
-      ]
+  "canonical": {
+    "meta": {
+      "title": "Footnotes and repeated references",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
+    },
+    "blocks": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A named note"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "The first paragraph of a named note refers to another note"
+                  },
+                  {
+                    "type": "footnote",
+                    "blocks": [
+                      {
+                        "type": "paragraph",
+                        "inlines": [
+                          {
+                            "type": "text",
+                            "text": "A nested footnote reference's content."
+                          }
+                        ]
+                      }
+                    ],
+                    "label": "b",
+                    "number": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "A second paragraph in the same note."
+                  }
+                ]
+              }
+            ],
+            "label": "a",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": ", the same note again"
+          },
+          {
+            "type": "footnote_ref",
+            "label": "a",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": ", and an inline note"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Inline content."
+                  }
+                ]
+              }
+            ],
+            "label": null,
+            "number": 3
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      }
+    ],
+    "features": {
+      "math": false,
+      "code": false,
+      "notebook": false,
+      "citations": false,
+      "footnotes": true
+    },
+    "resolved": {
+      "labels": {},
+      "toc": [],
+      "bibliography": null,
+      "footnotes": 3
     }
-  ],
-  "features": {
-    "math": false,
-    "code": false,
-    "notebook": false,
-    "citations": false,
-    "footnotes": true
   },
-  "resolved": {
-    "labels": {},
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A named note"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "The first paragraph of a named note refers to another note"
+                  },
+                  {
+                    "type": "footnote",
+                    "blocks": [
+                      {
+                        "type": "paragraph",
+                        "inlines": [
+                          {
+                            "type": "text",
+                            "text": "A nested footnote reference's content."
+                          }
+                        ]
+                      }
+                    ],
+                    "label": "b",
+                    "number": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "A second paragraph in the same note."
+                  }
+                ]
+              }
+            ],
+            "label": "a",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": ", the same note again"
+          },
+          {
+            "type": "footnote_ref",
+            "label": "a",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": ", and an inline note"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Inline content."
+                  }
+                ]
+              }
+            ],
+            "label": null,
+            "number": 3
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      }
+    ],
     "toc": [],
-    "bibliography": null,
-    "footnotes": 3
+    "bibliography": null
   }
 }

@@ -3,491 +3,939 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "Tables and captions",
-    "subtitle": null,
-    "authors": [],
-    "date": null,
-    "abstract_": null,
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "figure",
-      "kind": "table",
-      "caption": [
-        {
-          "type": "text",
-          "text": "A caption before the table"
-        }
-      ],
-      "body": [
-        {
-          "type": "table",
-          "columns": [
-            {
-              "align": "left",
-              "width": null
-            },
-            {
-              "align": "center",
-              "width": null
-            },
-            {
-              "align": "right",
-              "width": null
-            }
-          ],
-          "head": [
-            {
-              "cells": [
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "left"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "center"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "right"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                }
-              ]
-            }
-          ],
-          "body": [
-            {
-              "cells": [
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "one"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "two"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "three"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                }
-              ]
-            }
-          ],
-          "foot": [],
-          "attrs": {
-            "id": null,
-            "classes": [],
-            "pairs": {}
+  "canonical": {
+    "meta": {
+      "title": "Tables and captions",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
+    },
+    "blocks": [
+      {
+        "type": "figure",
+        "kind": "table",
+        "caption": [
+          {
+            "type": "text",
+            "text": "A caption before the table"
           }
-        }
-      ],
-      "attrs": {
-        "id": "tbl-before",
-        "classes": [],
-        "pairs": {}
-      },
-      "number": "1"
-    },
-    {
-      "type": "figure",
-      "kind": "table",
-      "caption": [
-        {
-          "type": "text",
-          "text": "A caption after the table"
-        }
-      ],
-      "body": [
-        {
-          "type": "table",
-          "columns": [
-            {
-              "align": "default",
-              "width": null
-            },
-            {
-              "align": "right",
-              "width": null
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "left",
+                "width": null
+              },
+              {
+                "align": "center",
+                "width": null
+              },
+              {
+                "align": "right",
+                "width": null
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "left"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "center"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "right"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "one"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "two"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "three"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
             }
-          ],
-          "head": [
-            {
-              "cells": [
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "item"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "count"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                }
-              ]
-            }
-          ],
-          "body": [
-            {
-              "cells": [
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "alpha"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "1"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                }
-              ]
-            }
-          ],
-          "foot": [],
-          "attrs": {
-            "id": null,
-            "classes": [],
-            "pairs": {}
           }
-        }
-      ],
-      "attrs": {
-        "id": "tbl-after",
-        "classes": [],
-        "pairs": {}
+        ],
+        "attrs": {
+          "id": "tbl-before",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1"
       },
-      "number": "2"
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Table: An orphan caption {#tbl-orphan}"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "A paragraph separates the orphan from any table."
-        }
-      ]
-    },
-    {
-      "type": "table",
-      "columns": [
-        {
-          "align": "default",
-          "width": null
+      {
+        "type": "figure",
+        "kind": "table",
+        "caption": [
+          {
+            "type": "text",
+            "text": "A caption after the table"
+          }
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "default",
+                "width": null
+              },
+              {
+                "align": "right",
+                "width": null
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "item"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "count"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "alpha"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "1"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            }
+          }
+        ],
+        "attrs": {
+          "id": "tbl-after",
+          "classes": [],
+          "pairs": {}
         },
-        {
-          "align": "default",
-          "width": null
+        "number": "2"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Table: An orphan caption {#tbl-orphan}"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A paragraph separates the orphan from any table."
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "columns": [
+          {
+            "align": "default",
+            "width": null
+          },
+          {
+            "align": "default",
+            "width": null
+          }
+        ],
+        "head": [
+          {
+            "cells": [
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "pandoc"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": true
+              },
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "caption"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": true
+              }
+            ]
+          }
+        ],
+        "body": [
+          {
+            "cells": [
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "a"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              },
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "b"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              }
+            ]
+          },
+          {
+            "cells": [
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": ": A pandoc caption is retained with a compatibility warning."
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              },
+              {
+                "inlines": [],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              }
+            ]
+          }
+        ],
+        "foot": [],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
         }
-      ],
-      "head": [
-        {
-          "cells": [
-            {
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "pandoc"
-                }
-              ],
-              "align": null,
-              "colspan": 1,
-              "rowspan": 1,
-              "header": true
-            },
-            {
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "caption"
-                }
-              ],
-              "align": null,
-              "colspan": 1,
-              "rowspan": 1,
-              "header": true
+      },
+      {
+        "type": "figure",
+        "kind": "table",
+        "caption": [
+          {
+            "type": "text",
+            "text": "A labelled table"
+          }
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "default",
+                "width": null
+              },
+              {
+                "align": "right",
+                "width": null
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "column"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "value"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "x"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "2"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
             }
-          ]
-        }
-      ],
-      "body": [
-        {
-          "cells": [
-            {
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "a"
-                }
-              ],
-              "align": null,
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            {
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "b"
-                }
-              ],
-              "align": null,
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            }
-          ]
+          }
+        ],
+        "attrs": {
+          "id": "tbl-wrapped",
+          "classes": [],
+          "pairs": {}
         },
-        {
-          "cells": [
-            {
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": ": A pandoc caption is retained with a compatibility warning."
-                }
-              ],
-              "align": null,
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            {
-              "inlines": [],
-              "align": null,
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            }
-          ]
-        }
-      ],
-      "foot": [],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
+        "number": "3"
       }
+    ],
+    "features": {
+      "math": false,
+      "code": false,
+      "notebook": false,
+      "citations": false,
+      "footnotes": false
     },
-    {
-      "type": "figure",
-      "kind": "table",
-      "caption": [
-        {
-          "type": "text",
-          "text": "A labelled table"
+    "resolved": {
+      "labels": {
+        "tbl-after": {
+          "kind": "table",
+          "number": "2",
+          "supplement": "Table",
+          "text": "A caption after the table",
+          "span": null
+        },
+        "tbl-before": {
+          "kind": "table",
+          "number": "1",
+          "supplement": "Table",
+          "text": "A caption before the table",
+          "span": null
+        },
+        "tbl-wrapped": {
+          "kind": "table",
+          "number": "3",
+          "supplement": "Table",
+          "text": "A labelled table",
+          "span": null
         }
-      ],
-      "body": [
-        {
-          "type": "table",
-          "columns": [
-            {
-              "align": "default",
-              "width": null
-            },
-            {
-              "align": "right",
-              "width": null
-            }
-          ],
-          "head": [
-            {
-              "cells": [
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "column"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "value"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": true
-                }
-              ]
-            }
-          ],
-          "body": [
-            {
-              "cells": [
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "x"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                },
-                {
-                  "inlines": [
-                    {
-                      "type": "text",
-                      "text": "2"
-                    }
-                  ],
-                  "align": null,
-                  "colspan": 1,
-                  "rowspan": 1,
-                  "header": false
-                }
-              ]
-            }
-          ],
-          "foot": [],
-          "attrs": {
-            "id": null,
-            "classes": [],
-            "pairs": {}
-          }
-        }
-      ],
-      "attrs": {
-        "id": "tbl-wrapped",
-        "classes": [],
-        "pairs": {}
       },
-      "number": "3"
+      "toc": [],
+      "bibliography": null,
+      "footnotes": 0
     }
-  ],
-  "features": {
-    "math": false,
-    "code": false,
-    "notebook": false,
-    "citations": false,
-    "footnotes": false
   },
-  "resolved": {
-    "labels": {
-      "tbl-after": {
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "figure",
         "kind": "table",
-        "number": "2",
-        "supplement": "Table",
-        "text": "A caption after the table",
-        "span": null
+        "caption": [
+          {
+            "type": "text",
+            "text": "A caption before the table"
+          }
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "left",
+                "width": null
+              },
+              {
+                "align": "center",
+                "width": null
+              },
+              {
+                "align": "right",
+                "width": null
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "left"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "center"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "right"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "one"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "two"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "three"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            }
+          }
+        ],
+        "attrs": {
+          "id": "tbl-before",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1"
       },
-      "tbl-before": {
+      {
+        "type": "figure",
         "kind": "table",
-        "number": "1",
-        "supplement": "Table",
-        "text": "A caption before the table",
-        "span": null
+        "caption": [
+          {
+            "type": "text",
+            "text": "A caption after the table"
+          }
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "default",
+                "width": null
+              },
+              {
+                "align": "right",
+                "width": null
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "item"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "count"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "alpha"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "1"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            }
+          }
+        ],
+        "attrs": {
+          "id": "tbl-after",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "2"
       },
-      "tbl-wrapped": {
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Table: An orphan caption {#tbl-orphan}"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A paragraph separates the orphan from any table."
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "columns": [
+          {
+            "align": "default",
+            "width": null
+          },
+          {
+            "align": "default",
+            "width": null
+          }
+        ],
+        "head": [
+          {
+            "cells": [
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "pandoc"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": true
+              },
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "caption"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": true
+              }
+            ]
+          }
+        ],
+        "body": [
+          {
+            "cells": [
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "a"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              },
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "b"
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              }
+            ]
+          },
+          {
+            "cells": [
+              {
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": ": A pandoc caption is retained with a compatibility warning."
+                  }
+                ],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              },
+              {
+                "inlines": [],
+                "align": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "header": false
+              }
+            ]
+          }
+        ],
+        "foot": [],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "figure",
         "kind": "table",
-        "number": "3",
-        "supplement": "Table",
-        "text": "A labelled table",
-        "span": null
+        "caption": [
+          {
+            "type": "text",
+            "text": "A labelled table"
+          }
+        ],
+        "body": [
+          {
+            "type": "table",
+            "columns": [
+              {
+                "align": "default",
+                "width": null
+              },
+              {
+                "align": "right",
+                "width": null
+              }
+            ],
+            "head": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "column"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "value"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": true
+                  }
+                ]
+              }
+            ],
+            "body": [
+              {
+                "cells": [
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "x"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  },
+                  {
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "2"
+                      }
+                    ],
+                    "align": null,
+                    "colspan": 1,
+                    "rowspan": 1,
+                    "header": false
+                  }
+                ]
+              }
+            ],
+            "foot": [],
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {}
+            }
+          }
+        ],
+        "attrs": {
+          "id": "tbl-wrapped",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "3"
       }
-    },
+    ],
     "toc": [],
-    "bibliography": null,
-    "footnotes": 0
+    "bibliography": null
   }
 }

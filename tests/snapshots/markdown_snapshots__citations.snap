@@ -1,0 +1,648 @@
+---
+source: tests/markdown_snapshots.rs
+expression: stable_json(&parsed.document)
+---
+{
+  "meta": {
+    "title": "Citations and bibliography",
+    "subtitle": null,
+    "authors": [],
+    "date": null,
+    "abstract_": null,
+    "keywords": [],
+    "description": null,
+    "lang": null,
+    "vars": {
+      "bibliography": "../bib/refs.bib",
+      "cite_style": "apa",
+      "numbering": {
+        "headings": "1.1"
+      }
+    }
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A document label"
+        }
+      ],
+      "attrs": {
+        "id": "sec-only",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 8,
+        "end_line": 8
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A label reference "
+        },
+        {
+          "type": "ref",
+          "target": "sec-only",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": " and a bibliography citation "
+        },
+        {
+          "type": "ref",
+          "target": "doe2020",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 10,
+            "end_line": 10
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 10,
+        "end_line": 10
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Normal "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 12,
+            "end_line": 12
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 12,
+        "end_line": 12
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Prose "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "prose",
+          "span": {
+            "start_line": 14,
+            "end_line": 14
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 14,
+        "end_line": 14
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Year "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "year",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          }
+        },
+        {
+          "type": "text",
+          "text": " and the negative shorthand "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "year",
+          "span": {
+            "start_line": 16,
+            "end_line": 16
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 16,
+        "end_line": 16
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Author "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "author",
+          "span": {
+            "start_line": 18,
+            "end_line": 18
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 18,
+        "end_line": 18
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Full "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "full",
+          "span": {
+            "start_line": 20,
+            "end_line": 20
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 20,
+        "end_line": 20
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Hidden "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "none",
+          "span": {
+            "start_line": 22,
+            "end_line": 22
+          }
+        },
+        {
+          "type": "text",
+          "text": " still lists the entry."
+        }
+      ],
+      "span": {
+        "start_line": 22,
+        "end_line": 22
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A custom locator "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "knuth1984",
+              "locator": "p. 12",
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 24,
+            "end_line": 24
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 24,
+        "end_line": 24
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A prefix starts a new subgroup "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 26,
+            "end_line": 26
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 26,
+        "end_line": 26
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A prefix before a shared subgroup "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": [
+                {
+                  "type": "text",
+                  "text": "see"
+                }
+              ],
+              "suffix": null
+            },
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 28,
+            "end_line": 28
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 28,
+        "end_line": 28
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Bare citations merge across spaces: "
+        },
+        {
+          "type": "ref",
+          "target": "doe2020",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 30,
+            "end_line": 30
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "ref",
+          "target": "lee2019",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 30,
+            "end_line": 30
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 30,
+        "end_line": 30
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Bracketed citations also merge: "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 32,
+            "end_line": 32
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "lee2019",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 32,
+            "end_line": 32
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 32,
+        "end_line": 32
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Two label references "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "sec-only",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "sec-only",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 34,
+            "end_line": 34
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 34,
+        "end_line": 34
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A group mixing a label and a bibliography key "
+        },
+        {
+          "type": "cite",
+          "items": [
+            {
+              "key": "sec-only",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            },
+            {
+              "key": "doe2020",
+              "locator": null,
+              "prefix": null,
+              "suffix": null
+            }
+          ],
+          "mode": "normal",
+          "span": {
+            "start_line": 36,
+            "end_line": 36
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 36,
+        "end_line": 36
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "An unknown bibliography key "
+        },
+        {
+          "type": "ref",
+          "target": "missing-key",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 38,
+            "end_line": 38
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 38,
+        "end_line": 38
+      }
+    },
+    {
+      "type": "bibliography",
+      "span": {
+        "start_line": 40,
+        "end_line": 41
+      }
+    }
+  ],
+  "features": {
+    "math": false,
+    "code": false,
+    "notebook": false,
+    "citations": true,
+    "footnotes": false
+  },
+  "source": {
+    "path": "[path]",
+    "kind": "markdown",
+    "base_dir": "[path]"
+  },
+  "assets": []
+}

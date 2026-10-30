@@ -1296,3 +1296,41 @@ package downloads disabled. Production export never invokes a TeX engine.
 
 Full debug/release acceptance passes. The existing debug-only adversarial
 frontend test accounts for the one-test difference between modes.
+
+
+## T70 citation integration acceptance (2026-10-29)
+
+Measured from T61 `22adf47` plus the T70 working tree, macOS arm64,
+Rust 1.99.1, cached dependencies and incremental targets. Commands use
+`/usr/bin/time -p`; these are suite timings, not cold-build measurements.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 28.95 s | 546.85 s | 248.42 s | 1,864 passed; one test expectation failure; 3 ignored |
+| `cargo test --locked --offline --test cli_typst_export` | 1.93 s | 11.11 s | 1.80 s | 9 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 9m 23s | 686.77 s | 5,832.76 s | 1,864 passed, 3 ignored |
+
+All 1,865 distinct debug cases passed across that complete run and the focused
+rerun. The sole initial failure was an expected exit status in a new CLI test:
+a directory at the Typst main path is a usage error (2), while HTML/PDF siblings
+still succeed. The corrected test keeps every output/sentinel assertion and a
+separate global missing-bibliography exit-1/no-output case. Production code did
+not change after the full debug run. No repeated case is counted twice.
+
+Configured formatting, all-target/all-feature denied-warning Clippy and
+all-feature denied-warning rustdoc pass. Twenty-three loader/driver units,
+25 resolver-related matches and 29 public cases pass. All 17 strict Markdown–
+Typst pairs and eight comparison controls pass; both comparison views preserve
+all old JSON facts for 14 non-citation snapshots. Independent reviewers cleared
+all changed markup, cache, diagnostic and LaTeX goldens. The nine tour bodies
+are byte-identical outside the citation paragraph, with unchanged usage/plans.
+
+Twelve real positive PDFLaTeX/XeLaTeX cases pass (five/seven), with eight actual
+BibTeX backend proofs and two explicitly unavailable optional Biber variants.
+Each case checks writer success, repeated TeX identity, engine logs/PDFs,
+undefined citations, glyph policy and extracted table/listing/venue text.
+Original tour, bibliography and exact minimal/BYO template bytes stay unchanged.
+The complete release suite passes. The existing debug-only adversarial frontend
+case accounts for the one-test mode difference. The native macOS arm64 release
+binary is 57,019,632 bytes; this is a local T70 measurement, not six-target
+release-artifact evidence.

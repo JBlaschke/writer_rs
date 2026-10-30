@@ -1,0 +1,31 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Citations and bibliography</h1>
+</header>
+<h1 id="sec-only"><span class="number">1</span> A document label</h1>
+<p>A label reference <a class="ref" href="#sec-only">Section 1</a> and a bibliography citation <span class="citation" data-cites="doe2020">(Doe &amp; Smith, 2020)</span>.</p>
+<p>Normal <span class="citation" data-cites="doe2020">(Doe &amp; Smith, 2020)</span>.</p>
+<p>Prose <span class="citation" data-cites="doe2020">Doe &amp; Smith (2020)</span>.</p>
+<p>Year <span class="citation" data-cites="doe2020">2020</span> and the negative shorthand <span class="citation" data-cites="doe2020">2020</span>.</p>
+<p>Author <span class="citation" data-cites="lee2019">Lee et al.</span>.</p>
+<p>Full <span class="citation" data-cites="knuth1984">Knuth, D. E. (1984). <em>The TeXbook</em>. Addison-Wesley.</span>.</p>
+<p>Hidden <span class="citation" data-cites="knuth1984"></span> still lists the entry.</p>
+<p>A custom locator <span class="citation" data-cites="knuth1984">see (Knuth, 1984, p. 12)</span>.</p>
+<p>A prefix starts a new subgroup <span class="citation" data-cites="doe2020 lee2019">(Doe &amp; Smith, 2020) see (Lee et al., 2019)</span>.</p>
+<p>A prefix before a shared subgroup <span class="citation" data-cites="doe2020 lee2019">see (Doe &amp; Smith, 2020; Lee et al., 2019)</span>.</p>
+<p>Bare citations merge across spaces: <span class="citation" data-cites="doe2020 lee2019">(Doe &amp; Smith, 2020; Lee et al., 2019)</span>.</p>
+<p>Bracketed citations also merge: <span class="citation" data-cites="doe2020 lee2019">(Doe &amp; Smith, 2020; Lee et al., 2019)</span>.</p>
+<p>Two label references <a class="ref" href="#sec-only">Section 1</a>, <a class="ref" href="#sec-only">Section 1</a>.</p>
+<p>A group mixing a label and a bibliography key <span class="unresolved-reference">[?sec-only; doe2020]</span>.</p>
+<p>An unknown bibliography key <span class="unresolved-reference">[?missing-key]</span>.</p>
+<section id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<h1 class="references-title">Bibliography</h1>
+<div id="ref-doe2020" class="csl-entry">Doe, J., &amp; Smith, J. (2020). A Study of Things. <em>Journal of Stuff</em>, <em>12</em>(3), 45–67. <a href="https://doi.org/10.1000/xyz123">https://doi.org/10.1000/xyz123</a></div>
+<div id="ref-knuth1984" class="csl-entry">Knuth, D. E. (1984). <em>The TeXbook</em>. Addison-Wesley.</div>
+<div id="ref-lee2019" class="csl-entry">Lee, A., Kim, B., &amp; Chen, C. (2019). Fast Widgets. <em>Proceedings of the Widget Conference</em>, 1–10. <a href="https://example.org/widgets">https://example.org/widgets</a></div>
+</section>
+</main>

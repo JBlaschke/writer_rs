@@ -1,0 +1,894 @@
+---
+source: tests/typst_roundtrip.rs
+expression: "stable_snapshot(actual, &right.assets)"
+---
+{
+  "canonical": {
+    "meta": {
+      "title": "Note-style citations",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
+    },
+    "blocks": [
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Notes and citations"
+          }
+        ],
+        "attrs": {
+          "id": "notes-and-citations",
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A regular note"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "An ordinary footnote with "
+                  },
+                  {
+                    "type": "emph",
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "emphasis"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "label": "ordinary",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": " precedes a note citation "
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "doe2020",
+                "locator": null,
+                "prefix": null,
+                "suffix": null
+              }
+            ],
+            "mode": "normal",
+            "resolved": {
+              "inlines": [],
+              "note": true
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A second note citation "
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "knuth1984",
+                "locator": "p. 12",
+                "prefix": null,
+                "suffix": null
+              }
+            ],
+            "mode": "normal",
+            "resolved": {
+              "inlines": [],
+              "note": true
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "The ordinary note is repeated"
+          },
+          {
+            "type": "footnote_ref",
+            "label": "ordinary",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A parent note contains another citation"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Parent note text with a nested note citation "
+                  },
+                  {
+                    "type": "cite",
+                    "items": [
+                      {
+                        "key": "lee2019",
+                        "locator": null,
+                        "prefix": null,
+                        "suffix": null
+                      }
+                    ],
+                    "mode": "normal",
+                    "resolved": {
+                      "inlines": [],
+                      "note": true
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "label": "parent",
+            "number": 4
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A grouped note citation "
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "doe2020",
+                "locator": null,
+                "prefix": null,
+                "suffix": null
+              },
+              {
+                "key": "lee2019",
+                "locator": null,
+                "prefix": null,
+                "suffix": null
+              }
+            ],
+            "mode": "normal",
+            "resolved": {
+              "inlines": [],
+              "note": true
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Prose in a note style "
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "doe2020",
+                "locator": null,
+                "prefix": null,
+                "suffix": null
+              }
+            ],
+            "mode": "prose",
+            "resolved": {
+              "inlines": [],
+              "note": false
+            }
+          },
+          {
+            "type": "text",
+            "text": " retains the engine's output."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Hidden "
+          },
+          {
+            "type": "cite",
+            "items": [
+              {
+                "key": "lee2019",
+                "locator": null,
+                "prefix": null,
+                "suffix": null
+              }
+            ],
+            "mode": "none",
+            "resolved": {
+              "inlines": [],
+              "note": false
+            }
+          },
+          {
+            "type": "text",
+            "text": " adds no note."
+          }
+        ]
+      },
+      {
+        "type": "bibliography"
+      }
+    ],
+    "features": {
+      "math": false,
+      "code": false,
+      "notebook": false,
+      "citations": true,
+      "footnotes": true
+    },
+    "resolved": {
+      "labels": {
+        "notes-and-citations": {
+          "kind": "heading",
+          "number": null,
+          "supplement": "Section",
+          "text": "Notes and citations",
+          "span": null
+        }
+      },
+      "toc": [
+        {
+          "level": 1,
+          "number": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Notes and citations"
+            }
+          ],
+          "anchor": "notes-and-citations"
+        },
+        {
+          "level": 1,
+          "number": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Bibliography"
+            }
+          ],
+          "anchor": "refs"
+        }
+      ],
+      "bibliography": {
+        "style": "chicago-notes",
+        "hanging_indent": true,
+        "entries": [
+          {
+            "key": "doe2020",
+            "prefix": null,
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Doe, Jane, and John Smith. “A Study of Things.” "
+              },
+              {
+                "type": "emph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Journal of Stuff"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " 12, no. 3 (2020): 45–67. "
+              },
+              {
+                "type": "link",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "https://doi.org/10.1000/xyz123"
+                  }
+                ],
+                "url": "https://doi.org/10.1000/xyz123",
+                "title": null,
+                "attrs": {
+                  "id": null,
+                  "classes": [],
+                  "pairs": {}
+                }
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "key": "knuth1984",
+            "prefix": null,
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Knuth, Donald E. "
+              },
+              {
+                "type": "emph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "The TeXbook"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Addison-Wesley, 1984."
+              }
+            ]
+          },
+          {
+            "key": "lee2019",
+            "prefix": null,
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Lee, Alice, Bob Kim, and Carol Chen. “Fast Widgets.” In “Proceedings of the Widget Conference.” Special issue, "
+              },
+              {
+                "type": "emph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Proceedings of the Widget Conference"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", 2019, 1–10. "
+              },
+              {
+                "type": "link",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "https://example.org/widgets"
+                  }
+                ],
+                "url": "https://example.org/widgets",
+                "title": null,
+                "attrs": {
+                  "id": null,
+                  "classes": [],
+                  "pairs": {}
+                }
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          }
+        ]
+      },
+      "footnotes": 6
+    }
+  },
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Notes and citations"
+          }
+        ],
+        "attrs": {
+          "id": "notes-and-citations",
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A regular note"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "An ordinary footnote with "
+                  },
+                  {
+                    "type": "emph",
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "emphasis"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "label": "ordinary",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": " precedes a note citation "
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Jane Doe and John Smith, “A Study of Things,” "
+                  },
+                  {
+                    "type": "emph",
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "Journal of Stuff"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " 12, no. 3 (2020): 45–67, "
+                  },
+                  {
+                    "type": "link",
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "https://doi.org/10.1000/xyz123"
+                      }
+                    ],
+                    "url": "https://doi.org/10.1000/xyz123",
+                    "title": null,
+                    "attrs": {
+                      "id": null,
+                      "classes": [],
+                      "pairs": {}
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "label": null,
+            "number": 2
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A second note citation "
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Donald E. Knuth, "
+                  },
+                  {
+                    "type": "emph",
+                    "inlines": [
+                      {
+                        "type": "text",
+                        "text": "The TeXbook"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " (Addison-Wesley, 1984), p. 12."
+                  }
+                ]
+              }
+            ],
+            "label": null,
+            "number": 3
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "The ordinary note is repeated"
+          },
+          {
+            "type": "footnote_ref",
+            "label": "ordinary",
+            "number": 1
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A parent note contains another citation"
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Parent note text with a nested note citation "
+                  },
+                  {
+                    "type": "footnote",
+                    "blocks": [
+                      {
+                        "type": "paragraph",
+                        "inlines": [
+                          {
+                            "type": "text",
+                            "text": "Alice Lee et al., “Fast Widgets,” in “Proceedings of the Widget Conference,” special issue, "
+                          },
+                          {
+                            "type": "emph",
+                            "inlines": [
+                              {
+                                "type": "text",
+                                "text": "Proceedings of the Widget Conference"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": ", 2019, 1–10, "
+                          },
+                          {
+                            "type": "link",
+                            "inlines": [
+                              {
+                                "type": "text",
+                                "text": "https://example.org/widgets"
+                              }
+                            ],
+                            "url": "https://example.org/widgets",
+                            "title": null,
+                            "attrs": {
+                              "id": null,
+                              "classes": [],
+                              "pairs": {}
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "."
+                          }
+                        ]
+                      }
+                    ],
+                    "label": null,
+                    "number": 5
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "label": "parent",
+            "number": 4
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "A grouped note citation "
+          },
+          {
+            "type": "footnote",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Doe and Smith, “A Study of Things”; Lee et al., “Fast Widgets”."
+                  }
+                ]
+              }
+            ],
+            "label": null,
+            "number": 6
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Prose in a note style Doe and Smith (“A Study of Things.” retains the engine's output."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Hidden  adds no note."
+          }
+        ]
+      },
+      {
+        "type": "bibliography"
+      }
+    ],
+    "toc": [
+      {
+        "level": 1,
+        "number": null,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Notes and citations"
+          }
+        ],
+        "anchor": "notes-and-citations"
+      },
+      {
+        "level": 1,
+        "number": null,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Bibliography"
+          }
+        ],
+        "anchor": "refs"
+      }
+    ],
+    "bibliography": {
+      "style": "chicago-notes",
+      "hanging_indent": true,
+      "entries": [
+        {
+          "key": "doe2020",
+          "prefix": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Doe, Jane, and John Smith. “A Study of Things.” "
+            },
+            {
+              "type": "emph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Journal of Stuff"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " 12, no. 3 (2020): 45–67. "
+            },
+            {
+              "type": "link",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "https://doi.org/10.1000/xyz123"
+                }
+              ],
+              "url": "https://doi.org/10.1000/xyz123",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "key": "knuth1984",
+          "prefix": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Knuth, Donald E. "
+            },
+            {
+              "type": "emph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "The TeXbook"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": ". Addison-Wesley, 1984."
+            }
+          ]
+        },
+        {
+          "key": "lee2019",
+          "prefix": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Lee, Alice, Bob Kim, and Carol Chen. “Fast Widgets.” In “Proceedings of the Widget Conference.” Special issue, "
+            },
+            {
+              "type": "emph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Proceedings of the Widget Conference"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": ", 2019, 1–10. "
+            },
+            {
+              "type": "link",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "https://example.org/widgets"
+                }
+              ],
+              "url": "https://example.org/widgets",
+              "title": null,
+              "attrs": {
+                "id": null,
+                "classes": [],
+                "pairs": {}
+              }
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

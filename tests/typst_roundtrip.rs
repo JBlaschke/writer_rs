@@ -1,7 +1,7 @@
 //! Exact Markdown -> resolved IR -> Typst -> resolved IR corpus contract.
 //!
-//! Normalization is typed and limited to typst-dialect.md §7. The sole extra
-//! coordinator amendment is notebook provenance -> surviving Cell presence.
+//! Normalization is typed and limited to typst-dialect.md §7. Citation caches
+//! retain their rendered facts in a second view before canonical affix lifting.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 use serde_json::Value;
 use writer::assets::registry::AssetRegistry;
+use writer::cite::Library;
 use writer::config::{Config, HeadingNumbering};
 use writer::ir::*;
 use writer::markdown::code::CodeAttrs;
@@ -30,7 +31,7 @@ fn fixtures() -> Vec<PathBuf> {
         })
         .collect();
     files.sort();
-    assert_eq!(files.len(), 18, "review additions to the top-level corpus");
+    assert_eq!(files.len(), 20, "review additions to the top-level corpus");
     for excluded in EXCLUDED {
         assert!(
             files.iter().any(|path| path.file_name().unwrap() == *excluded)
@@ -39,17 +40,32 @@ fn fixtures() -> Vec<PathBuf> {
     files.retain(|path| {
         !EXCLUDED.contains(&path.file_name().unwrap().to_str().unwrap())
     });
-    assert_eq!(files.len(), 15);
+    assert_eq!(files.len(), 17);
     files
 }
 
 fn resolve_side(document: &mut Document, config: &mut Config) {
     config.merge_front_matter(&document.meta).unwrap();
+    let library = if config.references.bibliography.is_empty() {
+        None
+    } else {
+        let paths: Vec<_> = config
+            .references
+            .bibliography
+            .iter()
+            .map(|path| document.source.base_dir.join(path))
+            .collect();
+        let mut library = Library::load(&paths).unwrap();
+        library
+            .set_style(&config.references.style, &document.source.base_dir)
+            .unwrap();
+        Some(library)
+    };
     // These findings are not part of the compared IR. The intentionally
     // recoverable fixtures still exercise exactly the resolver's real policy.
     let _ = resolve(
         document,
-        &ResolveOptions { config, library: None, lenient: true },
+        &ResolveOptions { config, library: library.as_ref(), lenient: true },
     );
 }
 
@@ -74,6 +90,7 @@ fn compared(document: &Document) -> Value {
 struct Normalizer<'a> {
     config: &'a Config,
     bibliography: bool,
+    rendered: bool,
 }
 
 impl Normalizer<'_> {
@@ -366,18 +383,28 @@ impl Normalizer<'_> {
                     }
                 }
                 Inline::Cite { items, mode, resolved, .. } => {
-                    // This preserves Cite itself. There is no extra rule
-                    // replacing unresolved Cite by a placeholder.
-                    if let Some(resolved) = resolved {
-                        resolved.inlines = self.inlines(
+                    if self.rendered
+                        && let Some(resolved) = resolved
+                    {
+                        // Use the actual stateful cache, including its affixes
+                        // and notes. Never rerender a split subgroup.
+                        output.extend(self.inlines(
                             std::mem::take(&mut resolved.inlines),
                             space_breaks,
-                        );
+                        ));
+                        continue;
                     }
+                    // Cache presence/note stay in the canonical lane. Its
+                    // complete content was captured in the rendered lane.
+                    let flags =
+                        resolved.as_ref().map(|resolved| ResolvedCite {
+                            inlines: Vec::new(),
+                            note: resolved.note,
+                        });
                     output.extend(self.citation(
                         std::mem::take(items),
                         *mode,
-                        resolved.clone(),
+                        flags,
                         space_breaks,
                     ));
                     continue;
@@ -408,10 +435,6 @@ impl Normalizer<'_> {
         if start < items.len() {
             groups.push(start..items.len());
         }
-        assert!(
-            resolved.is_none() || groups.len() <= 1,
-            "library=None must not produce a rendered multi-group citation cache"
-        );
         let mut output = Vec::new();
         for (index, group) in groups.iter().enumerate() {
             if index > 0 {
@@ -471,8 +494,33 @@ fn normalize(document: &mut Document, config: &Config) {
     Normalizer {
         config,
         bibliography: document.resolved.bibliography.is_some(),
+        rendered: false,
     }
     .document(document);
+}
+
+// Canonical subgroup identity and actual rendered content have different
+// boundaries after native Typst lifts affixes. Compare both without guessing
+// where an original combined cache's text belongs to an individual subgroup.
+fn compared_views(document: &Document, config: &Config) -> Value {
+    let mut rendered = document.clone();
+    Normalizer {
+        config,
+        bibliography: document.resolved.bibliography.is_some(),
+        rendered: true,
+    }
+    .document(&mut rendered);
+    let mut canonical = document.clone();
+    normalize(&mut canonical, config);
+    serde_json::json!({
+        "canonical": compared(&canonical),
+        "rendered": {
+            "abstract": rendered.meta.abstract_,
+            "blocks": rendered.blocks,
+            "toc": rendered.resolved.toc,
+            "bibliography": rendered.resolved.bibliography,
+        },
+    })
 }
 
 /// Snapshot-only redaction recognizes registered Image/Link URL fields. It
@@ -555,7 +603,7 @@ fn differences(
 }
 
 #[test]
-fn fifteen_markdown_fixtures_round_trip_with_only_the_documented_losses() {
+fn markdown_fixtures_round_trip_with_only_the_documented_losses() {
     let mut mismatches = Vec::new();
     for path in fixtures() {
         let name = path.file_stem().unwrap().to_str().unwrap();
@@ -606,10 +654,8 @@ fn fifteen_markdown_fixtures_round_trip_with_only_the_documented_losses() {
         .unwrap();
         let mut right_config = left_config.clone();
         resolve_side(&mut right.document, &mut right_config);
-        normalize(&mut left.document, &left_config);
-        normalize(&mut right.document, &right_config);
-        let expected = compared(&left.document);
-        let actual = compared(&right.document);
+        let expected = compared_views(&left.document, &left_config);
+        let actual = compared_views(&right.document, &right_config);
         if expected != actual {
             let mut findings = Vec::new();
             differences(&expected, &actual, "$", &mut findings);
@@ -638,6 +684,199 @@ fn hand_document(blocks: Vec<Block>) -> Document {
         includes: Vec::new(),
         resolved: Resolved::default(),
     }
+}
+
+fn cached_cite(items: Vec<CiteItem>, inlines: Inlines, note: bool) -> Inline {
+    Inline::Cite {
+        items,
+        mode: CiteMode::Normal,
+        span: None,
+        resolved: Some(ResolvedCite { inlines, note }),
+    }
+}
+
+// Synthetic caches isolate the comparison's sensitivity. Actual driver and
+// compiler behavior is covered independently by the public citation suites.
+fn combined_and_split_caches(note: bool) -> (Document, Document) {
+    let item = |key: &str| CiteItem { key: key.into(), ..CiteItem::default() };
+    let styled =
+        |text: &str| Inline::Emph { inlines: vec![Inline::text(text)] };
+    let fragment = |number, text: &str| {
+        if note {
+            Inline::Footnote {
+                blocks: vec![Block::paragraph(vec![styled(text)])],
+                label: None,
+                number: Some(number),
+            }
+        } else {
+            styled(text)
+        }
+    };
+    let first = fragment(1, "FIRST-CACHE");
+    let second = fragment(2, "SECOND-CACHE");
+    let mut first_item = item("a");
+    first_item.prefix = Some(vec![Inline::text("see")]);
+    let mut second_item = item("b");
+    second_item.prefix = Some(vec![Inline::text("also")]);
+    let mut combined =
+        hand_document(vec![Block::paragraph(vec![cached_cite(
+            vec![first_item, second_item],
+            vec![
+                Inline::text("see "),
+                first.clone(),
+                Inline::text(" also "),
+                second.clone(),
+            ],
+            note,
+        )])]);
+    let mut split = hand_document(vec![Block::paragraph(vec![
+        Inline::text("see "),
+        cached_cite(vec![item("a")], vec![first], note),
+        Inline::text(" also "),
+        cached_cite(vec![item("b")], vec![second], note),
+    ])]);
+    for document in [&mut combined, &mut split] {
+        document.features.citations = true;
+        document.features.footnotes = note;
+        document.resolved.footnotes = if note { 2 } else { 0 };
+    }
+    (combined, split)
+}
+
+fn last_cache(document: &mut Document) -> &mut ResolvedCite {
+    let Block::Paragraph { inlines, .. } = &mut document.blocks[0] else {
+        panic!("test paragraph missing");
+    };
+    inlines
+        .iter_mut()
+        .rev()
+        .find_map(|inline| {
+            let Inline::Cite { resolved: Some(resolved), .. } = inline else {
+                return None;
+            };
+            Some(resolved)
+        })
+        .unwrap()
+}
+
+#[test]
+fn comparison_accepts_combined_and_split_caches_without_rerendering() {
+    for note in [false, true] {
+        let (combined, split) = combined_and_split_caches(note);
+        let original = (combined.clone(), split.clone());
+        assert_eq!(
+            compared_views(&combined, &Config::default()),
+            compared_views(&split, &Config::default()),
+        );
+        assert_eq!((combined, split), original);
+    }
+}
+
+#[test]
+fn rendered_lane_retains_cache_content_and_formatting() {
+    let (combined, split) = combined_and_split_caches(false);
+    let config = Config::default();
+    let expected = compared_views(&combined, &config);
+    let mut changed = split.clone();
+    last_cache(&mut changed).inlines =
+        vec![Inline::Emph { inlines: vec![Inline::text("CHANGED-CACHE")] }];
+    let actual = compared_views(&changed, &config);
+    assert_eq!(actual["canonical"], expected["canonical"]);
+    assert_ne!(actual["rendered"], expected["rendered"]);
+
+    let mut changed = split;
+    last_cache(&mut changed).inlines =
+        vec![Inline::Strong { inlines: vec![Inline::text("SECOND-CACHE")] }];
+    let actual = compared_views(&changed, &config);
+    assert_eq!(actual["canonical"], expected["canonical"]);
+    assert_ne!(actual["rendered"], expected["rendered"]);
+}
+
+#[test]
+fn rendered_lane_retains_footnote_numbers_and_order() {
+    let (combined, split) = combined_and_split_caches(true);
+    let config = Config::default();
+    let expected = compared_views(&combined, &config);
+    let mut changed = split.clone();
+    let Inline::Footnote { number, .. } =
+        &mut last_cache(&mut changed).inlines[0]
+    else {
+        panic!("generated note missing");
+    };
+    *number = Some(99);
+    let actual = compared_views(&changed, &config);
+    assert_eq!(actual["canonical"], expected["canonical"]);
+    assert_ne!(actual["rendered"], expected["rendered"]);
+
+    let mut changed = split;
+    let Block::Paragraph { inlines, .. } = &mut changed.blocks[0] else {
+        panic!("test paragraph missing");
+    };
+    let cache = |inline: &Inline| {
+        let Inline::Cite { resolved: Some(resolved), .. } = inline else {
+            panic!("cache missing");
+        };
+        resolved.inlines.clone()
+    };
+    let first = cache(&inlines[1]);
+    let second = cache(&inlines[3]);
+    let Inline::Cite { resolved: Some(resolved), .. } = &mut inlines[1] else {
+        panic!("first cache missing");
+    };
+    resolved.inlines = second;
+    let Inline::Cite { resolved: Some(resolved), .. } = &mut inlines[3] else {
+        panic!("second cache missing");
+    };
+    resolved.inlines = first;
+    let actual = compared_views(&changed, &config);
+    assert_eq!(actual["canonical"], expected["canonical"]);
+    assert_ne!(actual["rendered"], expected["rendered"]);
+}
+
+#[test]
+fn canonical_lane_retains_cache_presence_note_flags_keys_and_modes() {
+    let (combined, split) = combined_and_split_caches(false);
+    let config = Config::default();
+    let expected = compared_views(&combined, &config);
+    let mut changed = split.clone();
+    last_cache(&mut changed).note = true;
+    let actual = compared_views(&changed, &config);
+    assert_ne!(actual["canonical"], expected["canonical"]);
+    assert_eq!(actual["rendered"], expected["rendered"]);
+
+    let mut changed = split.clone();
+    let Block::Paragraph { inlines, .. } = &mut changed.blocks[0] else {
+        panic!("test paragraph missing");
+    };
+    let Inline::Cite { mode, .. } = &mut inlines[3] else {
+        panic!("second citation missing");
+    };
+    *mode = CiteMode::Year;
+    let actual = compared_views(&changed, &config);
+    assert_ne!(actual["canonical"], expected["canonical"]);
+    assert_eq!(actual["rendered"], expected["rendered"]);
+
+    let mut changed = split.clone();
+    let Block::Paragraph { inlines, .. } = &mut changed.blocks[0] else {
+        panic!("test paragraph missing");
+    };
+    let Inline::Cite { items, .. } = &mut inlines[3] else {
+        panic!("second citation missing");
+    };
+    items[0].key = "different-key".into();
+    let actual = compared_views(&changed, &config);
+    assert_ne!(actual["canonical"], expected["canonical"]);
+    assert_eq!(actual["rendered"], expected["rendered"]);
+
+    let mut changed = split;
+    let Block::Paragraph { inlines, .. } = &mut changed.blocks[0] else {
+        panic!("test paragraph missing");
+    };
+    let Inline::Cite { resolved, .. } = &mut inlines[3] else {
+        panic!("second citation missing");
+    };
+    *resolved = None;
+    assert_ne!(compared_views(&changed, &config), expected);
 }
 
 #[test]

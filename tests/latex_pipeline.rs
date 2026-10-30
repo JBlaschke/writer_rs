@@ -8,12 +8,15 @@ use std::process::Output;
 use assert_cmd::Command;
 use typst::World;
 use typst::foundations::Datetime;
-use writer::config::{Config, Target};
+use writer::config::{Config, LatexCite, Target};
 use writer::error::{Error, Level};
 use writer::latex::{self, FileSource, PlannedFile};
 use writer::pipeline::{self, BuildOptions, Prepared, WorldSlot};
 use writer::typst::sourcemap::SourceMap;
 use writer::typst::world::{MainFile, WriterWorld};
+
+#[path = "common/latex_citations.rs"]
+mod latex_citations;
 
 const SETTINGS: &str = "[build]\nout_dir='out'\ntargets=['latex']\n[pdf]\nsystem_fonts=false\nallow_packages=false\ntimestamp='2026-10-29T00:00:00Z'\n";
 const PNG: &[u8] = include_bytes!("fixtures/latex/images/plot.png");
@@ -162,31 +165,28 @@ fn pure_render_materialise_and_dump_preserve_inputs_and_write_nothing() {
 }
 
 #[test]
-fn full_tour_sample_snapshot_preserves_the_current_t70_placeholders() {
+fn full_tour_sample_snapshot_uses_real_citations_and_bibliography() {
     let root = project("Unused main.\n");
     let mut options = options(root.path());
     options.input = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/latex/tour.md");
     let prepared = pipeline::prepare(&options).unwrap();
-    let errors: Vec<_> = prepared
-        .diagnostics
-        .iter()
-        .filter(|finding| finding.level == Level::Error)
-        .collect();
-    assert_eq!(errors.len(), 8, "{:?}", prepared.diagnostics);
-    assert!(errors.iter().all(|finding| {
-        finding.code == "unresolved-reference"
-            && ["doe2020", "lee2019", "knuth1984"]
-                .iter()
-                .any(|key| finding.message.contains(&format!("`<{key}>`")))
-    }));
+    assert!(!prepared.diagnostics.has_errors(), "{:?}", prepared.diagnostics);
+    assert!(prepared.document.features.citations);
+    let bibliography =
+        prepared.document.resolved.bibliography.as_ref().unwrap();
+    assert_eq!(bibliography.entries.len(), 3);
     let output = latex::render(
         &prepared.document, &prepared.assets, &prepared.config, "tour",
     )
     .unwrap();
     assert!(!output.diagnostics.has_errors(), "{:?}", output.diagnostics);
-    assert!(output.tex.contains("{[}?doe2020; lee2019{]}"));
-    assert_eq!(output.tex.matches("{[}?knuth1984{]}").count(), 6);
+    latex_citations::assert_tour_commands(&output.tex, LatexCite::Biblatex);
+    assert!(output.tex.contains("\\addbibresource{tour_assets/refs.bib}"));
+    assert!(output.tex.contains("\\printbibliography"));
+    assert!(output.files.iter().any(|file| {
+        file.name == "refs.bib" && matches!(&file.source, FileSource::Bib(_))
+    }));
     insta::assert_snapshot!("tour_sample", output.tex);
     assert!(!root.path().join("out").exists());
 }
@@ -260,13 +260,14 @@ fn physical_renditions_and_bibliography_are_exact_complete_and_deterministic() {
 }
 
 #[test]
-fn dump_never_decodes_images_or_reads_bibliography_and_cli_writes_no_files() {
+fn dump_never_decodes_images_and_prepared_dump_does_not_reread_bibliography() {
     let root = project("![Invalid vector](broken.svg)\n");
     write(root.path(), "broken.svg", b"not SVG bytes");
+    write(root.path(), "refs.bib", BIB);
     write(
         root.path(),
         "writer.toml",
-        format!("{SETTINGS}[references]\nbibliography=['missing/refs.bib']\n",),
+        format!("{SETTINGS}[references]\nbibliography=['refs.bib']\n"),
     );
     let (options, prepared) = prepare(root.path());
     let before = inventory(root.path());
@@ -280,6 +281,15 @@ fn dump_never_decodes_images_or_reads_bibliography_and_cli_writes_no_files() {
         .unwrap();
     success(&result);
     assert_eq!(String::from_utf8(result.stdout).unwrap(), dump);
+    assert_eq!(inventory(root.path()), before);
+    // The CLI prepares and therefore reads the library. The pure prepared
+    // dump only renders its existing plan, even if that resource later vanishes.
+    fs::remove_file(root.path().join("refs.bib")).unwrap();
+    let before = inventory(root.path());
+    let (again, diagnostics) =
+        pipeline::latex::dump(&prepared, &options).unwrap();
+    assert!(!diagnostics.has_errors());
+    assert_eq!(again, dump);
     assert_eq!(inventory(root.path()), before);
     assert!(!root.path().join("out").exists());
 }
@@ -312,7 +322,9 @@ fn renderer_and_copy_errors_preserve_last_good_outputs_and_new_parent_absence()
         "writer.toml",
         format!("{SETTINGS}[references]\nbibliography=['missing.bib']\n",),
     );
+    write(root.path(), "missing.bib", BIB);
     let (options, missing) = prepare(root.path());
+    fs::remove_file(root.path().join("missing.bib")).unwrap();
     assert!(matches!(
         pipeline::latex::build(&missing, &options, &fresh, &mut world),
         Err(Error::Resource { what: "bibliography", .. })

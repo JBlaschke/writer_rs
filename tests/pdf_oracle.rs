@@ -16,6 +16,9 @@ use writer::typst::compile::{OracleEntry, compile_document, oracle};
 use writer::typst::emit::{AssetPaths, EmitOptions, emit};
 use writer::typst::world::{MainFile, WriterWorld, world_inputs};
 
+#[path = "common/citations.rs"]
+mod citation_library;
+
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
 }
@@ -50,11 +53,12 @@ fn prepare(fixture: &str, policy: Option<NumberingConfig>) -> Prepared {
     }
     prepared.config.pdf.system_fonts = false;
     prepared.config.pdf.allow_packages = false;
+    let library = citation_library::load(&prepared.document, &prepared.config);
     prepared.diagnostics.extend(resolve(
         &mut prepared.document,
         &ResolveOptions {
             config: &prepared.config,
-            library: None,
+            library: library.as_ref(),
             lenient: true,
         },
     ));
@@ -140,10 +144,7 @@ fn check(
             mounted_file(&mut world, path, &format!("/__writer/bib/{index}"))
         })
         .collect();
-    let style = if Path::new(&config.references.style)
-        .extension()
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("csl"))
-    {
+    let style = if Path::new(&config.references.style).extension().is_some() {
         mounted_file(
             &mut world,
             Path::new(&config.references.style),

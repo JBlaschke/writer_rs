@@ -4,34 +4,6 @@ expression: stable(&diagnostics)
 ---
 [
   {
-    "level": "warning",
-    "code": "unresolved-reference",
-    "file": "md/references.md",
-    "line": 30,
-    "cell": null
-  },
-  {
-    "level": "warning",
-    "code": "unresolved-reference",
-    "file": "md/references.md",
-    "line": 30,
-    "cell": null
-  },
-  {
-    "level": "warning",
-    "code": "unresolved-reference",
-    "file": "md/references.md",
-    "line": 30,
-    "cell": null
-  },
-  {
-    "level": "warning",
-    "code": "unresolved-reference",
-    "file": "md/references.md",
-    "line": 30,
-    "cell": null
-  },
-  {
     "level": "error",
     "code": "duplicate-label",
     "file": "md/references.md",

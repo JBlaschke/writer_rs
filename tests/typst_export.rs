@@ -11,7 +11,7 @@ use typst::layout::{Frame, FrameItem};
 use typst_layout::PagedDocument;
 use writer::config::Config;
 use writer::error::Diagnostics;
-use writer::ir::{Attrs, Bibliography, Block, Inline};
+use writer::ir::{Attrs, Block, Inline};
 use writer::pipeline::{self, BuildOptions, Prepared};
 use writer::typst::compile::{compile_document, oracle};
 use writer::typst::package;
@@ -400,7 +400,7 @@ fn bibliography_csl_template_and_attachment_collisions_compile_from_exact_copies
  {
     let source = project(concat!(
         "---\ntitle: PORTABLE-TITLE\n---\n\n# Resources\n\n",
-        "```{=typst}\n#cite(<alpha>) #cite(<beta>)\n```\n",
+        "[@alpha; @beta].\n\n```{=typst}\n#cite(<alpha>) #cite(<beta>)\n```\n",
     ));
     let first =
         b"@book{alpha, author={Writer, A.}, title={ALPHA-BOOK}, year={2026}}\n";
@@ -418,14 +418,20 @@ fn bibliography_csl_template_and_attachment_collisions_compile_from_exact_copies
         ),
     );
     let (options, mut prepared) = prepare(source.path(), "document.md");
-    // T70 is pending. Only populate its resolved state to exercise the actual
-    // bibliography call, following the existing PDF resource fixture contract.
-    prepared.document.resolved.bibliography = Some(Bibliography {
-        style: prepared.config.references.style.clone(),
-        hanging_indent: false,
-        entries: Vec::new(),
-    });
-    prepared.document.blocks.push(Block::Bibliography { span: None });
+    assert!(prepared.document.features.citations);
+    assert_eq!(
+        prepared.document.resolved.bibliography.as_ref().unwrap().entries.len(),
+        2
+    );
+    assert_eq!(
+        prepared
+            .document
+            .blocks
+            .iter()
+            .filter(|block| matches!(block, Block::Bibliography { .. }))
+            .count(),
+        1
+    );
     let attachment = prepared.assets.register_bytes(
         b"attachment bytes".to_vec(),
         "application/octet-stream",
@@ -510,7 +516,13 @@ fn canonical_repeated_resources_share_one_copy_and_named_styles_are_not_files()
             "{CONFIG}[references]\nbibliography=['refs.bib','./refs.bib']\nstyle='ieee'\n"
         ),
     );
-    let (options, prepared) = prepare(source.path(), "document.md");
+    // This public prepared-input contract isolates the resource-copy planner.
+    // Real prepare intentionally rejects repeated nonempty bibliography inputs.
+    let mut options = BuildOptions::new(source.path().join("document.md"));
+    options.config_path = Some(source.path().join("writer.toml"));
+    let prepared = pipeline::parse_only(&options).unwrap();
+    assert!(!prepared.diagnostics.has_errors());
+
     let destination = tempfile::tempdir().unwrap();
     let output = destination.path().join("once.typ");
     let (written, _) = export(&options, &prepared, &output);
@@ -529,7 +541,13 @@ fn resource_read_or_destination_clash_failure_preserves_the_complete_existing_tr
         "writer.toml",
         format!("{CONFIG}[references]\nbibliography=['missing/refs.bib']\n"),
     );
+    write(
+        source.path(),
+        "missing/refs.bib",
+        b"@book{saved,title={Saved},year={2026}}\n",
+    );
     let (options, prepared) = prepare(source.path(), "document.md");
+    fs::remove_file(source.path().join("missing/refs.bib")).unwrap();
     let destination = tempfile::tempdir().unwrap();
     write(destination.path(), "sentinel.typ", b"previous generated source");
     let output = destination.path().join("new/nested.typ");

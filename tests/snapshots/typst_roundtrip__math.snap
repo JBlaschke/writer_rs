@@ -3,286 +3,542 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "Math sources and labels",
-    "subtitle": null,
-    "authors": [],
-    "date": null,
-    "abstract_": null,
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Inline "
-        },
-        {
-          "type": "math",
-          "source": "\\frac{a}{b}",
-          "dialect": "latex"
-        },
-        {
-          "type": "text",
-          "text": "."
-        }
-      ]
+  "canonical": {
+    "meta": {
+      "title": "Math sources and labels",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
     },
-    {
-      "type": "math",
-      "source": "\\sum_{i=0}^{n} i",
-      "dialect": "latex",
-      "attrs": {
-        "id": "eq-sum",
-        "classes": [],
-        "pairs": {}
-      },
-      "number": "1"
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "See "
-        },
-        {
-          "type": "ref",
-          "target": "eq-sum",
-          "supplement": null,
-          "form": "normal",
-          "resolved": {
-            "kind": "equation",
-            "number": "1",
-            "text": [
-              {
-                "type": "text",
-                "text": "Equation 1"
-              }
-            ],
-            "anchor": "eq-sum"
+    "blocks": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Inline "
+          },
+          {
+            "type": "math",
+            "source": "\\frac{a}{b}",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
           }
-        },
-        {
-          "type": "text",
-          "text": "."
-        }
-      ]
-    },
-    {
-      "type": "math",
-      "source": "\\begin{aligned} a &= b + c \\\\ &= d \\end{aligned}",
-      "dialect": "latex",
-      "attrs": {
-        "id": "eq-aligned",
-        "classes": [],
-        "pairs": {}
+        ]
       },
-      "number": "2"
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Accents "
+      {
+        "type": "math",
+        "source": "\\sum_{i=0}^{n} i",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-sum",
+          "classes": [],
+          "pairs": {}
         },
-        {
-          "type": "math",
-          "source": "\\hat{x} \\vec{v} \\dot{y}",
-          "dialect": "latex"
+        "number": "1"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "See "
+          },
+          {
+            "type": "ref",
+            "target": "eq-sum",
+            "supplement": null,
+            "form": "normal",
+            "resolved": {
+              "kind": "equation",
+              "number": "1",
+              "text": [
+                {
+                  "type": "text",
+                  "text": "Equation 1"
+                }
+              ],
+              "anchor": "eq-sum"
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "math",
+        "source": "\\begin{aligned} a &= b + c \\\\ &= d \\end{aligned}",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-aligned",
+          "classes": [],
+          "pairs": {}
         },
-        {
-          "type": "text",
-          "text": "."
+        "number": "2"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Accents "
+          },
+          {
+            "type": "math",
+            "source": "\\hat{x} \\vec{v} \\dot{y}",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "math",
+        "source": "x = 1  ",
+        "dialect": "latex",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
         }
-      ]
-    },
-    {
-      "type": "math",
-      "source": "x = 1  ",
-      "dialect": "latex",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Macros "
+          },
+          {
+            "type": "math",
+            "source": "\\RR^n + \\half{x}",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Inline "
+          },
+          {
+            "type": "math",
+            "source": "x + y",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": " and display "
+          },
+          {
+            "type": "math",
+            "source": "x^2",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "math",
+        "source": "x = y",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-x",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "3"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "math",
+            "source": "z = 2",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": " trailing prose {#eq-misplaced}"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "The escaped dollar price is $5."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Energy "
+          },
+          {
+            "type": "math",
+            "source": "E = mc^2",
+            "dialect": "latex"
+          }
+        ],
+        "attrs": {
+          "id": "energy-e-mc2",
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "list",
+        "kind": {
+          "kind": "bullet"
+        },
+        "tight": true,
+        "items": [
+          {
+            "checked": null,
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Math inside a list: "
+                  },
+                  {
+                    "type": "math",
+                    "source": "x_1",
+                    "dialect": "latex"
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
+    ],
+    "features": {
+      "math": true,
+      "code": false,
+      "notebook": false,
+      "citations": false,
+      "footnotes": false
     },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Macros "
+    "resolved": {
+      "labels": {
+        "energy-e-mc2": {
+          "kind": "heading",
+          "number": null,
+          "supplement": "Section",
+          "text": "Energy E = mc^2",
+          "span": null
         },
-        {
-          "type": "math",
-          "source": "\\RR^n + \\half{x}",
-          "dialect": "latex"
+        "eq-aligned": {
+          "kind": "equation",
+          "number": "2",
+          "supplement": "Equation",
+          "text": null,
+          "span": null
         },
-        {
-          "type": "text",
-          "text": "."
+        "eq-sum": {
+          "kind": "equation",
+          "number": "1",
+          "supplement": "Equation",
+          "text": null,
+          "span": null
+        },
+        "eq-x": {
+          "kind": "equation",
+          "number": "3",
+          "supplement": "Equation",
+          "text": null,
+          "span": null
         }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Inline "
-        },
-        {
-          "type": "math",
-          "source": "x + y",
-          "dialect": "latex"
-        },
-        {
-          "type": "text",
-          "text": " and display "
-        },
-        {
-          "type": "math",
-          "source": "x^2",
-          "dialect": "latex"
-        },
-        {
-          "type": "text",
-          "text": "."
-        }
-      ]
-    },
-    {
-      "type": "math",
-      "source": "x = y",
-      "dialect": "latex",
-      "attrs": {
-        "id": "eq-x",
-        "classes": [],
-        "pairs": {}
       },
-      "number": "3"
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
+      "toc": [
         {
-          "type": "math",
-          "source": "z = 2",
-          "dialect": "latex"
-        },
-        {
-          "type": "text",
-          "text": " trailing prose {#eq-misplaced}"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "The escaped dollar price is $5."
-        }
-      ]
-    },
-    {
-      "type": "heading",
-      "level": 1,
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Energy "
-        },
-        {
-          "type": "math",
-          "source": "E = mc^2",
-          "dialect": "latex"
+          "level": 1,
+          "number": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Energy "
+            },
+            {
+              "type": "math",
+              "source": "E = mc^2",
+              "dialect": "latex"
+            }
+          ],
+          "anchor": "energy-e-mc2"
         }
       ],
-      "attrs": {
-        "id": "energy-e-mc2",
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "list",
-      "kind": {
-        "kind": "bullet"
-      },
-      "tight": true,
-      "items": [
-        {
-          "checked": null,
-          "blocks": [
-            {
-              "type": "paragraph",
-              "inlines": [
-                {
-                  "type": "text",
-                  "text": "Math inside a list: "
-                },
-                {
-                  "type": "math",
-                  "source": "x_1",
-                  "dialect": "latex"
-                },
-                {
-                  "type": "text",
-                  "text": "."
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      "bibliography": null,
+      "footnotes": 0
     }
-  ],
-  "features": {
-    "math": true,
-    "code": false,
-    "notebook": false,
-    "citations": false,
-    "footnotes": false
   },
-  "resolved": {
-    "labels": {
-      "energy-e-mc2": {
-        "kind": "heading",
-        "number": null,
-        "supplement": "Section",
-        "text": "Energy E = mc^2",
-        "span": null
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Inline "
+          },
+          {
+            "type": "math",
+            "source": "\\frac{a}{b}",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
       },
-      "eq-aligned": {
-        "kind": "equation",
-        "number": "2",
-        "supplement": "Equation",
-        "text": null,
-        "span": null
+      {
+        "type": "math",
+        "source": "\\sum_{i=0}^{n} i",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-sum",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1"
       },
-      "eq-sum": {
-        "kind": "equation",
-        "number": "1",
-        "supplement": "Equation",
-        "text": null,
-        "span": null
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "See "
+          },
+          {
+            "type": "ref",
+            "target": "eq-sum",
+            "supplement": null,
+            "form": "normal",
+            "resolved": {
+              "kind": "equation",
+              "number": "1",
+              "text": [
+                {
+                  "type": "text",
+                  "text": "Equation 1"
+                }
+              ],
+              "anchor": "eq-sum"
+            }
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
       },
-      "eq-x": {
-        "kind": "equation",
-        "number": "3",
-        "supplement": "Equation",
-        "text": null,
-        "span": null
+      {
+        "type": "math",
+        "source": "\\begin{aligned} a &= b + c \\\\ &= d \\end{aligned}",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-aligned",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "2"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Accents "
+          },
+          {
+            "type": "math",
+            "source": "\\hat{x} \\vec{v} \\dot{y}",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "math",
+        "source": "x = 1  ",
+        "dialect": "latex",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Macros "
+          },
+          {
+            "type": "math",
+            "source": "\\RR^n + \\half{x}",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Inline "
+          },
+          {
+            "type": "math",
+            "source": "x + y",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": " and display "
+          },
+          {
+            "type": "math",
+            "source": "x^2",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "math",
+        "source": "x = y",
+        "dialect": "latex",
+        "attrs": {
+          "id": "eq-x",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "3"
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "math",
+            "source": "z = 2",
+            "dialect": "latex"
+          },
+          {
+            "type": "text",
+            "text": " trailing prose {#eq-misplaced}"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "The escaped dollar price is $5."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Energy "
+          },
+          {
+            "type": "math",
+            "source": "E = mc^2",
+            "dialect": "latex"
+          }
+        ],
+        "attrs": {
+          "id": "energy-e-mc2",
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "list",
+        "kind": {
+          "kind": "bullet"
+        },
+        "tight": true,
+        "items": [
+          {
+            "checked": null,
+            "blocks": [
+              {
+                "type": "paragraph",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Math inside a list: "
+                  },
+                  {
+                    "type": "math",
+                    "source": "x_1",
+                    "dialect": "latex"
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
-    },
+    ],
     "toc": [
       {
         "level": 1,
@@ -301,7 +557,6 @@ expression: "stable_snapshot(actual, &right.assets)"
         "anchor": "energy-e-mc2"
       }
     ],
-    "bibliography": null,
-    "footnotes": 0
+    "bibliography": null
   }
 }

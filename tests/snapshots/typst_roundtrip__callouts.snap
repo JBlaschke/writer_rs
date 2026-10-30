@@ -3,227 +3,433 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "Alerts and callouts",
-    "subtitle": null,
-    "authors": [],
-    "date": null,
-    "abstract_": null,
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "callout",
-      "kind": "note",
-      "title": null,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "A note."
-            }
-          ]
+  "canonical": {
+    "meta": {
+      "title": "Alerts and callouts",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
+    },
+    "blocks": [
+      {
+        "type": "callout",
+        "kind": "note",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A note."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
         }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
+      },
+      {
+        "type": "callout",
+        "kind": "tip",
+        "title": [
+          {
+            "type": "text",
+            "text": "Useful advice"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A tip with a title."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "important",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Important information."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "warning",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A warning."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "caution",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A caution."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "note",
+        "title": [
+          {
+            "type": "text",
+            "text": "Mixed case"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Tags are case-insensitive."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "block_quote",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[!UNKNOWN]"
+              },
+              {
+                "type": "soft_break"
+              },
+              {
+                "type": "text",
+                "text": "An unknown alert tag remains a block quote."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "kind": "warning",
+        "title": [
+          {
+            "type": "text",
+            "text": "Check the quota"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "An explicit callout kind and title."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "block_quote",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "An ordinary block quote."
+              }
+            ]
+          }
+        ]
       }
+    ],
+    "features": {
+      "math": false,
+      "code": false,
+      "notebook": false,
+      "citations": false,
+      "footnotes": false
     },
-    {
-      "type": "callout",
-      "kind": "tip",
-      "title": [
-        {
-          "type": "text",
-          "text": "Useful advice"
-        }
-      ],
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "A tip with a title."
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "callout",
-      "kind": "important",
-      "title": null,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "Important information."
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "callout",
-      "kind": "warning",
-      "title": null,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "A warning."
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "callout",
-      "kind": "caution",
-      "title": null,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "A caution."
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "callout",
-      "kind": "note",
-      "title": [
-        {
-          "type": "text",
-          "text": "Mixed case"
-        }
-      ],
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "Tags are case-insensitive."
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "block_quote",
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "[!UNKNOWN]"
-            },
-            {
-              "type": "soft_break"
-            },
-            {
-              "type": "text",
-              "text": "An unknown alert tag remains a block quote."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "callout",
-      "kind": "warning",
-      "title": [
-        {
-          "type": "text",
-          "text": "Check the quota"
-        }
-      ],
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "An explicit callout kind and title."
-            }
-          ]
-        }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
-      }
-    },
-    {
-      "type": "block_quote",
-      "blocks": [
-        {
-          "type": "paragraph",
-          "inlines": [
-            {
-              "type": "text",
-              "text": "An ordinary block quote."
-            }
-          ]
-        }
-      ]
+    "resolved": {
+      "labels": {},
+      "toc": [],
+      "bibliography": null,
+      "footnotes": 0
     }
-  ],
-  "features": {
-    "math": false,
-    "code": false,
-    "notebook": false,
-    "citations": false,
-    "footnotes": false
   },
-  "resolved": {
-    "labels": {},
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "callout",
+        "kind": "note",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A note."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "tip",
+        "title": [
+          {
+            "type": "text",
+            "text": "Useful advice"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A tip with a title."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "important",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Important information."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "warning",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A warning."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "caution",
+        "title": null,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "A caution."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "callout",
+        "kind": "note",
+        "title": [
+          {
+            "type": "text",
+            "text": "Mixed case"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Tags are case-insensitive."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "block_quote",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "[!UNKNOWN]"
+              },
+              {
+                "type": "soft_break"
+              },
+              {
+                "type": "text",
+                "text": "An unknown alert tag remains a block quote."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "kind": "warning",
+        "title": [
+          {
+            "type": "text",
+            "text": "Check the quota"
+          }
+        ],
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "An explicit callout kind and title."
+              }
+            ]
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        }
+      },
+      {
+        "type": "block_quote",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "An ordinary block quote."
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "toc": [],
-    "bibliography": null,
-    "footnotes": 0
+    "bibliography": null
   }
 }

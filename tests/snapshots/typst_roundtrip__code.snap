@@ -3,256 +3,476 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "Code attributes and listing figures",
-    "subtitle": null,
-    "authors": [],
-    "date": null,
-    "abstract_": null,
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "code_block",
-      "lang": "python",
-      "text": "print(\"first\")\nprint(\"highlighted\")",
-      "attrs": {
-        "id": null,
-        "classes": [
-          "numbered"
-        ],
-        "pairs": {
-          "highlight": "11",
-          "start": "10"
-        }
-      }
+  "canonical": {
+    "meta": {
+      "title": "Code attributes and listing figures",
+      "subtitle": null,
+      "authors": [],
+      "date": null,
+      "abstract_": null,
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
     },
-    {
-      "type": "code_block",
-      "lang": "rust",
-      "text": "fn main() {}",
-      "attrs": {
-        "id": null,
-        "classes": [
-          "plain"
-        ],
-        "pairs": {
-          "start": "1"
-        }
-      }
-    },
-    {
-      "type": "code_block",
-      "lang": "python",
-      "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {
-          "highlight": "1-3,5",
-          "start": "1"
-        }
-      }
-    },
-    {
-      "type": "code_block",
-      "lang": "python",
-      "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
-      "attrs": {
-        "id": null,
-        "classes": [
-          "numbered"
-        ],
-        "pairs": {
-          "highlight": "1-3,5",
-          "start": "1"
-        }
-      }
-    },
-    {
-      "type": "figure",
-      "kind": "listing",
-      "caption": [
-        {
-          "type": "text",
-          "text": "A labelled listing"
-        }
-      ],
-      "body": [
-        {
-          "type": "code_block",
-          "lang": "python",
-          "text": "print(\"a listing\")",
-          "attrs": {
-            "id": null,
-            "classes": [],
-            "pairs": {
-              "start": "1"
-            }
+    "blocks": [
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "print(\"first\")\nprint(\"highlighted\")",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "numbered"
+          ],
+          "pairs": {
+            "highlight": "11",
+            "start": "10"
           }
         }
-      ],
-      "attrs": {
-        "id": "lst-x",
-        "classes": [],
-        "pairs": {}
       },
-      "number": "1"
-    },
-    {
-      "type": "figure",
-      "kind": "listing",
-      "caption": [
-        {
-          "type": "text",
-          "text": "A caption without an explicit label"
-        }
-      ],
-      "body": [
-        {
-          "type": "code_block",
-          "lang": "python",
-          "text": "print(\"captioned\")",
-          "attrs": {
-            "id": null,
-            "classes": [],
-            "pairs": {
-              "start": "1"
-            }
+      {
+        "type": "code_block",
+        "lang": "rust",
+        "text": "fn main() {}",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "plain"
+          ],
+          "pairs": {
+            "start": "1"
           }
         }
-      ],
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {}
       },
-      "number": "2"
-    },
-    {
-      "type": "figure",
-      "kind": "listing",
-      "caption": null,
-      "body": [
-        {
-          "type": "code_block",
-          "lang": "python",
-          "text": "print(\"labelled\")",
-          "attrs": {
-            "id": null,
-            "classes": [],
-            "pairs": {
-              "start": "1"
-            }
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "highlight": "1-3,5",
+            "start": "1"
           }
         }
-      ],
-      "attrs": {
-        "id": "lst-uncaptioned",
-        "classes": [],
-        "pairs": {}
       },
-      "number": "3"
-    },
-    {
-      "type": "code_block",
-      "lang": "python",
-      "text": "print(\"invalid attributes are retained but ignored\")",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {
-          "start": "1"
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "numbered"
+          ],
+          "pairs": {
+            "highlight": "1-3,5",
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "figure",
+        "kind": "listing",
+        "caption": [
+          {
+            "type": "text",
+            "text": "A labelled listing"
+          }
+        ],
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(\"a listing\")",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "start": "1"
+              }
+            }
+          }
+        ],
+        "attrs": {
+          "id": "lst-x",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1"
+      },
+      {
+        "type": "figure",
+        "kind": "listing",
+        "caption": [
+          {
+            "type": "text",
+            "text": "A caption without an explicit label"
+          }
+        ],
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(\"captioned\")",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "start": "1"
+              }
+            }
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "2"
+      },
+      {
+        "type": "figure",
+        "kind": "listing",
+        "caption": null,
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(\"labelled\")",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "start": "1"
+              }
+            }
+          }
+        ],
+        "attrs": {
+          "id": "lst-uncaptioned",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "3"
+      },
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "print(\"invalid attributes are retained but ignored\")",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "print(\"more invalid values\")",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": "rust",
+        "text": "let value = 1;",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An indented code block follows."
+          }
+        ]
+      },
+      {
+        "type": "code_block",
+        "lang": null,
+        "text": "plain indented code",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": null,
+        "text": "A fence without a language.",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
         }
       }
+    ],
+    "features": {
+      "math": false,
+      "code": true,
+      "notebook": false,
+      "citations": false,
+      "footnotes": false
     },
-    {
-      "type": "code_block",
-      "lang": "python",
-      "text": "print(\"more invalid values\")",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {
-          "start": "1"
+    "resolved": {
+      "labels": {
+        "lst-uncaptioned": {
+          "kind": "listing",
+          "number": "3",
+          "supplement": "Listing",
+          "text": null,
+          "span": null
+        },
+        "lst-x": {
+          "kind": "listing",
+          "number": "1",
+          "supplement": "Listing",
+          "text": "A labelled listing",
+          "span": null
         }
-      }
-    },
-    {
-      "type": "code_block",
-      "lang": "rust",
-      "text": "let value = 1;",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {
-          "start": "1"
-        }
-      }
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "An indented code block follows."
-        }
-      ]
-    },
-    {
-      "type": "code_block",
-      "lang": null,
-      "text": "plain indented code",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {
-          "start": "1"
-        }
-      }
-    },
-    {
-      "type": "code_block",
-      "lang": null,
-      "text": "A fence without a language.",
-      "attrs": {
-        "id": null,
-        "classes": [],
-        "pairs": {
-          "start": "1"
-        }
-      }
+      },
+      "toc": [],
+      "bibliography": null,
+      "footnotes": 0
     }
-  ],
-  "features": {
-    "math": false,
-    "code": true,
-    "notebook": false,
-    "citations": false,
-    "footnotes": false
   },
-  "resolved": {
-    "labels": {
-      "lst-uncaptioned": {
-        "kind": "listing",
-        "number": "3",
-        "supplement": "Listing",
-        "text": null,
-        "span": null
+  "rendered": {
+    "abstract": null,
+    "blocks": [
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "print(\"first\")\nprint(\"highlighted\")",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "numbered"
+          ],
+          "pairs": {
+            "highlight": "11",
+            "start": "10"
+          }
+        }
       },
-      "lst-x": {
+      {
+        "type": "code_block",
+        "lang": "rust",
+        "text": "fn main() {}",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "plain"
+          ],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "highlight": "1-3,5",
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "a = 1\nb = 2\nc = 3\nd = 4\ne = 5",
+        "attrs": {
+          "id": null,
+          "classes": [
+            "numbered"
+          ],
+          "pairs": {
+            "highlight": "1-3,5",
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "figure",
         "kind": "listing",
-        "number": "1",
-        "supplement": "Listing",
-        "text": "A labelled listing",
-        "span": null
+        "caption": [
+          {
+            "type": "text",
+            "text": "A labelled listing"
+          }
+        ],
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(\"a listing\")",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "start": "1"
+              }
+            }
+          }
+        ],
+        "attrs": {
+          "id": "lst-x",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "1"
+      },
+      {
+        "type": "figure",
+        "kind": "listing",
+        "caption": [
+          {
+            "type": "text",
+            "text": "A caption without an explicit label"
+          }
+        ],
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(\"captioned\")",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "start": "1"
+              }
+            }
+          }
+        ],
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "2"
+      },
+      {
+        "type": "figure",
+        "kind": "listing",
+        "caption": null,
+        "body": [
+          {
+            "type": "code_block",
+            "lang": "python",
+            "text": "print(\"labelled\")",
+            "attrs": {
+              "id": null,
+              "classes": [],
+              "pairs": {
+                "start": "1"
+              }
+            }
+          }
+        ],
+        "attrs": {
+          "id": "lst-uncaptioned",
+          "classes": [],
+          "pairs": {}
+        },
+        "number": "3"
+      },
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "print(\"invalid attributes are retained but ignored\")",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": "python",
+        "text": "print(\"more invalid values\")",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": "rust",
+        "text": "let value = 1;",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "An indented code block follows."
+          }
+        ]
+      },
+      {
+        "type": "code_block",
+        "lang": null,
+        "text": "plain indented code",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
+      },
+      {
+        "type": "code_block",
+        "lang": null,
+        "text": "A fence without a language.",
+        "attrs": {
+          "id": null,
+          "classes": [],
+          "pairs": {
+            "start": "1"
+          }
+        }
       }
-    },
+    ],
     "toc": [],
-    "bibliography": null,
-    "footnotes": 0
+    "bibliography": null
   }
 }

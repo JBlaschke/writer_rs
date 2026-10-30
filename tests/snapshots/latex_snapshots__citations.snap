@@ -1,0 +1,43 @@
+---
+source: tests/latex_snapshots.rs
+expression: "snapshot(&output, &diagnostics)"
+---
+{
+  "body": "\\section{A document label}\\label{_2294854b8764793573831ea16c22aaf972f0e76}\n\nA label reference Section~\\ref{_2294854b8764793573831ea16c22aaf972f0e76} and a bibliography citation \\autocite{doe2020}.\n\nNormal \\autocite{doe2020}.\n\nProse \\textcite{doe2020}.\n\nYear \\autocite*{doe2020} and the negative shorthand \\autocite*{doe2020}.\n\nAuthor \\citeauthor{lee2019}.\n\nFull \\fullcite{knuth1984}.\n\nHidden \\nocite{knuth1984} still lists the entry.\n\nA custom locator \\autocite[see][p.~12]{knuth1984}.\n\nA prefix starts a new subgroup \\autocites{doe2020}[see][]{lee2019}.\n\nA prefix before a shared subgroup \\autocites[see][]{doe2020}{lee2019}.\n\nBare citations merge across spaces: \\autocite{doe2020,lee2019}.\n\nBracketed citations also merge: \\autocite{doe2020,lee2019}.\n\nTwo label references Section~\\ref{_2294854b8764793573831ea16c22aaf972f0e76}, Section~\\ref{_2294854b8764793573831ea16c22aaf972f0e76}.\n\nA group mixing a label and a bibliography key {[}?sec-only; doe2020{]}.\n\nAn unknown bibliography key {[}?missing-key{]}.\n",
+  "abstract": "",
+  "toc": 0,
+  "usage": "Usage {\n    graphics: false,\n    longtable: false,\n    table: false,\n    caption: false,\n    code: false,\n    highlighted: false,\n    listings: false,\n    ulem: false,\n    cells: false,\n    listing_caption: false,\n    uncaptioned_longtable: false,\n    math: false,\n    math_packages: [],\n    color: false,\n    newunicodechar: [],\n    secnumdepth: Some(\n        1,\n    ),\n    tocdepth: None,\n}",
+  "images": [],
+  "bibliography": [
+    {
+      "source": "../bib/refs.bib",
+      "name": "refs.bib"
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "error",
+      "code": "ambiguous-label",
+      "message": "citation group mixes labels and bibliography keys",
+      "path": "[fixtures]/md/citations.md",
+      "span": {
+        "start_line": 36,
+        "end_line": 36,
+        "cell": null,
+        "file": null
+      }
+    },
+    {
+      "level": "warning",
+      "code": "unresolved-reference",
+      "message": "label `<missing-key>` does not exist in the document (`missing-key` is no bibliography key either)",
+      "path": "[fixtures]/md/citations.md",
+      "span": {
+        "start_line": 38,
+        "end_line": 38,
+        "cell": null,
+        "file": null
+      }
+    }
+  ]
+}

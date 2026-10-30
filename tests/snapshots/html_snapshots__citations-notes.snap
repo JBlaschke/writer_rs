@@ -1,0 +1,46 @@
+---
+source: tests/html_snapshots.rs
+expression: stable_asset_ids(&emitted.main)
+---
+<main data-writer-document>
+<header class="title-block">
+<h1 class="title">Note-style citations</h1>
+</header>
+<h1 id="notes-and-citations">Notes and citations</h1>
+<p>A regular note<sup class="footnote-ref"><a id="fnref-1" href="#fn-1" role="doc-noteref">1</a></sup> precedes a note citation <span class="citation" data-cites="doe2020"><sup class="footnote-ref"><a id="fnref-2" href="#fn-2" role="doc-noteref">2</a></sup></span>.</p>
+<p>A second note citation <span class="citation" data-cites="knuth1984"><sup class="footnote-ref"><a id="fnref-3" href="#fn-3" role="doc-noteref">3</a></sup></span>.</p>
+<p>The ordinary note is repeated<sup class="footnote-ref"><a id="fnref-1-2" href="#fn-1" role="doc-noteref">1</a></sup>.</p>
+<p>A parent note contains another citation<sup class="footnote-ref"><a id="fnref-4" href="#fn-4" role="doc-noteref">4</a></sup>.</p>
+<p>A grouped note citation <span class="citation" data-cites="doe2020 lee2019"><sup class="footnote-ref"><a id="fnref-6" href="#fn-6" role="doc-noteref">6</a></sup></span>.</p>
+<p>Prose in a note style <span class="citation" data-cites="doe2020">Doe and Smith (“A Study of Things.”</span> retains the engine&#39;s output.</p>
+<p>Hidden <span class="citation" data-cites="lee2019"></span> adds no note.</p>
+<section id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<h1 class="references-title">Bibliography</h1>
+<div id="ref-doe2020" class="csl-entry">Doe, Jane, and John Smith. “A Study of Things.” <em>Journal of Stuff</em> 12, no. 3 (2020): 45–67. <a href="https://doi.org/10.1000/xyz123">https://doi.org/10.1000/xyz123</a>.</div>
+<div id="ref-knuth1984" class="csl-entry">Knuth, Donald E. <em>The TeXbook</em>. Addison-Wesley, 1984.</div>
+<div id="ref-lee2019" class="csl-entry">Lee, Alice, Bob Kim, and Carol Chen. “Fast Widgets.” In “Proceedings of the Widget Conference.” Special issue, <em>Proceedings of the Widget Conference</em>, 2019, 1–10. <a href="https://example.org/widgets">https://example.org/widgets</a>.</div>
+</section>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn-1">
+<p>An ordinary footnote with <em>emphasis</em>. <a class="footnote-back" href="#fnref-1" role="doc-backlink">↩︎</a> <a class="footnote-back" href="#fnref-1-2" role="doc-backlink">↩︎<sup>2</sup></a></p>
+</li>
+<li id="fn-2">
+<p>Jane Doe and John Smith, “A Study of Things,” <em>Journal of Stuff</em> 12, no. 3 (2020): 45–67, <a href="https://doi.org/10.1000/xyz123">https://doi.org/10.1000/xyz123</a>. <a class="footnote-back" href="#fnref-2" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-3">
+<p>Donald E. Knuth, <em>The TeXbook</em> (Addison-Wesley, 1984), p. 12. <a class="footnote-back" href="#fnref-3" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-4">
+<p>Parent note text with a nested note citation <span class="citation" data-cites="lee2019"><sup class="footnote-ref"><a id="fnref-5" href="#fn-5" role="doc-noteref">5</a></sup></span>. <a class="footnote-back" href="#fnref-4" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-5">
+<p>Alice Lee et al., “Fast Widgets,” in “Proceedings of the Widget Conference,” special issue, <em>Proceedings of the Widget Conference</em>, 2019, 1–10, <a href="https://example.org/widgets">https://example.org/widgets</a>. <a class="footnote-back" href="#fnref-5" role="doc-backlink">↩︎</a></p>
+</li>
+<li id="fn-6">
+<p>Doe and Smith, “A Study of Things”; Lee et al., “Fast Widgets”. <a class="footnote-back" href="#fnref-6" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+</main>

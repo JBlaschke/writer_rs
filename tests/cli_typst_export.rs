@@ -144,22 +144,42 @@ fn mixed_targets_treat_out_as_a_directory_and_preserve_other_successes_on_export
     for path in ["document.typ", "document.html", "document.pdf"] {
         assert!(output.join(path).is_file(), "{path}");
     }
-    write(
-        directory.path(),
-        "writer.toml",
-        format!("{CONFIG}[references]\nbibliography=['absent/refs.bib']\n"),
-    );
+    // A target-local output obstruction is a usage error (exit 2), while the
+    // independent HTML/PDF targets still succeed. Bibliography errors are global.
     let failed = directory.path().join("one-fails");
+    write(&failed, "document.typ/sentinel", b"keep this directory");
     let result = writer(directory.path())
         .args(["build", "document.md", "--to", "typst,html,pdf", "-o"])
         .arg(&failed)
         .output()
         .unwrap();
-    assert_eq!(result.status.code(), Some(1));
+    assert_eq!(result.status.code(), Some(2));
     assert!(failed.join("document.html").is_file());
     assert!(failed.join("document.pdf").is_file());
-    assert!(!failed.join("document.typ").exists());
+    assert!(failed.join("document.typ").is_dir());
+    assert_eq!(
+        fs::read(failed.join("document.typ/sentinel")).unwrap(),
+        b"keep this directory"
+    );
     assert!(!failed.join("document_assets").exists());
+    assert!(String::from_utf8(result.stderr).unwrap().contains("document.typ"));
+
+    write(
+        directory.path(),
+        "writer.toml",
+        format!("{CONFIG}[references]\nbibliography=['absent/refs.bib']\n"),
+    );
+    let global = directory.path().join("global-failure");
+    let result = writer(directory.path())
+        .args(["build", "document.md", "--to", "typst,html,pdf", "-o"])
+        .arg(&global)
+        .output()
+        .unwrap();
+    assert_eq!(result.status.code(), Some(1));
+    assert!(
+        !global.exists(),
+        "global resource failure must precede all targets"
+    );
     assert!(String::from_utf8(result.stderr).unwrap().contains("refs.bib"));
 }
 
@@ -194,7 +214,7 @@ fn notebook_exports_materialize_sources_and_explicit_markdown_format_is_supporte
 }
 
 #[test]
-fn configured_resources_are_copied_even_before_bibliography_resolution_exists()
+fn configured_resources_are_loaded_then_copied_without_compiling_the_template()
 {
     let directory = project("# Configured resources\n");
     write(
@@ -205,7 +225,7 @@ fn configured_resources_are_copied_even_before_bibliography_resolution_exists()
     write(
         directory.path(),
         "style.CSL",
-        "CSL bytes copied without interpretation\n",
+        include_str!("fixtures/bib/minimal.csl"),
     );
     write(directory.path(), "template.typ", "#let writer-doc =\n");
     write(
@@ -230,13 +250,13 @@ fn configured_resources_are_copied_even_before_bibliography_resolution_exists()
             fs::read(directory.path().join(resource)).unwrap()
         );
     }
-    // Export copies these bytes without compiling the intentionally invalid
-    // template or interpreting the CSL. Valid resources are compiled by the
-    // hand-resolved library fixture through a fresh physical World.
+    // Preparation parses the real CSL, then export copies its exact bytes.
+    // The intentionally invalid template remains uncompiled by source export;
+    // physical compilation with valid resources is covered in typst_export.
 }
 
 #[test]
-fn source_safety_and_parse_or_copy_failures_create_no_partial_tree() {
+fn source_safety_parse_and_global_resource_failures_create_no_partial_tree() {
     let directory = project("# Keep source\n");
     let source = directory.path().join("document.md");
     let original = fs::read(&source).unwrap();

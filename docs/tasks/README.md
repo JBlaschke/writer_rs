@@ -64,7 +64,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | ready for review |
 | T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | ready for review |
 | T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | done |
-| T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | todo |
+| T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | done |
 | T71 | `check`: typst and per-target lints | M7 | S | T1C, T33, T41, T42, T52, T61 | todo |
 | T72 | `init` scaffold and the `eject` family | M7 | M | T16, T31, T43, T61, T70 | todo |
 | T73 | Diagnostics quality | M7 | S | T16, T21, T22, T32 | todo |
@@ -530,3 +530,24 @@ Manual checks performed: …
   The full tour golden received independent review. Its eight unresolved
   citation findings remain an explicit T70 boundary. Existing PRs #34–#36 have
   no failed checks in the latest snapshot; #34 is green. T70 drafts are ready.
+
+
+- 2026-10-29: T61 published as [PR #37](https://github.com/JBlaschke/writer_rs/pull/37)
+  (`22adf47`). T70 starts on `codex/citations` without waiting for CI.
+  Real bibliography/CSL loading, driver rendering, stable resolver replay and
+  pipeline resource policy are installed. All 23 loader/driver units, 25
+  resolver-related matches and 29 public cases pass. All 17 strict round trips
+  pass; both new views exactly preserve the previous JSON facts for all 14
+  non-citation fixtures. Real positive-citation TeX/BibTeX protocols pass all
+  12 available cases, with two optional Biber variants unavailable. Goldens
+  are under independent review; final lint/docs/debug/release gates remain.
+
+
+- 2026-10-29: T70 acceptance complete on `codex/citations`: 1,865 debug
+  cases verified across the full run and a focused CLI expectation rerun;
+  all 1,864 release tests pass in one complete run (three intentional ignores).
+  Formatting and denied-warning Clippy/rustdoc pass. Both independent golden
+  reviews are clear; all 17 strict roundtrips and 14 unchanged baseline checks
+  pass. All 12 positive TeX cases pass, with 8 real BibTeX backend proofs and
+  two unavailable optional Biber variants. T71/T72/T73 drafts and independent
+  review corrections are staged for their separate feature branches.

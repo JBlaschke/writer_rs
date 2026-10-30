@@ -3,25 +3,103 @@ source: tests/typst_roundtrip.rs
 expression: "stable_snapshot(actual, &right.assets)"
 ---
 {
-  "meta": {
-    "title": "A minimal document",
-    "subtitle": null,
-    "authors": [
+  "canonical": {
+    "meta": {
+      "title": "A minimal document",
+      "subtitle": null,
+      "authors": [
+        {
+          "name": "Jane Doe",
+          "affiliation": null,
+          "email": null,
+          "id": null
+        },
+        {
+          "name": "John Smith",
+          "affiliation": null,
+          "email": null,
+          "id": null
+        }
+      ],
+      "date": null,
+      "abstract_": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "A short abstract."
+            }
+          ]
+        }
+      ],
+      "keywords": [],
+      "description": null,
+      "lang": "en",
+      "vars": {}
+    },
+    "blocks": [
       {
-        "name": "Jane Doe",
-        "affiliation": null,
-        "email": null,
-        "id": null
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Introduction"
+          }
+        ],
+        "attrs": {
+          "id": "introduction",
+          "classes": [],
+          "pairs": {}
+        }
       },
       {
-        "name": "John Smith",
-        "affiliation": null,
-        "email": null,
-        "id": null
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "This document has one heading and one paragraph."
+          }
+        ]
       }
     ],
-    "date": null,
-    "abstract_": [
+    "features": {
+      "math": false,
+      "code": false,
+      "notebook": false,
+      "citations": false,
+      "footnotes": false
+    },
+    "resolved": {
+      "labels": {
+        "introduction": {
+          "kind": "heading",
+          "number": null,
+          "supplement": "Section",
+          "text": "Introduction",
+          "span": null
+        }
+      },
+      "toc": [
+        {
+          "level": 1,
+          "number": null,
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Introduction"
+            }
+          ],
+          "anchor": "introduction"
+        }
+      ],
+      "bibliography": null,
+      "footnotes": 0
+    }
+  },
+  "rendered": {
+    "abstract": [
       {
         "type": "paragraph",
         "inlines": [
@@ -32,54 +110,32 @@ expression: "stable_snapshot(actual, &right.assets)"
         ]
       }
     ],
-    "keywords": [],
-    "description": null,
-    "lang": "en",
-    "vars": {}
-  },
-  "blocks": [
-    {
-      "type": "heading",
-      "level": 1,
-      "inlines": [
-        {
-          "type": "text",
-          "text": "Introduction"
+    "blocks": [
+      {
+        "type": "heading",
+        "level": 1,
+        "inlines": [
+          {
+            "type": "text",
+            "text": "Introduction"
+          }
+        ],
+        "attrs": {
+          "id": "introduction",
+          "classes": [],
+          "pairs": {}
         }
-      ],
-      "attrs": {
-        "id": "introduction",
-        "classes": [],
-        "pairs": {}
+      },
+      {
+        "type": "paragraph",
+        "inlines": [
+          {
+            "type": "text",
+            "text": "This document has one heading and one paragraph."
+          }
+        ]
       }
-    },
-    {
-      "type": "paragraph",
-      "inlines": [
-        {
-          "type": "text",
-          "text": "This document has one heading and one paragraph."
-        }
-      ]
-    }
-  ],
-  "features": {
-    "math": false,
-    "code": false,
-    "notebook": false,
-    "citations": false,
-    "footnotes": false
-  },
-  "resolved": {
-    "labels": {
-      "introduction": {
-        "kind": "heading",
-        "number": null,
-        "supplement": "Section",
-        "text": "Introduction",
-        "span": null
-      }
-    },
+    ],
     "toc": [
       {
         "level": 1,
@@ -93,7 +149,6 @@ expression: "stable_snapshot(actual, &right.assets)"
         "anchor": "introduction"
       }
     ],
-    "bibliography": null,
-    "footnotes": 0
+    "bibliography": null
   }
 }
