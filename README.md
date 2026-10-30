@@ -1,39 +1,56 @@
 # writer
 
-Write a document once — in Markdown, as a Jupyter notebook, or in typst — and get HTML, PDF,
-Word (`.docx`) and LaTeX source from it, with a live preview while you write.
+Write a report in Markdown, a saved Jupyter notebook or Typst, then build HTML,
+PDF, Word (`.docx`), LaTeX or Typst source. Preview changes in the browser while
+you write. Figures, tables, equations, references and bibliographies travel
+with the document.
 
-writer is the document-shaped sibling of [presenter_rs](https://github.com/JBlaschke/presenter_rs).
-It is being built from a plan written for a fleet of independent agents:
+From a checkout, with Rust 1.96 or newer:
 
-- [`PLAN.md`](PLAN.md) — goals, architecture, decisions, milestones and the task graph.
-- [`docs/spec/`](docs/spec/) — the frozen contracts (IR, dialects, outputs, config, CLI, live reload, vendored assets).
-- [`docs/tasks/`](docs/tasks/) — one file per task and the [task board](docs/tasks/README.md).
-- [`docs/research/`](docs/research/) — the verified facts the plan rests on (typst embedding, comrak, DOCX, math, citations, LaTeX, notebooks, presenter_rs inventory).
-
-T00 provides the Rust crate, pinned dependencies, checksummed vendored assets,
-embedded notices, build metadata, and CI. T01 adds the shared document model,
-configuration loading and precedence, diagnostics, asset registry, localization,
-and the source fixture corpus. T03 embeds the Typst compiler for PDFs, equation
-and image renditions, MathML, fonts, and package loading. T04 provides
-deterministic DOCX packages, styles, numbering, reference-document merging,
-and structural validation. T10/T11 add front matter, Markdown options,
-attribute recovery and directive helpers, with R9 corpus snapshots. T12 now
-parses Markdown into unresolved document IR, including figures, tables,
-equations, directives and footnotes, with shared fragment APIs. T14 resolves
-assets for standalone HTML, sites and versioned serve URLs. Reference/include
-expansion, output content mapping and CLI commands arrive in later tasks; the
-current binary reports that T16 is pending and exits with status 2.
-
-To validate the current implementation:
-
-```bash
-cargo build --locked
-cargo test --locked
-cargo fmt --check
-cargo clippy --locked --all-targets --all-features -- -D warnings
-RUSTDOCFLAGS="-D warnings" cargo doc --locked --no-deps
+```sh
+cargo install --path . --locked
+writer build examples/basic/document.md
+writer serve examples/basic/document.md --open
 ```
 
-See the [task board](docs/tasks/README.md) for implementation status and
-[build measurements](docs/dev/build-times.md) for the baseline.
+The build writes `examples/basic/dist/document.html`. The server watches the
+source, included files, images and theme; its web and typeset-page views keep
+the previous good result when an edit fails. Stop it with Ctrl-C.
+
+Choose several outputs with one command:
+
+```sh
+writer build examples/basic/document.md --to html,pdf,docx,latex,typst
+```
+
+PDF uses the embedded Typst compiler. Word equations are editable where the
+math conversion supports them, with an image fallback. LaTeX export writes
+source and resources for a separate TeX installation. Notebook builds read
+saved outputs and never execute the notebook.
+
+For native Typst input, PDF compiles the original source. The other formats
+use a documented structured subset, so full Typst programs can have different
+results in those outputs. Markdown and notebook inputs default to HTML;
+Typst inputs default to PDF.
+
+Read the [user guide](docs/guide/README.md) for authoring, output choices,
+configuration and customization. Start with an example:
+
+| Example | Demonstrates |
+|---|---|
+| [Basic report](examples/basic/README.md) | Headings, figures, tables, code, equations and footnotes |
+| [Saved notebook](examples/notebook/README.md) | A plot, DataFrame and saved traceback |
+| [Several source files](examples/mixed/README.md) | Nested Markdown and notebook includes |
+| [Native Typst](examples/typst/README.md) | Native PDF with structured HTML and Word outputs |
+| [LaTeX template](examples/latex-template/README.md) | Custom source template and separate latexmk compilation |
+
+The built-in theme, math assets, fonts and document package are embedded.
+External Typst package downloads require an explicit opt-in. Custom content
+can still refer to external resources; use local resources for a portable
+document.
+
+writer is the document sibling of
+[presenter_rs](https://github.com/JBlaschke/presenter_rs). Contributors can
+start with the [architecture and development plan](PLAN.md),
+[format contracts](docs/spec/) and
+[build measurements](docs/dev/build-times.md).
