@@ -1334,3 +1334,37 @@ The complete release suite passes. The existing debug-only adversarial frontend
 case accounts for the one-test mode difference. The native macOS arm64 release
 binary is 57,019,632 bytes; this is a local T70 measurement, not six-target
 release-artifact evidence.
+
+
+## T71 target-aware check acceptance (2026-10-29)
+
+Measured from T70 `9eeea00` plus the T71 working tree on macOS arm64,
+Rust 1.99.1, cached dependencies and incremental targets. Commands use
+`/usr/bin/time -p`; these are suite timings, not cold-build benchmarks.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 2.44 s | 529.98 s | 93.59 s | 1,903 passed; one obsolete stub expectation; 3 ignored |
+| `cargo test --locked --offline --test typst_frontend` | 3.14 s | 8.18 s | 3.22 s | 52 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 10m 12s | 738.47 s | 6,521.98 s | 1,903 passed, 3 ignored |
+
+All 1,904 distinct debug cases passed across the complete run and focused
+rerun. The sole initial failure was a T50 test expecting explicit HTML check
+to remain a T71 usage stub. It now requires real JSON, error exit 1 and the
+actual E-TYP-CALL-UNKNOWN error, while retaining the default-target assertion.
+Production code did not change after the full run; repeated cases are not
+counted twice. The complete release suite passes in one run; the existing
+debug-only adversarial frontend case explains the one-test mode difference.
+
+Configured formatting, all-target/all-feature denied-warning Clippy and
+all-feature denied-warning rustdoc pass. The focused checks include 39 units,
+18 new public controls, 12 inherited math cases and 25 CLI/corpus cases. Exact
+inventories verify that all targets and mixed lists create no output and leave
+inputs unchanged. Cheap PDF/Typst/LaTeX paths do not allocate a compiler World;
+actual HTML native/image and DOCX checks share one lazy World as required.
+
+Four reviewed goldens add only eight located raw-skipped infos and one HTML
+page-reference warning. A parsed JSON subsequence audit preserves every old
+finding and its order, path, cell, line and severity. No source fixture changes,
+new snapshot exclusions, global tuple dedup or speculative renderer fallback
+were introduced. T70's bibliography resource policy remains intact.

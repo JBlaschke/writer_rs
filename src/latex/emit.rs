@@ -23,6 +23,18 @@ mod table;
 
 use output::Output;
 
+/// Actual cells retained by the LaTeX table planner, for target-aware checks.
+pub(crate) fn rendered_table_cells(
+    block: &Block,
+) -> Vec<&crate::ir::TableCell> {
+    match block {
+        Block::Table { columns, head, body, foot, .. } => {
+            table::rendered_cells(columns.len(), head, body, foot)
+        }
+        _ => Vec::new(),
+    }
+}
+
 /// LaTeX text and the resources used by its abstract and body.
 pub struct Emitted {
     /// Body text, with one final line feed when nonempty.

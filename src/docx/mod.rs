@@ -24,6 +24,8 @@ use crate::error::{Diagnostics, Error, Result};
 use crate::ir::{Document, MathDialect};
 use crate::resolve::LangTag;
 
+pub(crate) use footnotes::visible_bookmarks;
+
 pub use numbering::Numbering;
 pub use package::{Package, core_timestamp};
 pub use styles::{StyleKind, StyleTable};

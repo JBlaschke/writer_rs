@@ -154,14 +154,16 @@ fn text_reports_use_stderr_and_quiet_deny_still_explains_failure() {
 }
 
 #[test]
-fn unsupported_explicit_targets_and_mixed_lists_keep_the_t71_stub() {
-    let directory = project("$x$\n", &Config::default());
+fn explicit_targets_and_mixed_lists_check_valid_math_without_outputs() {
+    let mut config = Config::default();
+    config.pdf.system_fonts = false;
+    config.pdf.allow_packages = false;
+    let directory = project("$x$\n", &config);
+    let before = inventory(directory.path());
     for targets in ["html", "docx", "typst", "latex", "pdf,html", "pdf,docx"] {
-        let output =
-            selected(directory.path(), targets, false).output().unwrap();
-        assert_eq!(output.status.code(), Some(2), "{targets}");
-        assert!(output.stdout.is_empty());
-        assert!(String::from_utf8(output.stderr).unwrap().contains("T71"));
+        let rows = json_rows(selected(directory.path(), targets, false), 0);
+        assert!(rows.is_empty(), "{targets}: {rows:?}");
+        assert_eq!(inventory(directory.path()), before, "{targets}");
     }
 }
 

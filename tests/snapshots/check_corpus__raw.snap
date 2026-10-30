@@ -4,8 +4,36 @@ expression: stable(&diagnostics)
 ---
 [
   {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "md/raw.md",
+    "line": 10,
+    "cell": null
+  },
+  {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "md/raw.md",
+    "line": 14,
+    "cell": null
+  },
+  {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "md/raw.md",
+    "line": 18,
+    "cell": null
+  },
+  {
     "level": "warning",
     "code": "raw-unknown-format",
+    "file": "md/raw.md",
+    "line": 22,
+    "cell": null
+  },
+  {
+    "level": "info",
+    "code": "raw-skipped",
     "file": "md/raw.md",
     "line": 22,
     "cell": null

@@ -10,22 +10,15 @@ use serde::Serialize;
 
 use super::{
     CheckArgs, CheckFormat, Compatibility, EXIT_BUILD_ERROR, EXIT_OK,
-    GlobalArgs, OutputTarget, display_path, print_stdout, report,
-    report_diagnostics,
+    GlobalArgs, display_path, print_stdout, report, report_diagnostics,
 };
 use crate::check::{self, CheckOptions};
 use crate::error::{Diagnostic, Diagnostics, Error, Level};
 use crate::ir::{self, SourceKind};
-use crate::pipeline::{self, BuildOptions, Mode};
+use crate::pipeline::{BuildOptions, Mode};
 
-/// Runs `writer check`, including the PDF parser preflight.
+/// Runs `writer check` for the selected output targets.
 pub fn run(args: &CheckArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
-    if args.target.as_ref().is_some_and(|targets| {
-        targets.is_empty()
-            || targets.iter().any(|target| *target != OutputTarget::Pdf)
-    }) {
-        return Err(pipeline::not_implemented("check --target", "T71").into());
-    }
     let diagnostics = check_input(args, global)?;
     match args.format {
         CheckFormat::Text => {
@@ -51,8 +44,10 @@ fn check_input(
     opts.format = Some(kind);
     opts.config_path = global.config.clone();
     opts.mode = Mode::Check;
-    opts.cli.targets =
-        args.target.as_ref().map(|_| vec![OutputTarget::Pdf.into()]);
+    opts.cli.targets = args
+        .target
+        .as_ref()
+        .map(|targets| targets.iter().copied().map(Into::into).collect());
     let options = CheckOptions {
         compat_presenter: args.compat == Some(Compatibility::Presenter),
     };

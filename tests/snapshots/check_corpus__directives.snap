@@ -4,6 +4,13 @@ expression: stable(&diagnostics)
 ---
 [
   {
+    "level": "info",
+    "code": "raw-skipped",
+    "file": "md/directives.md",
+    "line": 27,
+    "cell": null
+  },
+  {
     "level": "warning",
     "code": "unclosed-directive",
     "file": "md/directives.md",

@@ -40,6 +40,15 @@ struct Note<'a> {
     bookmark: Option<String>,
 }
 
+/// Actual bookmark targets after the emitter's two-pass content planning.
+pub(crate) fn visible_bookmarks(doc: &Document) -> BTreeSet<String> {
+    ContentState::new(doc, &mut Ids::default())
+        .plan
+        .bookmarks
+        .into_keys()
+        .collect()
+}
+
 impl<'a> ContentState<'a> {
     pub(crate) fn new(doc: &'a Document, ids: &mut Ids) -> Self {
         // Discover forward targets before choosing Page-reference content.
