@@ -663,7 +663,12 @@ typst-dialect.md §2.4, §2.7, §4.4 and §6.4 are aligned to it (see Deviations
   `"raw"`. Parts follow the whole-notebook footnote pass, so a selection that keeps a later reference
   to a shared footnote but drops the cell of its first reference does not compile (typst names the
   missing `<writer-fn-<prefix>…>` label, typst-dialect.md §5.6) while the structured path renders it:
-  the one case where the paths differ.
+  one case where the paths differ. The frozen content fields are eagerly
+  evaluated during native module import, so failing raw/native expressions in
+  unselected cells can also fail that import. For malformed duplicate ids where
+  the first original cell is removed/Unknown, the native module can find only
+  the first retained entry; structured selection still uses T18's first-original
+  rule. These differences do not change the content-field module or T18 policy.
   `include-notebook(file, cells: auto, tags: none, hide-input: auto, hide-output: auto)` (T53, additive
   to `cells.typ`): `file` must be a typst `path` value (a string would resolve inside the package; it
   panics with "pass path(\"x.ipynb\")"); it imports `writer-cells` from `file`, applies the selection

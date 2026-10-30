@@ -663,9 +663,40 @@ pub(crate) fn build_targets_with_count(
         };
         results.push(TargetResult { target: *target, written });
     }
+    if native_pdf {
+        diagnostics = merge_missing_asset_findings(diagnostics);
+    }
     let diagnostics =
         escalate_strict(diagnostics, opts.cli.strict, &prepared.config);
     BuildReport { prepared: Ok(prepared), targets: results, diagnostics }
+}
+
+// Native providers can report the same missing image that Prepared already
+// owns. Its IR-target Error and native-target Warning describe one finding.
+// Preserve first-seen order, exact source identity and the strongest severity.
+fn merge_missing_asset_findings(diagnostics: Diagnostics) -> Diagnostics {
+    let mut merged: Vec<Diagnostic> = Vec::new();
+    for finding in diagnostics {
+        if finding.code == "missing-asset"
+            && let Some(previous) = merged.iter_mut().find(|previous| {
+                previous.code == finding.code
+                    && previous.message == finding.message
+                    && previous.path == finding.path
+                    && previous.span == finding.span
+            })
+        {
+            if matches!(
+                (previous.level, finding.level),
+                (Level::Info, Level::Warning | Level::Error)
+                    | (Level::Warning, Level::Error)
+            ) {
+                previous.level = finding.level;
+            }
+        } else {
+            merged.push(finding);
+        }
+    }
+    merged.into()
 }
 
 fn failed_report(
@@ -1230,6 +1261,77 @@ mod tests {
     use crate::ir::{DocMeta, SourceSpan};
 
     #[test]
+    fn native_missing_asset_merge_keeps_strongest_level_and_first_position() {
+        let missing = |level| {
+            Diagnostic::new(
+                level,
+                "missing-asset",
+                "image missing (looked for /missing.png)",
+            )
+            .with_path("part.md")
+            .with_span(SourceSpan {
+                start_line: 3,
+                end_line: 3,
+                cell: Some(2),
+                file: Some("part.md".into()),
+            })
+        };
+        let other = Diagnostic::warning("typst-warning", "keep both copies");
+        for levels in [
+            [Level::Error, Level::Warning],
+            [Level::Warning, Level::Error],
+            [Level::Info, Level::Error],
+        ] {
+            let found = merge_missing_asset_findings(
+                vec![
+                    other.clone(),
+                    missing(levels[0]),
+                    other.clone(),
+                    missing(levels[1]),
+                ]
+                .into(),
+            );
+            assert_eq!(
+                found.into_vec(),
+                [other.clone(), missing(Level::Error), other.clone(),]
+            );
+        }
+        let warning = missing(Level::Warning);
+        assert_eq!(
+            merge_missing_asset_findings(vec![warning.clone()].into())
+                .into_vec(),
+            [warning],
+        );
+    }
+
+    #[test]
+    fn native_missing_asset_merge_preserves_different_source_findings() {
+        let first = Diagnostic::warning("missing-asset", "same missing image")
+            .with_path("one.ipynb")
+            .with_span(SourceSpan {
+                start_line: 1,
+                end_line: 1,
+                cell: Some(0),
+                file: Some("one.ipynb".into()),
+            });
+        let mut next_cell = first.clone();
+        next_cell.span.as_mut().unwrap().cell = Some(1);
+        let mut next_line = first.clone();
+        next_line.span.as_mut().unwrap().start_line = 2;
+        next_line.span.as_mut().unwrap().end_line = 2;
+        let mut next_file = first.clone();
+        next_file.path = Some("two.ipynb".into());
+        next_file.span.as_mut().unwrap().file = Some("two.ipynb".into());
+        let mut next_asset = first.clone();
+        next_asset.message = "another missing image".into();
+        let expected = vec![first, next_cell, next_line, next_file, next_asset];
+        assert_eq!(
+            merge_missing_asset_findings(expected.clone().into()).into_vec(),
+            expected,
+        );
+    }
+
+    #[test]
     fn build_failure_stays_below_clippy_result_size_threshold() {
         assert!(std::mem::size_of::<BuildFailure>() < 128);
     }
@@ -1350,7 +1452,7 @@ mod tests {
     }
 
     #[test]
-    fn md_include_answers_t53_stub() {
+    fn md_include_provider_is_installed_across_session_resets() {
         use ::typst::World;
         use ::typst::syntax::{RootedPath, VirtualPath, VirtualRoot};
         let dir = project(&[("x.md", "# Included\n")]);
@@ -1363,8 +1465,10 @@ mod tests {
         .intern();
         for _ in 0..2 {
             let world = worlds.get(Some(&prepared), &opts).unwrap();
-            let error = world.source(id).unwrap_err().to_string();
-            assert!(error.contains("arrives in T53"), "{error}");
+            let source = world.source(id).unwrap();
+            assert!(source.text().contains("= Included"));
+            assert!(source.text().contains("#import \"@writer/doc:0.1.0\""));
+            assert_eq!(world.file(id).unwrap().as_slice(), b"# Included\n");
         }
     }
 

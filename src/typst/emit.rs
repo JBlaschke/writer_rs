@@ -1465,7 +1465,7 @@ fn author(author: &ir::Author) -> String {
     format!("({})", fields.join(", "))
 }
 
-fn string(text: &str) -> String {
+pub(crate) fn string(text: &str) -> String {
     let mut result = String::from("\"");
     for c in text.chars() {
         match c {

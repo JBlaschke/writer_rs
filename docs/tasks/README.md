@@ -61,7 +61,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T50 | typst-syntax → IR walker (structured subset) | M5 | L | T01, T17, T30 | done (PR #25) |
 | T51 | typst math → LaTeX converter and the symbol table | M5 | L | T01 | ready for review |
 | T52 | typst documents end to end, round-trip golden | M5 | M | T1A, T23, T24, T32, T42, T50, T51 | ready for review |
-| T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | todo |
+| T53 | `#include` of `.md`/`.ipynb` from typst | M5 | M | T18, T1B, T30, T52 | ready for review |
 | T60 | IR → LaTeX emitter | M6 | L | T13, T17, T18, T1A, T32, T50, T51 | todo |
 | T61 | LaTeX template mechanism, preamble, assets, `--to latex` | M6 | M | T60 | todo |
 | T70 | Citations (hayagriva) and the resolve hook | M7 | M | T16, T17, T1B | todo |
@@ -481,3 +481,20 @@ Manual checks performed: …
   changes and resets. All 22 native integration cases, 12 World units, final
   1,601/1,600 debug/release tests and all 14 real browser tests pass; source bytes
   and ordinary include interception remain protected by dedicated regressions.
+
+
+- T52 is open in [PR #34](https://github.com/JBlaschke/writer_rs/pull/34)
+  (feature `995ee9e`, synced head `573f480`). The parent sync imports only six
+  recovery-documentation lines; validated source/tests/assets are unchanged.
+  T53 starts on `codex/typst-includes` from that checked milestone, with provider,
+  structured frontend/package, source-map/read-set and integration drafts
+  installed. Pending merge order is #28, #29, #30, #31, #32, #33, #34, then T53.
+
+- 2026-10-29: T53 is ready on `codex/typst-includes` from T52 `573f480`.
+  Native Markdown fragments/notebook cell modules and structured mixed includes
+  retain source identity, original bytes and transitive watch recovery. Exact
+  missing-image findings merge at their strongest severity in mixed builds.
+  All 1,634 debug/1,633 release tests pass (three intentional ignores), as do
+  formatting, denied-warning Clippy/rustdoc and independently reviewed goldens.
+  PRs #28–#33 are green; #34 is pending without failures. The next branch is
+  T60 LaTeX body emission; its independent source drafts are prepared.

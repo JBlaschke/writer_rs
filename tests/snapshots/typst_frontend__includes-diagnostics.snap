@@ -2,4 +2,27 @@
 source: tests/typst_frontend.rs
 expression: diagnostics
 ---
-[]
+[
+  {
+    "level": "warning",
+    "code": "include-meta-ignored",
+    "message": "`include/part.md` sets `title`; an included file's document metadata is ignored (col 2)",
+    "path": "[typ]/includes.typ",
+    "span": {
+      "start_line": 11,
+      "end_line": 11,
+      "file": "[typ]/includes.typ"
+    }
+  },
+  {
+    "level": "warning",
+    "code": "include-meta-ignored",
+    "message": "`include/nb.ipynb` sets `title`; an included file's document metadata is ignored (col 2)",
+    "path": "[typ]/includes.typ",
+    "span": {
+      "start_line": 13,
+      "end_line": 13,
+      "file": "[typ]/includes.typ"
+    }
+  }
+]

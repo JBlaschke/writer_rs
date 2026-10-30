@@ -816,7 +816,8 @@ fn includes_merge_assets_features_source_identity_and_first_use_order() {
     assert!(!parsed.diagnostics.has_errors(), "{:?}", parsed.diagnostics);
     assert_eq!(
         parsed.document.includes,
-        [fs::canonicalize(fixtures().join("include/part.typ")).unwrap()]
+        ["include/part.typ", "include/part.md", "include/nb.ipynb"]
+            .map(|path| fs::canonicalize(fixtures().join(path)).unwrap())
     );
     assert_eq!(parsed.assets.len(), 1);
     assert!(
@@ -835,12 +836,19 @@ fn includes_merge_assets_features_source_identity_and_first_use_order() {
     });
     assert!(count >= 4);
     let value = json_doc(&parsed);
-    assert!(
-        nodes(&value, "ref")
-            .iter()
-            .filter(|node| node["target"] == "sec-outer")
-            .all(|node| node["span"]["file"]
-                == included.to_string_lossy().as_ref())
+    let owners = nodes(&value, "ref")
+        .into_iter()
+        .filter(|node| node["target"] == "sec-outer")
+        .map(|node| node["span"]["file"].as_str().unwrap().to_owned())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        owners,
+        ["include/part.typ", "include/part.typ", "include/part.md"].map(
+            |path| fs::canonicalize(fixtures().join(path))
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()
+        )
     );
     assert!(
         nodes(&value, "footnote_ref")
@@ -900,8 +908,7 @@ fn included_absolute_paths_use_the_initial_root_and_diagnostics_keep_the_owner()
 }
 
 #[test]
-fn include_cycle_depth_dynamic_missing_and_t53_boundaries_have_specific_codes()
-{
+fn include_cycle_depth_dynamic_missing_and_mixed_kinds_have_specific_codes() {
     let cycle = parse("#include \"include/cycle-a.typ\"\n");
     assert!(codes(&cycle.diagnostics).contains(&"E-TYP-INCLUDE-CYCLE"));
     let missing = parse("#include \"absent.typ\"\n");
@@ -927,16 +934,22 @@ fn include_cycle_depth_dynamic_missing_and_t53_boundaries_have_specific_codes()
             ),
         ]);
         let parsed = parse_file(&dir.path().join("main.typ"));
-        let diagnostic = parsed
-            .diagnostics
-            .iter()
-            .find(|diagnostic| diagnostic.code == "E-TYP-INCLUDE-MISSING")
-            .unwrap();
-        assert!(
-            diagnostic
-                .message
-                .contains("including .md/.ipynb from typst arrives in T53")
+        assert!(!parsed.diagnostics.has_errors(), "{:?}", parsed.diagnostics);
+        let child = if text.contains("document.md") {
+            "document.md"
+        } else {
+            "notebook.ipynb"
+        };
+        assert_eq!(
+            parsed.document.includes,
+            [fs::canonicalize(dir.path().join(child)).unwrap()]
         );
+        if child == "document.md" {
+            assert!(paragraphs(&parsed.document).is_empty());
+            assert_eq!(nodes(&json_doc(&parsed), "heading").len(), 1);
+        } else {
+            assert!(parsed.document.blocks.is_empty());
+        }
     }
     let dir = project(&[("main.typ", "#include \"1.typ\"\n")]);
     for index in 1..=8 {

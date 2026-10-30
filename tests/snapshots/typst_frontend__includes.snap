@@ -314,12 +314,239 @@ expression: stable_document(&parsed.document)
         "end_line": 9,
         "file": "[typ]/includes.typ"
       }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Included Markdown"
+        }
+      ],
+      "attrs": {
+        "id": "sec-md-part",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 6,
+        "end_line": 6,
+        "file": "[typ]/include/part.md"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Markdown includes native-parent reference "
+        },
+        {
+          "type": "ref",
+          "target": "sec-outer",
+          "supplement": null,
+          "form": "normal",
+          "span": {
+            "start_line": 8,
+            "end_line": 8,
+            "file": "[typ]/include/part.md"
+          }
+        },
+        {
+          "type": "text",
+          "text": " and math "
+        },
+        {
+          "type": "math",
+          "source": "x + 1",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 8,
+        "end_line": 8,
+        "file": "[typ]/include/part.md"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "A Markdown note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Markdown-scoped note body."
+                }
+              ],
+              "span": {
+                "start_line": 12,
+                "end_line": 12,
+                "file": "[typ]/include/part.md"
+              }
+            }
+          ],
+          "label": "same"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 10,
+        "end_line": 10,
+        "file": "[typ]/include/part.md"
+      }
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Included notebook"
+        }
+      ],
+      "attrs": {
+        "id": "sec-nb-part",
+        "classes": [],
+        "pairs": {}
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 0,
+        "file": "[typ]/include/nb.ipynb"
+      }
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Notebook saved content with math "
+        },
+        {
+          "type": "math",
+          "source": "x^2",
+          "dialect": "latex"
+        },
+        {
+          "type": "text",
+          "text": " and a note"
+        },
+        {
+          "type": "footnote",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "inlines": [
+                {
+                  "type": "text",
+                  "text": "Notebook-scoped note body."
+                }
+              ],
+              "span": {
+                "start_line": 5,
+                "end_line": 5,
+                "cell": 0,
+                "file": "[typ]/include/nb.ipynb"
+              }
+            }
+          ],
+          "label": "same"
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ],
+      "span": {
+        "start_line": 3,
+        "end_line": 3,
+        "cell": 0,
+        "file": "[typ]/include/nb.ipynb"
+      }
+    },
+    {
+      "type": "cell",
+      "index": 1,
+      "id": "saved-output",
+      "language": "python",
+      "source": "print(\"NOTEBOOK-SOURCE\")",
+      "execution_count": 1,
+      "show_input": true,
+      "show_output": true,
+      "outputs": [
+        {
+          "kind": {
+            "kind": "display"
+          },
+          "execution_count": null,
+          "candidates": [
+            {
+              "mime": "text/plain",
+              "blocks": [
+                {
+                  "type": "code_block",
+                  "lang": null,
+                  "text": "NOTEBOOK-SAVED-OUTPUT",
+                  "attrs": {
+                    "id": null,
+                    "classes": [
+                      "output-text"
+                    ],
+                    "pairs": {}
+                  },
+                  "span": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "cell": 1,
+                    "file": "[typ]/include/nb.ipynb"
+                  }
+                }
+              ]
+            }
+          ],
+          "mimes": [
+            "text/plain"
+          ]
+        }
+      ],
+      "attrs": {
+        "id": null,
+        "classes": [],
+        "pairs": {}
+      },
+      "tags": [],
+      "metadata": {
+        "tags": []
+      },
+      "span": {
+        "start_line": 1,
+        "end_line": 1,
+        "cell": 1,
+        "file": "[typ]/include/nb.ipynb"
+      }
     }
   ],
   "features": {
     "math": true,
-    "code": false,
-    "notebook": false,
+    "code": true,
+    "notebook": true,
     "citations": false,
     "footnotes": true
   },
@@ -336,6 +563,8 @@ expression: stable_document(&parsed.document)
     }
   ],
   "includes": [
-    "[typ]/include/part.typ"
+    "[typ]/include/part.typ",
+    "[typ]/include/part.md",
+    "[typ]/include/nb.ipynb"
   ]
 }

@@ -379,11 +379,31 @@ impl WriterWorld {
                 "including .md/.ipynb from typst arrives in T53".into(),
             ))
         })?;
-        let included =
-            provider.synthesize(&path, &self.root).map_err(|error| {
-                FileError::Other(Some(error.to_string().into()))
-            })?;
-        locked(&self.accessed).insert(path);
+        locked(&self.accessed).insert(path.clone());
+        let included = match provider.synthesize(&path, &self.root) {
+            Ok(included) => included,
+            Err(error) => {
+                // A failed parse cannot return Synthesized.files. Retain its
+                // declared descendants so creating a missing child rebuilds.
+                let mut failed =
+                    if canonical_if_possible(&path).starts_with(&self.root) {
+                        crate::markdown::include::scan_includes(&path)
+                    } else {
+                        Vec::new()
+                    };
+                let located = match &error {
+                    Error::MissingAsset { path, .. } => Some(path.as_path()),
+                    _ => error.path(),
+                };
+                if let Some(located) =
+                    located.filter(|path| !path.as_os_str().is_empty())
+                {
+                    failed.push(canonical_if_possible(located));
+                }
+                locked(&self.accessed).extend(failed);
+                return Err(FileError::Other(Some(error.to_string().into())));
+            }
+        };
         locked(&self.accessed).extend(included.files);
         let mut state = locked(&self.includes);
         state.assets.merge(included.assets);
@@ -612,7 +632,11 @@ fn canonical_if_possible(path: &Path) -> PathBuf {
 
 fn is_include(id: FileId) -> bool {
     matches!(id.root(), VirtualRoot::Project)
-        && matches!(id.vpath().extension(), Some("md" | "ipynb"))
+        && matches!(
+            crate::ir::detect_kind(Path::new(id.vpath().get_without_slash())),
+            Ok(crate::ir::SourceKind::Markdown
+                | crate::ir::SourceKind::Notebook)
+        )
 }
 
 fn is_asset(id: FileId) -> bool {

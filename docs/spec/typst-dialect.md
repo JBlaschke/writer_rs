@@ -286,6 +286,11 @@ The package uses only typst built-ins (no `@preview` imports); LaTeX math needs 
 of the argument vocabulary or output (minor before 1.0); emitted files import exactly it; `check`
 warns on others (`W-TYP-PACKAGE-VERSION`).
 
+> **Initial implementation clarification (T53, 2026-10-29):** T53 completes
+> the deferred helper in T31's unreleased `0.1.0` package. Keep the initial
+> version/import fixtures during that completion; after first publication,
+> every package-file change updates `WRITER_DOC_VERSION` as specified above.
+
 ### 4.2 `writer-doc(..)` and layout defaults
 `#let writer-doc(title: none, subtitle: none, author: none, authors: (), date: none, abstract: none,
 abstract-title: auto, keywords: (), description: none, lang: auto, toc: auto, toc-title: auto,
@@ -644,6 +649,26 @@ impl to `src/typst/includes.rs` as a stub (additive, like `include::scan_include
 whose `synthesize(&self, path: &Path, root: &Path)` returns `Err(Error::Other("including
 .md/.ipynb from typst arrives in T53"))`;
 T53 replaces only that body, so no integration file changes after T16.
+
+> **T53 implementation clarifications (2026-10-29):** source interception
+> follows the input detector's Markdown/notebook extensions, case-insensitively,
+> including `.markdown`; `file()` still returns original bytes. The original
+> caller-selected native main retains T52's raw-file identity.
+>
+> Canonical provider paths outside the canonical root, or not representable as
+> UTF-8 root-relative paths, fail explicitly. A native fragment uses parent
+> emission settings with TOC off, clears ignored metadata before emission, and
+> reports explicit ignored document fields once at the included file's line1.
+> Parser-local options remain local; ignored abstracts do not reserve imports
+> or note identities. Only nonempty runs go to `emit_split`; empty retained
+> entries and code variants remain selectable. Exact duplicate conversion
+> diagnostics from three passes are kept once, in first-seen order.
+>
+> Failed provider/structured parses retain attempted paths and best-effort
+> declared descendants for missing-file recovery. Successful dependency lists
+> also include missing-image attempts. Refused out-of-root sources are not
+> scanned. Mapped source-span files take precedence over synthesized owners
+> when reporting nested compiler locations.
 
 ### 6.5 Packages and the downloader
 `file()` for `VirtualRoot::Package(spec)`, first match wins: (1) `writer/doc` at `WRITER_DOC_VERSION`

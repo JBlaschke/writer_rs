@@ -1210,3 +1210,26 @@ so `--format typ` on `.md` or `.ipynb` bypasses synthesis while actual includes
 still use it. Its two CLI/library regressions and a private scratch/reset unit
 pass. The measurements above are from the complete rerun after that correction,
 not the earlier 1,598/1,597 pass. All 14 browser tests ran again without skips.
+
+## T53 native Markdown/notebook include acceptance (2026-10-29)
+
+Measured from `573f480` plus the T53 working tree on macOS arm64, Rust 1.99.1,
+using cached dependencies and incremental targets. These are suite timings,
+not cold-build benchmarks. `/usr/bin/time -p` wrapped both final commands.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 26.37 s | 380.82 s | 179.28 s | 1,634 passed, 3 ignored |
+| `cargo test --release --locked --offline --no-fail-fast` | 8m 58s | 625.73 s | 5,382.40 s | 1,633 passed, 3 ignored |
+
+The debug/release difference is the existing debug-only adversarial frontend
+case. Includes pass through the actual pinned compiler and package: 22 new
+integration cases, six provider and two diagnostic-merge units, plus two live
+HTTP/SSE recovery tests within the 22-case server suite. Generated-source maps,
+original read/json bytes, selection, assets, parent references/citations,
+cycle/depth, failed dependencies and independent target success are covered.
+Both changed frontend snapshots and both new provider snapshots received
+independent review. Existing export/round-trip/native-source regressions pass.
+Configured formatting, denied-warning Clippy (all targets/features), rustdoc
+with denied warnings and `git diff --check` pass. No external TeX or browser
+installation is required by this milestone's acceptance tests.
