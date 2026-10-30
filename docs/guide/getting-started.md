@@ -4,6 +4,24 @@ This walkthrough creates a report, previews it while you edit, and builds
 files to share. You can also start with any existing Markdown document,
 saved notebook or Typst source.
 
+## Download a release
+
+Each [release](https://github.com/JBlaschke/writer_rs/releases) has one
+archive per platform: macOS (Apple silicon and Intel), Linux (x86_64 and
+arm64, glibc) and Windows (x64 and arm64). Check the archive against the
+release's `SHA256SUMS`, unpack it, and move `writer` (`writer.exe` on
+Windows) to a directory on your `PATH`:
+
+```sh
+tar -xzf writer-v0.1.0-aarch64-apple-darwin.tar.gz
+mv writer-v0.1.0-aarch64-apple-darwin/writer ~/.local/bin/
+writer --version
+```
+
+The binaries are not signed. On macOS, a browser download carries a
+quarantine mark; remove it with `xattr -d com.apple.quarantine writer`.
+Keep the archive's `THIRD-PARTY-LICENSES` with copies you pass on.
+
 ## Install from source
 
 In a checkout of this repository, with Rust 1.96 or newer:

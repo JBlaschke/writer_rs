@@ -1,34 +1,75 @@
-.site-nav, .site-footer {
-    box-sizing: border-box;
-    max-width: calc(var(--w-measure) + 3rem);
-    margin: 1.5rem auto;
-    padding: 0 1.5rem;
-    color: var(--w-muted);
-    font-family: var(--w-font-heading);
-    font-size: 0.9rem;
+/* The guide and example pages' header and footer; they match the landing
+   page (docs/site/site.css). */
+
+:root {
+    --site-paper: #f8f4ea;
+    --site-rule: rgba(54, 107, 118, 0.13);
+    --site-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter,
+        "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --site-paper: #12161a;
+        --site-rule: rgba(160, 199, 207, 0.07);
+    }
 }
 
 .site-nav {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.6rem 1.2rem;
-    padding-bottom: 1rem;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding: 1rem max(1.5rem, calc((100% - 1040px) / 2 + 16px));
+    background:
+        repeating-linear-gradient(180deg, transparent 0, transparent 31px,
+            var(--site-rule) 31px, var(--site-rule) 32px),
+        var(--site-paper);
     border-bottom: 1px solid var(--w-border);
+    font-family: var(--w-font-heading);
+    font-size: 0.95rem;
 }
 
-.site-nav a:first-child {
+.site-brand {
     color: var(--w-text);
-    font-size: 1.2rem;
-    font-weight: 700;
+    font: 700 1.4rem/1 var(--site-serif);
+    text-decoration: none;
+}
+
+.site-brand span {
+    color: var(--w-accent);
+    margin-right: 0.15em;
+}
+
+.site-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.1rem;
+}
+
+.site-links a {
+    color: var(--w-muted);
+    text-decoration: none;
+}
+
+.site-links a:hover {
+    color: var(--w-text);
+    text-decoration: underline;
 }
 
 .site-footer {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 1.2rem;
-    padding-top: 1rem;
+    box-sizing: border-box;
+    max-width: calc(var(--w-measure) + 3rem);
+    margin: 1.5rem auto 2.5rem;
+    padding: 1rem 1.5rem 0;
     border-top: 1px solid var(--w-border);
+    color: var(--w-muted);
+    font-family: var(--w-font-heading);
+    font-size: 0.9rem;
 }
 
 @media print {

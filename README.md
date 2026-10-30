@@ -5,7 +5,12 @@ PDF, Word (`.docx`), LaTeX or Typst source. Preview changes in the browser while
 you write. Figures, tables, equations, references and bibliographies travel
 with the document.
 
-From a checkout, with Rust 1.96 or newer:
+The [website](https://jblaschke.github.io/writer_rs/) has the user guide, the
+examples in every output format and the downloads. Each
+[release](https://github.com/JBlaschke/writer_rs/releases) has one archive
+per platform: macOS, Linux and Windows, each on x86_64 and arm64.
+
+Or build from a checkout, with Rust 1.96 or newer:
 
 ```sh
 cargo install --path . --locked

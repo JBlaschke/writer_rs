@@ -1,11 +1,14 @@
 {% extends "@default/document.html" %}
 {% block body_start %}
-<nav class="site-nav" aria-label="Documentation">
-    <a href="writer-site:home">writer</a>
-    <a href="writer-site:guide">Guide</a>
-    <a href="writer-site:guide-getting-started">Get started</a>
-    <a href="writer-site:guide-outputs">Outputs</a>
-    <a href="writer-site:guide-cli">Commands</a>
+<nav class="site-nav" aria-label="Site">
+    <a class="site-brand" href="writer-site:home"><span aria-hidden="true">¶</span>writer</a>
+    <span class="site-links">
+        <a href="writer-site:guide">Guide</a>
+        <a href="writer-site:guide-getting-started">Get started</a>
+        <a href="writer-site:home#examples">Examples</a>
+        <a href="writer-site:home#download">Download</a>
+        <a href="writer-site:repository">GitHub</a>
+    </span>
 </nav>
 {% endblock %}
 {% block body_end %}

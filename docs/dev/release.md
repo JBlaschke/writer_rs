@@ -1,9 +1,36 @@
-# Release artifact preparation
+# Releases
 
-This workflow builds reviewable archives and a static site artifact. It does
-not create GitHub releases, tags or deployments, change remote settings, sign
-binaries or notarize them. Publication is a separate authorized action after
-actual artifacts/results are reviewed. Cargo remains `publish = false`.
+Pushing a version tag publishes a GitHub Release with six native archives and
+`SHA256SUMS`, then redeploys the [website](site.md) so its download table
+names the new release. The workflow does not sign or notarize binaries, and
+Cargo remains `publish = false`.
+
+## Cutting a release
+
+1. Set `version` in `Cargo.toml` (and refresh `Cargo.lock` with a build).
+   Write the release notes in `docs/release/NOTES-<version>.md`; they become
+   the release's description. Merge both to `main`.
+2. Optionally dry-run: Actions → Release → Run workflow on `main`. It builds,
+   smokes and checksums all six archives as run artifacts and publishes
+   nothing.
+3. Tag the merged commit on `main` and push the tag:
+
+   ```sh
+   git tag -a v0.1.0 -m "writer 0.1.0"
+   git push origin v0.1.0
+   ```
+
+4. The Release workflow verifies that the tag is `v<Cargo.toml version>` and
+   names the checked-out commit, runs the release tests and builds on all six
+   runners, verifies the archives and `SHA256SUMS`, and publishes the release.
+   A tag with a pre-release suffix (`v0.2.0-rc.1`) makes a pre-release, which
+   the website's download table skips: it shows GitHub's latest release.
+5. Its last step starts the Site workflow on `main`. If that step only warns,
+   run the Site workflow by hand.
+
+If a build fails, nothing is published: fix the problem on `main`, delete the
+tag (`git push --delete origin v0.1.0` and `git tag -d v0.1.0`) and tag the
+fixed commit. If publishing itself fails, re-run the failed job.
 
 ## Native build matrix
 
@@ -33,11 +60,13 @@ There is no musl, 32-bit, universal macOS or package-manager distribution here.
 ## Revision and tools
 
 `.github/workflows/release.yml` runs pure helper tests on relevant PRs/main
-changes. Its manual artifact mode builds the selected existing revision using
-the exact checked-out SHA as `WRITER_GIT_SHA`. An optional existing tag must be
-`v<Cargo.toml package.version>` and resolve to that same SHA; validation never
-creates a tag. An empty revision input uses the workflow revision. The source
-revision must contain these helper scripts. Prepared notes are selected from
+changes. A pushed `v*` tag builds the tagged commit and publishes it. The
+manual artifact mode builds the selected existing revision and publishes
+nothing. Both use the exact checked-out SHA as `WRITER_GIT_SHA`. The tag
+(pushed, or the optional dispatch input) must be `v<Cargo.toml
+package.version>` and resolve to that same SHA; validation never creates a
+tag. An empty revision input uses the workflow revision. The source revision
+must contain these helper scripts. Release notes are selected from
 `docs/release/NOTES-<version>.md`; missing notes fail rather than borrowing a
 different version's history.
 
@@ -52,8 +81,10 @@ Official action usage was checked on 2026-10-29:
 [setup-python@v7](https://github.com/actions/setup-python),
 [upload-artifact@v7](https://github.com/actions/upload-artifact), and
 [download-artifact@v8](https://github.com/actions/download-artifact).
-Checkout@v7 and rust-cache@v2 follow existing repository CI. Workflow token
-permissions are `contents: read`; no release/Pages/deployment token is needed.
+Checkout@v7 and rust-cache@v2 follow existing repository CI. The workflow
+token is `contents: read` everywhere except the publish job, which needs
+`contents: write` for the release and `actions: write` to start the Site
+workflow.
 No extra Python packages, cargo-about, cargo-dist, archive CLI, Chrome, TeX or
 Word installation is required for release smoke. Linux inspection requires
 the runner's `readelf` and `ldd`; a missing inspection tool fails explicitly.

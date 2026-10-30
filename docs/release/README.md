@@ -32,6 +32,8 @@ outputs without executing cells. LaTeX export produces source/resources for
 a separate TeX installation; it never runs a TeX engine. Chrome-based PDF is
 currently unsupported; the embedded default path needs no Chrome.
 
-Source and documentation: <https://github.com/JBlaschke/writer_rs>.
-This README describes an archive's contents; it does not establish a published
-release, signing/notarization status or a platform compatibility floor.
+The binaries are not signed or notarized. On macOS, remove the quarantine
+mark of a browser download with `xattr -d com.apple.quarantine writer`.
+
+Website, user guide and examples: <https://jblaschke.github.io/writer_rs/>.
+Source: <https://github.com/JBlaschke/writer_rs>.
