@@ -547,6 +547,13 @@ fn cli_mixed_build_prints_a_mapped_compiler_error_once_even_when_quiet() {
         assert!(!dir.path().join("out/document.pdf").exists());
         let stderr = String::from_utf8(output.stderr).unwrap();
         assert_eq!(stderr.matches(marker).count(), 1, "{stderr}");
-        assert!(stderr.contains("document.md:3"), "{stderr}");
+        let headlines: Vec<_> = stderr
+            .lines()
+            .filter(|line| line.contains(marker) && line.contains(": error:"))
+            .collect();
+        assert_eq!(headlines.len(), 1, "{stderr}");
+        assert!(headlines[0].starts_with("document.md:3:"), "{stderr}");
+        assert_eq!(stderr.matches("3 | ```{=typst}").count(), 1, "{stderr}");
+        assert!(!stderr.contains("/__writer-main.typ"), "{stderr}");
     }
 }

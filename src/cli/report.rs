@@ -75,7 +75,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Once;
 
 use super::{GlobalArgs, relative_to};
-use crate::error::{Diagnostic, Diagnostics, Error, Level};
+use crate::error::{Diagnostic, Diagnostics, Error, Excerpt, Level};
 use crate::ir::SourceSpan;
 use crate::pipeline::{BuildFailure, missing_asset_as_error};
 
@@ -128,16 +128,17 @@ pub fn read_source(path: &Path) -> Option<String> {
     std::fs::read_to_string(path).ok()
 }
 
-/// Prints `diagnostics` on stderr, one `path:line: level: message` line each (cli.md),
-/// with paths as [`super::display_path`] shows them. With `-q` only error-level
-/// diagnostics are printed.
+/// Prints each diagnostic's `path:line: level: message` headline and available
+/// source excerpt, with paths as [`super::display_path`] shows them. Compiler
+/// hints follow the excerpt. With `-q` only errors are printed.
 pub fn report_diagnostics(diagnostics: &Diagnostics, global: &GlobalArgs) {
     let cwd = std::env::current_dir().ok();
     let color = stderr_color();
     let mut err = std::io::stderr().lock();
     for diagnostic in visible_diagnostics(diagnostics, global) {
-        let line = diagnostic_line(diagnostic, cwd.as_deref(), color);
-        let _ = writeln!(err, "{line}");
+        let text =
+            format_diagnostic(diagnostic, cwd.as_deref(), &read_source, color);
+        let _ = writeln!(err, "{text}");
     }
 }
 
@@ -461,17 +462,24 @@ impl Location<'_> {
         let Some(excerpt) = excerpt else {
             return;
         };
-        let bar = style(GUTTER, "|", color);
-        let _ = writeln!(out, "{pad} {bar}");
-        let number = style(GUTTER, &number, color);
-        let _ = match excerpt.text.as_str() {
-            "" => writeln!(out, "{number} {bar}"),
-            text => writeln!(out, "{number} {bar} {text}"),
-        };
-        if let Some((start, width)) = excerpt.marker {
-            let marker = style(UNDERLINE, &"^".repeat(width), color);
-            let _ = writeln!(out, "{pad} {bar} {}{marker}", " ".repeat(start));
-        }
+        append_excerpt(out, &excerpt, color);
+    }
+}
+
+/// The existing rustc-style source gutter, shared by errors and diagnostics.
+fn append_excerpt(out: &mut String, excerpt: &Excerpt, color: bool) {
+    let number = excerpt.line.to_string();
+    let pad = " ".repeat(number.len().max(1));
+    let bar = style(GUTTER, "|", color);
+    let _ = writeln!(out, "{pad} {bar}");
+    let number = style(GUTTER, &number, color);
+    let _ = match excerpt.text.as_str() {
+        "" => writeln!(out, "{number} {bar}"),
+        text => writeln!(out, "{number} {bar} {text}"),
+    };
+    if let Some((start, width)) = excerpt.marker {
+        let marker = style(UNDERLINE, &"^".repeat(width), color);
+        let _ = writeln!(out, "{pad} {bar} {}{marker}", " ".repeat(start));
     }
 }
 
@@ -630,12 +638,65 @@ fn location_text(
     }
 }
 
+/// Preserve Diagnostic Display's headline while quoting its actual source.
+fn format_diagnostic(
+    diagnostic: &Diagnostic, cwd: Option<&Path>, source_cache: SourceCache<'_>,
+    color: bool,
+) -> String {
+    let mut headline = diagnostic.clone();
+    let mut hints = Vec::new();
+    if matches!(diagnostic.code, "typst-error" | "typst-warning") {
+        // This is the compiler mapper's frozen encoding, not an arbitrary
+        // split of multiline frontend/library messages.
+        let mut parts = diagnostic.message.split("\n  hint: ");
+        headline.message = parts.next().unwrap_or_default().to_owned();
+        hints.extend(parts);
+    }
+    let mut out = diagnostic_line(&headline, cwd, color);
+    if let Some(excerpt) = diagnostic_excerpt(diagnostic, source_cache) {
+        out.push('\n');
+        append_excerpt(&mut out, &excerpt, color);
+        out.pop();
+    }
+    for hint in hints {
+        out.push_str("\n  hint: ");
+        out.push_str(hint);
+    }
+    out
+}
+
+/// SourceSpan already carries the authoritative line/cell; no column is
+/// inferred from arbitrary diagnostic text. Missing assets retain their
+/// existing reference-specific marker and code-cell omission behavior.
+fn diagnostic_excerpt(
+    diagnostic: &Diagnostic, source_cache: SourceCache<'_>,
+) -> Option<Excerpt> {
+    let span = diagnostic.span.as_ref()?;
+    let path = span.file.as_deref().or(diagnostic.path.as_deref())?;
+    let error =
+        missing_asset_as_error(diagnostic).unwrap_or_else(|| Error::Parse {
+            path: path.to_owned(),
+            line: span.cell.is_none().then_some(span.start_line),
+            message: span.cell.map_or_else(String::new, |cell| {
+                format!("cell {cell}, line {}: diagnostic", span.start_line)
+            }),
+        });
+    error
+        .excerpt(path, source_cache)
+        .filter(|excerpt| !excerpt.text.trim().is_empty())
+}
+
 /// One diagnostic as printed by [`report_diagnostics`].
 fn diagnostic_line(
     diagnostic: &Diagnostic, cwd: Option<&Path>, color: bool,
 ) -> String {
     let mut diagnostic = diagnostic.clone();
-    diagnostic.path = diagnostic.path.map(|path| relative_to(&path, cwd));
+    diagnostic.path = diagnostic
+        .span
+        .as_ref()
+        .and_then(|span| span.file.as_deref())
+        .or(diagnostic.path.as_deref())
+        .map(|path| relative_to(path, cwd));
     let text = diagnostic.to_string();
     if !color {
         return text;
@@ -785,6 +846,129 @@ mod tests {
         assert_eq!(
             diagnostic_line(&diagnostic, Some(Path::new("/work")), false),
             "talk.ipynb: cell 5, line 2: warning: image `x.png` not found"
+        );
+    }
+
+    #[test]
+    fn diagnostics_quote_source_without_changing_the_display_headline() {
+        for (level, label) in [
+            (Level::Info, "info"),
+            (Level::Warning, "warning"),
+            (Level::Error, "error"),
+        ] {
+            let diagnostic = Diagnostic::new(level, "sample", "message")
+                .with_path("main.md")
+                .with_span(span(2, None));
+            assert_eq!(
+                format_diagnostic(
+                    &diagnostic,
+                    None,
+                    &one_file("main.md", "Before\n  Source α text  \n"),
+                    false,
+                ),
+                format!(
+                    "main.md:2: {label}: message\n  |\n2 |   Source α text\n  |   ^^^^^^^^^^^^^",
+                )
+            );
+        }
+    }
+
+    #[test]
+    fn included_diagnostic_origin_wins_for_both_headline_and_excerpt() {
+        let mut diagnostic = Diagnostic::warning("included", "problem")
+            .with_path("main.md")
+            .with_span(span(2, None));
+        diagnostic.span.as_mut().unwrap().file = Some("part.md".into());
+        assert_eq!(
+            format_diagnostic(
+                &diagnostic,
+                None,
+                &one_file("part.md", "Intro\nIncluded\n"),
+                false,
+            ),
+            "part.md:2: warning: problem\n  |\n2 | Included\n  | ^^^^^^^^"
+        );
+    }
+
+    #[test]
+    fn notebook_diagnostic_quotes_cell_source_with_bom_and_crlf() {
+        let diagnostic = Diagnostic::error("typst-error", "unknown variable")
+            .with_path("book.ipynb")
+            .with_span(span(2, Some(1)));
+        let notebook = concat!(
+            "\u{feff}{\r\n\"cells\":[",
+            "{\"cell_type\":\"markdown\",\"source\":\"Other\"},",
+            "{\"cell_type\":\"markdown\",\"source\":[\"Before\\r\\n\",\"#bad()\\r\\n\"]}",
+            "]}\r\n",
+        );
+        assert_eq!(
+            format_diagnostic(
+                &diagnostic,
+                None,
+                &one_file("book.ipynb", notebook),
+                false,
+            ),
+            "book.ipynb: cell 1, line 2: error: unknown variable\n  |\n2 | #bad()\n  | ^^^^^^"
+        );
+    }
+
+    #[test]
+    fn compiler_hints_follow_the_excerpt_once_and_other_messages_are_literal() {
+        let diagnostic = Diagnostic::error("typst-error",
+            "bad argument\n  hint: choose another value\n  hint: in @writer/doc:0.1.0/lib.typ:99")
+            .with_path("main.typ").with_span(span(1, None));
+        assert_eq!(
+            format_diagnostic(
+                &diagnostic,
+                None,
+                &one_file("main.typ", "#call()\n"),
+                false,
+            ),
+            concat!(
+                "main.typ:1: error: bad argument\n  |\n1 | #call()\n  | ^^^^^^^",
+                "\n  hint: choose another value\n  hint: in @writer/doc:0.1.0/lib.typ:99",
+            )
+        );
+        let other = Diagnostic::warning("literal", "two\n  hint: source text");
+        assert_eq!(
+            format_diagnostic(&other, None, &|_| None, false),
+            "warning: two\n  hint: source text"
+        );
+    }
+
+    #[test]
+    fn unquotable_or_blank_diagnostic_source_keeps_the_headline() {
+        let diagnostic = Diagnostic::warning("w", "message")
+            .with_path("main.md")
+            .with_span(span(2, None));
+        for text in [None, Some("only one line\n"), Some("first\n  \n")] {
+            let source = |_: &Path| text.map(str::to_owned);
+            assert_eq!(
+                format_diagnostic(&diagnostic, None, &source, false),
+                "main.md:2: warning: message"
+            );
+        }
+    }
+
+    #[test]
+    fn missing_asset_diagnostic_underlines_the_original_reference() {
+        let diagnostic = Diagnostic::warning(
+            "missing-asset",
+            "image `plot.png` not found (looked for /missing/plot.png)",
+        )
+        .with_path("main.md")
+        .with_span(span(1, None));
+        assert_eq!(
+            format_diagnostic(
+                &diagnostic,
+                None,
+                &one_file("main.md", "![Plot](plot.png)\n"),
+                false,
+            ),
+            concat!(
+                "main.md:1: warning: image `plot.png` not found (looked for /missing/plot.png)",
+                "\n  |\n1 | ![Plot](plot.png)\n  |         ^^^^^^^^",
+            )
         );
     }
 

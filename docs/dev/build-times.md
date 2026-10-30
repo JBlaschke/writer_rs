@@ -1405,3 +1405,51 @@ The complete release suite passes in one run, including all 20 watcher tests.
 The existing debug-only adversarial frontend case explains the one-test mode
 difference. Final configured formatting and whitespace checks pass; source
 was unchanged after the denied-warning Clippy/rustdoc gates.
+
+
+## T73 diagnostic quality acceptance (2026-10-29)
+
+Measured from T72 `772dc5e` plus the T73 working tree on macOS arm64,
+Rust 1.99.1, cached dependencies and incremental targets. Commands use
+`/usr/bin/time -p`; these are suite timings, not cold-build benchmarks.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 0.51 s | 535.25 s | 103.14 s | 1,944 passed, 3 ignored |
+| `cargo test --release --locked --offline --no-fail-fast` | 11m 04s | 805.82 s | 6,952.27 s | 1,943 passed, 3 ignored |
+
+The complete debug suite passes in one run, including all watcher cases.
+Configured formatting, all-target/all-feature denied-warning Clippy and
+all-feature denied-warning rustdoc pass. Twenty report units, fourteen payload
+units, four new public compiler/payload cases, one native CLI case, twenty
+existing PDF pipeline cases and sixteen original World cases pass. No primary
+message-count assertion, source location or payload schema was loosened.
+
+Both existing required-Chrome overlay/repair cases pass with actual server/
+browser facts: warning display/clearing, shared parse failure, pages-only error,
+retained last-good images and repair. The focused browser run takes 34.51s
+including compilation, with 11.66s in the two tests. Existing 10-second
+browser deadlines remain unchanged. The complete release suite also passes
+in one run. The existing debug-only adversarial frontend case explains the
+one-test mode difference. These full-suite measurements precede the separate
+T72 Windows parent-error repair; focused integration checks are recorded below
+in the following table.
+
+
+Post-parent-repair integration uses `6eaa3c8` plus the T73 working tree.
+The typed I/O repair and one added tree control are a separate T72 change;
+T73's formatter code did not change after its complete baseline runs.
+
+| focused command group | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| CLI units, debug | 9.80s | 45.36 s | 13.05 s | 88 passed |
+| Public cases, debug | 10.36s | 54.57 s | 30.45 s | 53 passed |
+| CLI units, release | 1m 27s | 89.30 s | 226.64 s | 88 passed |
+| Public cases, release | 1m 46s | 114.01 s | 713.15 s | 53 passed |
+
+Final formatting, all-target/all-feature denied-warning Clippy and all-feature
+rustdoc pass after the repair (Clippy 26.11s; rustdoc 4.01s). No public DOCX
+assertion or original deadline was relaxed. Full baseline counts above and
+focused integration below are distinct evidence, not a claim that the full
+suite reran after the parent repair. Native Windows CI is still required for
+that platform; local integration runs were on macOS arm64.
