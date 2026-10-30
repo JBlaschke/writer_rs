@@ -1,0 +1,266 @@
+{
+    "legal_paths": [
+        "LICENSE",
+        "NOTICE"
+    ],
+    "license": {
+        "existing_embedded_path": "vendor/crates/typst-assets/LICENSE",
+        "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+        "path": "LICENSE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "size": 9723,
+        "url": "https://raw.githubusercontent.com/typst/typst/9dfd3a08500b7896045f907433cf7b4b02434fad/LICENSE"
+    },
+    "notice": {
+        "checked_in_path": "docs/release/notice-sources/typst-0.15.1/NOTICE",
+        "embedded": false,
+        "git_blob_sha1": "6d7e238afbef1e4f72f075a1367bb0cbb372a6ac",
+        "path": "NOTICE",
+        "sha256": "1778244777547c281b6f5fa9fc0c18ab21f8d4491c803f64e09046800f5fcb26",
+        "size": 21066,
+        "url": "https://raw.githubusercontent.com/typst/typst/9dfd3a08500b7896045f907433cf7b4b02434fad/NOTICE"
+    },
+    "packages": [
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "d1cb79435d128de5d5443a058a983f6dcc16738760fa55ed703762bc278b1fd3",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "d1cb79435d128de5d5443a058a983f6dcc16738760fa55ed703762bc278b1fd3",
+            "name": "typst",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "a8823e1822bd181d8bee47b05632d16bf3a0a8ab042e01d815826350d7ae16c3",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "a8823e1822bd181d8bee47b05632d16bf3a0a8ab042e01d815826350d7ae16c3",
+            "name": "typst-eval",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-eval"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "f41bcfbe480b640c4447d8bf9bb59020da610f239aa032d53328651a03572c09",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "f41bcfbe480b640c4447d8bf9bb59020da610f239aa032d53328651a03572c09",
+            "name": "typst-html",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-html"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "27ee52e27dfab0da5ac3d19e7e43a21fbc7ff83af9301119468bae89fa857a8b",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "27ee52e27dfab0da5ac3d19e7e43a21fbc7ff83af9301119468bae89fa857a8b",
+            "name": "typst-kit",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-kit"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "1916c407baf8f8815e5d50030eed6d5ac6a0702d927b3c156e38db7a618499e2",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "1916c407baf8f8815e5d50030eed6d5ac6a0702d927b3c156e38db7a618499e2",
+            "name": "typst-layout",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-layout"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "12becd02464849f1507f3c4ef3f401a4d28d5938cc74b6acc6f1d703458bf393",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "12becd02464849f1507f3c4ef3f401a4d28d5938cc74b6acc6f1d703458bf393",
+            "name": "typst-library",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-library"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "3aef841ff3e606542f3057ce5dd0ff264d53a439e00ed4a91ec00ec8568b3b7f",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "3aef841ff3e606542f3057ce5dd0ff264d53a439e00ed4a91ec00ec8568b3b7f",
+            "name": "typst-pdf",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-pdf"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "a8f2eb73ab25add88cab03b26effabc657977fe850ff81556b28c6b137ff4bf1",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "a8f2eb73ab25add88cab03b26effabc657977fe850ff81556b28c6b137ff4bf1",
+            "name": "typst-realize",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-realize"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "de8a657a5fa5b9b7d3d458f482978674de910b54889d46f3bb55ca89f570f83e",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "de8a657a5fa5b9b7d3d458f482978674de910b54889d46f3bb55ca89f570f83e",
+            "name": "typst-render",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-render"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "5df6dc785695aae085678bd6657aa04a1d26058a76ed042e738658078bca681e",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "5df6dc785695aae085678bd6657aa04a1d26058a76ed042e738658078bca681e",
+            "name": "typst-svg",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-svg"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "92a20d79df5d10c7fb0b4f7c18e4b2671edfc21e5ed9ad9894e18cccefd1c70f",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "92a20d79df5d10c7fb0b4f7c18e4b2671edfc21e5ed9ad9894e18cccefd1c70f",
+            "name": "typst-syntax",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-syntax"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "ab6ee5110f671a23164c61caa85dbc476043d503103dedd36f16d93f970f3f59",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "ab6ee5110f671a23164c61caa85dbc476043d503103dedd36f16d93f970f3f59",
+            "name": "typst-timing",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-timing"
+            },
+            "version": "0.15.1"
+        },
+        {
+            "archive_legal_members": [],
+            "cached_archive_sha256": "b33ad1675497b45ae9d960a16e95207c35c2c46330d1a6249a9a977670c8c160",
+            "license": "Apache-2.0",
+            "license_file": null,
+            "locked_checksum": "b33ad1675497b45ae9d960a16e95207c35c2c46330d1a6249a9a977670c8c160",
+            "name": "typst-utils",
+            "repository": "https://github.com/typst/typst",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "source_vcs_matches_archive": true,
+            "vcs": {
+                "git": {
+                    "sha1": "9dfd3a08500b7896045f907433cf7b4b02434fad"
+                },
+                "path_in_vcs": "crates/typst-utils"
+            },
+            "version": "0.15.1"
+        }
+    ],
+    "repository": "https://github.com/typst/typst",
+    "revision": "9dfd3a08500b7896045f907433cf7b4b02434fad",
+    "schema_version": 1,
+    "tree_entry_count": 2954,
+    "tree_truncated": false,
+    "tree_url": "https://api.github.com/repos/typst/typst/git/trees/9dfd3a08500b7896045f907433cf7b4b02434fad?recursive=1",
+    "verified_date": "2026-10-29"
+}

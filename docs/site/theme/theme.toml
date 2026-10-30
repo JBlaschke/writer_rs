@@ -1,0 +1,5 @@
+name = "writer-site"
+extends = "default"
+
+[styles]
+entries = ["styles/site.css"]

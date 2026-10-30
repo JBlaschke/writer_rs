@@ -1,0 +1,226 @@
+{
+  "license": {
+    "bytes": 16726,
+    "file": "LICENSE-MPL-2.0.txt",
+    "note": "Verbatim official versioned Mozilla text, not a selectors upstream root LICENSE.",
+    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "source_url": "https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt",
+    "version": "Mozilla Public License Version 2.0"
+  },
+  "negative_inventory": {
+    "additional_copyright_patent_or_incompatible_notices_in_published_rust": [],
+    "all_published_file_bytes_match_unpacked_registry_source": true,
+    "applicable_root_or_selectors_legal_files": [],
+    "matching_legal_files_in_archive": [],
+    "other_upstream_legal_files_not_applicable_to_selectors": [
+      "malloc_size_of/LICENSE-APACHE",
+      "malloc_size_of/LICENSE-MIT",
+      "servo_arc/LICENSE-APACHE",
+      "servo_arc/LICENSE-MIT",
+      "style/properties/vendored_python/markupsafe/LICENSE.txt"
+    ],
+    "published_file_count": 21,
+    "upstream_tree_entries": 439,
+    "upstream_tree_truncated": false
+  },
+  "package": {
+    "archive_sha256": "8322aebea94a6cc288ff884e8a49bdbceef60206c400c6c46d22e62fc4fd91a6",
+    "complete_source_archive_url": "https://static.crates.io/crates/selectors/selectors-0.41.0.crate",
+    "license": "MPL-2.0",
+    "license_file": null,
+    "name": "selectors",
+    "path_in_vcs": "selectors",
+    "registry_source": "registry+https://github.com/rust-lang/crates.io-index",
+    "repository": "https://github.com/servo/stylo",
+    "vcs_sha1": "34d25f741765a0bdb894f8271852e633299352d8",
+    "version": "0.41.0"
+  },
+  "source_header": {
+    "bytes": 206,
+    "file": "SOURCE-HEADER.txt",
+    "files": [
+      {
+        "git_blob_sha1": "2a80f939c9f975cee6d9793bcf1a4bae980ce2d1",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "attr.rs",
+        "path_in_vcs": "selectors/attr.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/attr.rs",
+        "whole_file_bytes": 6682,
+        "whole_file_sha256": "ac734a338f114a6f3a6b5176e4356ea9d03365fd3fc9db22f3851f737fce575f"
+      },
+      {
+        "git_blob_sha1": "5299e1840acf5f99d72e66ee22fb982873936e44",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "bloom.rs",
+        "path_in_vcs": "selectors/bloom.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/bloom.rs",
+        "whole_file_bytes": 11846,
+        "whole_file_sha256": "9cd80b3bf842566d78ccffa88de86e2dcf5f23562bb4828865ba0f750d12fe19"
+      },
+      {
+        "git_blob_sha1": "f204ecfb1a23c3847877c0457af80bdc60bdc4d5",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "builder.rs",
+        "path_in_vcs": "selectors/builder.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/builder.rs",
+        "whole_file_bytes": 16711,
+        "whole_file_sha256": "be4ce2818710343d2f6841a78013a26c86ca72d8ca62e68f8b580435a92bfc19"
+      },
+      {
+        "git_blob_sha1": "3d000b730e117063425936318d3772dc57c18b03",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "context.rs",
+        "path_in_vcs": "selectors/context.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/context.rs",
+        "whole_file_bytes": 17280,
+        "whole_file_sha256": "ae29c12c063fcfd4f1b121d84688a2c4d16291d6247a0e03f104e57a6361d575"
+      },
+      {
+        "git_blob_sha1": "e9cf2ee3191c9dd57d4abe6f163774c431bdf727",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "kleene_value.rs",
+        "path_in_vcs": "selectors/kleene_value.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/kleene_value.rs",
+        "whole_file_bytes": 3577,
+        "whole_file_sha256": "1932450194f7114d89151a09efa79130f34961e2556fb79b92d4c5e174adb823"
+      },
+      {
+        "git_blob_sha1": "e60fe5be257f03091569b56a149e7c95ab186bfb",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "lib.rs",
+        "path_in_vcs": "selectors/lib.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/lib.rs",
+        "whole_file_bytes": 643,
+        "whole_file_sha256": "d54c6e13e9e952dac17d209171df8657e3cae93beaddace4906150cdec8d02e9"
+      },
+      {
+        "git_blob_sha1": "128a62a82d651aa96170708d67470950f265adab",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "matching.rs",
+        "path_in_vcs": "selectors/matching.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/matching.rs",
+        "whole_file_bytes": 57415,
+        "whole_file_sha256": "c07aebf79525f36c6bcdbb5fa6955bc160fb119a9ecb1573b3423a80d31de622"
+      },
+      {
+        "git_blob_sha1": "bd593ac50b1f48729f3efdc693ac5b076498f2a4",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "nth_index_cache.rs",
+        "path_in_vcs": "selectors/nth_index_cache.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/nth_index_cache.rs",
+        "whole_file_bytes": 3176,
+        "whole_file_sha256": "2f4e94a1010c867ce4b96619e90f1574449769fc5f3f419a2b84e4613d4ab39c"
+      },
+      {
+        "git_blob_sha1": "3f835a967d3858f96f7473206c5d4fee7157dcec",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "parser.rs",
+        "path_in_vcs": "selectors/parser.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/parser.rs",
+        "whole_file_bytes": 178306,
+        "whole_file_sha256": "430e0b463cfbcf791eeac5cbcc389ee44dbf169d4a7ac6785e961fc2654d7499"
+      },
+      {
+        "git_blob_sha1": "207ce888e4d2268cca5417af6a1461ad94c6f133",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "relative_selector/cache.rs",
+        "path_in_vcs": "selectors/relative_selector/cache.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/relative_selector/cache.rs",
+        "whole_file_bytes": 2743,
+        "whole_file_sha256": "c6460f5db8c74421af0890c4c69119450397258f64be169c91d0320e2d8626f4"
+      },
+      {
+        "git_blob_sha1": "5c7ec35bace18f06dbccf0590a35652849b69c7c",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "relative_selector/filter.rs",
+        "path_in_vcs": "selectors/relative_selector/filter.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/relative_selector/filter.rs",
+        "whole_file_bytes": 6079,
+        "whole_file_sha256": "9909a1766c64bc7e3e432c1dfdea5a5e4b774329cee50afba6d5e51f81de712c"
+      },
+      {
+        "git_blob_sha1": "6dd39f7327e6b6e4a0b2eb6e9383bb9ee5d2ab95",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "relative_selector/mod.rs",
+        "path_in_vcs": "selectors/relative_selector/mod.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/relative_selector/mod.rs",
+        "whole_file_bytes": 238,
+        "whole_file_sha256": "29e305635f471d8467a6eca83ef83dcbda769ecc62976a708c98afa418ab76a6"
+      },
+      {
+        "git_blob_sha1": "dcdd7ff259dd5d6dc435a671a66ec97d11d09e1f",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "sink.rs",
+        "path_in_vcs": "selectors/sink.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/sink.rs",
+        "whole_file_bytes": 950,
+        "whole_file_sha256": "34d4cd4127a6e4979eba11f8e6c41dbc527c0a996be78bd2e3167916c025a04b"
+      },
+      {
+        "git_blob_sha1": "09e7ebdfc1b43d501392ddd2d3fb228f12d38176",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "tree.rs",
+        "path_in_vcs": "selectors/tree.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/tree.rs",
+        "whole_file_bytes": 6347,
+        "whole_file_sha256": "257a2b30dcdd07bcf0d2519301c4e0678b8ae1a0ba22ad122a7a9132027b62ee"
+      },
+      {
+        "git_blob_sha1": "e4286c55532cae89bc7bf8c0a9575e225106aa4a",
+        "header_byte_range": [
+          0,
+          206
+        ],
+        "path_in_crate": "visitor.rs",
+        "path_in_vcs": "selectors/visitor.rs",
+        "source_url": "https://github.com/servo/stylo/blob/34d25f741765a0bdb894f8271852e633299352d8/selectors/visitor.rs",
+        "whole_file_bytes": 4884,
+        "whole_file_sha256": "3b39f678c2f89c720d2d4fe9bb9064e283609ed49c190cc5a657705522f91dfd"
+      }
+    ],
+    "note": "Verbatim identical leading MPL comment bytes from all 15 published Rust files; no owner attribution added.",
+    "sha256": "766674381e88a468d55e07de3596987391cf0e8beebe51baf4fddf11078785b3"
+  }
+}

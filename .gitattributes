@@ -5,3 +5,5 @@ assets/vendor/** -text -whitespace linguist-vendored
 assets/licenses/two-face*.md -text -whitespace linguist-generated
 assets/licenses/hayagriva-styles.md -whitespace linguist-generated
 assets/math/unicode-latex.toml linguist-generated
+# Preserve reviewed release-only upstream notices byte for byte.
+docs/release/notice-sources/** -text -whitespace

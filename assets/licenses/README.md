@@ -53,8 +53,8 @@ and BSD-3-Clause licenses. Their notices are in the patterns/ directory at
 https://github.com/typst/hypher; its crate LICENSE is included with the
 linked Rust crates in the release archive.
 
-The Unicode-to-LaTeX table planned for math/unicode-latex.toml (T51) will be
-derived from tylax 0.3.8, whose maps derive from tex2typst. Both use Apache-2.0; see
+The Unicode-to-LaTeX table in math/unicode-latex.toml is derived from
+tylax 0.3.8, whose maps derive from tex2typst. Both use Apache-2.0; see
 vendor/crates/tylax/LICENSE. VERSIONS.toml in vendor/ records source pins.
 
 Rust crates: THIRD-PARTY-LICENSES/ in the release archive

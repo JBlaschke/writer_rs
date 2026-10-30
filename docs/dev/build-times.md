@@ -1500,3 +1500,61 @@ installed binary passes version/notices, bibliography scaffold and HTML/PDF
 smoke. Actual documented latexmk PDFLaTeX succeeds with final PDF/log/text
 checks; Ghostscript's joined title projection is checked against the exact
 spaced TeX title. No Biber use is claimed for this citation-free walkthrough.
+
+
+## T75 release/site acceptance (2026-10-29)
+
+Measured on macOS 26.7 arm64, Rust 1.99.1, Python 3.15.2, cached dependencies
+and targets. Debug acceptance uses implementation `b4e80c0`; final release
+and artifacts use `5e3062d913d514c87621d4c2f2d391382b8d4b69`. Between these
+commits, four Python scripts receive AST-identical layout changes and the
+site workflow gains complete asset/license input triggers. Rust source,
+assertions, dependencies and profiles do not change. Later acceptance edits
+are documentation only. These are not cold-build or performance comparisons.
+
+| command | Cargo build phase | total wall | CPU (user + system) | result |
+|---|---|---|---|---|
+| `cargo test --locked --offline --no-fail-fast` | 51.74 s | 706.81 s | 296.15 s | 1,953 passed; one existing watcher timeout; 3 ignored |
+| `cargo test --locked --offline --test watch` | 0.63 s | 64.25 s | 0.38 s | Original 20 passed |
+| `cargo test --release --locked --offline --no-fail-fast` | 11m 28s | 1,149.56 s | 7,023.57 s | 1,953 passed; 3 ignored |
+| `cargo build --release --locked --offline --bin writer` | 1m 14s | 74.94 s | 211.53 s | Passed |
+
+The debug invocation completes all 82 groups and the unchanged rerun verifies
+all 1,954 distinct cases, counting repeated cases once. Its cross-thread
+watcher completion timeout is the previously recorded macOS symptom; its
+cause remains unproven and no deadline/assertion is weakened. The complete
+release invocation passes all 82 groups in one run, including every watcher
+case. No diagnostic probe enters this milestone.
+
+Configured formatting, denied-warning all-target/all-feature Clippy (88.94s
+wall; 111.60s CPU) and all-feature rustdoc (8.05s wall; 3.92s CPU) pass on the
+installed implementation before the Python-only review refinements. JavaScript
+syntax and the pinned Unicode-table check pass. The initial Unicode command
+lacks sandbox network access; its offline replacement verifies exact cached
+source archive hashes and table bytes. All 62 final Python helper cases pass
+after the refinements, with no failure/error.
+
+Actual native archive/site process wall measurements:
+
+| operation | wall | result |
+|---|---:|---|
+| Exact notice assembly | 1.259 s | 420 crate rows/directories; 749 files |
+| Archive / same-input repeat | 1.554 / 1.466 s | Complete archive bytes identical |
+| Unpacked native smoke | 2.215 s | All five outputs/repeated bytes/native Typst PDF pass |
+| Relative site build | 0.769 s | 14 pages; 17 files; 3,042,863 bytes |
+| Commit/source-link inspection | 26.065 s | 24 source URLs; all 1,324 tracked blobs match |
+| `/writer_rs/` site build | 1.370 s | 14 pages; 17 files; 3,044,591 bytes |
+
+The uncompressed `aarch64-apple-darwin` executable is **57,153,472 bytes**;
+the tar.gz is **28,068,371 bytes**. Full SHA-256 identities, fixed epoch and
+validation boundaries are in `release.md`. Production site validation checks
+149 local references and 20 fragments, 114 IDs, 44 data URLs and 80 inactive
+fallback occurrences proved through 20 canonical font rules. Fresh raw Writer
+output confirms byte-identical help/default/example code and CSS blocks.
+All 1,324 tracked source hashes and the binary hash remain unchanged.
+
+Detailed local reports and inventories are retained under ignored
+`target/task-prep/crash-recovery/t75/native-final-v2/`. This proves one local
+native target, not the six hosted jobs or an aggregate checksum set. No manual
+workflow dispatch, tag/release creation, deployment, signing or publication
+was performed. Stretch milestones remain outside this completed core run.
