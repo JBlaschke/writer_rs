@@ -840,6 +840,7 @@ fn notebook_difference(old: &str, new: &str) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use std::sync::mpsc;
+    use std::time::Duration;
 
     use serde_json::json;
     use typst::World as _;
@@ -1273,6 +1274,50 @@ mod tests {
         serde_json::to_value(session.state.read().unwrap().hello()).unwrap()
     }
 
+    /// How long a session test may run before it counts as stalled; each one
+    /// takes well under a second, on CI too.
+    const STALL_LIMIT: Duration = Duration::from_secs(120);
+
+    /// Runs `test` on its own thread and fails when it has not finished within
+    /// `limit`, instead of hanging the whole run. A stalled thread cannot be
+    /// stopped: it is left behind, and the harness exits without it.
+    fn within(limit: Duration, test: impl FnOnce() + Send + 'static) {
+        let name = std::thread::current().name().unwrap_or("test").to_owned();
+        let (done, finished) = mpsc::channel();
+        let runner = std::thread::Builder::new()
+            .name(name.clone())
+            .spawn(move || {
+                test();
+                let _ = done.send(());
+            })
+            .unwrap();
+        // A panic drops `done` unsent; joining passes the panic on.
+        if let Err(mpsc::RecvTimeoutError::Timeout) =
+            finished.recv_timeout(limit)
+        {
+            panic!("{name} stalled: still running after {limit:?}");
+        }
+        if let Err(panic) = runner.join() {
+            std::panic::resume_unwind(panic);
+        }
+    }
+
+    #[test]
+    fn within_passes_on_results_and_panics_and_fails_stalled_tests() {
+        within(STALL_LIMIT, || {});
+        let failed = catch_unwind(|| within(STALL_LIMIT, || panic!("inner")));
+        assert_eq!(*failed.unwrap_err().downcast::<&str>().unwrap(), "inner");
+        let (release, stalled) = mpsc::channel::<()>();
+        let stall = catch_unwind(AssertUnwindSafe(|| {
+            within(Duration::from_millis(10), move || {
+                let _ = stalled.recv();
+            });
+        }));
+        let message = *stall.unwrap_err().downcast::<String>().unwrap();
+        assert!(message.ends_with(" stalled: still running after 10ms"));
+        drop(release);
+    }
+
     #[test]
     fn session_runs_only_affected_stages_and_keeps_skipped_warnings() {
         let (_directory, opts) = project();
@@ -1333,23 +1378,27 @@ mod tests {
     #[test]
     fn web_panic_discards_world_and_independent_pages_reacquires_then_recovers()
     {
-        let (_directory, opts) = project();
-        let mut session = session(opts);
-        let mut stages = Stages {
-            web: Action::Panic,
-            fresh_pages_world: true,
-            ..Default::default()
-        };
-        session.rebuild_with(Vec::new(), &mut stages);
-        let failed = state(&session);
-        assert_eq!(failed["web"]["status"], "error");
-        assert_eq!(failed["pages"]["status"], "ok");
-        assert_eq!(stages.calls, ["prepare", "web", "pages"]);
-        assert!(session.worlds.current().is_some());
-        stages.web = Action::Good;
-        stages.fresh_pages_world = false;
-        session.rebuild_with(Vec::new(), &mut stages);
-        assert_eq!(state(&session)["status"], "ok");
+        // A Windows CI run blocked here for hours: notify 8.2 can rearm a
+        // stopped watch on a closed handle that a directory listing reuses.
+        within(STALL_LIMIT, || {
+            let (_directory, opts) = project();
+            let mut session = session(opts);
+            let mut stages = Stages {
+                web: Action::Panic,
+                fresh_pages_world: true,
+                ..Default::default()
+            };
+            session.rebuild_with(Vec::new(), &mut stages);
+            let failed = state(&session);
+            assert_eq!(failed["web"]["status"], "error");
+            assert_eq!(failed["pages"]["status"], "ok");
+            assert_eq!(stages.calls, ["prepare", "web", "pages"]);
+            assert!(session.worlds.current().is_some());
+            stages.web = Action::Good;
+            stages.fresh_pages_world = false;
+            session.rebuild_with(Vec::new(), &mut stages);
+            assert_eq!(state(&session)["status"], "ok");
+        });
     }
 
     #[test]
