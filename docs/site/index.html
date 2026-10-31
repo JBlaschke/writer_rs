@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+    The project website's landing page. scripts/site.py fills the dollar-brace
+    placeholders (a Python string.Template, so a literal dollar sign is written
+    twice), then maps every writer-site: URL like the guide pages' links.
+    docs/dev/site.md describes the site.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>writer: Markdown, notebooks and Typst to HTML, PDF and Word</title>
+<meta name="description" content="writer turns Markdown reports, saved Jupyter notebooks and Typst into HTML, typeset PDF, editable Word, LaTeX and Typst source. One binary, live preview, downloads and examples.">
+<link rel="stylesheet" href="writer-site:artifact/site.css">
+</head>
+<body>
+
+<header class="hero">
+    <nav class="topbar wrap" aria-label="Site">
+        <a class="brand" href="writer-site:home"><span class="mark" aria-hidden="true">¶</span>writer</a>
+        <span class="links">
+            <a href="#outputs">Outputs</a>
+            <a href="#examples">Examples</a>
+            <a href="writer-site:guide">Guide</a>
+            <a href="#download">Download</a>
+            <a href="${repo_url}">GitHub</a>
+        </span>
+    </nav>
+    <div class="wrap hero-grid">
+        <div class="pitch">
+            <p class="kicker">A command-line tool, one binary</p>
+            <h1>Write once.<br><em>Typeset everywhere.</em></h1>
+            <p class="tagline">Write a report in Markdown, a saved Jupyter
+                notebook or Typst. writer builds a web page, a typeset PDF,
+                an editable Word file, LaTeX or Typst source from it, and
+                previews every edit while you write.</p>
+            <p class="actions">
+                <a class="button primary" href="#download">Download</a>
+                <a class="button" href="writer-site:guide-getting-started">Get started</a>
+                <a class="button" href="#examples">See the examples</a>
+            </p>
+        </div>
+        <div class="desk" aria-label="First pages of the example PDFs">
+${desk}
+        </div>
+    </div>
+</header>
+
+<main>
+
+<section id="outputs" class="wrap">
+    <h2>One source, five outputs</h2>
+    <p class="lede">This is the start of the basic example. Each of these
+        files was built from it by the same <code>writer</code> that built
+        this page.</p>
+    <div class="pipeline">
+        <figure class="source">
+            <figcaption><span class="dots" aria-hidden="true"></span>${source_name}</figcaption>
+<pre><code>${source_excerpt}</code></pre>
+        </figure>
+        <div class="arrow" aria-hidden="true">→</div>
+        <ul class="formats">
+${formats}
+        </ul>
+    </div>
+<pre class="command"><code>writer build ${source_name} --to html,pdf,docx,latex,typst</code></pre>
+</section>
+
+<section class="wrap features" aria-label="Features">
+    <article>
+        <h3>Live preview</h3>
+        <p><code>writer serve</code> rebuilds on every save and shows the web
+            page or the typeset pages. A failing edit keeps the last good
+            result on screen and points at the line.</p>
+    </article>
+    <article>
+        <h3>Notebooks, as saved</h3>
+        <p>Plots, DataFrames and tracebacks come from the notebook's saved
+            outputs. No kernel runs, so a build needs no Python.</p>
+    </article>
+    <article>
+        <h3>References that travel</h3>
+        <p>Numbered figures, tables and equations, cross-references,
+            footnotes, citations and a bibliography, on the web, in the PDF
+            and in Word.</p>
+    </article>
+    <article>
+        <h3>Math everywhere</h3>
+        <p>LaTeX math becomes KaTeX or MathML on the web, typeset math in the
+            PDF and editable Word equations, with an image where Word's
+            equations fall short.</p>
+    </article>
+    <article>
+        <h3>Everything inside</h3>
+        <p>The Typst compiler, fonts, KaTeX, the theme and the document
+            package are embedded. Web, PDF and Word need no TeX, Typst CLI,
+            Chrome or Node.js.</p>
+    </article>
+    <article>
+        <h3>Yours to restyle</h3>
+        <p>Themes are CSS and Jinja templates. Eject the built-in theme,
+            Typst template, LaTeX template or Word reference document and
+            change them.</p>
+    </article>
+</section>
+
+<section id="download" class="wrap">
+    <h2>Download</h2>
+    <p>Each release has one archive per platform: macOS (Apple silicon and
+        Intel), Linux (x86_64 and arm64, glibc) and Windows (x64 and arm64).
+        The archive holds the <code>writer</code> binary, its license and the
+        notices of everything it embeds.</p>
+${download}
+    <p>Or build from source with Rust 1.96 or newer:
+        <code>cargo install --path . --locked</code> in a checkout. The
+        <a href="writer-site:guide-getting-started">getting started guide</a>
+        has the details.</p>
+</section>
+
+<section id="start" class="wrap">
+    <h2>In 30 seconds</h2>
+<pre><code>writer init report --bib              # a document, writer.toml, a theme and refs.bib
+cd report
+writer serve document.md --open       # live preview; press p for the typeset pages
+writer build document.md              # Wrote dist/document.html (683.8 kB)
+writer build document.md --to pdf,docx</code></pre>
+</section>
+
+<section id="examples" class="wrap">
+    <h2>Examples</h2>
+    <p>The example documents from the repository, built by the current
+        <code>writer</code>. Read each one on the web, or download the
+        typeset PDF and the Word file.</p>
+    <div class="cards">
+${examples}
+    </div>
+</section>
+
+<section id="docs" class="wrap">
+    <h2>Documentation</h2>
+    <p>The user guide, built with <code>writer</code> from the repository's
+        Markdown:</p>
+${guide}
+</section>
+
+</main>
+
+<footer class="wrap">
+    <p>${stamp}</p>
+    <p><a href="writer-site:license">MIT license</a> ·
+        <a href="writer-site:embedded-notices">Embedded asset notices</a> ·
+        <a href="writer-site:repository">Source of this revision</a></p>
+</footer>
+
+</body>
+</html>

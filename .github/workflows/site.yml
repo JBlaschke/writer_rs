@@ -1,7 +1,20 @@
-name: Site artifact
+# The project website (docs/dev/site.md): https://jblaschke.github.io/writer_rs/
+#
+# Builds `writer` in release mode, runs scripts/site.py (the landing page with
+# the latest release's downloads, the user guide, and every example as a web
+# page plus PDF, Word, LaTeX and Typst downloads) and deploys the result to
+# GitHub Pages. Deploys on every push to `main`, on "Run workflow", and when
+# release.yml has published a release: its last step asks for a run on `main`,
+# because GitHub starts no workflow for a release that a workflow's own token
+# published, and the github-pages environment deploys from `main` only. A pull
+# request only builds; the site is the run's `github-pages` artifact.
+#
+# One-time setup: Settings → Pages → Source: "GitHub Actions".
+name: Site
 
 on:
-    workflow_dispatch:
+    push:
+        branches: [main]
     pull_request:
         paths:
             - ".github/workflows/site.yml"
@@ -16,41 +29,99 @@ on:
             - "src/**"
             - "Cargo.toml"
             - "Cargo.lock"
+    workflow_dispatch:
 
 permissions:
     contents: read
+
+# One deployment at a time: a later one waits and none is cancelled. Pull
+# requests build in their own group, so they never queue behind a deployment.
+concurrency:
+    group: ${{ github.event_name == 'pull_request' && format('site-{0}', github.ref) || 'pages' }}
+    cancel-in-progress: false
 
 defaults:
     run:
         shell: bash
 
+env:
+    CARGO_TERM_COLOR: always
+
 jobs:
     build:
-        runs-on: ubuntu-latest
+        name: Build the site
+        runs-on: ubuntu-24.04
+        timeout-minutes: 60
         steps:
             - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
             - uses: actions/setup-python@v7
               with:
                   python-version: "3.13"
             - uses: dtolnay/rust-toolchain@stable
             - uses: Swatinem/rust-cache@v2
+            - name: Install Ghostscript for the page previews
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install --yes --no-install-recommends ghostscript
+                  gs --version
             - name: Pure site tests
               run: python3 -I -m unittest discover -s scripts/tests -p test_site.py
             - name: Validate complete guide and built CLI
               run: cargo test --locked --test guide
             - name: Build site executable
               run: cargo build --locked --release
-            - name: Build portable site artifact
+            - name: Latest release
+              env:
+                  GH_TOKEN: ${{ github.token }}
               run: |
+                  # The download table shows the latest published release
+                  # (drafts and pre-releases are not "latest"). Before the
+                  # first release the API answers 404, and the page says so.
+                  if gh api "repos/$GITHUB_REPOSITORY/releases/latest" \
+                          > "$RUNNER_TEMP/release.json" 2> "$RUNNER_TEMP/release.err"; then
+                      jq -r '"latest release: " + .tag_name + " (" + (.assets | length | tostring) + " assets)"' \
+                          "$RUNNER_TEMP/release.json"
+                  else
+                      cat "$RUNNER_TEMP/release.err"
+                      echo "no published release yet"
+                      rm -f "$RUNNER_TEMP/release.json"
+                  fi
+            - name: Build the site
+              run: |
+                  args=(
+                      --binary target/release/writer --source . --out target/site
+                      --repo-url "https://github.com/$GITHUB_REPOSITORY"
+                      --revision "$GITHUB_SHA"
+                  )
+                  if [[ -f "$RUNNER_TEMP/release.json" ]]; then
+                      args+=(--release-json "$RUNNER_TEMP/release.json")
+                  fi
                   SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-                      python3 -I scripts/site.py \
-                      --binary target/release/writer \
-                      --source . --out target/site \
-                      --repo-url https://github.com/JBlaschke/writer_rs \
-                      --revision "${{ github.sha }}"
-            - uses: actions/upload-artifact@v7
+                      python3 -I scripts/site.py "${args[@]}"
+                  du -sh target/site
+            # Fails early with a clear message when Pages does not deploy
+            # from Actions.
+            - name: Configure Pages
+              if: github.event_name != 'pull_request'
+              uses: actions/configure-pages@v6
+            - uses: actions/upload-pages-artifact@v5
               with:
-                  name: writer-site
                   path: target/site
-                  if-no-files-found: error
-                  retention-days: 14
+
+    deploy:
+        name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
+        needs: build
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+        permissions:
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - id: deployment
+              uses: actions/deploy-pages@v5

@@ -1,0 +1,685 @@
+/* The landing page's stylesheet (docs/dev/site.md). No fonts or scripts are
+   loaded: the page works offline, like the documents it links to. The colours
+   follow writer's default theme, so the guide pages feel like the same site. */
+
+:root {
+    color-scheme: light dark;
+    --bg: #fffefb;
+    --paper: #f8f4ea;
+    --ink: #23262b;
+    --muted: #5c626d;
+    --line: #dcd7c9;
+    --card: #f6f3ea;
+    --code: #f2f1ec;
+    --rule: rgba(54, 107, 118, 0.13);
+    --margin: rgba(204, 92, 77, 0.45);
+    --accent: #366b76;
+    --accent-ink: #ffffff;
+    --link: #235c93;
+    --shadow: 0 1px 2px rgba(35, 38, 43, 0.12), 0 8px 24px rgba(35, 38, 43, 0.14);
+    --html: #d9622b;
+    --pdf: #c4352b;
+    --docx: #2b5797;
+    --latex: #3a7d44;
+    --typst: #1f8a99;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter,
+        "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #181c20;
+        --paper: #12161a;
+        --ink: #e9e6de;
+        --muted: #acb3ba;
+        --line: #3a434a;
+        --card: #1f252a;
+        --code: #22282d;
+        --rule: rgba(160, 199, 207, 0.07);
+        --margin: rgba(229, 160, 152, 0.3);
+        --accent: #a0c7cf;
+        --accent-ink: #12161a;
+        --link: #8abbe8;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 28px rgba(0, 0, 0, 0.45);
+        --html: #f0915f;
+        --pdf: #ec7f74;
+        --docx: #86aee8;
+        --latex: #8cc796;
+        --typst: #7fcfda;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 var(--sans);
+}
+
+a {
+    color: var(--link);
+}
+
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+code,
+kbd,
+pre {
+    font-family: var(--mono);
+    font-size: 0.9em;
+}
+
+code {
+    background: var(--code);
+    border-radius: 4px;
+    padding: 0.1em 0.3em;
+}
+
+pre {
+    background: var(--code);
+    border-radius: 6px;
+    padding: 0.8em 1em;
+    overflow-x: auto;
+    line-height: 1.45;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+}
+
+.wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* Header: a sheet of ruled paper with a margin line. */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        repeating-linear-gradient(180deg, transparent 0, transparent 31px,
+            var(--rule) 31px, var(--rule) 32px),
+        var(--paper);
+    border-bottom: 1px solid var(--line);
+}
+
+/* The margin line, just left of the text. */
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: max(6px, calc(50% - 520px - 10px));
+    width: 2px;
+    background: var(--margin);
+}
+
+.topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+
+.brand {
+    color: var(--ink);
+    font: 700 1.45rem/1 var(--serif);
+    text-decoration: none;
+}
+
+.brand .mark {
+    color: var(--accent);
+    margin-right: 0.15em;
+}
+
+.topbar .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    font-size: 0.95rem;
+}
+
+.topbar .links a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.topbar .links a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 32px;
+    padding-top: 28px;
+    padding-bottom: 64px;
+}
+
+.kicker {
+    margin: 0 0 8px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    margin: 0;
+    font: 700 clamp(2.4rem, 5.6vw, 3.9rem)/1.05 var(--serif);
+    letter-spacing: -0.01em;
+}
+
+.hero h1 em {
+    color: var(--accent);
+    font-weight: 400;
+}
+
+.tagline {
+    max-width: 34em;
+    margin: 20px 0 28px;
+    font-size: 1.12rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+}
+
+.button {
+    display: inline-block;
+    padding: 0.55em 1.05em;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.button:hover {
+    border-color: var(--accent);
+}
+
+.button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+}
+
+/* The desk: the example PDFs' first pages, fanned out. */
+
+.desk {
+    position: relative;
+    height: 430px;
+}
+
+.desk .page {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    width: 56%;
+    margin-left: -28%;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.desk .page img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #ffffff;
+    border-radius: 2px;
+    box-shadow: var(--shadow);
+}
+
+.desk .page:nth-child(1) {
+    transform: translate(-34%, 22px) rotate(-8deg);
+}
+
+.desk .page:nth-child(2) {
+    transform: translate(34%, 30px) rotate(7deg);
+}
+
+.desk .page:nth-child(3) {
+    transform: translate(0, 0) rotate(-1deg);
+}
+
+.desk .page:hover,
+.desk .page:focus-visible {
+    z-index: 2;
+    transform: translate(var(--lift-x, 0), -12px) rotate(0deg) scale(1.03);
+}
+
+.desk .page:nth-child(1):hover,
+.desk .page:nth-child(1):focus-visible {
+    --lift-x: -34%;
+}
+
+.desk .page:nth-child(2):hover,
+.desk .page:nth-child(2):focus-visible {
+    --lift-x: 34%;
+}
+
+.desk .tag {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--pdf);
+    color: #ffffff;
+    font: 700 0.7rem/1.4 var(--sans);
+    letter-spacing: 0.06em;
+}
+
+/* Sections */
+
+section.wrap {
+    margin-top: 72px;
+    margin-bottom: 72px;
+}
+
+h2 {
+    margin: 0 0 12px;
+    font: 700 1.9rem/1.2 var(--serif);
+}
+
+h3 {
+    margin: 0 0 6px;
+    font-size: 1.08rem;
+}
+
+.lede {
+    max-width: 44em;
+    color: var(--muted);
+}
+
+/* One source, five outputs */
+
+.pipeline {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 20px;
+    margin: 24px 0 16px;
+}
+
+.source {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--code);
+    box-shadow: var(--shadow);
+}
+
+.source figcaption {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font: 0.82rem/1.4 var(--mono);
+}
+
+.source .dots {
+    display: inline-block;
+    width: 44px;
+    height: 10px;
+    margin-right: 10px;
+    background:
+        radial-gradient(circle at 5px 5px, #e0675c 4.5px, transparent 5px),
+        radial-gradient(circle at 22px 5px, #e5b94d 4.5px, transparent 5px),
+        radial-gradient(circle at 39px 5px, #5fb760 4.5px, transparent 5px);
+}
+
+.source pre {
+    margin: 0;
+    border-radius: 0;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.arrow {
+    color: var(--accent);
+    font: 2.2rem/1 var(--serif);
+}
+
+.formats {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.formats a {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 0 14px;
+    padding: 10px 14px 10px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.formats a:hover,
+.formats a:focus-visible {
+    border-color: var(--fmt);
+    transform: translateX(4px);
+}
+
+.formats strong {
+    display: block;
+}
+
+.formats .meta {
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+/* A file with a folded corner, in its format's colour. */
+.file {
+    position: relative;
+    grid-row: span 2;
+    width: 42px;
+    height: 52px;
+    margin: 0 auto;
+    border-radius: 3px 12px 3px 3px;
+    background: var(--fmt);
+    color: #ffffff;
+    font: 800 0.66rem/52px var(--sans);
+    letter-spacing: 0.04em;
+    text-align: center;
+}
+
+.file::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 0 0 0 3px;
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.fmt-html { --fmt: var(--html); }
+.fmt-pdf { --fmt: var(--pdf); }
+.fmt-docx { --fmt: var(--docx); }
+.fmt-latex { --fmt: var(--latex); }
+.fmt-typst { --fmt: var(--typst); }
+
+@media (prefers-color-scheme: dark) {
+    .file {
+        color: #12161a;
+    }
+}
+
+.command {
+    margin: 0;
+}
+
+/* Features */
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 28px 32px;
+}
+
+.features article {
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+}
+
+.features p {
+    margin: 0;
+    color: var(--muted);
+}
+
+/* Downloads */
+
+table.downloads {
+    width: 100%;
+    margin: 16px 0;
+    border-collapse: collapse;
+}
+
+table.downloads th,
+table.downloads td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+table.downloads th {
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+table.downloads td.num {
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+table.downloads code {
+    overflow-wrap: anywhere;
+}
+
+.release {
+    padding: 12px 16px;
+    border-left: 3px solid var(--accent);
+    background: var(--card);
+}
+
+.notes {
+    padding-left: 1.2em;
+    color: var(--muted);
+}
+
+/* Example cards */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+}
+
+.card .thumb {
+    display: block;
+    height: 190px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+}
+
+.card .thumb img {
+    display: block;
+    width: 78%;
+    height: auto;
+    margin: 18px auto 0;
+    background: #ffffff;
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease;
+}
+
+.card .thumb:hover img {
+    transform: translateY(-6px);
+}
+
+.card .body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.card .kicker {
+    margin-bottom: 2px;
+    color: var(--muted);
+    font: 0.78rem/1.4 var(--mono);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.card h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.card h3 a:hover {
+    text-decoration: underline;
+}
+
+.card .description {
+    margin: 0 0 10px;
+}
+
+.card pre {
+    margin: 0 0 14px;
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: auto 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chips a {
+    display: inline-block;
+    padding: 2px 9px;
+    border: 1px solid var(--fmt, var(--line));
+    border-radius: 999px;
+    color: var(--fmt, var(--ink));
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.chips a:hover {
+    background: var(--fmt, var(--line));
+    color: var(--bg);
+}
+
+.chips .source-link {
+    --fmt: var(--muted);
+}
+
+/* Documentation */
+
+.guide {
+    columns: 2 220px;
+    column-gap: 32px;
+    margin: 12px 0 0;
+    padding-left: 1.2em;
+}
+
+.guide li {
+    break-inside: avoid;
+    margin-bottom: 6px;
+}
+
+.guide span {
+    color: var(--muted);
+}
+
+/* Footer */
+
+footer {
+    margin-top: 64px;
+    margin-bottom: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+footer p {
+    margin: 4px 0;
+}
+
+@media (max-width: 820px) {
+    .hero-grid {
+        grid-template-columns: minmax(0, 1fr);
+        padding-bottom: 40px;
+    }
+
+    .desk {
+        height: 340px;
+        max-width: 480px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .pipeline {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .arrow {
+        transform: rotate(90deg);
+        justify-self: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .desk {
+        height: 270px;
+    }
+
+    table.downloads th:nth-child(2),
+    table.downloads td:nth-child(2) {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .desk .page,
+    .formats a,
+    .card .thumb img {
+        transition: none;
+    }
+}

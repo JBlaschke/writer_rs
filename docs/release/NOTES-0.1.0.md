@@ -1,28 +1,41 @@
-# Prepared initial 0.1.0 notes
+The first release of writer: write a report in Markdown, a saved Jupyter
+notebook or Typst, and build a web page, a typeset PDF, an editable Word file,
+LaTeX or Typst source from it.
 
-These are prepared notes for an initial Writer artifact. They are not a record
-of a published release, historical versions or completed six-platform results.
-The artifact's `writer --version` identifies its exact revision.
+## Highlights
 
-Writer accepts Markdown reports, saved Jupyter notebooks and native Typst
-sources. It builds standalone/site HTML, embedded-compiler PDF, editable Word
-packages, LaTeX source/resources and portable Typst source/resources. Native
-Typst PDF compiles the original file; other native-Typst outputs use the
-structured subset.
+- **Five outputs from one source.** Standalone or site HTML, PDF from the
+  embedded Typst compiler, Word packages with editable equations, LaTeX
+  source and resources, and portable Typst source. Native Typst input
+  compiles directly for PDF; its other outputs use a documented structured
+  subset.
+- **Live preview.** `writer serve` rebuilds on every save and shows the web
+  page or the typeset pages. A failing edit keeps the last good result and
+  reports located errors and warnings.
+- **Notebooks as saved.** Plots, DataFrames and tracebacks come from the
+  notebook's saved outputs. No kernel runs.
+- **References and citations.** Numbered figures, tables and equations,
+  cross-references, footnotes, citations and a bibliography with a CSL style.
+- **Checks without output.** `writer check` reports frontend, reference and
+  target diagnostics without writing files.
+- **Customization.** `writer init` scaffolds a document; `writer eject`
+  copies the built-in theme, Typst and LaTeX templates or the Word reference
+  document for editing.
 
-The browser preview has web and typeset-page views, source-position updates,
-last-good output retention and located errors/warnings. Checks reuse frontend,
-reference and selected-target diagnostics without writing target output.
+## Downloads
 
-References/citations use the configured bibliography and CSL style. Notebook
-builds preserve saved output selection and never execute a kernel. Themes,
-Typst/LaTeX templates and Word references can be ejected for customization.
+One archive per platform: macOS (Apple silicon and Intel), Linux (x86_64 and
+arm64, glibc) and Windows (x64 and arm64). Each holds the `writer` binary,
+the MIT license and the notices of every embedded asset and linked crate.
+Check a download against `SHA256SUMS`, unpack it and put `writer` on your
+`PATH`.
 
-Archives include the executable, MIT license and complete third-party notices,
-including embedded fonts, web assets, packages and linked crate license files.
-The artifact workflow builds six native targets and records actual smoke/size
-results; only successful workflow reports establish those particular results.
-LaTeX compilation, optional browser QA, manual Word/LibreOffice/Google Docs
-checks and platform signing/notarization are separate validation/publication
-activities and are not implied by these prepared notes. Chrome-based PDF is
-currently unsupported.
+The binaries are not signed or notarized. On macOS, remove the quarantine
+mark of a browser download with `xattr -d com.apple.quarantine writer`.
+
+The web page, PDF and Word outputs need nothing else at run time. Compiling
+the LaTeX export needs a separate TeX installation. Chrome-based PDF is not
+supported yet; the embedded Typst path needs no browser.
+
+Read the [user guide](https://jblaschke.github.io/writer_rs/guide/) or start
+with the [examples](https://jblaschke.github.io/writer_rs/#examples).

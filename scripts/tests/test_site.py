@@ -37,7 +37,7 @@ class SiteTests(unittest.TestCase):
         return path.resolve()
 
     def mapper(self, prefix=""):
-        home = self.write("docs/site/index.md", "# Home\n")
+        home = self.write("docs/site/index.html", "<!DOCTYPE html>\n<p>Home</p>\n")
         guide = self.write("docs/guide/README.md", "# Guide\n")
         authoring = self.write("docs/guide/authoring.md", "# Authoring\n")
         pages = [site.Page("home", home, "index.html"),
@@ -174,12 +174,14 @@ class SiteTests(unittest.TestCase):
     def test_unicode_space_prefix_and_emitted_bytes_survive_the_full_build(self):
         _, pages = self.mapper()
         self.write("docs/site/theme/theme.toml", 'extends = "default"\n')
+        self.write("docs/site/site.css", "body { color: black; }\n")
         self.write("LICENSE", "Project license\r\n")
         binary = self.write("writer", "mocked executable\n", self.root)
         destination = self.root / "published-site"
         args = SimpleNamespace(
             source=self.source, binary=binary, out=destination,
             repo_url=REPO, revision=SHA, prefix="résumé docs",
+            release_json=None, gs=None,
         )
         originals = {
             path: path.read_bytes() for path in self.source.rglob("*")
@@ -190,30 +192,170 @@ class SiteTests(unittest.TestCase):
             b'<pre><code>&lt;a href="writer-site:home"&gt;literal</code></pre>\r\n'
             b'<script>const sample = \'href="writer-site:home"\';</script>\r\n'
         )
+        landing = (
+            '<link rel="stylesheet" href="writer-site:artifact/site.css">'
+            '<a href="writer-site:guide">Guide</a>'
+        )
 
         def command(_binary, arguments, _root, _environment):
             if arguments == ["--licenses"]:
                 return b"Embedded notices\r\n"
+            if arguments == ["--version"]:
+                return b"writer 0.1.0 (mocked)\n"
             Path(arguments[-1]).write_bytes(emitted)
             return b""
 
         with patch.object(site, "require_complete_guide"):
             with patch.object(site, "pages", return_value=pages):
                 with patch.object(site, "command", side_effect=command):
-                    site.build(args)
+                    with patch.object(site, "landing_page", return_value=landing):
+                        site.build(args)
         manifest = site.json.loads((destination / "site-manifest.json").read_text())
         self.assertEqual(manifest["prefix"], "/r%C3%A9sum%C3%A9%20docs/")
+        self.assertEqual(manifest["downloads"], [])
+        self.assertIsNone(manifest["release"])
         expected = emitted.replace(
             b'href="writer-site:home"',
             b'href="/r%C3%A9sum%C3%A9%20docs/index.html"', 1,
         )
-        for page in pages:
+        for page in pages[1:]:
             self.assertEqual((destination / page.route).read_bytes(), expected)
+        self.assertEqual((destination / "index.html").read_text(), (
+            '<link rel="stylesheet" href="/r%C3%A9sum%C3%A9%20docs/site.css">'
+            '<a href="/r%C3%A9sum%C3%A9%20docs/guide/index.html">Guide</a>'
+        ))
+        self.assertEqual((destination / ".nojekyll").read_bytes(), b"")
+        self.assertEqual((destination / "site.css").read_bytes(),
+            (self.source / "docs/site/site.css").read_bytes())
         site.validate_site(destination, args.prefix)
         self.assertEqual(originals, {
             path: path.read_bytes() for path in self.source.rglob("*")
             if path.is_file()
         })
+
+    def test_artifact_links_name_claimed_routes_and_keys_keep_fragments(self):
+        mapper, pages = self.mapper()
+        route = "examples/basic/document.pdf"
+        with self.assertRaisesRegex(site.SiteError, "unknown site artifact"):
+            mapper.rewrite(pages[2], "a", "href", f"writer-site:artifact/{route}")
+        mapper.claim(route)
+        self.assertEqual(mapper.rewrite(pages[2], "a", "href",
+            f"writer-site:artifact/{route}"), "../examples/basic/document.pdf")
+        self.assertEqual(mapper.rewrite(pages[0], "a", "href",
+            f"writer-site:artifact/{route}"), route)
+        self.assertEqual(mapper.rewrite(pages[2], "a", "href",
+            "writer-site:home#download"), "../index.html#download")
+        self.assertEqual(mapper.rewrite(pages[0], "a", "href",
+            "writer-site:home#download"), "#download")
+        with self.assertRaisesRegex(site.SiteError, "unknown site artifact"):
+            mapper.rewrite(pages[2], "a", "href",
+                "writer-site:artifact/Examples/basic/document.pdf")
+
+    def test_source_zip_is_reproducible_rooted_and_portable(self):
+        export = self.root / "export"
+        self.write("document.tex", "\\section{One}\n", export)
+        (export / "document_assets").mkdir()
+        (export / "document_assets/plot.png").write_bytes(b"\x89PNG fixture")
+        first = self.root / "first.zip"
+        second = self.root / "second.zip"
+        site.pack(export, first, "document-latex", 0)
+        site.pack(export, second, "document-latex", 0)
+        self.assertEqual(first.read_bytes(), second.read_bytes())
+        with site.zipfile.ZipFile(first) as archive:
+            self.assertIsNone(archive.testzip())
+            entries = archive.infolist()
+        self.assertEqual([entry.filename for entry in entries], [
+            "document-latex/document.tex",
+            "document-latex/document_assets/plot.png",
+        ])
+        for entry in entries:
+            self.assertEqual(entry.date_time, (1980, 1, 1, 0, 0, 0))
+            self.assertEqual(entry.external_attr >> 16, 0o100644)
+        with self.assertRaises(FileExistsError):
+            site.pack(export, first, "document-latex", 0)
+
+    def test_download_table_follows_release_targets_and_platform_order(self):
+        common = importlib.util.spec_from_file_location(
+            "release_common", SCRIPT.parent / "release_common.py"
+        )
+        release_common = importlib.util.module_from_spec(common)
+        common.loader.exec_module(release_common)
+        self.assertEqual([target for target, _, _ in site.PLATFORMS],
+            list(release_common.TARGETS))
+        base = "https://github.com/example/writer/releases/download/v0.2.0/"
+        names = [release_common.archive_name("0.2.0", target)
+            for target in reversed(release_common.TARGETS)]
+        release = {
+            "tag_name": "v0.2.0", "published_at": "2026-11-02T09:00:00Z",
+            "html_url": "https://github.com/example/writer/releases/tag/v0.2.0",
+            "assets": [
+                {"name": name, "size": 28_068_371, "browser_download_url": base + name}
+                for name in [*names, "SHA256SUMS", "writer-v0.1.0-x86_64-apple-darwin.tar.gz"]
+            ],
+        }
+        table = site.download_section(release, REPO)
+        rows = site.re.findall(r"<code>(writer-[^<]+)</code>", table)
+        self.assertEqual(rows, list(reversed(names)))
+        self.assertIn("writer v0.2.0</a></strong>, published 2026-11-02.", table)
+        self.assertIn(f'href="{base}SHA256SUMS"', table)
+        self.assertIn("28.1 MB", table)
+        for missing in (None, {"tag_name": "v0.2.0", "assets": []}):
+            with self.subTest(release=missing):
+                text = site.download_section(missing, REPO)
+                self.assertIn("No release has been published yet", text)
+                self.assertIn(f'href="{REPO}/releases"', text)
+
+    def test_landing_template_fills_and_validates_with_example_outputs(self):
+        template = SCRIPT.parents[1] / "docs/site/index.html"
+        home = self.write("docs/site/index.html", template.read_text(encoding="utf-8"))
+        guides = []
+        for name in site.GUIDE_PAGES:
+            key = "guide" if name == "README" else f"guide-{name}"
+            leaf = "index" if name == "README" else name
+            source = self.write(f"docs/guide/{name}.md", f"# {name.title()}\n")
+            guides.append(site.Page(key, source, f"guide/{leaf}.html"))
+        basic = self.write("examples/basic/document.md", "---\ntitle: <Basic>\n---\n")
+        notebook = self.write("examples/notebook/analysis.ipynb", "{}")
+        examples = [
+            site.Page("example-basic", basic, "examples/basic/index.html"),
+            site.Page("example-notebook", notebook, "examples/notebook/index.html"),
+        ]
+        all_pages = [site.Page("home", home, "index.html"), *guides, *examples]
+        mapper = site.Mapper(self.source, self.output, all_pages, REPO, SHA, "")
+        built = []
+        for page in examples:
+            folder = site.posixpath.dirname(page.route)
+            stem = page.source.stem
+            outputs = [site.Output("html", page.route, 690_300)]
+            for route in (f"{stem}.pdf", f"{stem}.docx", f"{stem}-latex.zip", f"{stem}-typst.zip"):
+                mapper.claim(f"{folder}/{route}")
+                target = route.removesuffix(".zip").rpartition("-")[2] if route.endswith(".zip") else route.rpartition(".")[2]
+                outputs.append(site.Output(target, f"{folder}/{route}", 50_800, 3 if target == "pdf" else None))
+            mapper.claim(f"{folder}/page-1.png")
+            built.append(site.Example(page, f"{stem} & title", tuple(outputs), f"{folder}/page-1.png", (827, 1169)))
+        for page in all_pages[1:]:
+            self.write(page.route, "<h1>Page</h1>", self.output)
+        for example in built:
+            for output in example.outputs[1:]:
+                self.write(output.route, "built", self.output)
+            self.write(example.thumbnail, "png", self.output)
+        for route in ("site.css", "licenses/LICENSE", "licenses/embedded.txt"):
+            self.write(route, "", self.output)
+        text = site.landing_page(self.source, all_pages[0], built, mapper, None, "writer 0.1.0")
+        self.assertNotIn("${", text)
+        self.assertIn("examples/basic/document.md", text)
+        self.assertIn("&lt;Basic&gt;", text)
+        self.assertIn("3 pages, 50.8 kB", text)
+        self.assertIn("document &amp; title", text)
+        self.assertIn("No release has been published yet", text)
+        site.write_page(self.output, mapper, all_pages[0], text)
+        result = (self.output / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn('="writer-site:', result)
+        self.assertIn('href="examples/basic/document.pdf"', result)
+        self.assertIn(f'href="{REPO}/blob/{SHA}/examples/basic/document.md"', result)
+        site.validate_site(self.output, "")
+        with self.assertRaisesRegex(site.SiteError, "basic example"):
+            site.landing_page(self.source, all_pages[0], built[1:], mapper, None, "writer")
 
     def test_fresh_publication_preserves_a_racing_directory(self):
         artifact = self.root / "prepared"
