@@ -1,4 +1,5 @@
-//! Check-time target adapters. Generated strings, packages and assets are dropped.
+//! Check-time target adapters. Generated strings, packages and assets are
+//! dropped.
 
 use std::path::Path;
 
@@ -39,7 +40,8 @@ pub(super) fn run(prepared: &Prepared, opts: &BuildOptions) -> Vec<Diagnostic> {
     diagnostics
 }
 
-/// One lazy World shared only by adapters that actually render equations/images.
+/// One lazy World shared only by adapters that actually render
+/// equations/images.
 #[derive(Default)]
 struct CheckWorld {
     slot: WorldSlot,

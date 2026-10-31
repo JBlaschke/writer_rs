@@ -224,7 +224,8 @@ impl Server {
 
     fn events(&mut self) -> Events {
         // HTTP/1.0 gives an EOF-delimited event body, avoiding a second chunk
-        // decoder. A cloned socket lets Drop wake this owned reader immediately.
+        // decoder. A cloned socket lets Drop wake this owned reader
+        // immediately.
         let mut stream =
             TcpStream::connect_timeout(&self.addr(), HTTP_WAIT).unwrap();
         stream.set_read_timeout(Some(WAIT)).unwrap();

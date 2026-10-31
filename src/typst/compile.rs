@@ -65,7 +65,8 @@ impl<T> Compiled<T> {
 pub struct PdfOptions {
     /// Creation time in UTC, computed once for the publishing session.
     pub timestamp: Datetime,
-    /// A stable document identifier, or `None` for Typst's automatic identifier.
+    /// A stable document identifier, or `None` for Typst's automatic
+    /// identifier.
     pub ident: Option<String>,
 }
 
@@ -248,7 +249,8 @@ fn append_hint(message: &mut String, hint: &str) {
 ///
 /// Precedence is an explicit RFC 3339 `[pdf] timestamp`, a valid `YYYY-MM-DD`
 /// document date, `SOURCE_DATE_EPOCH`, then `now`. Invalid explicit timestamps
-/// and epoch values are configuration errors; other document dates fall through.
+/// and epoch values are configuration errors; other document dates fall
+/// through.
 pub fn pdf_timestamp(
     pdf: &PdfConfig, meta: &DocMeta, source_date_epoch: Option<&str>,
     now: SystemTime,

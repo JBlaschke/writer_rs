@@ -297,8 +297,9 @@ fn all_34_compile_entries_share_one_real_deterministic_pdf() {
             table["latex"][&fixture.name]["pdf"].as_str() == Some("compile")
         })
         .map(|fixture| {
-            // Only31 needs configured macros. Materialize that equation's prefix
-            // locally so it cannot collide with fixture17's independent half macro.
+            // Only31 needs configured macros. Materialize that equation's
+            // prefix locally so it cannot collide with fixture17's independent
+            // half macro.
             let source = if fixture.name.starts_with("31-") {
                 for_typst(&fixture.body, &macros(&config(Some(&fixture)))).0
             } else {

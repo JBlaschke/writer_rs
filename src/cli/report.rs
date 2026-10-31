@@ -1,10 +1,11 @@
-//! How failures, diagnostics and panics are printed on stderr (cli.md "Global flags";
-//! T73, diagnostics quality).
+//! How failures, diagnostics and panics are printed on stderr (cli.md "Global
+//! flags"; T73, diagnostics quality).
 //!
 //! # Errors
 //!
-//! A failed command ([`report_error`]) says what went wrong, where, and, when the error has a
-//! location and its file can be read, shows the offending line (rustc's layout):
+//! A failed command ([`report_error`]) says what went wrong, where, and, when
+//! the error has a location and its file can be read, shows the offending line
+//! (rustc's layout):
 //!
 //! ```text
 //! error: unknown directive 'include'
@@ -24,48 +25,53 @@
 //! | template | in the message: `template 'layouts/title.html' line 4: …` | minijinja's own excerpt when it captured the source (see below) |
 //! | `theme.toml`, `writer.toml`, SCSS | in the message | the `toml`/`grass` excerpt in the message |
 //!
-//! The location comes from the error ([`Error::path`], [`Error::span`]); for a missing
-//! asset or a front matter error, which do not name the deck source, from the context that
-//! [`super::locate`] adds. A YAML message with two positions is located at the first (the
-//! problem; the second, its context, stays in the message). Template errors carry
-//! minijinja's debug info (the source around the line, the referenced variables) in serve
-//! mode and for syntax errors converted with `?` ([`crate::error::template_error`]); `build`
-//! renders without it, so a template error there names the template and line only (the
-//! source cache is never asked for a template: its name is not a path the report could
-//! read). Paths are shown as [`super::display_path`] shows them (relative to the current
-//! directory, also with `..`). Errors that are not library errors print
-//! `error: outer: inner`.
+//! The location comes from the error ([`Error::path`], [`Error::span`]); for a
+//! missing asset or a front matter error, which do not name the deck source,
+//! from the context that [`super::locate`] adds. A YAML message with two
+//! positions is located at the first (the problem; the second, its context,
+//! stays in the message). Template errors carry minijinja's debug info (the
+//! source around the line, the referenced variables) in serve mode and for
+//! syntax errors converted with `?` ([`crate::error::template_error`]); `build`
+//! renders without it, so a template error there names the template and line
+//! only (the source cache is never asked for a template: its name is not a path
+//! the report could read). Paths are shown as [`super::display_path`] shows
+//! them (relative to the current directory, also with `..`). Errors that are
+//! not library errors print `error: outer: inner`.
 //!
-//! A failed build ([`report_build_failure`]) prints the diagnostics found before the error,
-//! then the error. When it failed on a missing asset, every missing asset of the build is
-//! printed as such a report, in source order, rather than the first one framed and the
-//! others as `path:line: error:` lines.
+//! A failed build ([`report_build_failure`]) prints the diagnostics found
+//! before the error, then the error. When it failed on a missing asset, every
+//! missing asset of the build is printed as such a report, in source order,
+//! rather than the first one framed and the others as `path:line: error:`
+//! lines.
 //!
-//! [`print_error_in`] prints one library error the same way, given the deck source;
-//! [`print_error`] without it (a missing asset or front matter error is then located by
-//! its line alone, ` --> line 3`, without an excerpt); [`format_error`] returns the text.
+//! [`print_error_in`] prints one library error the same way, given the deck
+//! source; [`print_error`] without it (a missing asset or front matter error is
+//! then located by its line alone, ` --> line 3`, without an excerpt);
+//! [`format_error`] returns the text.
 //!
 //! # Colors
 //!
-//! Labels, the message, the gutter and the underline are colored by the rules clap's own
-//! output (anstream) follows in the same binary ([`stderr_color`], also used for log
-//! lines): never with `NO_COLOR` (non-empty); always with `CLICOLOR_FORCE` (non-empty);
-//! never with `CLICOLOR=0`; else when stderr is a terminal whose `TERM` is set and not
-//! `dumb` (or `CLICOLOR` or `CI` is set). cli.md has no `--no-color` flag, so there is
-//! none: use `NO_COLOR=1`.
+//! Labels, the message, the gutter and the underline are colored by the rules
+//! clap's own output (anstream) follows in the same binary ([`stderr_color`],
+//! also used for log lines): never with `NO_COLOR` (non-empty); always with
+//! `CLICOLOR_FORCE` (non-empty); never with `CLICOLOR=0`; else when stderr is a
+//! terminal whose `TERM` is set and not `dumb` (or `CLICOLOR` or `CI` is set).
+//! cli.md has no `--no-color` flag, so there is none: use `NO_COLOR=1`.
 //!
 //! # Panics
 //!
-//! [`install_panic_hook`] replaces the standard panic message with a bug-report line that
-//! names the location; `RUST_BACKTRACE` still gives the standard message and backtrace.
+//! [`install_panic_hook`] replaces the standard panic message with a bug-report
+//! line that names the location; `RUST_BACKTRACE` still gives the standard
+//! message and backtrace.
 //!
 //! # Contract with `cli/mod.rs`
 //!
-//! `cli/mod.rs` and the commands print only through [`report_error`] (a failed command,
-//! from `cli::run_from`), [`report_diagnostics`] (re-exported as `cli::report_diagnostics`),
-//! [`report_build_failure`] (a failed build's diagnostics and missing assets) and
-//! [`install_panic_hook`] (called once by `cli::run`). The signatures of those functions
-//! are the contract; [`stderr_color`] is also used by the logging setup.
+//! `cli/mod.rs` and the commands print only through [`report_error`] (a failed
+//! command, from `cli::run_from`), [`report_diagnostics`] (re-exported as
+//! `cli::report_diagnostics`), [`report_build_failure`] (a failed build's
+//! diagnostics and missing assets) and [`install_panic_hook`] (called once by
+//! `cli::run`). The signatures of those functions are the contract;
+//! [`stderr_color`] is also used by the logging setup.
 
 use std::borrow::Cow;
 use std::ffi::{OsStr, OsString};
@@ -79,42 +85,46 @@ use crate::error::{Diagnostic, Diagnostics, Error, Excerpt, Level};
 use crate::ir::SourceSpan;
 use crate::pipeline::{BuildFailure, missing_asset_as_error};
 
-/// A source cache for [`print_error`] and [`format_error`]: the text of a file, or `None`.
+/// A source cache for [`print_error`] and [`format_error`]: the text of a file,
+/// or `None`.
 pub type SourceCache<'a> = &'a dyn Fn(&Path) -> Option<String>;
 
-/// SGR codes: the message (bold), the gutter and `-->` (bold blue), the underline (bold red).
+/// SGR codes: the message (bold), the gutter and `-->` (bold blue), the
+/// underline (bold red).
 const BOLD: &str = "1";
 const GUTTER: &str = "1;34";
 const UNDERLINE: &str = "1;31";
 
-/// Prints a failed command's error on stderr: a library error ([`Error`], found anywhere in
-/// the chain) with its location and source excerpt (module docs), anything else as
-/// `error: outer: inner`.
+/// Prints a failed command's error on stderr: a library error ([`Error`], found
+/// anywhere in the chain) with its location and source excerpt (module docs),
+/// anything else as `error: outer: inner`.
 pub fn report_error(err: &anyhow::Error) {
     write_stderr(&format_error_chain(err, &read_source, stderr_color()));
 }
 
-/// Prints `err` on stderr with its location and the offending line from `source_cache`
-/// (module docs), in color per [`stderr_color`].
+/// Prints `err` on stderr with its location and the offending line from
+/// `source_cache` (module docs), in color per [`stderr_color`].
 ///
-/// A missing asset or a front matter error does not name the deck source its span is in:
-/// this prints its line alone (` --> line 3`) and no excerpt. Use [`print_error_in`] with
-/// the deck source (or [`report_error`] with [`super::locate`]'s context) for those.
+/// A missing asset or a front matter error does not name the deck source its
+/// span is in: this prints its line alone (` --> line 3`) and no excerpt. Use
+/// [`print_error_in`] with the deck source (or [`report_error`] with
+/// [`super::locate`]'s context) for those.
 pub fn print_error(err: &Error, source_cache: SourceCache<'_>) {
     print_error_in(err, None, source_cache);
 }
 
-/// [`print_error`] for an error of a build of the deck source `input`: a missing asset or
-/// front matter error is located in it and quoted from it.
+/// [`print_error`] for an error of a build of the deck source `input`: a
+/// missing asset or front matter error is located in it and quoted from it.
 pub fn print_error_in(
     err: &Error, input: Option<&Path>, source_cache: SourceCache<'_>,
 ) {
     write_stderr(&format_error(err, input, source_cache, stderr_color()));
 }
 
-/// The text [`print_error_in`] prints (without the final line break), with ANSI colors
-/// when `color`. `input` is the deck source, for the errors that do not name it themselves
-/// (a missing asset, front matter); `source_cache` gives the text of a file to quote.
+/// The text [`print_error_in`] prints (without the final line break), with ANSI
+/// colors when `color`. `input` is the deck source, for the errors that do not
+/// name it themselves (a missing asset, front matter); `source_cache` gives the
+/// text of a file to quote.
 pub fn format_error(
     err: &Error, input: Option<&Path>, source_cache: SourceCache<'_>,
     color: bool,
@@ -123,7 +133,8 @@ pub fn format_error(
     Report::new(err, input, cwd.as_deref()).render(source_cache, color)
 }
 
-/// The CLI's source cache: the file's text, `None` when it cannot be read as UTF-8.
+/// The CLI's source cache: the file's text, `None` when it cannot be read as
+/// UTF-8.
 pub fn read_source(path: &Path) -> Option<String> {
     std::fs::read_to_string(path).ok()
 }
@@ -162,16 +173,17 @@ fn visible_diagnostics<'a>(
     visible
 }
 
-/// Installs writer's panic hook; `cli::run` calls it before parsing arguments (a second
-/// call does nothing). A panic prints
+/// Installs writer's panic hook; `cli::run` calls it before parsing arguments
+/// (a second call does nothing). A panic prints
 ///
 /// ```text
 /// error: internal error at src/render/html.rs:42:9: <panic message>
 /// note: this is a bug in writer 0.1.0; please report it with the command line you ran (RUST_BACKTRACE=1 shows a backtrace)
 /// ```
 ///
-/// instead of the standard message. With `RUST_BACKTRACE` set (and not `0`) the standard
-/// hook runs after these lines, printing its message and the backtrace as usual.
+/// instead of the standard message. With `RUST_BACKTRACE` set (and not `0`) the
+/// standard hook runs after these lines, printing its message and the backtrace
+/// as usual.
 pub fn install_panic_hook() {
     static INSTALLED: Once = Once::new();
     INSTALLED.call_once(|| {
@@ -202,15 +214,16 @@ pub fn install_panic_hook() {
 }
 
 /// Whether stderr gets ANSI colors, by the rules of clap's colors (anstream's
-/// `AutoStream::choice`): not with `NO_COLOR` (non-empty); with `CLICOLOR_FORCE`
-/// (non-empty); not with `CLICOLOR=0`; else when stderr is a terminal and `TERM` is set and
-/// not `dumb` (unset counts as set on Windows), `CLICOLOR` is set, or `CI` is.
+/// `AutoStream::choice`): not with `NO_COLOR` (non-empty); with
+/// `CLICOLOR_FORCE` (non-empty); not with `CLICOLOR=0`; else when stderr is a
+/// terminal and `TERM` is set and not `dumb` (unset counts as set on Windows),
+/// `CLICOLOR` is set, or `CI` is.
 pub fn stderr_color() -> bool {
     use_color(|name| std::env::var_os(name), || std::io::stderr().is_terminal())
 }
 
-/// [`stderr_color`] with the environment variables read by `var` and the terminal test
-/// `terminal` (asked only when the variables do not decide).
+/// [`stderr_color`] with the environment variables read by `var` and the
+/// terminal test `terminal` (asked only when the variables do not decide).
 fn use_color(
     var: impl Fn(&str) -> Option<OsString>, terminal: impl FnOnce() -> bool,
 ) -> bool {
@@ -229,12 +242,14 @@ fn use_color(
     terminal() && (term || clicolor == Some(true) || var("CI").is_some())
 }
 
-/// Whether `RUST_BACKTRACE` (its value) asks for a backtrace, as the standard hook reads it.
+/// Whether `RUST_BACKTRACE` (its value) asks for a backtrace, as the standard
+/// hook reads it.
 fn backtrace_requested(value: Option<&OsStr>) -> bool {
     value.is_some_and(|value| !value.is_empty() && value != "0")
 }
 
-/// The two lines the panic hook prints for a panic at `location` with message `payload`.
+/// The two lines the panic hook prints for a panic at `location` with message
+/// `payload`.
 fn panic_message(
     location: Option<&str>, payload: Option<&str>, backtrace: bool, color: bool,
 ) -> String {
@@ -256,15 +271,16 @@ fn panic_message(
     )
 }
 
-/// Writes `text` and a line break on stderr. Nothing sensible is left to do when that fails.
+/// Writes `text` and a line break on stderr. Nothing sensible is left to do
+/// when that fails.
 fn write_stderr(text: &str) {
     let _ = writeln!(std::io::stderr().lock(), "{text}");
 }
 
-/// The report of `err` (see [`report_error`]): the first library [`Error`] in the chain
-/// with its location; the contexts outside it in front of its message, except the
-/// location [`super::locate`] added (it names the deck source, which the excerpt reads);
-/// its causes after it.
+/// The report of `err` (see [`report_error`]): the first library [`Error`] in
+/// the chain with its location; the contexts outside it in front of its
+/// message, except the location [`super::locate`] added (it names the deck
+/// source, which the excerpt reads); its causes after it.
 fn format_error_chain(
     err: &anyhow::Error, source_cache: SourceCache<'_>, color: bool,
 ) -> String {
@@ -290,8 +306,9 @@ fn format_error_chain(
     report.render(source_cache, color)
 }
 
-/// The deck source named by `context` when it is the location [`super::locate`] added to
-/// `err` (`input:line`, `input: cell C, line L`, or `input`) and names a file.
+/// The deck source named by `context` when it is the location [`super::locate`]
+/// added to `err` (`input:line`, `input: cell C, line L`, or `input`) and names
+/// a file.
 fn located_input(err: &Error, context: &str) -> Option<PathBuf> {
     let input = match err {
         Error::MissingAsset { span: Some(span), .. } => {
@@ -310,12 +327,13 @@ fn located_input(err: &Error, context: &str) -> Option<PathBuf> {
     Some(PathBuf::from(input)).filter(|path| path.is_file())
 }
 
-/// One error as printed: `error: <outer>: <message>: <inner>`, its location and excerpt,
-/// then the further lines of the message.
+/// One error as printed: `error: <outer>: <message>: <inner>`, its location and
+/// excerpt, then the further lines of the message.
 struct Report<'a> {
     /// Contexts around the error, outermost first.
     outer: Vec<String>,
-    /// The error's message; lines after the first are printed after the excerpt as they are.
+    /// The error's message; lines after the first are printed after the excerpt
+    /// as they are.
     message: String,
     /// The error's causes, outermost first.
     inner: Vec<String>,
@@ -346,8 +364,8 @@ impl<'a> Report<'a> {
         }
     }
 
-    /// The report of `err`; `input` is the deck source (for a missing asset or front
-    /// matter), paths are shown relative to `cwd`.
+    /// The report of `err`; `input` is the deck source (for a missing asset or
+    /// front matter), paths are shown relative to `cwd`.
     fn new(err: &'a Error, input: Option<&Path>, cwd: Option<&Path>) -> Self {
         let message = match err {
             Error::MissingAsset { path, .. } => {
@@ -379,7 +397,8 @@ impl<'a> Report<'a> {
             Error::Parse { .. } | Error::Compile { .. } => {
                 err.path().map(Path::to_path_buf)
             }
-            // A missing asset of an included file: its span names the file (T48).
+            // A missing asset of an included file: its span names the file
+            // (T48).
             Error::MissingAsset {
                 span: Some(SourceSpan { file: Some(file), .. }),
                 ..
@@ -389,7 +408,8 @@ impl<'a> Report<'a> {
             }
             _ => None,
         };
-        // A template's name and line are in its message; the other variants have no span.
+        // A template's name and line are in its message; the other variants
+        // have no span.
         let span = match err {
             Error::Template { .. } => None,
             _ => err.span(),
@@ -483,8 +503,8 @@ fn append_excerpt(out: &mut String, excerpt: &Excerpt, color: bool) {
     }
 }
 
-/// `message` with the absolute path it starts with (a theme or config error names its
-/// `theme.toml` or `writer.toml` first, followed by `: `) shown as
+/// `message` with the absolute path it starts with (a theme or config error
+/// names its `theme.toml` or `writer.toml` first, followed by `: `) shown as
 /// [`super::display_path`] shows paths, relative to `cwd`.
 fn relative_lead<'m>(message: &'m str, cwd: Option<&Path>) -> Cow<'m, str> {
     match message.split_once(": ") {
@@ -497,9 +517,10 @@ fn relative_lead<'m>(message: &'m str, cwd: Option<&Path>) -> Cow<'m, str> {
 }
 
 /// `err` with the paths in its message shown as the error report shows them
-/// ([`super::display_path`]): the file a config or theme error starts with, the missing
-/// file of a missing asset. For errors that are printed in another form, such as
-/// `check`'s diagnostics (audit F39). Other errors are returned unchanged.
+/// ([`super::display_path`]): the file a config or theme error starts with, the
+/// missing file of a missing asset. For errors that are printed in another
+/// form, such as `check`'s diagnostics (audit F39). Other errors are returned
+/// unchanged.
 pub fn with_display_paths(err: Error) -> Error {
     let cwd = std::env::current_dir().ok();
     let cwd = cwd.as_deref();
@@ -518,12 +539,13 @@ pub fn with_display_paths(err: Error) -> Error {
     }
 }
 
-/// Prints a failed build of `input` (`build`, `build --watch`, `export pdf`) and returns
-/// its error, located in `input` ([`super::locate`]), for the caller to report last with
-/// [`report_error`]. The diagnostics found before the error are printed first
-/// ([`report_diagnostics`]). When the build failed on a missing asset, every missing asset
-/// is reported the same way, as a located error with its source line, in source order
-/// (audit F37; `source_order`): those before the last are printed here, the last is
+/// Prints a failed build of `input` (`build`, `build --watch`, `export pdf`)
+/// and returns its error, located in `input` ([`super::locate`]), for the
+/// caller to report last with [`report_error`]. The diagnostics found before
+/// the error are printed first ([`report_diagnostics`]). When the build failed
+/// on a missing asset, every missing asset is reported the same way, as a
+/// located error with its source line, in source order (audit F37;
+/// `source_order`): those before the last are printed here, the last is
 /// returned.
 pub fn report_build_failure(
     failure: BuildFailure, input: &Path, global: &GlobalArgs,
@@ -580,11 +602,12 @@ pub(crate) fn print_build_failure(
     }
 }
 
-/// Sorts the missing assets of a failed build (`errors`, in the frontend's order: the deck's
-/// own, then those of the files it includes, in first-use order) into source order: the
-/// deck's first, then each included file's (`SourceSpan.file`, T48) in the order the files
-/// first appear, each file's by cell and line. Stable: errors on the same line keep their
-/// order, and errors without a span come last.
+/// Sorts the missing assets of a failed build (`errors`, in the frontend's
+/// order: the deck's own, then those of the files it includes, in first-use
+/// order) into source order: the deck's first, then each included file's
+/// (`SourceSpan.file`, T48) in the order the files first appear, each file's by
+/// cell and line. Stable: errors on the same line keep their order, and errors
+/// without a span come last.
 fn source_order(errors: &mut [Error]) {
     source_order_by(errors, |error| error);
 }
@@ -608,9 +631,9 @@ fn source_order_by<T>(errors: &mut [T], error: impl Fn(&T) -> &Error) {
     });
 }
 
-/// The text after `-->`: `file:line[:column]` for a file, `file: cell C, line L[, column N]`
-/// for a notebook cell, without a file `line L[, column N]` (or the cell form), without a
-/// span the file alone.
+/// The text after `-->`: `file:line[:column]` for a file,
+/// `file: cell C, line L[, column N]` for a notebook cell, without a file
+/// `line L[, column N]` (or the cell form), without a span the file alone.
 fn location_text(
     file: Option<&Path>, span: Option<&SourceSpan>, column: Option<usize>,
 ) -> String {
@@ -723,7 +746,8 @@ fn paint(level: Level, text: &str, color: bool) -> String {
     style(code, text, color)
 }
 
-/// `text` with the SGR `code` when `color` (unchanged otherwise, and when empty).
+/// `text` with the SGR `code` when `color` (unchanged otherwise, and when
+/// empty).
 fn style(code: &str, text: &str, color: bool) -> String {
     if !color || text.is_empty() {
         return text.to_string();
@@ -796,8 +820,9 @@ mod tests {
         );
     }
 
-    // POSIX paths (`/work` is absolute, `/` separates), as in the theme-and-config test
-    // below; `errors_for_other_reports_show_the_same_paths` covers the real current
+    // POSIX paths (`/work` is absolute, `/` separates), as in the
+    // theme-and-config test below;
+    // `errors_for_other_reports_show_the_same_paths` covers the real current
     // directory on every platform.
     #[cfg(unix)]
     #[test]
@@ -983,8 +1008,9 @@ mod tests {
         SourceSpan { start_line: line, end_line: line, cell, file: None }
     }
 
-    /// Audit F37 with includes (T48): the deck's missing assets first, then each included
-    /// file's in the order the files first appear, each by cell and line; no span last.
+    /// Audit F37 with includes (T48): the deck's missing assets first, then
+    /// each included file's in the order the files first appear, each by cell
+    /// and line; no span last.
     #[test]
     fn missing_assets_are_sorted_into_source_order_per_file() {
         let missing = |name: &str,
@@ -1118,7 +1144,8 @@ mod tests {
         let text = format_error_chain(&wrapped, &read_source, false);
         assert!(text.starts_with("error: loading slides: asset not found: "));
         assert!(text.ends_with(" --> line 3"), "{text}");
-        // A context that only looks like a location of a file that does not exist.
+        // A context that only looks like a location of a file that does not
+        // exist.
         let fake = anyhow::Error::new(missing()).context("nowhere.md:3");
         let text = format_error_chain(&fake, &read_source, false);
         assert!(
@@ -1192,7 +1219,8 @@ mod tests {
             Error::Config("/work/writer.toml: TOML parse error".into());
         let report = Report::new(&config, None, Some(Path::new("/work")));
         assert_eq!(report.message, "config: writer.toml: TOML parse error");
-        // Outside the current directory: with `..`, like `path:line:` lines (audit F39).
+        // Outside the current directory: with `..`, like `path:line:` lines
+        // (audit F39).
         let report = Report::new(&config, None, Some(Path::new("/work/talk")));
         assert_eq!(report.message, "config: ../writer.toml: TOML parse error");
         // Only a leading absolute path is rewritten.
@@ -1250,12 +1278,14 @@ mod tests {
         assert!(!color_with(&[term], false));
         assert!(!color_with(&[("TERM", "dumb")], true));
         assert_eq!(color_with(&[], true), cfg!(windows), "TERM unset");
-        // CLICOLOR or CI vouch for a terminal without a TERM; CLICOLOR=0 turns colors off.
+        // CLICOLOR or CI vouch for a terminal without a TERM; CLICOLOR=0 turns
+        // colors off.
         assert!(color_with(&[("CLICOLOR", "1")], true));
         assert!(color_with(&[("CI", "true"), ("TERM", "dumb")], true));
         assert!(!color_with(&[("CLICOLOR", "0"), term], true));
         assert!(!color_with(&[("CLICOLOR", "1")], false));
-        // NO_COLOR (non-empty) always wins; CLICOLOR_FORCE (non-empty) colors a pipe.
+        // NO_COLOR (non-empty) always wins; CLICOLOR_FORCE (non-empty) colors a
+        // pipe.
         assert!(!color_with(&[("NO_COLOR", "1"), term], true));
         assert!(
             color_with(&[("NO_COLOR", ""), term], true),

@@ -399,7 +399,8 @@ const CONFIG_KEYS: &[&str] = &[
     "paper",
 ];
 
-/// Explicit fields, including empty lists, from source already loaded for parsing.
+/// Explicit fields, including empty lists, from source already loaded for
+/// parsing.
 pub(crate) fn explicit_keys(text: &str, kind: SourceKind) -> BTreeSet<String> {
     let mut keys = BTreeSet::new();
     if kind == SourceKind::Markdown {
@@ -527,9 +528,10 @@ fn canonical(path: &Path) -> PathBuf {
     })
 }
 
-/// Finds transitive includes for the watcher, even when a document fails to parse.
-/// Notebook Markdown/raw-Markdown cells are scanned; code and output are ignored.
-/// Markdown roots are scanned whatever their extension (`--format md`).
+/// Finds transitive includes for the watcher, even when a document fails to
+/// parse. Notebook Markdown/raw-Markdown cells are scanned; code and output are
+/// ignored. Markdown roots are scanned whatever their extension
+/// (`--format md`).
 pub fn scan_includes(path: &Path) -> Vec<PathBuf> {
     let Ok(path) = std::path::absolute(path) else {
         return Vec::new();
@@ -543,7 +545,8 @@ pub fn scan_includes(path: &Path) -> Vec<PathBuf> {
 fn watcher_path(path: &Path) -> (PathBuf, PathBuf) {
     let identity = canonical(path);
     let normalized = normalize_lexically(path);
-    // Removing `..` before following directory symlinks can select another file.
+    // Removing `..` before following directory symlinks can select another
+    // file.
     let target = if canonical(&normalized) == identity {
         normalized
     } else {
@@ -648,7 +651,8 @@ pub fn cell_includes(
     cell_includes_in(notebook, &[])
 }
 
-/// Creates a notebook include hook with canonical ancestors, excluding this notebook.
+/// Creates a notebook include hook with canonical ancestors, excluding this
+/// notebook.
 pub fn cell_includes_in(
     notebook: &SourceInfo, chain: &[PathBuf],
 ) -> Box<dyn crate::notebook::CellIncludes> {

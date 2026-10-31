@@ -1,8 +1,10 @@
-//! T20: the watcher against the real notify backend in isolated temp directories.
+//! T20: the watcher against the real notify backend in isolated temp
+//! directories.
 //!
-//! Ported from presenter's backend regressions. Startup events are drained before
-//! edits, and every receive or drain has a deadline. Platform-specific structural
-//! events may arrive in separate batches, so those checks collect a quiet window.
+//! Ported from presenter's backend regressions. Startup events are drained
+//! before edits, and every receive or drain has a deadline. Platform-specific
+//! structural events may arrive in separate batches, so those checks collect a
+//! quiet window.
 
 use std::fs::OpenOptions;
 use std::io::Write as _;

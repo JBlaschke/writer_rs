@@ -1,11 +1,13 @@
-//! Final syntax-frontend normalization after figure inference and include expansion.
+//! Final syntax-frontend normalization after figure inference and include
+//! expansion.
 
 use std::collections::BTreeSet;
 
 use crate::ir::{self, Attrs, Block, Document, FigureKind, Inline};
 
-/// Keeps labelled tables invariant-safe and resolves forward footnote references.
-/// Existing note labels have already had one writer prefix removed by the walker.
+/// Keeps labelled tables invariant-safe and resolves forward footnote
+/// references. Existing note labels have already had one writer prefix removed
+/// by the walker.
 pub(super) fn finish_document(document: &mut Document) {
     let mut notes = BTreeSet::new();
     ir::walk_inlines(document, &mut |inline| {

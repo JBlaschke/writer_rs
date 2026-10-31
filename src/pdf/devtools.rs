@@ -2,7 +2,8 @@
 //!
 //! Lifted from presenter_rs for browser smoke tests; compiled only with the
 //! `browser-tests` feature. This Unix pipe client creates a private throwaway
-//! browser profile, enforces a deadline for each call, and collects page errors.
+//! browser profile, enforces a deadline for each call, and collects page
+//! errors.
 //!
 //! [`Page::navigate`] waits for the navigation's document or its replacement,
 //! using frame and loader IDs. [`Page::evaluate`] awaits promises and returns
@@ -38,8 +39,9 @@ const CLOSE_GRACE: Duration = Duration::from_secs(5);
 const MAX_MESSAGE: usize = 96 << 20;
 const _: () = assert!(MAX_MESSAGE < 100 << 20);
 
-/// macOS app bundles searched by [`find_chrome`], in order: bundle and executable name.
-/// Each is looked for in `/Applications`, then `~/Applications`.
+/// macOS app bundles searched by [`find_chrome`], in order: bundle and
+/// executable name. Each is looked for in `/Applications`, then
+/// `~/Applications`.
 const MAC_APPS: &[(&str, &str)] = &[
     ("Google Chrome.app", "Google Chrome"),
     ("Chromium.app", "Chromium"),
@@ -54,9 +56,9 @@ const PATH_NAMES: &[&str] = &[
     "microsoft-edge",
 ];
 
-/// Chrome's command line, before `--user-data-dir=<profile>` and `about:blank`: headless,
-/// a quiet throwaway profile (no first-run UI, sync, extensions or keychain access) and the
-/// DevTools protocol on descriptors 3 and 4.
+/// Chrome's command line, before `--user-data-dir=<profile>` and `about:blank`:
+/// headless, a quiet throwaway profile (no first-run UI, sync, extensions or
+/// keychain access) and the DevTools protocol on descriptors 3 and 4.
 const CHROME_FLAGS: &[&str] = &[
     "--headless=new",
     "--disable-gpu",
@@ -77,17 +79,19 @@ const CHROME_FLAGS: &[&str] = &[
     "--remote-debugging-pipe",
 ];
 
-/// Runs Chrome (`$0`, with the arguments `$@`) with the shell's stdin and stdout pipes moved
-/// to descriptors 3 and 4, where `--remote-debugging-pipe` expects them. `exec` keeps the
-/// process id, so writer's child is Chrome itself.
+/// Runs Chrome (`$0`, with the arguments `$@`) with the shell's stdin and
+/// stdout pipes moved to descriptors 3 and 4, where `--remote-debugging-pipe`
+/// expects them. `exec` keeps the process id, so writer's child is Chrome
+/// itself.
 const LAUNCH_SCRIPT: &str =
     r#"exec "$0" "$@" 3<&0 4>&1 0</dev/null 1>/dev/null"#;
 
-/// The watchdog of one browser (module docs, cleanup); `$1` is the temporary directory. Its
-/// stdin carries `chrome <pid>` and `done` lines. Without `done`, it waits up to 3 s for
-/// Chrome to exit, then kills it (checking it every second, for at most 10 s), and removes
-/// the directory (retrying while Chrome's helper processes finish writing into it). A
-/// process counts as Chrome only while its command line names the directory (Chrome's
+/// The watchdog of one browser (module docs, cleanup); `$1` is the temporary
+/// directory. Its stdin carries `chrome <pid>` and `done` lines. Without
+/// `done`, it waits up to 3 s for Chrome to exit, then kills it (checking it
+/// every second, for at most 10 s), and removes the directory (retrying while
+/// Chrome's helper processes finish writing into it). A process counts as
+/// Chrome only while its command line names the directory (Chrome's
 /// `--user-data-dir`), so a reused process id is never killed. Without `ps`,
 /// ownership cannot be verified and the watchdog leaves the process alone.
 const JANITOR_SCRIPT: &str = r#"trap '' INT TERM HUP
@@ -127,21 +131,23 @@ const STDERR_TAIL: usize = 30;
 /// How long an error report waits for Chrome's last stderr lines to arrive.
 const STDERR_DRAIN: Duration = Duration::from_millis(500);
 
-/// How often a wait for Chrome's next message checks whether Chrome is still running.
+/// How often a wait for Chrome's next message checks whether Chrome is still
+/// running.
 const POLL: Duration = Duration::from_millis(100);
 
 /// At most this much of an invalid DevTools message is shown in an error.
 const SHOWN_MESSAGE: usize = 200;
 
-/// A headless Chrome with one open page (module docs). Dropping it stops Chrome and
-/// removes its profile.
+/// A headless Chrome with one open page (module docs). Dropping it stops Chrome
+/// and removes its profile.
 pub struct Page {
     /// The browser as given to [`Page::launch`], for error messages.
     chrome: PathBuf,
-    /// The running browser. Declared before `profile`: fields are dropped in order, and
-    /// Chrome must be gone before its profile directory is removed.
+    /// The running browser. Declared before `profile`: fields are dropped in
+    /// order, and Chrome must be gone before its profile directory is removed.
     browser: Browser,
-    /// The temporary directory with Chrome's profile (and its watchdog), removed on drop.
+    /// The temporary directory with Chrome's profile (and its watchdog),
+    /// removed on drop.
     profile: TempDir,
     /// The page's flat DevTools session.
     session: String,
@@ -157,8 +163,8 @@ pub struct Page {
 enum CallError {
     /// Chrome is fine but refused the request or could not do it; the reason.
     Refused(String),
-    /// Driving Chrome failed: it exited, closed its pipe, did not answer in time, or the
-    /// page crashed or was closed.
+    /// Driving Chrome failed: it exited, closed its pipe, did not answer in
+    /// time, or the page crashed or was closed.
     Browser(Failure),
 }
 
@@ -168,14 +174,14 @@ impl From<Failure> for CallError {
     }
 }
 
-/// A directory that `chrome` can read files from, for pages to open as `file://` URLs: the
-/// system's temporary directory (`$TMPDIR`, `/tmp` when unset or empty), or for a
-/// snap browser its `~/snap/<name>/common`. `None`
-/// for a snap without that directory (one that has never run): it can read no temporary
-/// directory at all; running it once creates the directory. The returned base
-/// is absolute, and canonical when it exists, so file URLs preserve symlink/..
-/// semantics and relative TMPDIR values. Bare executable names resolve on PATH
-/// before snap placement is detected.
+/// A directory that `chrome` can read files from, for pages to open as
+/// `file://` URLs: the system's temporary directory (`$TMPDIR`, `/tmp` when
+/// unset or empty), or for a snap browser its `~/snap/<name>/common`. `None`
+/// for a snap without that directory (one that has never run): it can read no
+/// temporary directory at all; running it once creates the directory. The
+/// returned base is absolute, and canonical when it exists, so file URLs
+/// preserve symlink/.. semantics and relative TMPDIR values. Bare executable
+/// names resolve on PATH before snap placement is detected.
 pub fn readable_temp_dir(chrome: &Path) -> Option<PathBuf> {
     let home = std::env::var_os("HOME").map(PathBuf::from);
     let path_var = std::env::var_os("PATH");
@@ -207,9 +213,10 @@ impl Page {
     /// as a direct executable, macOS app bundle or bare PATH name. Every call,
     /// including startup, must finish within `timeout`.
     ///
-    /// Errors (all [`Error::Other`]): `chrome` is not an executable; the temporary profile
-    /// cannot be created; Chrome cannot be started, exits or does not answer in time (with
-    /// the browser's path and its last stderr lines); not macOS or Linux.
+    /// Errors (all [`Error::Other`]): `chrome` is not an executable; the
+    /// temporary profile cannot be created; Chrome cannot be started, exits or
+    /// does not answer in time (with the browser's path and its last stderr
+    /// lines); not macOS or Linux.
     pub fn launch(chrome: &Path, timeout: Duration) -> Result<Page> {
         if cfg!(not(unix)) {
             return Err(Error::Other(
@@ -250,25 +257,27 @@ impl Page {
         Ok(page)
     }
 
-    /// Sets the timeout of every DevTools call from now on (`launch`'s applies until then):
-    /// a test can give Chrome's start-up the time a loaded machine needs and still expect
-    /// one call to return quickly.
+    /// Sets the timeout of every DevTools call from now on (`launch`'s applies
+    /// until then): a test can give Chrome's start-up the time a loaded machine
+    /// needs and still expect one call to return quickly.
     pub fn set_timeout(&mut self, timeout: Duration) {
         self.timeout = timeout;
     }
 
-    /// Loads `url` in the page and waits for the `load` event of the document it creates,
-    /// or of the document that replaced it before its `load` (module docs). When `url`
-    /// differs from the current page's only in its fragment (`#/2`), Chrome stays on the
-    /// page and fires no `load` event: then this returns as soon as Chrome has accepted the
-    /// navigation.
+    /// Loads `url` in the page and waits for the `load` event of the document
+    /// it creates, or of the document that replaced it before its `load`
+    /// (module docs). When `url` differs from the current page's only in its
+    /// fragment (`#/2`), Chrome stays on the page and fires no `load` event:
+    /// then this returns as soon as Chrome has accepted the navigation.
     ///
-    /// Errors: Chrome cannot load it (`net::ERR_…`; for a `file://` URL with a hint about
-    /// [`readable_temp_dir`]), the page crashes, Chrome exits or the timeout passes.
+    /// Errors: Chrome cannot load it (`net::ERR_…`; for a `file://` URL with a
+    /// hint about [`readable_temp_dir`]), the page crashes, Chrome exits or the
+    /// timeout passes.
     pub fn navigate(&mut self, url: &str) -> Result<()> {
         self.run("loading a page", |cdp, session| {
-            // Every lifecycle event from the request on, in order: those that arrive before
-            // the reply are judged once the reply names the loader.
+            // Every lifecycle event from the request on, in order: those that
+            // arrive before the reply are judged once the reply names the
+            // loader.
             let mut events = Vec::new();
             let params = json!({ "url": url });
             let navigation =
@@ -303,17 +312,19 @@ impl Page {
         })
     }
 
-    /// Evaluates the JavaScript `expression` in the page, awaits its value when it is a
-    /// promise, and returns that value as JSON. `undefined` is `null`; the numbers JSON
-    /// cannot hold, `NaN`, `Infinity`, `-Infinity` and `-0`, and BigInts are strings in
-    /// JavaScript's spelling (`"NaN"`, `"-0"`, `"1n"`); objects come back as Chrome
-    /// serializes them by value (functions, DOM nodes and `Map`s as `{}`; inside an array
-    /// or object, `NaN` and the like as `null`, as with `JSON.stringify`).
+    /// Evaluates the JavaScript `expression` in the page, awaits its value when
+    /// it is a promise, and returns that value as JSON. `undefined` is `null`;
+    /// the numbers JSON cannot hold, `NaN`, `Infinity`, `-Infinity` and `-0`,
+    /// and BigInts are strings in JavaScript's spelling (`"NaN"`, `"-0"`,
+    /// `"1n"`); objects come back as Chrome serializes them by value
+    /// (functions, DOM nodes and `Map`s as `{}`; inside an array or object,
+    /// `NaN` and the like as `null`, as with `JSON.stringify`).
     ///
-    /// Errors: the expression throws or its promise rejects (`JavaScript threw: ` and
-    /// Chrome's description of the exception, for an `Error` the first line of its stack,
-    /// for an object its class, like `Object`; for a thrown string, `null` or `undefined`,
-    /// Chrome's text and the value, like `Uncaught boom`), or Chrome fails as for
+    /// Errors: the expression throws or its promise rejects
+    /// (`JavaScript threw: ` and Chrome's description of the exception, for an
+    /// `Error` the first line of its stack, for an object its class, like
+    /// `Object`; for a thrown string, `null` or `undefined`, Chrome's text and
+    /// the value, like `Uncaught boom`), or Chrome fails as for
     /// [`Page::navigate`].
     pub fn evaluate(&mut self, expression: &str) -> Result<Value> {
         let evaluated = self.run("evaluating JavaScript", |cdp, session| {
@@ -333,16 +344,16 @@ impl Page {
         Ok(result_value(&evaluated["result"]))
     }
 
-    /// The page's errors so far (module docs), oldest first: `console.error: …` for a
-    /// console message, the first line of an uncaught exception, a `Log` entry's text with
-    /// its URL, `dismissed a JavaScript …` for a dialog.
+    /// The page's errors so far (module docs), oldest first: `console.error: …`
+    /// for a console message, the first line of an uncaught exception, a `Log`
+    /// entry's text with its URL, `dismissed a JavaScript …` for a dialog.
     pub fn errors(&self) -> &[String] {
         &self.errors
     }
 
-    /// Runs `step` on a DevTools connection to the page's browser, with the page's session
-    /// and timeout, and keeps the errors the page reported meanwhile. `stage` names what is
-    /// going on in error messages.
+    /// Runs `step` on a DevTools connection to the page's browser, with the
+    /// page's session and timeout, and keeps the errors the page reported
+    /// meanwhile. `stage` names what is going on in error messages.
     fn run<T>(
         &mut self, stage: &'static str,
         step: impl FnOnce(&mut Cdp<'_>, &str) -> std::result::Result<T, CallError>,
@@ -362,8 +373,8 @@ impl Page {
         })
     }
 
-    /// The error when Chrome failed: the reason, the browser and Chrome's last stderr
-    /// lines.
+    /// The error when Chrome failed: the reason, the browser and Chrome's last
+    /// stderr lines.
     fn error(&self, failure: Failure) -> Error {
         let mut message = format!(
             "Chrome (DevTools) failed: {}\n  browser: {}",
@@ -408,12 +419,13 @@ impl Drop for Page {
             cdp.close_browser();
         }
         self.browser.stop(CLOSE_GRACE);
-        // Then `browser` (already stopped) and `profile` (removed) are dropped, in order.
+        // Then `browser` (already stopped) and `profile` (removed) are dropped,
+        // in order.
     }
 }
 
-/// Opens a blank page with a flat session, enables the domains whose events [`Cdp`]
-/// handles and the page's lifecycle events; returns the session id.
+/// Opens a blank page with a flat session, enables the domains whose events
+/// [`Cdp`] handles and the page's lifecycle events; returns the session id.
 fn open_page(cdp: &mut Cdp<'_>) -> std::result::Result<String, CallError> {
     let target =
         cdp.call(None, "Target.createTarget", json!({ "url": "about:blank" }))?;
@@ -431,9 +443,10 @@ fn open_page(cdp: &mut Cdp<'_>) -> std::result::Result<String, CallError> {
     Ok(session)
 }
 
-/// Sends `method` to the page `session` and returns its result, like [`Cdp::call`]: every
-/// other message that arrives meanwhile is shown to `watch` and then handled by
-/// [`Cdp::handle_event`]. An error reply is [`CallError::Refused`].
+/// Sends `method` to the page `session` and returns its result,
+/// like [`Cdp::call`]: every other message that arrives meanwhile is shown to
+/// `watch` and then handled by [`Cdp::handle_event`]. An error reply is
+/// [`CallError::Refused`].
 fn call(
     cdp: &mut Cdp<'_>, session: &str, method: &str, params: Value,
     watch: &mut dyn FnMut(&Value),
@@ -455,8 +468,8 @@ fn call(
     }
 }
 
-/// One `Page.lifecycleEvent`: a document (`loader`) of a frame reached a stage (`name`:
-/// `init` when it starts, `DOMContentLoaded`, `load`, …).
+/// One `Page.lifecycleEvent`: a document (`loader`) of a frame reached a stage
+/// (`name`: `init` when it starts, `DOMContentLoaded`, `load`, …).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Lifecycle {
     /// The frame's id.
@@ -483,8 +496,9 @@ impl Lifecycle {
     }
 }
 
-/// The document [`Page::navigate`] waits for (module docs): at first the one its navigation
-/// created; when a newer document of the same frame starts after that one did, that one.
+/// The document [`Page::navigate`] waits for (module docs): at first the one
+/// its navigation created; when a newer document of the same frame starts after
+/// that one did, that one.
 #[derive(Debug)]
 struct LoadWait {
     /// The navigated frame, if Chrome named it (else every frame counts).
@@ -505,9 +519,10 @@ impl LoadWait {
         }
     }
 
-    /// Takes the page's next lifecycle event (in the order Chrome sent them); true once
-    /// the awaited document has fired `load`. Events of a document that started before
-    /// the awaited one (a navigation the page made by itself earlier) do not count.
+    /// Takes the page's next lifecycle event (in the order Chrome sent them);
+    /// true once the awaited document has fired `load`. Events of a document
+    /// that started before the awaited one (a navigation the page made by
+    /// itself earlier) do not count.
     fn loaded(&mut self, event: &Lifecycle) -> bool {
         if self.frame.as_ref().is_some_and(|frame| *frame != event.frame) {
             return false;
@@ -522,8 +537,9 @@ impl LoadWait {
     }
 }
 
-/// The reason when Chrome cannot load `url` (`error`, e.g. `net::ERR_FILE_NOT_FOUND`); for
-/// a `file://` URL with a hint about sandboxed browsers.
+/// The reason when Chrome cannot load `url` (`error`, e.g.
+/// `net::ERR_FILE_NOT_FOUND`); for a `file://` URL with a hint about sandboxed
+/// browsers.
 fn load_error(url: &str, error: &str) -> String {
     let mut reason = format!("cannot load {url}: {error}");
     if url.starts_with("file:") {
@@ -535,7 +551,8 @@ fn load_error(url: &str, error: &str) -> String {
     reason
 }
 
-/// The JSON value of a `Runtime.RemoteObject` returned by value (see [`Page::evaluate`]).
+/// The JSON value of a `Runtime.RemoteObject` returned by value (see
+/// [`Page::evaluate`]).
 fn result_value(result: &Value) -> Value {
     if let Some(value) = result.get("value") {
         return value.clone();
@@ -561,7 +578,8 @@ pub fn find_chrome(explicit: Option<&Path>) -> Option<PathBuf> {
     find_chrome_in(explicit, &|name| std::env::var_os(name), &bundles)
 }
 
-/// [`find_chrome`] with the environment (`var`) and the app bundle candidates given.
+/// [`find_chrome`] with the environment (`var`) and the app bundle candidates
+/// given.
 fn find_chrome_in(
     explicit: Option<&Path>, var: &dyn Fn(&str) -> Option<OsString>,
     bundles: &[PathBuf],
@@ -586,8 +604,8 @@ fn find_chrome_in(
     PATH_NAMES.iter().find_map(|name| which(Path::new(name), path_var?))
 }
 
-/// The macOS app bundle executables of [`MAC_APPS`]: each app in `/Applications`, then in
-/// `<home>/Applications`.
+/// The macOS app bundle executables of [`MAC_APPS`]: each app in
+/// `/Applications`, then in `<home>/Applications`.
 fn mac_bundles(home: Option<&Path>) -> Vec<PathBuf> {
     let mut roots = vec![PathBuf::from("/Applications")];
     roots.extend(home.map(|home| home.join("Applications")));
@@ -601,8 +619,8 @@ fn mac_bundles(home: Option<&Path>) -> Vec<PathBuf> {
         .collect()
 }
 
-/// `path` as an executable: itself, the executable of a `.app` bundle, or a bare name
-/// looked up on `path_var`.
+/// `path` as an executable: itself, the executable of a `.app` bundle, or a
+/// bare name looked up on `path_var`.
 fn resolve_executable(
     path: &Path, path_var: Option<&OsStr>,
 ) -> Option<PathBuf> {
@@ -625,7 +643,8 @@ fn is_bare_name(path: &Path) -> bool {
     path.components().count() == 1 && path.parent() == Some(Path::new(""))
 }
 
-/// The first executable `name` in the directories of `path_var` (a `PATH` value).
+/// The first executable `name` in the directories of `path_var` (a `PATH`
+/// value).
 fn which(name: &Path, path_var: &OsStr) -> Option<PathBuf> {
     std::env::split_paths(path_var)
         .filter(|dir| !dir.as_os_str().is_empty())
@@ -634,12 +653,14 @@ fn which(name: &Path, path_var: &OsStr) -> Option<PathBuf> {
         .map(|found| absolute(&found))
 }
 
-/// `path` made absolute against the current directory (unchanged if that fails).
+/// `path` made absolute against the current directory (unchanged if that
+/// fails).
 fn absolute(path: &Path) -> PathBuf {
     std::path::absolute(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
-/// True for a regular file (after symlinks) that is executable (any `x` bit on Unix).
+/// True for a regular file (after symlinks) that is executable (any `x` bit on
+/// Unix).
 fn is_executable(path: &Path) -> bool {
     let Ok(meta) = std::fs::metadata(path) else {
         return false;
@@ -698,8 +719,9 @@ fn placement(
     }
 }
 
-/// The snap a browser belongs to: `/snap/bin/<name>[.<app>]`, `/snap/<name>/…`, or a small
-/// wrapper script that runs `/snap/bin/<name>` (like Ubuntu's `chromium-browser`).
+/// The snap a browser belongs to: `/snap/bin/<name>[.<app>]`, `/snap/<name>/…`,
+/// or a small wrapper script that runs `/snap/bin/<name>` (like Ubuntu's
+/// `chromium-browser`).
 fn snap_name(chrome: &Path) -> Option<String> {
     if let Ok(rest) = chrome.strip_prefix("/snap") {
         let mut parts = rest.iter().map(OsStr::to_str);
@@ -737,9 +759,10 @@ fn string_field(
     )
 }
 
-/// A `Runtime.ExceptionDetails` as one line: the exception's description (for an `Error`,
-/// the first line of its stack: `TypeError: …`), or for a thrown value without one, like
-/// `throw 'boom'`, Chrome's text and the value (`Uncaught boom`), else Chrome's text.
+/// A `Runtime.ExceptionDetails` as one line: the exception's description (for
+/// an `Error`, the first line of its stack: `TypeError: …`), or for a thrown
+/// value without one, like `throw 'boom'`, Chrome's text and the value
+/// (`Uncaught boom`), else Chrome's text.
 fn exception_text(details: &Value) -> String {
     let exception = &details["exception"];
     let text = details["text"].as_str();
@@ -786,7 +809,8 @@ impl Failure {
     }
 }
 
-/// A DevTools protocol connection to a launched browser (its pipes, flat sessions).
+/// A DevTools protocol connection to a launched browser (its pipes, flat
+/// sessions).
 struct Cdp<'a> {
     /// The browser.
     browser: &'a mut Browser,
@@ -796,8 +820,9 @@ struct Cdp<'a> {
     next_id: u64,
     /// What is going on, for error messages.
     stage: &'static str,
-    /// The page's uncaught exceptions, `console.error` messages, dismissed dialogs and
-    /// `error` entries of the `Log` domain (only `devtools::Page` enables that domain).
+    /// The page's uncaught exceptions, `console.error` messages, dismissed
+    /// dialogs and `error` entries of the `Log` domain (only `devtools::Page`
+    /// enables that domain).
     page_errors: Vec<String>,
 }
 
@@ -813,8 +838,8 @@ impl<'a> Cdp<'a> {
         }
     }
 
-    /// Sends `method` (to the page `session`, or to the browser) and returns its result,
-    /// handling the events that arrive meanwhile.
+    /// Sends `method` (to the page `session`, or to the browser) and returns
+    /// its result, handling the events that arrive meanwhile.
     fn call(
         &mut self, session: Option<&str>, method: &str, params: Value,
     ) -> std::result::Result<Value, CallError> {
@@ -861,8 +886,8 @@ impl<'a> Cdp<'a> {
         }
     }
 
-    /// The next message from Chrome, waiting at most until the deadline and failing as soon
-    /// as Chrome has exited or either pipe has closed.
+    /// The next message from Chrome, waiting at most until the deadline and
+    /// failing as soon as Chrome has exited or either pipe has closed.
     fn next_message(&mut self) -> std::result::Result<Value, Failure> {
         loop {
             let left =
@@ -893,8 +918,8 @@ impl<'a> Cdp<'a> {
         }
     }
 
-    /// The failure when a command could not be written (`error`): Chrome exited, or closed
-    /// its command pipe.
+    /// The failure when a command could not be written (`error`): Chrome
+    /// exited, or closed its command pipe.
     fn unwritable(&mut self, error: &std::io::Error) -> Failure {
         match self.browser.wait_exit(Duration::from_secs(1)) {
             Some(status) => self.exited(status),
@@ -953,7 +978,8 @@ impl<'a> Cdp<'a> {
                     self.page_errors.push(format!("console.error: {text}"));
                 }
             }
-            // `Page::launch` enables the Log domain for failed-resource reports.
+            // `Page::launch` enables the Log domain for failed-resource
+            // reports.
             Some("Log.entryAdded") => {
                 let entry = &params["entry"];
                 let text = entry["text"].as_str().unwrap_or("");
@@ -1019,16 +1045,17 @@ fn console_text(params: &Value) -> String {
         .join(" ")
 }
 
-/// A running Chrome and the threads that talk to it. Dropping it kills Chrome if it is
-/// still running.
+/// A running Chrome and the threads that talk to it. Dropping it kills Chrome
+/// if it is still running.
 struct Browser {
     /// The Chrome process.
     child: Child,
-    /// Messages for Chrome, written to its descriptor 3 by a writer thread. `None` once
-    /// closed; the writer then closes the pipe, which makes Chrome exit.
+    /// Messages for Chrome, written to its descriptor 3 by a writer thread.
+    /// `None` once closed; the writer then closes the pipe, which makes Chrome
+    /// exit.
     commands: Option<Sender<Vec<u8>>>,
-    /// Chrome's messages from its descriptor 4, read by a reader thread, and the writer
-    /// thread's failure.
+    /// Chrome's messages from its descriptor 4, read by a reader thread, and
+    /// the writer thread's failure.
     replies: Receiver<Incoming>,
     /// Its last [`STDERR_TAIL`] stderr lines, filled by a reader thread.
     stderr: Arc<Mutex<VecDeque<String>>>,
@@ -1038,8 +1065,8 @@ struct Browser {
 
 impl Browser {
     /// Starts `chrome` (the module docs) with its profile in `profile`, its own
-    /// temporary files in `scratch` when given (`TMPDIR` in its environment), and the
-    /// threads for its pipes.
+    /// temporary files in `scratch` when given (`TMPDIR` in its environment),
+    /// and the threads for its pipes.
     fn launch(
         chrome: &Path, profile: &Path, scratch: Option<&Path>,
     ) -> Result<Browser> {
@@ -1056,7 +1083,8 @@ impl Browser {
         }
         command.arg("-c").arg(LAUNCH_SCRIPT).arg(chrome).args(CHROME_FLAGS);
         if running_as_root() {
-            // Chrome refuses to start as root (containers, CI) with its sandbox on.
+            // Chrome refuses to start as root (containers, CI) with its sandbox
+            // on.
             command.arg("--no-sandbox");
         }
         let mut child = command
@@ -1113,7 +1141,8 @@ impl Browser {
         self.child.try_wait().ok().flatten()
     }
 
-    /// Chrome's last stderr lines, after giving the last ones [`STDERR_DRAIN`] to arrive.
+    /// Chrome's last stderr lines, after giving the last ones [`STDERR_DRAIN`]
+    /// to arrive.
     fn stderr_tail(&self) -> Vec<String> {
         let _ = self.stderr_closed.recv_timeout(STDERR_DRAIN);
         let lines = self.stderr.lock().unwrap_or_else(PoisonError::into_inner);
@@ -1134,8 +1163,8 @@ impl Browser {
         }
     }
 
-    /// Closes Chrome's command pipe, gives Chrome `grace` to exit, then kills it, and reaps
-    /// it.
+    /// Closes Chrome's command pipe, gives Chrome `grace` to exit, then kills
+    /// it, and reaps it.
     fn stop(&mut self, grace: Duration) {
         self.commands = None;
         if self.wait_exit(grace).is_none() {
@@ -1177,9 +1206,10 @@ enum Incoming {
     WriteFailed(std::io::Error),
 }
 
-/// The body of the writer thread: writes each message to Chrome's command pipe with its
-/// NUL terminator, until the channel closes (then the pipe is closed) or a write fails,
-/// which it reports to `failures` (so that a wait for a reply ends at once).
+/// The body of the writer thread: writes each message to Chrome's command pipe
+/// with its NUL terminator, until the channel closes (then the pipe is closed)
+/// or a write fails, which it reports to `failures` (so that a wait for a reply
+/// ends at once).
 fn write_messages(
     mut input: impl std::io::Write, messages: &Receiver<Vec<u8>>,
     failures: &Sender<Incoming>,
@@ -1194,9 +1224,9 @@ fn write_messages(
     }
 }
 
-/// The body of the reader thread: sends each NUL-terminated message from Chrome to
-/// `messages`, then [`Incoming::Closed`] when the pipe closes; stops early when nobody
-/// listens any more.
+/// The body of the reader thread: sends each NUL-terminated message from Chrome
+/// to `messages`, then [`Incoming::Closed`] when the pipe closes; stops early
+/// when nobody listens any more.
 fn read_messages(output: impl std::io::Read, messages: &Sender<Incoming>) {
     let mut reader = BufReader::new(output);
     loop {
@@ -1217,7 +1247,8 @@ fn read_messages(output: impl std::io::Read, messages: &Sender<Incoming>) {
     }
 }
 
-/// The body of the stderr reader thread: keeps the last [`STDERR_TAIL`] lines in `log`.
+/// The body of the stderr reader thread: keeps the last [`STDERR_TAIL`] lines
+/// in `log`.
 fn read_stderr(pipe: ChildStderr, log: &Mutex<VecDeque<String>>) {
     let mut reader = BufReader::new(pipe);
     let mut line = Vec::new();
@@ -1240,8 +1271,8 @@ fn read_stderr(pipe: ChildStderr, log: &Mutex<VecDeque<String>>) {
     }
 }
 
-/// True when this process runs as root on Linux (effective uid 0 in `/proc/self/status`),
-/// where Chrome needs `--no-sandbox`.
+/// True when this process runs as root on Linux (effective uid 0 in
+/// `/proc/self/status`), where Chrome needs `--no-sandbox`.
 fn running_as_root() -> bool {
     if !cfg!(target_os = "linux") {
         return false;
@@ -1250,7 +1281,8 @@ fn running_as_root() -> bool {
         .is_ok_and(|status| status_is_root(&status))
 }
 
-/// Whether a `/proc/<pid>/status` text has effective uid 0 (`Uid: real effective …`).
+/// Whether a `/proc/<pid>/status` text has effective uid 0
+/// (`Uid: real effective …`).
 fn status_is_root(status: &str) -> bool {
     status
         .lines()
@@ -1259,8 +1291,8 @@ fn status_is_root(status: &str) -> bool {
         == Some("0")
 }
 
-/// A private temporary directory, removed (with its contents) on drop, and the watchdog
-/// that removes it if writer dies first (module docs, cleanup).
+/// A private temporary directory, removed (with its contents) on drop, and the
+/// watchdog that removes it if writer dies first (module docs, cleanup).
 struct TempDir {
     /// The directory.
     path: PathBuf,
@@ -1269,14 +1301,16 @@ struct TempDir {
 }
 
 impl TempDir {
-    /// Creates `<base>/<prefix>-<pid>-<n>` (mode 0700 on Unix) and starts its watchdog.
+    /// Creates `<base>/<prefix>-<pid>-<n>` (mode 0700 on Unix) and starts its
+    /// watchdog.
     ///
-    /// The directory is then named by its real path ([`std::fs::canonicalize`]; made
-    /// absolute if that fails): that path becomes the page's `file://` URL and Chrome's
-    /// `--user-data-dir`. A relative `base` (`TMPDIR=tmp`; [`std::env::temp_dir`] returns
-    /// `$TMPDIR` as set) would make them depend on Chrome's current directory, and a `..`
-    /// after a symbolic link (`TMPDIR=lnk/../t`) would name another directory in the URL:
-    /// the system follows `lnk` before `..`, Chrome drops `lnk/..` from the URL.
+    /// The directory is then named by its real path ([`std::fs::canonicalize`];
+    /// made absolute if that fails): that path becomes the page's `file://` URL
+    /// and Chrome's `--user-data-dir`. A relative `base` (`TMPDIR=tmp`;
+    /// [`std::env::temp_dir`] returns `$TMPDIR` as set) would make them depend
+    /// on Chrome's current directory, and a `..` after a symbolic link
+    /// (`TMPDIR=lnk/../t`) would name another directory in the URL: the system
+    /// follows `lnk` before `..`, Chrome drops `lnk/..` from the URL.
     fn new(base: &Path, prefix: &str) -> Result<TempDir> {
         let created = create_private_dir(base, prefix)?;
         let path = std::fs::canonicalize(&created)
@@ -1309,7 +1343,8 @@ impl Drop for TempDir {
     }
 }
 
-/// Creates `<base>/<prefix>-<pid>-<n>` with mode 0700 (on Unix), for the first free `n`.
+/// Creates `<base>/<prefix>-<pid>-<n>` with mode 0700 (on Unix), for the first
+/// free `n`.
 fn create_private_dir(base: &Path, prefix: &str) -> Result<PathBuf> {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let pid = std::process::id();
@@ -1342,8 +1377,8 @@ fn create_private_dir(base: &Path, prefix: &str) -> Result<PathBuf> {
     }
 }
 
-/// Removes `path` and its contents, retrying for up to 1 s: Chrome's helper processes may
-/// still be finishing writes into the profile.
+/// Removes `path` and its contents, retrying for up to 1 s: Chrome's helper
+/// processes may still be finishing writes into the profile.
 fn remove_dir_patiently(path: &Path) {
     for attempt in 0..20 {
         match std::fs::remove_dir_all(path) {
@@ -1357,8 +1392,8 @@ fn remove_dir_patiently(path: &Path) {
     }
 }
 
-/// The watchdog process of one browser (module docs, cleanup; `JANITOR_SCRIPT`). Dropping it
-/// tells it `done` and reaps it.
+/// The watchdog process of one browser (module docs, cleanup;
+/// `JANITOR_SCRIPT`). Dropping it tells it `done` and reaps it.
 struct Janitor {
     /// The `/bin/sh` process.
     child: Child,
@@ -1367,8 +1402,8 @@ struct Janitor {
 }
 
 impl Janitor {
-    /// Starts the watchdog for the temporary directory `dir`, in its own process group (so
-    /// that a Ctrl-C in the terminal does not reach it).
+    /// Starts the watchdog for the temporary directory `dir`, in its own
+    /// process group (so that a Ctrl-C in the terminal does not reach it).
     fn start(dir: &Path) -> std::io::Result<Janitor> {
         let mut command = Command::new("/bin/sh");
         command
@@ -1455,7 +1490,8 @@ mod tests {
         );
     }
 
-    /// The lifecycle event `name` of document `loader` in frame `frame`, as Chrome sends it.
+    /// The lifecycle event `name` of document `loader` in frame `frame`, as
+    /// Chrome sends it.
     fn event(frame: &str, loader: &str, name: &str) -> Value {
         json!({
             "method": "Page.lifecycleEvent",
@@ -1478,8 +1514,8 @@ mod tests {
         assert_eq!(Lifecycle::of(&json!({ "id": 3, "result": {} })), None);
     }
 
-    /// Runs `events` (frame, loader, name) through a [`LoadWait`] for loader `A` of frame
-    /// `F`; returns the index of the event it finished on.
+    /// Runs `events` (frame, loader, name) through a [`LoadWait`] for loader
+    /// `A` of frame `F`; returns the index of the event it finished on.
     fn finishes_at(events: &[(&str, &str, &str)]) -> Option<usize> {
         let mut wait = LoadWait::new(Some("F"), "A");
         events.iter().position(|(frame, loader, name)| {
@@ -1504,8 +1540,9 @@ mod tests {
             ("F", "A", "load"),
         ];
         assert_eq!(finishes_at(&stale), Some(3));
-        // A script in the new document navigates again before its load (L-T24-1): the
-        // replacing document's load counts, then also a further replacement's.
+        // A script in the new document navigates again before its load
+        // (L-T24-1): the replacing document's load counts, then also a further
+        // replacement's.
         let redirect =
             [("F", "A", "init"), ("F", "B", "init"), ("F", "B", "load")];
         assert_eq!(finishes_at(&redirect), Some(2));
@@ -1583,7 +1620,8 @@ mod tests {
         let vars = env(&[("CHROME_PATH", &chrome_path)]);
         let bundles = [other.clone()];
         assert_eq!(find_chrome_in(Some(&fake), &vars, &bundles), Some(fake));
-        // An explicit path that is not an executable is not replaced by another browser.
+        // An explicit path that is not an executable is not replaced by another
+        // browser.
         let missing = dir.path().join("missing");
         assert_eq!(find_chrome_in(Some(&missing), &vars, &bundles), None);
         let plain = dir.path().join("plain.txt");
@@ -1804,7 +1842,8 @@ mod tests {
             }
             other => panic!("{other:?}"),
         }
-        // Messages are delivered with their NUL terminator removed, then the end.
+        // Messages are delivered with their NUL terminator removed, then the
+        // end.
         let output: &[u8] = b"{\"id\":1}\0{\"id\":2}\0";
         read_messages(output, &from_chrome);
         let received: Vec<Incoming> = replies.try_iter().collect();

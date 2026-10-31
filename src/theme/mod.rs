@@ -1083,7 +1083,8 @@ mod tests {
             source: ThemeSource::Disk { dir: root.clone() },
             manifest: ThemeManifest::default(),
         };
-        // Not recording: nothing is kept. Exact-case checks list the directories.
+        // Not recording: nothing is kept. Exact-case checks list the
+        // directories.
         let before = directory_listings();
         dir.read("a.css").unwrap();
         assert!(directory_listings() > before);

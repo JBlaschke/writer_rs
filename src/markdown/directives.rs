@@ -123,9 +123,9 @@ fn merge_attrs(out: &mut DirectiveInfo, parsed: ParsedAttrs) {
     }
 }
 
-/// Rewrites colon-bearing directive candidates in document/directive paragraphs.
-/// Returns rewritten 1-based lines in ascending order, preserving line endings
-/// and the number of lines. Unchanged inputs remain borrowed.
+/// Rewrites colon-bearing directive candidates in document/directive
+/// paragraphs. Returns rewritten 1-based lines in ascending order, preserving
+/// line endings and the number of lines. Unchanged inputs remain borrowed.
 pub fn colon_prepass<'t>(
     text: &'t str, opts: &Options,
 ) -> (Cow<'t, str>, Vec<usize>) {
@@ -314,8 +314,9 @@ struct InfoToken {
     eq: Option<usize>,
 }
 
-/// Splits on whitespace outside `"…"` / `'…'` (backslash escapes the next character inside
-/// quotes). An unclosed quote runs to the end; its character is returned.
+/// Splits on whitespace outside `"…"` / `'…'` (backslash escapes the next
+/// character inside quotes). An unclosed quote runs to the end; its character
+/// is returned.
 fn split_info(info: &str) -> (Vec<InfoToken>, Option<char>) {
     let mut tokens = Vec::new();
     let mut current: Option<InfoToken> = None;

@@ -1,6 +1,7 @@
-//! Asset registry and emitter (T14; `docs/spec/ir.md` §3, `docs/spec/live-reload.md` §1,
-//! `docs/spec/html-output.md` §6.1, `docs/spec/vendored-assets.md` §2): placeholders become
-//! `data:` URIs (standalone), hashed files (site) or dev-server routes (serve), and CSS
+//! Asset registry and emitter (T14; `docs/spec/ir.md` §3,
+//! `docs/spec/live-reload.md` §1, `docs/spec/html-output.md` §6.1,
+//! `docs/spec/vendored-assets.md` §2): placeholders become `data:` URIs
+//! (standalone), hashed files (site) or dev-server routes (serve), and CSS
 //! `url()` references become placeholders.
 
 use std::path::{Component, Path, PathBuf};
@@ -39,8 +40,8 @@ const SVG: &[u8] =
     b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"8\" height=\"8\"/>";
 const GIF: &[u8] = b"GIF89a\x01\x00\x01\x00";
 
-/// The hash in the fixture PNG's site-mode file name: of its bytes, not of its id (which
-/// hashes its path; ir.md §3, audit F20).
+/// The hash in the fixture PNG's site-mode file name: of its bytes, not of its
+/// id (which hashes its path; ir.md §3, audit F20).
 fn png_hash() -> String {
     content_hash(PNG)
 }
@@ -318,8 +319,8 @@ fn deleted_file_is_missing_asset_at_emit_time() {
     }
 }
 
-/// The real vendored KaTeX stylesheet references `.woff2`, `.woff` and `.ttf` for every
-/// font; only the woff2 files are vendored (vendored-assets.md §2).
+/// The real vendored KaTeX stylesheet references `.woff2`, `.woff` and `.ttf`
+/// for every font; only the woff2 files are vendored (vendored-assets.md §2).
 #[test]
 fn katex_css_inlines_woff2_fonts_and_leaves_fallbacks_untouched() {
     let css = writer::vendor::get_str("vendor/katex/katex.min.css").unwrap();
@@ -390,8 +391,8 @@ fn figure_markup_placeholders_resolve_in_every_mode() {
     }
 }
 
-/// Theme assets registered separately (T15) merge into the document registry and resolve in
-/// the same pass.
+/// Theme assets registered separately (T15) merge into the document registry
+/// and resolve in the same pass.
 #[test]
 fn merged_registries_resolve_together() {
     let (_dir, mut document_assets, [png, _, svg]) = registry();
@@ -405,7 +406,8 @@ fn merged_registries_resolve_together() {
     .unwrap();
     assert_eq!(theme_assets.len(), 1);
     document_assets.merge(theme_assets);
-    // bg.svg has the same bytes as the document's output.svg: one asset, first hint kept.
+    // bg.svg has the same bytes as the document's output.svg: one asset, first
+    // hint kept.
     assert_eq!(document_assets.len(), 3);
     assert_eq!(document_assets.get(&svg).unwrap().file_name_hint, "output.svg");
     assert_eq!(
@@ -428,18 +430,19 @@ fn merged_registries_resolve_together() {
     );
 }
 
-/// The file a browser fetches for `url` referenced from the file `referrer` (both relative
-/// to the site root): relative URLs resolve against the referrer's own directory.
+/// The file a browser fetches for `url` referenced from the file `referrer`
+/// (both relative to the site root): relative URLs resolve against the
+/// referrer's own directory.
 fn fetched_file(referrer: &str, url: &str) -> PathBuf {
     let path = url.split(['?', '#']).next().unwrap_or_default();
     let dir = Path::new(referrer).parent().unwrap_or(Path::new(""));
     normalize_lexically(&dir.join(path))
 }
 
-/// html-output.md §6.1 (site): the theme stylesheet is written into `assets/` and
-/// linked from the document, and a browser resolves the `url()`s inside it against the
-/// stylesheet's own URL. Every URL, followed from where it is written, must reach a file
-/// the emitter emitted.
+/// html-output.md §6.1 (site): the theme stylesheet is written into `assets/`
+/// and linked from the document, and a browser resolves the `url()`s inside it
+/// against the stylesheet's own URL. Every URL, followed from where it is
+/// written, must reach a file the emitter emitted.
 #[test]
 fn site_mode_stylesheet_in_assets_dir_references_files_next_to_it() {
     let ok = png_hash();
@@ -485,8 +488,8 @@ fn site_mode_stylesheet_in_assets_dir_references_files_next_to_it() {
         ]
     );
 
-    // Follow every URL like a browser: the document is dist/index.html, the stylesheet
-    // dist/assets/theme.css.
+    // Follow every URL like a browser: the document is dist/index.html, the
+    // stylesheet dist/assets/theme.css.
     let urls =
         regex::Regex::new(r#"(?:src|href)="([^"]+)"|url\("?([^")]+)"?\)"#)
             .unwrap();
@@ -510,8 +513,9 @@ fn site_mode_stylesheet_in_assets_dir_references_files_next_to_it() {
     }
     assert_eq!(followed, 4);
 
-    // The same CSS inlined into the document (`<style>`) is relative to the document; those
-    // URLs would miss from inside assets/ (dist/assets/assets/…).
+    // The same CSS inlined into the document (`<style>`) is relative to the
+    // document; those URLs would miss from inside assets/
+    // (dist/assets/assets/…).
     let inline = emitter.resolve_css(&css).unwrap();
     assert!(inline.starts_with(&format!(
         ".writer-document{{background:url(assets/background-{gif}.gif)}}"
@@ -524,10 +528,11 @@ fn site_mode_stylesheet_in_assets_dir_references_files_next_to_it() {
     assert_eq!(emitter.files.len(), 2);
 }
 
-/// T15's template helpers are minijinja functions, which must be `Send + Sync + 'static`, so
-/// they cannot hold an `Emitter<'_>` (it borrows the registry and the mode). They keep owned
-/// state behind a mutex and create a short-lived emitter per call, carrying `files` across
-/// calls; each id is still emitted exactly once.
+/// T15's template helpers are minijinja functions, which must be
+/// `Send + Sync + 'static`, so they cannot hold an `Emitter<'_>` (it borrows
+/// the registry and the mode). They keep owned state behind a mutex and create
+/// a short-lived emitter per call, carrying `files` across calls; each id is
+/// still emitted exactly once.
 #[test]
 fn per_call_emitters_in_static_template_helpers_emit_each_id_once() {
     let ok = png_hash();
@@ -585,8 +590,8 @@ fn per_call_emitters_in_static_template_helpers_emit_each_id_once() {
     assert_eq!(state.lock().unwrap().files.len(), 2);
 }
 
-/// A resolver like the theme's (T15): the reference joined to the theme directory, if that
-/// is a file. Records what it was asked for.
+/// A resolver like the theme's (T15): the reference joined to the theme
+/// directory, if that is a file. Records what it was asked for.
 fn theme_resolver<'a>(
     theme_dir: &'a Path, calls: &'a mut Vec<String>,
 ) -> impl FnMut(&str) -> Option<AssetData> + 'a {
@@ -597,13 +602,14 @@ fn theme_resolver<'a>(
     }
 }
 
-/// Percent-decoding happens before the resolver sees a path, but never changes the path's
-/// structure: a reference that would decode to a root-absolute path, a scheme or another
-/// directory (`url(%2F…)`, `url(..%2F…)`, `url(C%3A/…)`) reaches the resolver undecoded, as
-/// the literal names a browser requests, so `Path::join` (which an absolute path replaces)
-/// cannot reach a file outside the theme. Written root-absolute and scheme references stay
-/// untouched. Nothing is left out silently: unresolvable with `lenient = false`, an encoded
-/// reference is `MissingAsset` like any other relative one.
+/// Percent-decoding happens before the resolver sees a path, but never changes
+/// the path's structure: a reference that would decode to a root-absolute path,
+/// a scheme or another directory (`url(%2F…)`, `url(..%2F…)`, `url(C%3A/…)`)
+/// reaches the resolver undecoded, as the literal names a browser requests, so
+/// `Path::join` (which an absolute path replaces) cannot reach a file outside
+/// the theme. Written root-absolute and scheme references stay untouched.
+/// Nothing is left out silently: unresolvable with `lenient = false`, an
+/// encoded reference is `MissingAsset` like any other relative one.
 #[test]
 fn percent_encoded_references_cannot_escape_the_relative_path_rules() {
     let dir = tempfile::tempdir().unwrap();
@@ -614,8 +620,9 @@ fn percent_encoded_references_cannot_escape_the_relative_path_rules() {
     std::fs::write(theme_dir.join("img/bg.png"), GIF).unwrap();
 
     let absolute = secret.to_str().unwrap().to_string();
-    // (The colon of a Windows drive too: `C:%5C…` would read as a URL with the scheme `c`,
-    // which is left alone like an `https:` reference, so nothing would reach the resolver.)
+    // (The colon of a Windows drive too: `C:%5C…` would read as a URL with the
+    // scheme `c`, which is left alone like an `https:` reference, so nothing
+    // would reach the resolver.)
     let encoded =
         absolute.replace('/', "%2F").replace('\\', "%5C").replace(':', "%3A");
     // What the resolver gets for these: the reference as written.
@@ -636,7 +643,8 @@ fn percent_encoded_references_cannot_escape_the_relative_path_rules() {
         literal.map(|r| format!("url({r})")).join(" "),
     );
 
-    // Lenient (vendor CSS): the literal names do not resolve and stay as written.
+    // Lenient (vendor CSS): the literal names do not resolve and stay as
+    // written.
     let mut calls = Vec::new();
     let mut registry = AssetRegistry::new();
     let out = register_css_urls(
@@ -647,7 +655,8 @@ fn percent_encoded_references_cannot_escape_the_relative_path_rules() {
     )
     .unwrap();
     assert_eq!(calls, [&literal[..], &["img/bg.png"]].concat());
-    // Every path the resolver saw is plain relative segments, so it stays below the theme.
+    // Every path the resolver saw is plain relative segments, so it stays below
+    // the theme.
     for call in &calls {
         let below = Path::new(call)
             .components()
@@ -697,9 +706,10 @@ fn percent_encoded_references_cannot_escape_the_relative_path_rules() {
     assert_eq!(calls, ["a%2Fb.png"]);
 }
 
-/// A query written with CSS escapes after a reference is stored without them, so standalone
-/// output drops it whole instead of gluing its tail onto the `data:` URI (which would make the
-/// base64 payload invalid); site output keeps an equivalent query.
+/// A query written with CSS escapes after a reference is stored without them,
+/// so standalone output drops it whole instead of gluing its tail onto the
+/// `data:` URI (which would make the base64 payload invalid); site output keeps
+/// an equivalent query.
 #[test]
 fn standalone_drops_css_escaped_queries_whole() {
     let mut resolver = |reference: &str| {
@@ -729,7 +739,8 @@ fn standalone_drops_css_escaped_queries_whole() {
             format!(r"a{{b:url({uri}#f\(1\))}}"),
             "?v=1",
         ),
-        // An HTML numeric reference running on into the fragment: the query's `&` is encoded.
+        // An HTML numeric reference running on into the fragment: the query's
+        // `&` is encoded.
         (
             r"a{b:url(bg.png?v=\31&#1\(x\))}",
             format!(r"a{{b:url({uri}#1\(x\))}}"),

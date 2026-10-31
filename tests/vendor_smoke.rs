@@ -19,7 +19,8 @@ const KATEX_FONTS: [&str; 20] = [
     "Typewriter-Regular",
 ];
 
-/// The 43 downloaded files of vendored-assets.md §2; VERSIONS.toml is additional.
+/// The 43 downloaded files of vendored-assets.md §2; VERSIONS.toml is
+/// additional.
 const VENDOR_FILES: [&str; 43] = [
     "vendor/crates/tylax/LICENSE",
     "vendor/crates/typst-assets/LICENSE",
@@ -97,7 +98,8 @@ struct PackagePin {
     sources: &'static [(&'static str, &'static str)],
 }
 
-/// Complete pins, including source order and hashes, from vendored-assets.md §1.
+/// Complete pins, including source order and hashes, from vendored-assets.md
+/// §1.
 #[rustfmt::skip]
 const PACKAGE_PINS: [PackagePin; 6] = [
     PackagePin {
@@ -540,7 +542,8 @@ fn list_is_sorted_and_prefix_filtered() {
     assert!(vendor::list("no-such-prefix/").is_empty());
 }
 
-/// The path contract is identical for debug disk reads and release embedded reads.
+/// The path contract is identical for debug disk reads and release embedded
+/// reads.
 #[test]
 fn non_normalized_paths_resolve_like_clean_ones() {
     for (messy, clean) in [

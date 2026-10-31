@@ -59,7 +59,8 @@ pub struct LatexOutput {
 /// Renders a dedicated LaTeX template and plans its resources without copying.
 ///
 /// Only the selected template is read. Missing required slots are diagnostics;
-/// unreadable, invalid or failing templates return their located template error.
+/// unreadable, invalid or failing templates return their located template
+/// error.
 pub fn render(
     document: &Document, registry: &AssetRegistry, config: &Config, stem: &str,
 ) -> Result<LatexOutput> {
@@ -67,7 +68,8 @@ pub fn render(
         .map_err(|failure| *failure.error)
 }
 
-/// Internal render errors preserve findings collected before template evaluation.
+/// Internal render errors preserve findings collected before template
+/// evaluation.
 #[derive(Debug)]
 pub(crate) struct RenderFailure {
     pub(crate) error: Box<Error>,

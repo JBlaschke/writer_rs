@@ -1,4 +1,5 @@
-//! Configuration contract: defaults, discovery, serde forms, and atomic overlays.
+//! Configuration contract: defaults, discovery, serde forms, and atomic
+//! overlays.
 
 use std::path::{Path, PathBuf};
 

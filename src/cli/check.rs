@@ -62,7 +62,8 @@ fn check_input(
     })
 }
 
-/// `check` reports format failures as diagnostics, unlike the shared usage helper.
+/// `check` reports format failures as diagnostics, unlike the shared usage
+/// helper.
 fn kind(input: &Path) -> crate::error::Result<SourceKind> {
     ir::detect_kind(input).map_err(|error| {
         let message = error.to_string();

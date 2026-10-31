@@ -145,7 +145,8 @@ fn mixed_targets_treat_out_as_a_directory_and_preserve_other_successes_on_export
         assert!(output.join(path).is_file(), "{path}");
     }
     // A target-local output obstruction is a usage error (exit 2), while the
-    // independent HTML/PDF targets still succeed. Bibliography errors are global.
+    // independent HTML/PDF targets still succeed. Bibliography errors are
+    // global.
     let failed = directory.path().join("one-fails");
     write(&failed, "document.typ/sentinel", b"keep this directory");
     let result = writer(directory.path())

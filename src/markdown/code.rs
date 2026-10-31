@@ -10,7 +10,8 @@ use crate::ir::{Attrs, SourceSpan};
 pub const INVALID_CODE_ATTR: &str = "invalid-code-attr";
 
 /// Warns once for each malformed `start`, `highlight` or `lines` value that
-/// [`CodeAttrs::from_attrs`] ignores. Unknown pairs remain available to emitters.
+/// [`CodeAttrs::from_attrs`] ignores. Unknown pairs remain available to
+/// emitters.
 pub fn check_code_attrs(
     attrs: &Attrs, span: Option<&SourceSpan>, diagnostics: &mut Diagnostics,
 ) {
@@ -86,7 +87,8 @@ impl CodeAttrs {
     }
 }
 
-/// Reads the whole value atomically: one malformed item invalidates every range.
+/// Reads the whole value atomically: one malformed item invalidates every
+/// range.
 fn parse_ranges(value: &str) -> Option<Vec<RangeInclusive<u64>>> {
     value
         .split([',', '|'])

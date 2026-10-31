@@ -3,7 +3,8 @@
 
 use crate::ir::{Inline, Inlines};
 
-/// Removes note markers from a heading copy without changing the actual heading.
+/// Removes note markers from a heading copy without changing the actual
+/// heading.
 pub(crate) fn without_footnotes(inlines: &[Inline]) -> Inlines {
     let mut out = Vec::new();
     for inline in inlines {

@@ -1071,7 +1071,8 @@ fn outage_backoff_restart_missed_builds_and_stale_tabs_follow_the_protocol() {
     assert_eq!(logs, json!([]));
 }
 
-// The pages checks deliberately avoid READY: far lazy images must stay unloaded.
+// The pages checks deliberately avoid READY: far lazy images must stay
+// unloaded.
 const PAGES_READY: &str = r#"(() => {
     if (!window.__writerPages || !window.__writerLiveReload?.state.connected
         || window.__writerLiveReload.state.buildId === null) return false;

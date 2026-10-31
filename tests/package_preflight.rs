@@ -1,4 +1,5 @@
-//! Public package ejection never resolves a missing-component/.. into owned files.
+//! Public package ejection never resolves a missing-component/.. into owned
+//! files.
 
 use std::collections::BTreeMap;
 use std::fs;

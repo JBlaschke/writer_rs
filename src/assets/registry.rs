@@ -1,19 +1,21 @@
-//! Document asset registration and placeholders (ir.md §3).
-//! Owner: T01. Stub created by T00.
-//! `AssetRegistry`: registered images/binary outputs and `asset:<id>` placeholders.
+//! Document asset registration and placeholders (ir.md §3). Owner: T01. Stub
+//! created by T00. `AssetRegistry`: registered images/binary outputs and
+//! `asset:<id>` placeholders.
 //!
-//! Contract: `docs/spec/ir.md` §3. Frontends never read image bytes or decide URLs: they
-//! register an asset and write the placeholder `asset:<id>` (exactly 12 `[0-9a-f]`) into
-//! their HTML; the emitter (`assets::emit`, T14) later rewrites every placeholder into a
-//! `data:` URI, a site-mode file or a dev-server route. Implemented by T01; T14 added
-//! `merge`, `len`, `is_empty` and `read` (the only place that reads a file asset's bytes).
+//! Contract: `docs/spec/ir.md` §3. Frontends never read image bytes or decide
+//! URLs: they register an asset and write the placeholder `asset:<id>` (exactly
+//! 12 `[0-9a-f]`) into their HTML; the emitter (`assets::emit`, T14) later
+//! rewrites every placeholder into a `data:` URI, a site-mode file or a
+//! dev-server route. Implemented by T01; T14 added `merge`, `len`, `is_empty`
+//! and `read` (the only place that reads a file asset's bytes).
 //!
-//! Ids are content-derived and therefore stable across runs: the first 12 hex chars of the
-//! BLAKE3 hash of the absolute path (files) or of the bytes (in-memory assets). Registering
-//! the same path or bytes again returns the same id and keeps the first registration.
-//! File paths are resolved first ([`resolve_path`]: canonicalized when the absolute path
-//! exists, so symlinks are followed exactly as the OS does; otherwise normalized lexically),
-//! so `/talk/./img.png`, `/talk/sub/../img.png` and `/talk/img.png` are one asset.
+//! Ids are content-derived and therefore stable across runs: the first 12 hex
+//! chars of the BLAKE3 hash of the absolute path (files) or of the bytes
+//! (in-memory assets). Registering the same path or bytes again returns the
+//! same id and keeps the first registration. File paths are resolved first
+//! ([`resolve_path`]: canonicalized when the absolute path exists, so symlinks
+//! are followed exactly as the OS does; otherwise normalized lexically), so
+//! `/talk/./img.png`, `/talk/sub/../img.png` and `/talk/img.png` are one asset.
 
 use std::collections::BTreeMap;
 use std::io;
@@ -43,7 +45,8 @@ pub struct Asset {
     pub mime: String,
     /// The bytes or the file they live in.
     pub data: AssetData,
-    /// Preferred output file name in site mode, e.g. "plot.png" or "output.png".
+    /// Preferred output file name in site mode, e.g. "plot.png" or
+    /// "output.png".
     pub file_name_hint: String,
 }
 
@@ -59,18 +62,21 @@ impl AssetRegistry {
         Self::default()
     }
 
-    /// Registers a file by absolute path. id = first 12 hex chars of blake3(path as UTF-8)
-    /// (lossy for non-UTF-8 paths). MIME from the extension via `mime_guess`, default
-    /// "application/octet-stream". Does NOT read the file. Returns the id.
+    /// Registers a file by absolute path. id = first 12 hex chars of
+    /// blake3(path as UTF-8) (lossy for non-UTF-8 paths). MIME from the
+    /// extension via `mime_guess`, default "application/octet-stream". Does NOT
+    /// read the file. Returns the id.
     ///
-    /// The path is first resolved with [`resolve_path`] (canonicalized when it is absolute
-    /// and exists — only metadata is touched — else normalized lexically), and the resolved
-    /// path is what is hashed and stored in [`AssetData::File`]: `base_dir.join("./x.png")`,
-    /// `base_dir.join("a/../x.png")` and `base_dir.join("x.png")` all get the same id, and a
-    /// `..` that crosses a symlinked directory resolves to the file the OS would open.
-    /// Callers pass the resolved absolute path; a relative path is accepted and hashed as
-    /// given (after lexical normalization), which makes the id depend on the path spelling
-    /// rather than on the working directory.
+    /// The path is first resolved with [`resolve_path`] (canonicalized when it
+    /// is absolute and exists — only metadata is touched — else normalized
+    /// lexically), and the resolved path is what is hashed and stored
+    /// in [`AssetData::File`]: `base_dir.join("./x.png")`,
+    /// `base_dir.join("a/../x.png")` and `base_dir.join("x.png")` all get the
+    /// same id, and a `..` that crosses a symlinked directory resolves to the
+    /// file the OS would open. Callers pass the resolved absolute path; a
+    /// relative path is accepted and hashed as given (after lexical
+    /// normalization), which makes the id depend on the path spelling rather
+    /// than on the working directory.
     pub fn register_file(&mut self, abs_path: &Path) -> String {
         let path = resolve_path(abs_path);
         let id = content_hash(path.to_string_lossy().as_bytes());
@@ -89,7 +95,8 @@ impl AssetRegistry {
         id
     }
 
-    /// Registers in-memory bytes. id = first 12 hex chars of blake3(bytes). Returns the id.
+    /// Registers in-memory bytes. id = first 12 hex chars of blake3(bytes).
+    /// Returns the id.
     pub fn register_bytes(
         &mut self, bytes: Vec<u8>, mime: &str, file_name_hint: &str,
     ) -> String {
@@ -113,10 +120,12 @@ impl AssetRegistry {
         self.assets.values()
     }
 
-    /// Summaries for `Deck.assets`, ordered by id. `origin` is `file:<path relative to
-    /// base_dir>` (`/`-separated; the full stored path when the file is not under
-    /// `base_dir`, e.g. for `base_dir.join("../shared/logo.png")`) or `inline:<byte length>`.
-    /// `base_dir` is resolved with [`resolve_path`] before the comparison, like the files.
+    /// Summaries for `Deck.assets`, ordered by id. `origin` is
+    /// `file:<path relative to base_dir>` (`/`-separated; the full stored path
+    /// when the file is not under `base_dir`, e.g. for
+    /// `base_dir.join("../shared/logo.png")`) or `inline:<byte length>`.
+    /// `base_dir` is resolved with [`resolve_path`] before the comparison, like
+    /// the files.
     pub fn infos(&self, base_dir: &Path) -> Vec<AssetInfo> {
         let base_dir = resolve_path(base_dir);
         self.iter()
@@ -140,9 +149,10 @@ impl AssetRegistry {
         format!("asset:{id}")
     }
 
-    /// Moves every asset of `other` into `self`. Ids are content-derived, so an id present
-    /// in both registries names the same asset; the existing registration is kept, exactly
-    /// as when the same path or bytes are registered twice.
+    /// Moves every asset of `other` into `self`. Ids are content-derived, so an
+    /// id present in both registries names the same asset; the existing
+    /// registration is kept, exactly as when the same path or bytes are
+    /// registered twice.
     pub fn merge(&mut self, other: AssetRegistry) {
         for (id, asset) in other.assets {
             self.assets.entry(id).or_insert(asset);
@@ -159,13 +169,14 @@ impl AssetRegistry {
         self.assets.is_empty()
     }
 
-    /// The bytes of asset `id`: cloned for [`AssetData::Bytes`], read from disk now for
-    /// [`AssetData::File`] (registration never reads files).
+    /// The bytes of asset `id`: cloned for [`AssetData::Bytes`], read from disk
+    /// now for [`AssetData::File`] (registration never reads files).
     ///
-    /// Errors: an unregistered id is [`Error::Other`] naming the id; a file that no longer
-    /// exists (deleted between parsing and emitting) is
-    /// [`Error::MissingAsset`]` { path, span: None }`; any other read failure is
-    /// [`Error::Io`] with the path prepended to the message (same [`std::io::ErrorKind`]).
+    /// Errors: an unregistered id is [`Error::Other`] naming the id; a file
+    /// that no longer exists (deleted between parsing and emitting) is
+    /// [`Error::MissingAsset`]` { path, span: None }`; any other read failure
+    /// is [`Error::Io`] with the path prepended to the message (same
+    /// [`std::io::ErrorKind`]).
     pub fn read(&self, id: &str) -> Result<Vec<u8>> {
         let asset = self.get(id).ok_or_else(|| unknown_id(id))?;
         match &asset.data {
@@ -196,16 +207,18 @@ pub(crate) fn unknown_id(id: &str) -> Error {
     ))
 }
 
-/// First [`ID_LEN`] lowercase hex chars of the BLAKE3 hash of `bytes`: the id of an asset
-/// registered by its bytes, and the hash in a site-mode file name (`assets::emit`), which
-/// is always taken from the bytes, also for a file asset (whose id hashes its path).
+/// First [`ID_LEN`] lowercase hex chars of the BLAKE3 hash of `bytes`: the id
+/// of an asset registered by its bytes, and the hash in a site-mode file name
+/// (`assets::emit`), which is always taken from the bytes, also for a file
+/// asset (whose id hashes its path).
 pub fn content_hash(bytes: &[u8]) -> String {
     let hex = blake3::hash(bytes).to_hex();
     hex[..ID_LEN].to_string()
 }
 
-/// `path` relative to `base`, joined with `/`; the full path when it is not under `base`.
-/// Both paths are already normalized, so `..` never appears in the relative form.
+/// `path` relative to `base`, joined with `/`; the full path when it is not
+/// under `base`. Both paths are already normalized, so `..` never appears in
+/// the relative form.
 fn display_relative(path: &Path, base: &Path) -> String {
     match path.strip_prefix(base) {
         Ok(rel) => rel
@@ -217,9 +230,10 @@ fn display_relative(path: &Path, base: &Path) -> String {
     }
 }
 
-/// The path the registry stores for `path`: `std::fs::canonicalize(path)` when `path` is
-/// absolute and exists (symlinks resolved exactly as the OS resolves them when opening the
-/// file), otherwise [`normalize_lexically`]. Relative paths are never made absolute.
+/// The path the registry stores for `path`: `std::fs::canonicalize(path)` when
+/// `path` is absolute and exists (symlinks resolved exactly as the OS resolves
+/// them when opening the file), otherwise [`normalize_lexically`]. Relative
+/// paths are never made absolute.
 pub fn resolve_path(path: &Path) -> PathBuf {
     if path.is_absolute()
         && let Ok(canonical) = std::fs::canonicalize(path)
@@ -229,12 +243,14 @@ pub fn resolve_path(path: &Path) -> PathBuf {
     normalize_lexically(path)
 }
 
-/// Removes `.` components and resolves `..` against the preceding component, without
-/// touching the filesystem (so symlinks are not followed: `a/link/../b` becomes `a/b`).
+/// Removes `.` components and resolves `..` against the preceding component,
+/// without touching the filesystem (so symlinks are not followed: `a/link/../b`
+/// becomes `a/b`).
 ///
-/// `..` directly under the root is dropped (`/..` is `/`); leading `..` components of a
-/// relative path are kept (`../a/../b` becomes `../b`). An input that normalizes to nothing
-/// (`""`, `"."`, `"a/.."`) becomes `"."`. Shared by the registry and config discovery.
+/// `..` directly under the root is dropped (`/..` is `/`); leading `..`
+/// components of a relative path are kept (`../a/../b` becomes `../b`). An
+/// input that normalizes to nothing (`""`, `"."`, `"a/.."`) becomes `"."`.
+/// Shared by the registry and config discovery.
 pub fn normalize_lexically(path: &Path) -> PathBuf {
     let mut parts: Vec<Component<'_>> = Vec::new();
     for component in path.components() {
@@ -245,7 +261,8 @@ pub fn normalize_lexically(path: &Path) -> PathBuf {
                     parts.pop();
                 }
                 Some(Component::RootDir) => {}
-                // Empty, a drive prefix without root (Windows `C:..`) or a leading `..`.
+                // Empty, a drive prefix without root (Windows `C:..`) or a
+                // leading `..`.
                 _ => parts.push(component),
             },
             other => parts.push(other),
@@ -266,10 +283,10 @@ mod tests {
             && id.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
     }
 
-    // The four tests on POSIX paths: `/abs/…` is absolute, `/` is the separator, and the
-    // hashed and shown paths are the spellings below. On Windows `/abs` is relative to the
-    // current drive and the normalized path uses `\`; the integration tests cover it with
-    // real paths.
+    // The four tests on POSIX paths: `/abs/…` is absolute, `/` is the
+    // separator, and the hashed and shown paths are the spellings below. On
+    // Windows `/abs` is relative to the current drive and the normalized path
+    // uses `\`; the integration tests cover it with real paths.
     #[cfg(unix)]
     #[test]
     fn file_ids_hash_the_path_and_are_idempotent() {
@@ -287,7 +304,8 @@ mod tests {
         assert_eq!(asset.mime, "image/png");
         assert_eq!(asset.file_name_hint, "plot.png");
         assert_eq!(asset.data, AssetData::File(path.to_path_buf()));
-        // A different path is a different asset, even if the file content were identical.
+        // A different path is a different asset, even if the file content were
+        // identical.
         assert_ne!(
             reg.register_file(Path::new("/abs/talk/figures/other.png")),
             id
@@ -440,7 +458,8 @@ mod tests {
         // A base_dir spelled with `.`/`..` is normalized before the comparison.
         let infos = reg.infos(Path::new("/abs/./other/../talk/"));
         assert!(infos.iter().any(|i| i.origin == "file:figures/plot.png"));
-        // A sibling directory whose name merely starts with base_dir's name is outside.
+        // A sibling directory whose name merely starts with base_dir's name is
+        // outside.
         let sibling = reg.register_file(Path::new("/abs/talk2/x.png"));
         let infos = reg.infos(base);
         let info = infos.iter().find(|i| i.id == sibling).unwrap();
@@ -615,8 +634,9 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn parent_dir_through_a_symlink_resolves_like_the_os() {
-        // root/current -> root/2026/talk; the image lives at root/2026/shared/logo.png, so
-        // `current/../shared/logo.png` exists for the OS but `root/shared/logo.png` does not.
+        // root/current -> root/2026/talk; the image lives at
+        // root/2026/shared/logo.png, so `current/../shared/logo.png` exists for
+        // the OS but `root/shared/logo.png` does not.
         let tmp = std::env::temp_dir()
             .join(format!("presenter-registry-{}", std::process::id()));
         let root = tmp.join("root");

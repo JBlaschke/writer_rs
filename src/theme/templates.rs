@@ -365,7 +365,8 @@ mod tests {
             ],
         );
         let ctx = minijinja::context! { x => minijinja::context! { w => 1 } };
-        // Serve mode (debug): `?` keeps the source excerpt and the referenced variables.
+        // Serve mode (debug): `?` keeps the source excerpt and the referenced
+        // variables.
         let message = from_error(&theme, true, "outer.html", ctx.clone());
         assert!(
             message.starts_with("undefined value (via outer.html line 1)\n"),
@@ -376,7 +377,8 @@ mod tests {
         // Build mode: minijinja captures no debug info for runtime errors.
         let message = from_error(&theme, false, "outer.html", ctx);
         assert_eq!(message, "undefined value (via outer.html line 1)");
-        // Syntax errors always carry their source; `template_error(_, false)` drops it.
+        // Syntax errors always carry their source; `template_error(_, false)`
+        // drops it.
         let env = environment(&theme, false).unwrap();
         let syntax_error = || env.get_template("syntax.html").unwrap_err();
         let Error::Template { message, .. } = Error::from(syntax_error())
@@ -406,8 +408,8 @@ mod tests {
             render_error(&theme, false, "deck.html", ().into());
         assert_eq!((template.as_str(), line), ("slide.html", Some(2)));
         assert!(message.contains("recursion limit exceeded"), "{message}");
-        // One entry per distinct site: `slide.html line 2 ×N` (N set by minijinja's
-        // recursion limit), then the outermost include.
+        // One entry per distinct site: `slide.html line 2 ×N` (N set by
+        // minijinja's recursion limit), then the outermost include.
         let via = message.split_once(" (via ").map_or("", |(_, via)| via);
         let (repeated, outer) = via.split_once(", ").unwrap_or_default();
         assert!(

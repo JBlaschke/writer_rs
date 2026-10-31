@@ -1,4 +1,5 @@
-//! `writer init`: deterministic documents and a child theme from embedded files.
+//! `writer init`: deterministic documents and a child theme from embedded
+//! files.
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -9,7 +10,8 @@ use super::{
 };
 use crate::vendor;
 
-/// Creates a project without replacing existing scaffold files, even with force.
+/// Creates a project without replacing existing scaffold files, even with
+/// force.
 pub fn run(args: &InitArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
     let source = if args.typst {
         "document.typ"

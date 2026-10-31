@@ -35,7 +35,8 @@ pub(crate) struct Reference {
 
 impl Reference {
     /// Reads a complete, well-formed reference package, mapping every failure
-    /// to the source document rather than leaking ZIP or XML implementation errors.
+    /// to the source document rather than leaking ZIP or XML implementation
+    /// errors.
     pub(crate) fn load(path: &Path) -> Result<Self> {
         Self::read(path).map_err(|message| Error::Resource {
             what: "reference document",

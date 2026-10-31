@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 use super::{InputRole, find_clash};
 use crate::error::{Error, Result};
 
-/// Validates every file/directory and their input/output aliases without writes.
+/// Validates every file/directory and their input/output aliases without
+/// writes.
 pub(super) fn preflight(
     files: &[&Path], directory: Option<&Path>, inputs: &[(PathBuf, InputRole)],
     target: &str,

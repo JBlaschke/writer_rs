@@ -1,6 +1,7 @@
 //! Structured Typst syntax to document IR (typst-dialect.md §§2–3).
 //!
-//! This frontend walks syntax and literal bindings without evaluating user code.
+//! This frontend walks syntax and literal bindings without evaluating user
+//! code.
 
 mod calls;
 mod literals;
@@ -453,7 +454,8 @@ impl<'a> Context<'a> {
         &mut self, path: &Path, error: &crate::error::Error,
     ) {
         // A failed parse cannot return its consumed-file inventory. Watch the
-        // declared descendants only for recovery; successful selection stays exact.
+        // declared descendants only for recovery; successful selection stays
+        // exact.
         for path in crate::markdown::include::scan_includes(path) {
             self.remember_include(canonical(&path));
         }

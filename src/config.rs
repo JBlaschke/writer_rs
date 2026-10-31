@@ -707,9 +707,10 @@ impl Config {
         })
     }
 
-    /// Walks from a source directory to the root, loading the nearest writer.toml.
-    /// Returns an absolute, lexically normalized config path. Config values stay
-    /// relative as written; pipeline preparation resolves their origins.
+    /// Walks from a source directory to the root, loading the nearest
+    /// writer.toml. Returns an absolute, lexically normalized config path.
+    /// Config values stay relative as written; pipeline preparation resolves
+    /// their origins.
     pub fn discover(start_dir: &Path) -> Result<Option<(PathBuf, Config)>> {
         let start = if start_dir.as_os_str().is_empty() {
             Path::new(".")
@@ -907,7 +908,8 @@ fn json_map<'de, D: Deserializer<'de>>(
     Ok(map)
 }
 
-/// Replaces every TOML date/time inside `value` by its text (see [`toml_datetime_text`]).
+/// Replaces every TOML date/time inside `value` by its text (see
+/// [`toml_datetime_text`]).
 fn stringify_toml_datetimes(value: &mut Value) {
     match value {
         Value::Object(map) => match toml_datetime_text(map) {
@@ -921,9 +923,10 @@ fn stringify_toml_datetimes(value: &mut Value) {
     }
 }
 
-/// The `toml` deserializer hands a date/time to a `serde_json::Value` as a one-entry object
-/// (a private marker key mapped to the date text). Returns that date's text (`2026-10-08`)
-/// when `map` is such an object, recognised by `toml`'s own `Datetime` deserializer.
+/// The `toml` deserializer hands a date/time to a `serde_json::Value` as a
+/// one-entry object (a private marker key mapped to the date text). Returns
+/// that date's text (`2026-10-08`) when `map` is such an object, recognised by
+/// `toml`'s own `Datetime` deserializer.
 fn toml_datetime_text(map: &Map<String, Value>) -> Option<String> {
     if map.len() != 1 || !map.values().all(Value::is_string) {
         return None;
@@ -933,9 +936,10 @@ fn toml_datetime_text(map: &Map<String, Value>) -> Option<String> {
         .map(|datetime| datetime.to_string())
 }
 
-/// For a serde "unknown field `x`, expected …" or "unknown variant `x`, expected …" message
-/// (as produced for `deny_unknown_fields` structs and enums), the expected name closest to
-/// `x` if it is within Levenshtein distance 2.
+/// For a serde "unknown field `x`, expected …" or "unknown variant `x`,
+/// expected …" message (as produced for `deny_unknown_fields` structs and
+/// enums), the expected name closest to `x` if it is within Levenshtein
+/// distance 2.
 pub fn unknown_key_hint(message: &str) -> Option<String> {
     let (_, rest) = message
         .split_once("unknown field `")
@@ -948,8 +952,8 @@ pub fn unknown_key_hint(message: &str) -> Option<String> {
     closest(unknown, candidates).map(str::to_string)
 }
 
-/// `message` (trailing whitespace trimmed) with ` (did you mean '…'?)` appended when
-/// [`unknown_key_hint`] finds a suggestion.
+/// `message` (trailing whitespace trimmed) with ` (did you mean '…'?)` appended
+/// when [`unknown_key_hint`] finds a suggestion.
 pub fn with_unknown_key_hint(message: String) -> String {
     let trimmed = message.trim_end();
     match unknown_key_hint(trimmed) {
@@ -958,8 +962,8 @@ pub fn with_unknown_key_hint(message: String) -> String {
     }
 }
 
-/// The candidate with the smallest edit distance to `word` (first one on ties), if that
-/// distance is 1 or 2.
+/// The candidate with the smallest edit distance to `word` (first one on ties),
+/// if that distance is 1 or 2.
 fn closest<'c>(
     word: &str, candidates: impl IntoIterator<Item = &'c str>,
 ) -> Option<&'c str> {
@@ -971,7 +975,8 @@ fn closest<'c>(
         .map(|(_, candidate)| candidate)
 }
 
-/// Levenshtein edit distance over `char`s (insertions, deletions, substitutions).
+/// Levenshtein edit distance over `char`s (insertions, deletions,
+/// substitutions).
 fn levenshtein(a: &str, b: &str) -> usize {
     let b: Vec<char> = b.chars().collect();
     let mut previous: Vec<usize> = (0..=b.len()).collect();

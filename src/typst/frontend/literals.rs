@@ -1,4 +1,5 @@
-//! Literal values, lexical bindings and raw call arguments for the subset walker.
+//! Literal values, lexical bindings and raw call arguments for the subset
+//! walker.
 
 use std::collections::BTreeMap;
 use std::rc::Rc;

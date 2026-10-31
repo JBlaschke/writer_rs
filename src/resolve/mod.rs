@@ -42,7 +42,8 @@ pub struct ResolveOptions<'a> {
 }
 
 /// Resolves labels, numbering, references, notes and the shared TOC model.
-/// Problems are recorded as diagnostics; invalid references become placeholders.
+/// Problems are recorded as diagnostics; invalid references become
+/// placeholders.
 pub fn resolve(
     document: &mut Document, opts: &ResolveOptions<'_>,
 ) -> Diagnostics {
@@ -660,7 +661,8 @@ impl<'a> Resolver<'a> {
                     });
                 }
             }
-            // Bibliography entries are appended by T70's phase 4 before assembly.
+            // Bibliography entries are appended by T70's phase 4 before
+            // assembly.
             Block::Bibliography { .. } if self.has_bibliography => {
                 self.toc.push(TocEntry {
                     level: 1,
@@ -769,7 +771,8 @@ impl<'a> Resolver<'a> {
                     );
                 }
             }
-            // Alt text is flattened at Finish without diagnostics or counter changes.
+            // Alt text is flattened at Finish without diagnostics or counter
+            // changes.
             Inline::Image { .. }
             | Inline::Text { .. }
             | Inline::Code { .. }

@@ -43,7 +43,8 @@ impl LangTag {
         Some(LangTag { lang: lang.to_ascii_lowercase(), region })
     }
 
-    /// Uses metadata, then configuration, then English; invalid present tags fail.
+    /// Uses metadata, then configuration, then English; invalid present tags
+    /// fail.
     pub fn effective(meta: &DocMeta, config: &Config) -> Option<LangTag> {
         let tag = meta
             .lang

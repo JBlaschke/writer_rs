@@ -1,4 +1,5 @@
-//! Lenient nbformat contract tests, lifted from presenter_rs without slide behavior.
+//! Lenient nbformat contract tests, lifted from presenter_rs without slide
+//! behavior.
 
 use std::path::{Path, PathBuf};
 
@@ -13,9 +14,10 @@ fn parse(value: Value) -> (Notebook, Diagnostics) {
     parse_notebook(Path::new("test.ipynb"), &value.to_string()).unwrap()
 }
 
-/// (cell index from the span, code, message) of every warning, after checking the parts
-/// every warning shares: warning level, the path given to `parse_notebook`, and a
-/// whole-cell span (lines 1..=source lines) when the warning is about a cell.
+/// (cell index from the span, code, message) of every warning, after checking
+/// the parts every warning shares: warning level, the path given to
+/// `parse_notebook`, and a whole-cell span (lines 1..=source lines) when the
+/// warning is about a cell.
 fn summary(
     notebook: &Notebook, warnings: &Diagnostics,
 ) -> Vec<(Option<usize>, &'static str, String)> {
@@ -228,7 +230,8 @@ fn other_unusable_documents_are_parse_errors() {
 
 #[test]
 fn unknown_cell_type_is_kept_as_unknown_with_a_warning() {
-    // nbformat 5.11.1 validates and reads this (an "unrecognized cell" from 4.6).
+    // nbformat 5.11.1 validates and reads this (an "unrecognized cell" from
+    // 4.6).
     let (notebook, warnings) = parse(json!({
         "cells": [
             { "cell_type": "markdown", "id": "a", "metadata": {}, "source": "# A" },
@@ -355,7 +358,8 @@ fn language_precedence() {
 
 #[test]
 fn jupyterlab_4_metadata_parses_without_warnings() {
-    // The cell metadata JupyterLab 4's property inspector writes when "-" is selected.
+    // The cell metadata JupyterLab 4's property inspector writes when "-" is
+    // selected.
     let metadata = json!({ "editable": true, "slideshow": { "slide_type": "" }, "tags": [] });
     let (notebook, warnings) = parse(notebook_with(json!([
         { "cell_type": "markdown", "id": "m", "metadata": metadata, "source": "# Title" },

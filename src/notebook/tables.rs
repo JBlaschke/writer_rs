@@ -1,4 +1,5 @@
-//! Plain notebook HTML tables and pandas grid conversion (notebook-mapping.md §4.4).
+//! Plain notebook HTML tables and pandas grid conversion (notebook-mapping.md
+//! §4.4).
 
 use scraper::{ElementRef, Html, Node};
 

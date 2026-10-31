@@ -1,5 +1,5 @@
-//! Compiler-backed page and equation renditions (typst-dialect.md §9; math.md §3.4).
-//! Owner: T03. Stub created by T00.
+//! Compiler-backed page and equation renditions (typst-dialect.md §9; math.md
+//! §3.4). Owner: T03. Stub created by T00.
 
 use typst::layout::FrameItem;
 use typst_layout::{Page, PagedDocument};
@@ -15,7 +15,8 @@ const PRELUDE: &str = concat!(
     "#set text(top-edge: \"bounds\", bottom-edge: \"bounds\")\n",
 );
 
-/// A self-contained rendition with dimensions and baseline in typographic points.
+/// A self-contained rendition with dimensions and baseline in typographic
+/// points.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Rendition {
     /// SVG whose glyphs are paths, independent of fonts on the viewing machine.
@@ -46,10 +47,11 @@ impl Rendition {
     }
 }
 
-/// Renders one equation using embedded fonts and preserves the world's main file.
+/// Renders one equation using embedded fonts and preserves the world's main
+/// file.
 ///
-/// LaTeX source is passed unchanged to the vendored mitex package. Callers expand
-/// their configured macros before calling this helper.
+/// LaTeX source is passed unchanged to the vendored mitex package. Callers
+/// expand their configured macros before calling this helper.
 pub fn equation(
     world: &mut WriterWorld, source: &str, dialect: MathDialect, display: bool,
 ) -> Result<Rendition> {
@@ -70,10 +72,12 @@ pub fn equation(
     })
 }
 
-/// Converts an image to SVG, PNG and PDF while preserving the world's main file.
+/// Converts an image to SVG, PNG and PDF while preserving the world's main
+/// file.
 ///
 /// Supported MIME types are PNG, JPEG, GIF, WebP, SVG and PDF. When provided,
-/// `width_pt` scales the rendition to that width and preserves its aspect ratio.
+/// `width_pt` scales the rendition to that width and preserves its aspect
+/// ratio.
 pub fn image(
     world: &mut WriterWorld, bytes: &[u8], mime: &str, width_pt: Option<f64>,
 ) -> Result<Rendition> {

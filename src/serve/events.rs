@@ -1,4 +1,5 @@
-//! Per-view live-build events and located browser diagnostics (live-reload.md §2).
+//! Per-view live-build events and located browser diagnostics (live-reload.md
+//! §2).
 //!
 //! The payloads are shared by SSE and `/__writer/state`. Error conversion,
 //! source excerpts and relative paths are lifted from presenter_rs; Writer adds
@@ -96,7 +97,8 @@ pub struct BuildEvent {
     pub warnings: Vec<DiagnosticJson>,
 }
 
-/// Current state sent immediately to an SSE subscriber and by `/__writer/state`.
+/// Current state sent immediately to an SSE subscriber and by
+/// `/__writer/state`.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Hello {
     /// Latest attempt id, zero before the first build.
@@ -140,8 +142,9 @@ impl From<&Error> for ErrorPayload {
 }
 
 impl ErrorPayload {
-    /// Converts an error from `input`, showing paths below the current directory
-    /// relatively. Input supplies the source of missing assets and front matter.
+    /// Converts an error from `input`, showing paths below the current
+    /// directory relatively. Input supplies the source of missing assets and
+    /// front matter.
     pub fn for_input(err: &Error, input: &Path) -> Self {
         let cwd = std::env::current_dir().ok();
         Self::new(err, cwd.as_deref(), Some(input))
@@ -268,7 +271,8 @@ impl DiagnosticJson {
     }
 }
 
-/// The diagnostic's precise included-file origin takes precedence over its path.
+/// The diagnostic's precise included-file origin takes precedence over its
+/// path.
 fn diagnostic_path(diagnostic: &Diagnostic) -> Option<&Path> {
     diagnostic
         .span
@@ -378,7 +382,8 @@ fn toml_parse_error(text: &str) -> Option<(usize, String)> {
     Some((line, explanation.join("\n").trim().to_string()))
 }
 
-/// Shortens paths strictly below base, resolving symlink spelling as a fallback.
+/// Shortens paths strictly below base, resolving symlink spelling as a
+/// fallback.
 fn display_relative(path: &Path, base: Option<&Path>) -> String {
     let below = |path: &Path, base: &Path| -> Option<PathBuf> {
         let relative = path.strip_prefix(base).ok()?;

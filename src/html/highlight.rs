@@ -100,8 +100,8 @@ fn open_tags(stack: &ScopeStack, out: &mut String) {
     }
 }
 
-/// Looks up a two-face theme by its exact, case-sensitive embedded name.
-/// The terminal themes `ansi`, `base16` and `base16-256` are unsuitable for HTML.
+/// Looks up a two-face theme by its exact, case-sensitive embedded name. The
+/// terminal themes `ansi`, `base16` and `base16-256` are unsuitable for HTML.
 pub fn builtin_code_theme(name: &str) -> Option<&'static Theme> {
     if matches!(name, "ansi" | "base16" | "base16-256") {
         return None;
@@ -114,7 +114,8 @@ pub fn builtin_code_theme(name: &str) -> Option<&'static Theme> {
 
 /// Generates the `.hl-code` root rule and `hl-` scope rules for a theme.
 pub fn code_theme_css(theme: &Theme) -> String {
-    // Syntect only appends to a String here; its implementation always returns Ok.
+    // Syntect only appends to a String here; its implementation always returns
+    // Ok.
     css_for_theme_with_class_style(theme, STYLE)
         .expect("syntect CSS generation only writes to a String")
 }

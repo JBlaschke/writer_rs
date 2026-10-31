@@ -1,4 +1,5 @@
-//! ANSI stream styles and deterministic notebook output (notebook-mapping.md §5).
+//! ANSI stream styles and deterministic notebook output (notebook-mapping.md
+//! §5).
 
 use anstyle::{Ansi256Color, AnsiColor, Color, Effects, RgbColor, Style};
 use anstyle_parse::{DefaultCharAccumulator, Params, Parser, Perform};
@@ -194,7 +195,8 @@ fn rgb_color(red: u16, green: u16, blue: u16) -> Option<Color> {
     Some(Color::Rgb(RgbColor(red, green, blue)))
 }
 
-/// Parses terminal output, discarding all controls except SGR, tabs and newlines.
+/// Parses terminal output, discarding all controls except SGR, tabs and
+/// newlines.
 pub fn parse(text: &str) -> Vec<AnsiSpan> {
     let mut parser = Parser::<DefaultCharAccumulator>::new();
     let mut output = StyledText::default();
@@ -204,12 +206,14 @@ pub fn parse(text: &str) -> Vec<AnsiSpan> {
     output.spans
 }
 
-/// Removes terminal controls while preserving printable text, tabs and newlines.
+/// Removes terminal controls while preserving printable text, tabs and
+/// newlines.
 pub fn strip(text: &str) -> String {
     parse(text).into_iter().map(|span| span.text).collect()
 }
 
-/// Serializes parsed spans using a complete style and reset for each styled span.
+/// Serializes parsed spans using a complete style and reset for each styled
+/// span.
 pub fn canonical(spans: &[AnsiSpan]) -> String {
     spans
         .iter()

@@ -1,4 +1,5 @@
-//! Editable Word equations from the supported MathML Core subset (math.md §3.2).
+//! Editable Word equations from the supported MathML Core subset (math.md
+//! §3.2).
 
 mod fold;
 mod parse;

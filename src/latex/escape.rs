@@ -108,7 +108,8 @@ pub fn map_char(c: char) -> Option<&'static str> {
         .map(|index| TEXT_MATH[index].1)
 }
 
-/// Whether ASCII or the exact §5.6 T1/inputenc/textcomp set accepts a character.
+/// Whether ASCII or the exact §5.6 T1/inputenc/textcomp set accepts a
+/// character.
 pub fn pdflatex_safe(c: char) -> bool {
     if c.is_ascii() {
         return true;

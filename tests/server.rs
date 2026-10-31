@@ -30,7 +30,8 @@ const WAIT: Duration = Duration::from_secs(60);
 const NO_STORE: &str = "no-store";
 const IMMUTABLE: &str = "public, max-age=31536000, immutable";
 
-/// A dedicated runtime, bounded requests, and shutdown cleanup even on assertion failure.
+/// A dedicated runtime, bounded requests, and shutdown cleanup even on
+/// assertion failure.
 struct TestServer {
     addr: SocketAddr,
     state: Shared,
@@ -700,7 +701,8 @@ fn page_resources_use_current_or_previous_content_hash_and_security_headers() {
         &server.state,
         outcome(ViewOutcome::Skipped, ViewOutcome::Built(next)),
     );
-    // Old versions expire after the next successful set rotates the previous slot.
+    // Old versions expire after the next successful set rotates the previous
+    // slot.
     let expired =
         server.get(&format!("/__writer/pages/1.svg?v={}", old.pages[0].hash));
     assert_eq!(expired.header("cache-control"), Some(NO_STORE));

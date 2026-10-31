@@ -1,8 +1,8 @@
 //! Document asset registration and HTML emission (html-output.md §6).
 //! Owner: T14. Module skeleton created by T00.
 //!
-//! The registry records files and bytes; the emitter resolves their placeholders.
-//! The HTML tokenizer is shared with the Markdown frontend (T12).
+//! The registry records files and bytes; the emitter resolves their
+//! placeholders. The HTML tokenizer is shared with the Markdown frontend (T12).
 
 use std::convert::Infallible;
 use std::ops::Range;
@@ -23,10 +23,10 @@ pub(crate) fn html_start_tags(html: &str) -> Vec<(String, usize)> {
     tags
 }
 
-/// Every attribute value of the start tags [`html_start_tags`] finds, in order: the
-/// attribute's ASCII-lowercased name and the byte range of its value (quotes excluded,
-/// entities not decoded; bare attributes are left out). The Markdown frontend (T12)
-/// resolves local URLs with it.
+/// Every attribute value of the start tags [`html_start_tags`] finds, in order:
+/// the attribute's ASCII-lowercased name and the byte range of its value
+/// (quotes excluded, entities not decoded; bare attributes are left out). The
+/// Markdown frontend (T12) resolves local URLs with it.
 pub(crate) fn html_attr_values(html: &str) -> Vec<(String, Range<usize>)> {
     let mut values = Vec::new();
     let Ok(()) = HtmlScan::default().start_tags(html, |tag| {
@@ -56,16 +56,17 @@ pub(crate) fn html_count_attr(html: &str, attr: &str) -> usize {
     count
 }
 
-/// Elements whose content is raw text (or escapable raw text) for the HTML tokenizer: tags
-/// inside them are not tags.
+/// Elements whose content is raw text (or escapable raw text) for the HTML
+/// tokenizer: tags inside them are not tags.
 const RAW_TEXT_ELEMENTS: [&str; 8] = [
     "script", "style", "textarea", "title", "xmp", "iframe", "noembed",
     "noframes",
 ];
 
-/// Where an HTML scan stands between snippets. The raw HTML nodes of a document are scanned
-/// one after the other, and a comment or `<script>` opened in one can close in a later one
-/// (`x <script>…'<img src=a.png>'…</script>` is three inline HTML nodes).
+/// Where an HTML scan stands between snippets. The raw HTML nodes of a document
+/// are scanned one after the other, and a comment or `<script>` opened in one
+/// can close in a later one (`x <script>…'<img src=a.png>'…</script>` is three
+/// inline HTML nodes).
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum HtmlScan {
     /// Ordinary content: tags are recognized.
@@ -73,7 +74,8 @@ pub(crate) enum HtmlScan {
     Data,
     /// Inside `<!-- … -->`.
     Comment,
-    /// Inside a raw-text element (one of [`RAW_TEXT_ELEMENTS`]) until its end tag.
+    /// Inside a raw-text element (one of [`RAW_TEXT_ELEMENTS`]) until its end
+    /// tag.
     RawText(&'static str),
 }
 
@@ -93,14 +95,16 @@ pub(crate) struct StartTag {
 pub(crate) struct TagAttr {
     /// The name, ASCII-lowercased.
     pub(crate) name: String,
-    /// Byte range of the value in the snippet, quotes excluded; `None` for a bare attribute.
+    /// Byte range of the value in the snippet, quotes excluded; `None` for a
+    /// bare attribute.
     pub(crate) value: Option<Range<usize>>,
 }
 
 impl HtmlScan {
-    /// Calls `on_tag` for every start tag of `html` that is outside comments and raw-text
-    /// elements, then leaves `self` in the state the snippet ends in. End tags, `<!…>`
-    /// declarations and `<?…>` are skipped; a `<` that starts none of these is text.
+    /// Calls `on_tag` for every start tag of `html` that is outside comments
+    /// and raw-text elements, then leaves `self` in the state the snippet ends
+    /// in. End tags, `<!…>` declarations and `<?…>` are skipped; a `<` that
+    /// starts none of these is text.
     pub(crate) fn start_tags<E>(
         &mut self, html: &str,
         mut on_tag: impl FnMut(&StartTag) -> std::result::Result<(), E>,
@@ -167,7 +171,8 @@ impl HtmlScan {
     }
 }
 
-/// Byte offset of the `</name` that ends a raw-text element (searching from `from`).
+/// Byte offset of the `</name` that ends a raw-text element (searching from
+/// `from`).
 fn raw_text_end(html: &str, from: usize, name: &str) -> Option<usize> {
     let bytes = html.as_bytes();
     html[from..].match_indices("</").map(|(offset, _)| from + offset).find(
@@ -182,8 +187,9 @@ fn raw_text_end(html: &str, from: usize, name: &str) -> Option<usize> {
     )
 }
 
-/// Tokenizes the start tag whose `<` is at byte `lt` (HTML tokenizer rules: attribute names
-/// end at whitespace, `/`, `>` or `=`; a value is quoted or runs to whitespace or `>`).
+/// Tokenizes the start tag whose `<` is at byte `lt` (HTML tokenizer rules:
+/// attribute names end at whitespace, `/`, `>` or `=`; a value is quoted or
+/// runs to whitespace or `>`).
 fn start_tag(html: &str, lt: usize) -> StartTag {
     let bytes = html.as_bytes();
     let ends_name = |b: u8| b.is_ascii_whitespace() || matches!(b, b'/' | b'>');
@@ -220,8 +226,8 @@ fn start_tag(html: &str, lt: usize) -> StartTag {
     }
 }
 
-/// The value after an attribute name that ends at byte `at`: its byte range (quotes
-/// excluded) when `=` follows, and where tokenizing continues.
+/// The value after an attribute name that ends at byte `at`: its byte range
+/// (quotes excluded) when `=` follows, and where tokenizing continues.
 fn attr_value(bytes: &[u8], at: usize) -> (Option<Range<usize>>, usize) {
     let skip_space = |mut i: usize| {
         while i < bytes.len() && bytes[i].is_ascii_whitespace() {

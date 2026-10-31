@@ -263,8 +263,9 @@ fn notebook_includes(text: &str, prepared: &Prepared) -> Result<Vec<String>> {
 }
 
 // §10 deliberately uses file spans, not include occurrence identities. Adjacent
-// repeated files can coalesce; a nested file that is also first-level may split.
-// Neither changes content order or the shared resolved reference identities.
+// repeated files can coalesce; a nested file that is also first-level may
+// split. Neither changes content order or the shared resolved reference
+// identities.
 fn include_runs(
     blocks: &[Block], first_level: &BTreeSet<PathBuf>, stem: &str, out: &Path,
 ) -> Vec<IncludeRun> {

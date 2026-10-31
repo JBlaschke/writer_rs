@@ -52,7 +52,8 @@ fn picture(rendition: Rendition) -> Picture {
     }
 }
 
-/// Builds an editable Word document and writes it through output safety helpers.
+/// Builds an editable Word document and writes it through output safety
+/// helpers.
 pub fn build(
     doc: &Document, assets: &AssetRegistry, config: &Config, out: &Path,
     world: &mut WriterWorld,

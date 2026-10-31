@@ -1,4 +1,5 @@
-//! One retained serve session: independent stages, source baselines and watches.
+//! One retained serve session: independent stages, source baselines and
+//! watches.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Write as _;
@@ -31,7 +32,8 @@ use crate::typst::world::WriterWorld;
 
 type BuildResult<T> = std::result::Result<T, BuildFailure>;
 
-/// Moves into one blocking build at a time; request handlers only share served state.
+/// Moves into one blocking build at a time; request handlers only share served
+/// state.
 pub(super) struct Session {
     opts: BuildOptions,
     global: GlobalArgs,
@@ -89,12 +91,14 @@ impl Session {
         }
     }
 
-    /// Request handlers retain only state/events, not the mutable build session.
+    /// Request handlers retain only state/events, not the mutable build
+    /// session.
     pub(super) fn router(&self) -> Router {
         server::router(self.state.clone(), self.events.clone())
     }
 
-    /// An empty queue denotes build1; later queues combine into one selective attempt.
+    /// An empty queue denotes build1; later queues combine into one selective
+    /// attempt.
     pub(super) fn rebuild(&mut self, queued: Vec<ChangeBatch>) {
         self.rebuild_with(queued, &mut LiveStages);
     }
@@ -465,8 +469,8 @@ fn prepare_messages(
     }
 }
 
-/// Production stage calls stay separate so tests can exercise panic recovery without
-/// adding a public injection API or asking a compiler bug to occur.
+/// Production stage calls stay separate so tests can exercise panic recovery
+/// without adding a public injection API or asking a compiler bug to occur.
 trait BuildStages {
     fn prepare(&mut self, opts: &BuildOptions) -> BuildResult<Prepared>;
     fn web(

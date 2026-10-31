@@ -27,7 +27,8 @@ use crate::error::{Diagnostic, Diagnostics, Error, Result, template_error};
 use crate::ir::Features;
 use crate::theme::Theme;
 
-/// URL prefix of the dev server route that serves helper paths (live-reload.md §1).
+/// URL prefix of the dev server route that serves helper paths (live-reload.md
+/// §1).
 pub const SERVE_HELPER_PREFIX: &str = "/__writer/asset/";
 
 /// URL of the dev server's theme stylesheet (live-reload.md §1).
@@ -36,11 +37,12 @@ pub const SERVE_THEME_CSS: &str = "/__writer/theme.css";
 /// URL of the live-reload client script (live-reload.md §1).
 pub const SERVE_LIVE_RELOAD_JS: &str = "/__writer/live-reload.js";
 
-/// The text the dev server serves for `css`, the stylesheet at the normalized helper path
-/// `key` of `theme`'s chain (a file a template links with `style()`): each relative `url()`
-/// that names a file (next to the stylesheet, as `style()` resolves it) becomes that file's
-/// absolute dev-server URL, versioned like the theme stylesheet's (module docs, "Content
-/// versions"); a vendor reference that names nothing stays as written.
+/// The text the dev server serves for `css`, the stylesheet at the normalized
+/// helper path `key` of `theme`'s chain (a file a template links with
+/// `style()`): each relative `url()` that names a file (next to the stylesheet,
+/// as `style()` resolves it) becomes that file's absolute dev-server URL,
+/// versioned like the theme stylesheet's (module docs, "Content versions"); a
+/// vendor reference that names nothing stays as written.
 ///
 /// Errors when a theme stylesheet URL cannot resolve or a file cannot be read.
 pub fn serve_stylesheet(theme: &Theme, key: &str, css: &str) -> Result<String> {
@@ -156,8 +158,8 @@ struct Extras {
 }
 
 impl HelperState {
-    /// Runs `f` with an emitter over the helpers' registry that continues this render's
-    /// file list.
+    /// Runs `f` with an emitter over the helpers' registry that continues this
+    /// render's file list.
     fn with_emitter<T>(
         &mut self, f: impl FnOnce(&mut Emitter<'_>) -> Result<T>,
     ) -> Result<T> {
@@ -169,8 +171,8 @@ impl HelperState {
         result
     }
 
-    /// Registers `bytes` and returns their URL for this mode (site: emits the file
-    /// `<name>-<hash>.<ext>` named after `key`'s last segment).
+    /// Registers `bytes` and returns their URL for this mode (site: emits the
+    /// file `<name>-<hash>.<ext>` named after `key`'s last segment).
     fn emit_bytes(
         &mut self, bytes: Vec<u8>, mime: &str, key: &str,
     ) -> Result<String> {
@@ -179,8 +181,9 @@ impl HelperState {
         self.with_emitter(|emitter| emitter.url_for(&id))
     }
 
-    /// The compiled theme stylesheet, resolved for this mode (standalone: `data:` URIs;
-    /// site: a file in `assets/`, so bare file names; serve: `/__writer/asset/` URLs).
+    /// The compiled theme stylesheet, resolved for this mode (standalone:
+    /// `data:` URIs; site: a file in `assets/`, so bare file names; serve:
+    /// `/__writer/asset/` URLs).
     fn theme_css(&mut self, features: &Features) -> Result<String> {
         let mut remote = Vec::new();
         let targets = match &self.mode {
@@ -194,8 +197,9 @@ impl HelperState {
                 &url,
             );
         }
-        // Serve: no placeholder is left, except `asset:<id>` text the theme wrote itself,
-        // which is an unknown id here exactly as in the other modes.
+        // Serve: no placeholder is left, except `asset:<id>` text the theme
+        // wrote itself, which is an unknown id here exactly as in the other
+        // modes.
         self.with_emitter(|e| e.resolve_css_in_assets_dir(&css))
     }
 
@@ -214,8 +218,8 @@ impl HelperState {
         ));
     }
 
-    /// The normalized helper path `path` names if a file is there, else the "unknown path"
-    /// error naming `helper`, `path` and the reason.
+    /// The normalized helper path `path` names if a file is there, else the
+    /// "unknown path" error naming `helper`, `path` and the reason.
     fn lookup(&self, helper: &str, path: &str) -> Result<String> {
         match normalize_helper_path(path) {
             Some(key) if helper_path_exists(&self.theme, &key) => Ok(key),
@@ -251,7 +255,8 @@ impl HelperState {
         let rules = UrlRules::for_style(&key);
         if self.mode == OutputMode::Serve {
             if !rules.is_lenient() {
-                // The browser loads the url()s; check them as the other modes do.
+                // The browser loads the url()s; check them as the other modes
+                // do.
                 let css = self.text("style", path, &key)?;
                 styles::rewrite_urls(
                     &self.theme,
@@ -458,9 +463,9 @@ fn inline_script(js: &str) -> String {
     format!("<script>\n{text}</script>")
 }
 
-/// `text` for inlining in a `<tag>` raw-text element: every `</tag` (ASCII case-insensitive)
-/// becomes `<\/tag` (an escaped `/` in JS strings, regexes and CSS strings), and the text
-/// ends with a line break.
+/// `text` for inlining in a `<tag>` raw-text element: every `</tag` (ASCII
+/// case-insensitive) becomes `<\/tag` (an escaped `/` in JS strings, regexes
+/// and CSS strings), and the text ends with a line break.
 fn raw_text(text: &str, tag: &str) -> String {
     let mut out = String::with_capacity(text.len() + 1);
     let mut last = 0;
@@ -479,13 +484,15 @@ fn raw_text(text: &str, tag: &str) -> String {
     out
 }
 
-/// True when the content `text` of a `<script>` element (passed through [`raw_text`], so
-/// without `</script`) ends with the HTML tokenizer in the "script data double escaped"
-/// state, where the element's own `</script>` does not close it (HTML Living Standard
-/// §13.2.5.4 and §13.2.5.20–31): `<!--` enters the escaped state, which `-->` leaves (the
-/// dashes of `<!--` count, so `<!-->` leaves at once); in it, `<script` followed by
-/// whitespace, `/`, `>` (or the end, as the element's `</script>` follows a line break)
-/// enters the double escaped state, which only `-->` leaves. May err on the side of `true`.
+/// True when the content `text` of a `<script>` element (passed through
+/// [`raw_text`], so without `</script`) ends with the HTML tokenizer in the
+/// "script data double escaped" state, where the element's own `</script>` does
+/// not close it (HTML Living Standard §13.2.5.4 and §13.2.5.20–31): `<!--`
+/// enters the escaped state, which `-->` leaves (the dashes of `<!--` count, so
+/// `<!-->` leaves at once); in it, `<script` followed by whitespace, `/`, `>`
+/// (or the end, as the element's `</script>` follows a line break) enters the
+/// double escaped state, which only `-->` leaves. May err on the side of
+/// `true`.
 fn leaves_script_open(text: &str) -> bool {
     enum State {
         Data,
@@ -532,8 +539,8 @@ fn leaves_script_open(text: &str) -> bool {
     }
 }
 
-/// Byte offset of the first `<script` in the lowercase `text` that is followed by
-/// whitespace, `/`, `>` or the end of `text`.
+/// Byte offset of the first `<script` in the lowercase `text` that is followed
+/// by whitespace, `/`, `>` or the end of `text`.
 fn script_start(text: &str) -> Option<usize> {
     text.match_indices("<script").map(|(i, _)| i).find(|&i| {
         matches!(
@@ -548,12 +555,13 @@ fn attr(text: &str) -> Cow<'_, str> {
     html_escape::encode_double_quoted_attribute(text)
 }
 
-// ---------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Filters
-// ---------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
-/// `attrs`: a map → ` k="v"` pairs in map order, keys and values escaped; `none`/undefined
-/// values are skipped and an undefined or `none` map renders nothing.
+/// `attrs`: a map → ` k="v"` pairs in map order, keys and values escaped;
+/// `none`/undefined values are skipped and an undefined or `none` map renders
+/// nothing.
 fn attrs_filter(map: Value) -> std::result::Result<Value, minijinja::Error> {
     let mut out = String::new();
     if map.is_undefined() || map.is_none() {
@@ -577,7 +585,8 @@ fn attrs_filter(map: Value) -> std::result::Result<Value, minijinja::Error> {
     Ok(Value::from_safe_string(out))
 }
 
-/// A value's plain text: strings as they are, anything else in its display form.
+/// A value's plain text: strings as they are, anything else in its display
+/// form.
 fn text_of(value: &Value) -> String {
     match value.as_str() {
         Some(text) => text.to_string(),
@@ -618,10 +627,12 @@ mod tests {
             "", "let a = 1 < 2;", "a <!-- b", "'<script>'",
             "<!-- <script> -->", "<!-- --> <script>",
             "<!-- <scripts> <scriptx",
-            // Only whitespace, `/` and `>` end the tag name the tokenizer compares.
+            // Only whitespace, `/` and `>` end the tag name the tokenizer
+            // compares.
             "'<!-- <script' + 1", "<!--><script>", "<!---><script>",
             "<!-- <script> --->",
-            // `-- >` does not leave the escaped state; `-->` leaves the double escaped one.
+            // `-- >` does not leave the escaped state; `-->` leaves the double
+            // escaped one.
             "<!-- -- > <script>--> a",
         ];
         for text in closed {

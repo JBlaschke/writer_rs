@@ -1,6 +1,7 @@
 //! Document lints and presenter compatibility (markdown-dialect.md §9–10).
 //! Frontend and resolver findings are reused; target packages are discarded.
-//! Error conversion and position ordering are adapted from presenter_rs/check.rs.
+//! Error conversion and position ordering are adapted from
+//! presenter_rs/check.rs.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -552,7 +553,8 @@ fn validate_math(
     }
 }
 
-/// Converts a stopped check to a located error finding for text or JSON reports.
+/// Converts a stopped check to a located error finding for text or JSON
+/// reports.
 pub fn error_diagnostic(error: &Error, input: &Path) -> Diagnostic {
     let code = match error {
         Error::Parse { .. } | Error::FrontMatter(_) | Error::Json(_) => {

@@ -44,7 +44,8 @@ pub struct ParsedAttrs {
     pub id: Option<String>,
     /// The `.class` entries, in source order (not deduplicated).
     pub classes: Vec<String>,
-    /// `key=value` pairs in source order; a bare `key` is `(key, "")`. Keys keep their case.
+    /// `key=value` pairs in source order; a bare `key` is `(key, "")`. Keys
+    /// keep their case.
     pub pairs: Vec<(String, String)>,
 }
 
@@ -55,7 +56,8 @@ impl ParsedAttrs {
     }
 }
 
-/// comrak's parsed attributes (headings, fenced code, links, images, inline code).
+/// comrak's parsed attributes (headings, fenced code, links, images, inline
+/// code).
 impl From<&comrak::nodes::Attributes> for ParsedAttrs {
     fn from(attrs: &comrak::nodes::Attributes) -> Self {
         ParsedAttrs {
@@ -66,17 +68,20 @@ impl From<&comrak::nodes::Attributes> for ParsedAttrs {
     }
 }
 
-/// Parses `{#id .cls key=value key2="v 2" bare}` (braces optional). Errors on unbalanced quotes.
+/// Parses `{#id .cls key=value key2="v 2" bare}` (braces optional). Errors on
+/// unbalanced quotes.
 ///
-/// Grammar (dialect §3.1): one leading `{` and one trailing `}` are skipped; the rest is split
-/// on whitespace outside quotes. Each item is `#id`, `.class`, `key=value` (split at the first
-/// `=` outside quotes) or a bare `key` (→ `(key, "")`). Double or single quotes group
-/// whitespace anywhere in an item and are removed; inside quotes a backslash escapes the next
-/// character. Unquoted values run to the next whitespace, so `background=#111` works here
-/// although comrak's heading grammar rejects it. Items with an empty key (`=v`) and a bare `#`
-/// or `.` are ignored; a quoted empty id or class (`#""`, `.""`) is kept as `""`, as comrak
-/// does. Keys are not validated here (see [`is_valid_attr_name`]). Every block comrak accepts
-/// on a heading parses to the same [`ParsedAttrs`] here (shared unit tests, including a
+/// Grammar (dialect §3.1): one leading `{` and one trailing `}` are skipped;
+/// the rest is split on whitespace outside quotes. Each item is `#id`,
+/// `.class`, `key=value` (split at the first `=` outside quotes) or a bare
+/// `key` (→ `(key, "")`). Double or single quotes group whitespace anywhere in
+/// an item and are removed; inside quotes a backslash escapes the next
+/// character. Unquoted values run to the next whitespace, so `background=#111`
+/// works here although comrak's heading grammar rejects it. Items with an empty
+/// key (`=v`) and a bare `#` or `.` are ignored; a quoted empty id or class
+/// (`#""`, `.""`) is kept as `""`, as comrak does. Keys are not validated here
+/// (see [`is_valid_attr_name`]). Every block comrak accepts on a heading parses
+/// to the same [`ParsedAttrs`] here (shared unit tests, including a
 /// differential run over random blocks).
 pub fn parse_attr_block(s: &str) -> Result<ParsedAttrs> {
     let trimmed = s.trim();
@@ -93,37 +98,41 @@ pub fn parse_attr_block(s: &str) -> Result<ParsedAttrs> {
     Ok(out)
 }
 
-/// How an attribute block that comrak left as text reads with the dialect §3.1 grammar
-/// ([`read_element_attrs`]).
+/// How an attribute block that comrak left as text reads with the dialect §3.1
+/// grammar ([`read_element_attrs`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ElementAttrs {
-    /// Every item is an `#id`, a `.class` or a `key=value` pair with a valid key name: the
-    /// attributes, exactly as [`parse_attr_block`] reads the block.
+    /// Every item is an `#id`, a `.class` or a `key=value` pair with a valid
+    /// key name: the attributes, exactly as [`parse_attr_block`] reads the
+    /// block.
     Attrs(ParsedAttrs),
-    /// Not meant as attributes (`{1, 2}`, `{curly braces}`, R Markdown's `{r}`): the block
-    /// stays text and nothing is reported.
+    /// Not meant as attributes (`{1, 2}`, `{curly braces}`, R Markdown's
+    /// `{r}`): the block stays text and nothing is reported.
     Text,
-    /// Meant as attributes (some item is valid, or a known presenter key is bare,
-    /// such as `{auto-animate}`), but not valid; the reason, for a warning.
+    /// Meant as attributes (some item is valid, or a known presenter key is
+    /// bare, such as `{auto-animate}`), but not valid; the reason, for a
+    /// warning.
     Invalid(String),
 }
 
-/// Reads `block` (`{…}`, braces included) as the attributes of a heading, fenced code,
-/// link, image or inline code (dialect §3.1, A3 contract note): with [`parse_attr_block`]'s
-/// tokenizer, so single-quoted values and unquoted values with any character but whitespace
-/// work, but stricter in what an item may be. Each item must be `#id`, `.class` (both
-/// non-empty or quoted) or `key=value` with an unquoted key that [`is_valid_attr_name`]
-/// accepts; a bare key (`{auto-animate}`) needs a value there (`auto-animate=""`), as §3.2
-/// says, no item may end with an unquoted comma (`{debug=true, verbose=false}` is prose
-/// or another tool's syntax: items are separated by spaces), and no item may have a `{` or
-/// `}` outside quotes (two blocks written together, `{.dark}{k=v}`, which reach here as one
-/// block, or a stray `}`). The strictness keeps ordinary text in braces as text.
+/// Reads `block` (`{…}`, braces included) as the attributes of a heading,
+/// fenced code, link, image or inline code (dialect §3.1, A3 contract note):
+/// with [`parse_attr_block`]'s tokenizer, so single-quoted values and unquoted
+/// values with any character but whitespace work, but stricter in what an item
+/// may be. Each item must be `#id`, `.class` (both non-empty or quoted) or
+/// `key=value` with an unquoted key that [`is_valid_attr_name`] accepts; a bare
+/// key (`{auto-animate}`) needs a value there (`auto-animate=""`), as §3.2
+/// says, no item may end with an unquoted comma (`{debug=true, verbose=false}`
+/// is prose or another tool's syntax: items are separated by spaces), and no
+/// item may have a `{` or `}` outside quotes (two blocks written together,
+/// `{.dark}{k=v}`, which reach here as one block, or a stray `}`). The
+/// strictness keeps ordinary text in braces as text.
 ///
-/// [`ElementAttrs::Invalid`] when the block has an unbalanced quote or an unquoted brace
-/// in an item and starts like attributes (`#x`, `.x` or `key=`), or when some item is
-/// invalid while another one is valid or a known presenter key has no
-/// value (`{.dark auto-animate}`, `{auto-animate}`); [`ElementAttrs::Text`] for anything
-/// else that is not attributes.
+/// [`ElementAttrs::Invalid`] when the block has an unbalanced quote or an
+/// unquoted brace in an item and starts like attributes (`#x`, `.x` or `key=`),
+/// or when some item is invalid while another one is valid or a known presenter
+/// key has no value (`{.dark auto-animate}`, `{auto-animate}`);
+/// [`ElementAttrs::Text`] for anything else that is not attributes.
 pub fn read_element_attrs(block: &str) -> ElementAttrs {
     let Some(inner) =
         block.strip_prefix('{').and_then(|rest| rest.strip_suffix('}'))
@@ -164,7 +173,8 @@ pub fn read_element_attrs(block: &str) -> ElementAttrs {
     }
 }
 
-/// Whether the inside of a block starts like an attribute item: `#x`, `.x` or `key=`.
+/// Whether the inside of a block starts like an attribute item: `#x`, `.x` or
+/// `key=`.
 fn starts_like_attrs(inner: &str) -> bool {
     let inner = inner.trim_start();
     if let Some(rest) = inner.strip_prefix(['#', '.']) {
@@ -173,18 +183,21 @@ fn starts_like_attrs(inner: &str) -> bool {
     inner.split_once('=').is_some_and(|(key, _)| is_valid_attr_name(key))
 }
 
-/// One whitespace-separated item of an attribute block, with its quotes removed.
+/// One whitespace-separated item of an attribute block, with its quotes
+/// removed.
 #[derive(Default)]
 struct Token {
     /// The item's text without quotes and escapes.
     text: String,
     /// Byte offset in `text` of the first `=` that was outside quotes.
     eq: Option<usize>,
-    /// The item's first character when it was outside quotes (only then is `#`/`.` a marker).
+    /// The item's first character when it was outside quotes (only then is
+    /// `#`/`.` a marker).
     lead: Option<char>,
     /// Whether any character (quoted or not) has been read.
     started: bool,
-    /// Whether the item contained a quoted run (so `#""` is an empty id, not a bare `#`).
+    /// Whether the item contained a quoted run (so `#""` is an empty id, not a
+    /// bare `#`).
     quoted: bool,
     /// Whether the item's last character was inside quotes.
     ends_quoted: bool,
@@ -193,11 +206,12 @@ struct Token {
 }
 
 impl Token {
-    /// Why this item is not a valid element attribute ([`read_element_attrs`]); `None` when
-    /// it is one.
+    /// Why this item is not a valid element attribute ([`read_element_attrs`]);
+    /// `None` when it is one.
     fn element_problem(&self) -> Option<String> {
         if self.brace {
-            // Two blocks written together (`{.dark}{k=v}`), read as one, or a stray brace.
+            // Two blocks written together (`{.dark}{k=v}`), read as one, or a
+            // stray brace.
             return Some(format!(
                 "`{}` has a `{{` or `}}` outside quotes: write one block with its items \
                  separated by spaces, or quote the brace",
@@ -282,7 +296,8 @@ impl Token {
     }
 }
 
-/// Splits on whitespace outside quotes. `Err(quote)` names the quote character left open.
+/// Splits on whitespace outside quotes. `Err(quote)` names the quote character
+/// left open.
 fn tokenize(s: &str) -> std::result::Result<Vec<Token>, char> {
     let mut tokens = Vec::new();
     let mut current: Option<Token> = None;
@@ -317,8 +332,9 @@ fn tokenize(s: &str) -> std::result::Result<Vec<Token>, char> {
     Ok(tokens)
 }
 
-/// Reads a quoted run up to the closing `quote` (already past the opening one), appending its
-/// content with backslash escapes resolved. `Err(quote)` when the input ends first.
+/// Reads a quoted run up to the closing `quote` (already past the opening one),
+/// appending its content with backslash escapes resolved. `Err(quote)` when the
+/// input ends first.
 fn read_quoted(
     chars: &mut std::str::Chars<'_>, quote: char, out: &mut String,
 ) -> std::result::Result<(), char> {
@@ -373,7 +389,8 @@ mod tests {
         }
     }
 
-    /// Attribute blocks comrak accepts on a heading; both parsers must agree on each.
+    /// Attribute blocks comrak accepts on a heading; both parsers must agree on
+    /// each.
     const SHARED_CASES: &[&str] = &[
         "{}",
         "{#intro}",
@@ -425,8 +442,8 @@ mod tests {
         }
     }
 
-    /// A small deterministic generator (64-bit LCG), so the differential test needs no
-    /// dependency and always checks the same blocks.
+    /// A small deterministic generator (64-bit LCG), so the differential test
+    /// needs no dependency and always checks the same blocks.
     struct Lcg(u64);
 
     impl Lcg {
@@ -439,8 +456,9 @@ mod tests {
         }
     }
 
-    /// Differential check: random blocks over the grammar's alphabet; whenever comrak accepts
-    /// one as heading attributes, `parse_attr_block` must return the same `ParsedAttrs`.
+    /// Differential check: random blocks over the grammar's alphabet; whenever
+    /// comrak accepts one as heading attributes, `parse_attr_block` must return
+    /// the same `ParsedAttrs`.
     #[test]
     fn parse_attr_block_agrees_with_comrak_on_random_blocks() {
         let alphabet: Vec<char> = "ab#.=\" \\'-_:%1\tZé".chars().collect();
@@ -464,8 +482,8 @@ mod tests {
         assert!(accepted > 1_000, "only {accepted} blocks accepted by comrak");
     }
 
-    /// A3: blocks comrak rejects on a heading but §3.1 allows; the heading form reads them
-    /// with the shared recovery grammar (`markdown::recover`).
+    /// A3: blocks comrak rejects on a heading but §3.1 allows; the heading form
+    /// reads them with the shared recovery grammar (`markdown::recover`).
     const RECOVERED_CASES: &[&str] = &[
         "{.dark background=#222}",
         "{background=figures/bg.png}",
@@ -528,7 +546,8 @@ mod tests {
             "`k` is not a valid attribute name"
         );
         assert_eq!(invalid("{# .a}"), "`#` without a name after it");
-        // items separated by commas are prose or another tool's syntax, not attributes
+        // items separated by commas are prose or another tool's syntax, not
+        // attributes
         assert_eq!(
             invalid("{debug=true, verbose=false}"),
             "`debug=true,` ends with a comma: items are separated by spaces, not commas"
@@ -536,8 +555,9 @@ mod tests {
         assert!(invalid("{.a, .b}").starts_with("`.a,` ends with a comma"));
         assert!(invalid("{#a, .b}").starts_with("`#a,` ends with a comma"));
         assert_eq!(read_element_attrs("{a, b}"), ElementAttrs::Text);
-        // Wave-8 review: two blocks written together reach here as one block, and a stray
-        // `}` ends up in an item; neither may become mangled attributes.
+        // Wave-8 review: two blocks written together reach here as one block,
+        // and a stray `}` ends up in an item; neither may become mangled
+        // attributes.
         assert_eq!(
             invalid("{.dark}{background='#222'}"),
             "`.dark}{background=#222` has a `{` or `}` outside quotes: write one block with \
@@ -576,7 +596,8 @@ mod tests {
         }
     }
 
-    /// Every block comrak accepts on a heading reads the same with `read_element_attrs`.
+    /// Every block comrak accepts on a heading reads the same with
+    /// `read_element_attrs`.
     #[test]
     fn read_element_attrs_agrees_with_comrak_on_random_blocks() {
         let alphabet: Vec<char> = "ab#.=\" \\'-_:%1\tZé/|".chars().collect();
@@ -651,7 +672,8 @@ mod tests {
                     ],
                 ),
             ),
-            // only the first unquoted `=` splits; quoted `=` and `}` are content
+            // only the first unquoted `=` splits; quoted `=` and `}` are
+            // content
             (
                 "a=b=c d=\"x=}\"",
                 attrs(None, &[], &[("a", "b=c"), ("d", "x=}")]),
@@ -661,7 +683,8 @@ mod tests {
                 r#"k="a\"b\\c" w=C:\x"#,
                 attrs(None, &[], &[("k", r#"a"b\c"#), ("w", r"C:\x")]),
             ),
-            // bare `#` / `.` and empty keys are ignored; quoted empty id / class are kept
+            // bare `#` / `.` and empty keys are ignored; quoted empty id /
+            // class are kept
             ("{# . =v \"\" .ok}", attrs(None, &["ok"], &[])),
             ("{#\"\" .\"\" .''}", attrs(Some(""), &["", ""], &[])),
             // the last id wins, keys keep their case

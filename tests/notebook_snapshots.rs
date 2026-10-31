@@ -1,5 +1,6 @@
-//! Notebook IR, diagnostics and HTML snapshots, plus the T18 frontend contracts.
-//! Stable asset labels follow presenter_rs's notebook snapshot harness.
+//! Notebook IR, diagnostics and HTML snapshots, plus the T18 frontend
+//! contracts. Stable asset labels follow presenter_rs's notebook snapshot
+//! harness.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Cursor, Read};

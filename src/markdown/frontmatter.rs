@@ -1,13 +1,16 @@
-//! YAML front matter → [`DocMeta`] (markdown-dialect.md §2.2, config.md §3). Implemented by T10.
+//! YAML front matter → [`DocMeta`] (markdown-dialect.md §2.2, config.md §3).
+//! Implemented by T10.
 //!
 //! There are two ways to get at the YAML text, and one parser for it:
-//! - Markdown files: comrak extracts the block as `NodeValue::FrontMatter(literal)`;
-//!   [`strip_delimiters`] turns that literal into the YAML between the `---` lines.
+//! - Markdown files: comrak extracts the block as
+//!   `NodeValue::FrontMatter(literal)`; [`strip_delimiters`] turns that literal
+//!   into the YAML between the `---` lines.
 //! - Sources comrak does not see (the first markdown cell of a notebook):
-//!   [`split_front_matter`] finds the block in plain text, by the same rules as comrak.
-//! - [`parse_front_matter`] turns the YAML into a [`DocMeta`]; [`meta_from_json`] applies
-//!   the same key rules to a JSON object (a notebook's `metadata.writer`,
-//!   notebook-mapping.md §2.2).
+//!   [`split_front_matter`] finds the block in plain text, by the same rules as
+//!   comrak.
+//! - [`parse_front_matter`] turns the YAML into a [`DocMeta`];
+//!   [`meta_from_json`] applies the same key rules to a JSON object (a
+//!   notebook's `metadata.writer`, notebook-mapping.md §2.2).
 //!
 //! Configuration keys and table maps stay in [`DocMeta::vars`], as specified by
 //! markdown-dialect.md §2.2 and config.md §3. Merge into a clone of the config:
@@ -24,24 +27,28 @@
 //! ```
 //!
 //! # YAML flavour (`serde_norway` 0.9)
-//! `serde_norway` resolves plain scalars with the **YAML 1.2 core schema**, not YAML 1.1:
-//! - booleans are only `true`/`false` (also `True`, `TRUE`, `False`, `FALSE`); the YAML 1.1
-//!   spellings `yes`, `no`, `on`, `off`, `y`, `n` are **strings** (unlike PyYAML), so
-//!   `smart_punctuation: yes` under `markdown:` is rejected as "expected a boolean";
+//! `serde_norway` resolves plain scalars with the **YAML 1.2 core schema**, not
+//! YAML 1.1:
+//! - booleans are only `true`/`false` (also `True`, `TRUE`, `False`, `FALSE`);
+//!   the YAML 1.1 spellings `yes`, `no`, `on`, `off`, `y`, `n` are **strings**
+//!   (unlike PyYAML), so `smart_punctuation: yes` under `markdown:` is rejected
+//!   as "expected a boolean";
 //! - null is `null`, `Null`, `NULL`, `~` or an empty value;
-//! - integers are decimal, `0x…`, `0o…` or `0b…`; a leading zero (`010`) makes a string;
-//!   an integer outside the 64-bit range has no JSON number form and becomes the string of
-//!   its decimal digits in `vars` (`n: 99999999999999999999` →
-//!   `"99999999999999999999"`), up to 128 bits; serde_norway reads even longer digit
-//!   strings as floats (`1e42`);
-//! - floats include `.inf`/`.nan`, which have no JSON form and become `null` in `vars`;
-//! - there is no timestamp type: `date: 2026-10-08` is the string `"2026-10-08"`.
+//! - integers are decimal, `0x…`, `0o…` or `0b…`; a leading zero (`010`) makes
+//!   a string; an integer outside the 64-bit range has no JSON number form and
+//!   becomes the string of its decimal digits in `vars`
+//!   (`n: 99999999999999999999` → `"99999999999999999999"`), up to 128 bits;
+//!   serde_norway reads even longer digit strings as floats (`1e42`);
+//! - floats include `.inf`/`.nan`, which have no JSON form and become `null` in
+//!   `vars`;
+//! - there is no timestamp type: `date: 2026-10-08` is the string
+//!   `"2026-10-08"`.
 //!
-//! The string fields of [`DocMeta`] take any scalar as its text exactly as written
-//! (`title: 42` → `"42"`, `subtitle: 1.50` → `"1.50"`, `author: yes` → `"yes"`).
-//! Keys must be unique in every mapping (a repeated key is an error, as YAML requires).
-//! Custom tags (`!expr x`) are rejected, except on the string fields, where the scalar's
-//! text is used and the tag ignored.
+//! The string fields of [`DocMeta`] take any scalar as its text exactly as
+//! written (`title: 42` → `"42"`, `subtitle: 1.50` → `"1.50"`, `author: yes` →
+//! `"yes"`). Keys must be unique in every mapping (a repeated key is an error,
+//! as YAML requires). Custom tags (`!expr x`) are rejected, except on the
+//! string fields, where the scalar's text is used and the tag ignored.
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -56,10 +63,12 @@ use serde_json::{Map, Value};
 use crate::error::{Diagnostic, Diagnostics, Error, Result};
 use crate::ir::{Author, DocMeta, SourceSpan};
 
-/// The front matter delimiter line (dialect §1: `front_matter_delimiter = "---"`).
+/// The front matter delimiter line (dialect §1:
+/// `front_matter_delimiter = "---"`).
 const DELIMITER: &str = "---";
 
-/// Byte-order mark that may precede the opening delimiter (comrak skips it too).
+/// Byte-order mark that may precede the opening delimiter (comrak skips it
+/// too).
 const BOM: char = '\u{feff}';
 
 /// The front matter error for a root that is not a mapping (dialect §2.2).
@@ -83,21 +92,23 @@ const TABLES: [(&str, &str); 10] = [
     ("notebook", "notebook: {show_prompts: false}"),
 ];
 
-/// `std`'s two-parameter `Result`, for serde trait methods (the crate's `Result` has one).
+/// `std`'s two-parameter `Result`, for serde trait methods (the crate's
+/// `Result` has one).
 type DeResult<T, E> = std::result::Result<T, E>;
 
 /// Text-based extraction for sources comrak does not see (notebook cells).
-/// Returns (yaml_without_delimiters, rest_of_text, number_of_lines_consumed) when `text`
-/// starts with a line `---` and a closing `---` line exists.
+/// Returns (yaml_without_delimiters, rest_of_text, number_of_lines_consumed)
+/// when `text` starts with a line `---` and a closing `---` line exists.
 ///
-/// Both delimiter lines must be exactly `---` (no trailing spaces), terminated by `\n` or
-/// `\r\n`; the closing one may also end the text. As in comrak, the line right after the
-/// opening delimiter never closes the block, so `---\n---\n` is not front matter (an empty
-/// block needs a blank line: `---\n\n---\n`). The YAML excludes the line break before the
-/// closing delimiter, and `rest_of_text` starts right after the closing line's break (a
-/// following blank line stays in it). `number_of_lines_consumed` counts the opening line,
-/// the YAML lines and the closing line, so `rest_of_text` begins on line `consumed + 1`. A
-/// leading byte-order mark is skipped.
+/// Both delimiter lines must be exactly `---` (no trailing spaces), terminated
+/// by `\n` or `\r\n`; the closing one may also end the text. As in comrak, the
+/// line right after the opening delimiter never closes the block, so
+/// `---\n---\n` is not front matter (an empty block needs a blank line:
+/// `---\n\n---\n`). The YAML excludes the line break before the closing
+/// delimiter, and `rest_of_text` starts right after the closing line's break (a
+/// following blank line stays in it). `number_of_lines_consumed` counts the
+/// opening line, the YAML lines and the closing line, so `rest_of_text` begins
+/// on line `consumed + 1`. A leading byte-order mark is skipped.
 ///
 /// ```
 /// use writer::markdown::frontmatter::split_front_matter;
@@ -114,8 +125,8 @@ pub fn split_front_matter(text: &str) -> Option<(&str, &str, usize)> {
     }
     let mut line_start = yaml_start;
     for (consumed, (line, end)) in (2..).zip(lines) {
-        // comrak searches for `\n---` only after the opening line's break, so the closing
-        // delimiter is line 3 at the earliest.
+        // comrak searches for `\n---` only after the opening line's break, so
+        // the closing delimiter is line 3 at the earliest.
         if consumed > 2 && line == DELIMITER {
             let yaml = without_line_break(&text[yaml_start..line_start]);
             return Some((yaml, &text[end..], consumed));
@@ -125,13 +136,15 @@ pub fn split_front_matter(text: &str) -> Option<(&str, &str, usize)> {
     None
 }
 
-/// Strip the `---` delimiter lines from comrak's `NodeValue::FrontMatter` literal.
+/// Strip the `---` delimiter lines from comrak's `NodeValue::FrontMatter`
+/// literal.
 ///
-/// comrak's literal is the raw block: the opening `---` line, the YAML, the closing `---`
-/// line and, when present, one following blank line (`\n` or `\r\n` line breaks, possibly
-/// no break at all when the block ends the document). The result is the YAML without the
-/// line break before the closing delimiter — the same text [`split_front_matter`] returns
-/// for the same block. A delimiter line that is missing is simply not stripped.
+/// comrak's literal is the raw block: the opening `---` line, the YAML, the
+/// closing `---` line and, when present, one following blank line (`\n` or
+/// `\r\n` line breaks, possibly no break at all when the block ends the
+/// document). The result is the YAML without the line break before the closing
+/// delimiter — the same text [`split_front_matter`] returns for the same block.
+/// A delimiter line that is missing is simply not stripped.
 pub fn strip_delimiters(literal: &str) -> &str {
     let mut body = literal.strip_prefix(BOM).unwrap_or(literal);
     if let Some(rest) =
@@ -139,7 +152,8 @@ pub fn strip_delimiters(literal: &str) -> &str {
     {
         body = rest;
     }
-    // Drops the blank line comrak keeps after the block and the closing line's break.
+    // Drops the blank line comrak keeps after the block and the closing line's
+    // break.
     let body = body.trim_end_matches(['\r', '\n']);
     if body == DELIMITER {
         return "";
@@ -151,9 +165,9 @@ pub fn strip_delimiters(literal: &str) -> &str {
 }
 
 /// Parse YAML into document metadata. Unknown and config-like keys stay in
-/// [`DocMeta::vars`] in source order. Scalars for content fields keep their YAML
-/// text; authors and keywords also accept lists. The abstract remains a string
-/// in `vars["abstract"]` for the frontend to parse into blocks.
+/// [`DocMeta::vars`] in source order. Scalars for content fields keep their
+/// YAML text; authors and keywords also accept lists. The abstract remains a
+/// string in `vars["abstract"]` for the frontend to parse into blocks.
 ///
 /// Empty YAML or `null` gives default metadata. A non-mapping root, repeated
 /// keys, invalid content values and non-mapping config tables are errors.
@@ -168,8 +182,9 @@ pub fn parse_front_matter(yaml: &str) -> Result<DocMeta> {
 }
 
 /// Parse metadata and retain the author syntax for document warnings and the
-/// scalar-text replay. `deserialize_any` validates shapes with positioned errors;
-/// a narrow second pass asks for strings to retain numeric YAML spelling.
+/// scalar-text replay. `deserialize_any` validates shapes with positioned
+/// errors; a narrow second pass asks for strings to retain numeric YAML
+/// spelling.
 fn parse_yaml(yaml: &str) -> Result<ParsedRoot> {
     let source = format!("\n{yaml}");
     let parse = || -> DeResult<ParsedRoot, serde_norway::Error> {
@@ -197,11 +212,12 @@ fn parse_yaml(yaml: &str) -> Result<ParsedRoot> {
     Ok(root)
 }
 
-/// A hint for the YAML error `message` located on source `line` (the YAML's first line is
-/// line 2), for the two mistakes YAML's own messages do not explain: a line indented with a
-/// tab (`indent with spaces, not tabs`), and a `mapping values are not allowed` error on a
-/// `key: value` line (also a `- key: value` item) whose plain value contains `: ` or ends
-/// with `:`, as talk titles do (`put the value in quotes: `title: "Rust: the good parts"``,
+/// A hint for the YAML error `message` located on source `line` (the YAML's
+/// first line is line 2), for the two mistakes YAML's own messages do not
+/// explain: a line indented with a tab (`indent with spaces, not tabs`), and a
+/// `mapping values are not allowed` error on a `key: value` line (also a
+/// `- key: value` item) whose plain value contains `: ` or ends with `:`, as
+/// talk titles do (`put the value in quotes: `title: "Rust: the good parts"``,
 /// built from the line with `\` and `"` escaped).
 fn yaml_hint(yaml: &str, message: &str, line: usize) -> Option<String> {
     let text = yaml.lines().nth(line.checked_sub(2)?)?;
@@ -227,23 +243,27 @@ fn yaml_hint(yaml: &str, message: &str, line: usize) -> Option<String> {
     Some(format!("put the value in quotes: `{key}: \"{quoted}\"`"))
 }
 
-/// [`parse_front_matter`] for the front matter of a Markdown document, whose closing `---` is on
-/// line `closing`, with what it means for a document (A3): front matter that swallowed heading
-/// content because a document started with a `---` rule or the closing `---` is missing.
-/// Markdown headings are YAML comments, so such content vanishes without an error.
+/// [`parse_front_matter`] for the front matter of a Markdown document, whose
+/// closing `---` is on line `closing`, with what it means for a document (A3):
+/// front matter that swallowed heading content because a document started with
+/// a `---` rule or the closing `---` is missing. Markdown headings are YAML
+/// comments, so such content vanishes without an error.
 ///
-/// - YAML without any key (only comments and blank lines) with a comment that is a Markdown
-///   heading (`# Title`; not a commented-out key such as `# title: Draft`, nor a label
-///   ending with `:`): a [`FRONT_MATTER_EMPTY`] warning (lines 1 to `closing`), as for a
-///   notebook's first cell. YAML with keys whose values are all commented out
-///   (`html:` over `#   theme: x`) is fine;
+/// - YAML without any key (only comments and blank lines) with a comment that
+///   is a Markdown heading (`# Title`; not a commented-out key such as
+///   `# title: Draft`, nor a label ending with `:`): a [`FRONT_MATTER_EMPTY`]
+///   warning (lines 1 to `closing`), as for a notebook's first cell. YAML with
+///   keys whose values are all commented out (`html:` over `# theme: x`) is
+///   fine;
 /// - otherwise a Markdown heading after a blank line, with only blank lines and
 ///   comments after it, including a blank line before the closing `---`, as
-///   [`swallowed_heading`] finds it: a [`FRONT_MATTER_UNCLOSED`] warning on its line;
-/// - a root that is not a mapping: `expected a mapping at line L column C (…)` with the
-///   position of the root value and the front matter's extent, asking whether line 1 was
-///   meant as a thematic break or the closing `---` is missing; any other error gets that
-///   extent and question too when the YAML has a heading after a blank line.
+///   [`swallowed_heading`] finds it: a [`FRONT_MATTER_UNCLOSED`] warning on its
+///   line;
+/// - a root that is not a mapping: `expected a mapping at line L column C (…)`
+///   with the position of the root value and the front matter's extent, asking
+///   whether line 1 was meant as a thematic break or the closing `---` is
+///   missing; any other error gets that extent and question too when the YAML
+///   has a heading after a blank line.
 ///
 /// Errors: as [`parse_front_matter`].
 pub fn parse_document_front_matter(
@@ -328,16 +348,17 @@ pub fn parse_document_front_matter(
 /// Diagnostic code for a list supplied under the singular `author` key.
 pub const FRONT_MATTER_AUTHOR_LIST: &str = "front-matter-author-list";
 
-/// Diagnostic code of front matter that sets nothing but has YAML comments (warning; the same
-/// code as the notebook frontend's).
+/// Diagnostic code of front matter that sets nothing but has YAML comments
+/// (warning; the same code as the notebook frontend's).
 pub const FRONT_MATTER_EMPTY: &str = "front-matter-empty";
 
-/// Diagnostic code of front matter that ends with a Markdown heading, so its closing `---` is
-/// probably missing (warning, A3).
+/// Diagnostic code of front matter that ends with a Markdown heading, so its
+/// closing `---` is probably missing (warning, A3).
 pub const FRONT_MATTER_UNCLOSED: &str = "front-matter-unclosed";
 
-/// The source line and column (1-based; the YAML starts on line 2) of the first character
-/// that is not whitespace or part of a comment: where a root value starts.
+/// The source line and column (1-based; the YAML starts on line 2) of the first
+/// character that is not whitespace or part of a comment: where a root value
+/// starts.
 fn root_position(yaml: &str) -> (usize, usize) {
     (2..)
         .zip(yaml.lines())
@@ -350,8 +371,9 @@ fn root_position(yaml: &str) -> (usize, usize) {
         .unwrap_or((2, 1))
 }
 
-/// The YAML comment lines that look like Markdown headings ([`is_markdown_heading`]) and
-/// follow a blank line, as `(source line, text)` (the YAML's first line is line 2).
+/// The YAML comment lines that look like Markdown headings
+/// ([`is_markdown_heading`]) and follow a blank line, as `(source line, text)`
+/// (the YAML's first line is line 2).
 fn headings_after_blank(yaml: &str) -> Vec<(usize, &str)> {
     let lines: Vec<&str> = yaml.lines().collect();
     (1..lines.len())
@@ -362,9 +384,9 @@ fn headings_after_blank(yaml: &str) -> Vec<(usize, &str)> {
         .collect()
 }
 
-/// A Markdown heading as a YAML comment: `#` to `######` at the start of the line, a space or
-/// tab and text, not ending with `:` (a comment that labels what follows) and not a
-/// commented-out key ([`is_commented_key`]).
+/// A Markdown heading as a YAML comment: `#` to `######` at the start of the
+/// line, a space or tab and text, not ending with `:` (a comment that labels
+/// what follows) and not a commented-out key ([`is_commented_key`]).
 fn is_markdown_heading(line: &str) -> bool {
     let hashes = line.bytes().take_while(|&b| b == b'#').count();
     let text = &line[hashes..];
@@ -375,8 +397,9 @@ fn is_markdown_heading(line: &str) -> bool {
     !text.is_empty() && !text.ends_with(':') && !is_commented_key(line)
 }
 
-/// A comment holding a `key: value` line (`# date: 2026-01-31`, `#theme: dark`): the key is
-/// letters, digits, `_` and `-`, and the colon ends the line or is followed by whitespace.
+/// A comment holding a `key: value` line (`# date: 2026-01-31`,
+/// `#theme: dark`): the key is letters, digits, `_` and `-`, and the colon ends
+/// the line or is followed by whitespace.
 fn is_commented_key(line: &str) -> bool {
     let Some(comment) = line.trim_start().strip_prefix('#') else {
         return false;
@@ -391,11 +414,12 @@ fn is_commented_key(line: &str) -> bool {
     })
 }
 
-/// A Markdown heading that front matter swallowed (`# Title`, after a blank line; not a
-/// label ending with `:` or a commented-out key such as `# date: …`), after the last YAML line
-/// (not blank, not a comment), with only blank lines and comments after it, none of them a
-/// commented-out key and one of them blank (counting the blank line before the closing
-/// `---`, which [`strip_delimiters`] leaves as a final line break); `(source line, text)`,
+/// A Markdown heading that front matter swallowed (`# Title`, after a blank
+/// line; not a label ending with `:` or a commented-out key such as
+/// `# date: …`), after the last YAML line (not blank, not a comment), with only
+/// blank lines and comments after it, none of them a commented-out key and one
+/// of them blank (counting the blank line before the closing `---`, which
+/// [`strip_delimiters`] leaves as a final line break); `(source line, text)`,
 /// the YAML's first line being line 2. See [`parse_document_front_matter`].
 pub fn swallowed_heading(yaml: &str) -> Option<(usize, &str)> {
     let lines: Vec<&str> = yaml.lines().collect();
@@ -414,13 +438,14 @@ pub fn swallowed_heading(yaml: &str) -> Option<(usize, &str)> {
     (!keys_after && blank_after).then_some((line, text))
 }
 
-/// Document metadata from a JSON value, with the key rules of [`parse_front_matter`]: for a
-/// notebook's `metadata.writer` object ("same keys as Markdown front matter",
-/// notebook-mapping.md §2.2).
+/// Document metadata from a JSON value, with the key rules
+/// of [`parse_front_matter`]: for a notebook's `metadata.writer` object ("same
+/// keys as Markdown front matter", notebook-mapping.md §2.2).
 ///
-/// `null` → [`DocMeta::default()`]; any other non-object → `"expected a mapping"`. A
-/// number or boolean for a string field becomes its JSON text (`42` → `"42"`, `1.50` →
-/// `"1.5"`). Messages start with the offending key and carry no line numbers.
+/// `null` → [`DocMeta::default()`]; any other non-object →
+/// `"expected a mapping"`. A number or boolean for a string field becomes its
+/// JSON text (`42` → `"42"`, `1.50` → `"1.5"`). Messages start with the
+/// offending key and carry no line numbers.
 pub fn meta_from_json(value: &Value) -> Result<DocMeta> {
     let object = match value {
         Value::Null => return Ok(DocMeta::default()),
@@ -495,8 +520,8 @@ impl ParsedRoot {
     }
 }
 
-/// The front matter root: `Some(meta)` for a mapping or an empty document, `None` for any
-/// other value (reported as [`NOT_A_MAPPING`]).
+/// The front matter root: `Some(meta)` for a mapping or an empty document,
+/// `None` for any other value (reported as [`NOT_A_MAPPING`]).
 struct RootVisitor;
 
 impl<'de> Visitor<'de> for RootVisitor {
@@ -568,7 +593,8 @@ impl<'de> Visitor<'de> for RootVisitor {
     }
 }
 
-/// One top-level entry: routes the value for `key` into `meta` (see [`parse_front_matter`]).
+/// One top-level entry: routes the value for `key` into `meta` (see
+/// [`parse_front_matter`]).
 struct EntrySeed<'m> {
     root: &'m mut ParsedRoot,
     key: String,
@@ -887,9 +913,9 @@ impl<'de> Visitor<'de> for AuthorReplay<'_> {
     }
 }
 
-/// A mapping key as text (a non-string scalar key becomes its YAML text). A key already in
-/// the set is an error; raising it while the key is read lets serde_norway report the
-/// key's own line and column.
+/// A mapping key as text (a non-string scalar key becomes its YAML text). A key
+/// already in the set is an error; raising it while the key is read lets
+/// serde_norway report the key's own line and column.
 struct KeySeed<'s>(&'s mut BTreeSet<String>);
 
 impl<'de> DeserializeSeed<'de> for KeySeed<'_> {
@@ -964,9 +990,9 @@ impl<'de> Visitor<'de> for TableVisitor {
     }
 }
 
-/// Any YAML value as JSON, for `vars`: integers outside the 64-bit range
-/// become their decimal text, `.inf`/`.nan` become `null`, keys must be unique and custom
-/// tags are errors.
+/// Any YAML value as JSON, for `vars`: integers outside the 64-bit range become
+/// their decimal text, `.inf`/`.nan` become `null`, keys must be unique and
+/// custom tags are errors.
 #[derive(Clone, Copy)]
 struct JsonVisitor;
 
@@ -1051,7 +1077,8 @@ impl<'de> Visitor<'de> for JsonVisitor {
     }
 }
 
-/// A mapping's entries as JSON, in the order written; a repeated key is an error.
+/// A mapping's entries as JSON, in the order written; a repeated key is an
+/// error.
 fn json_map<'de, A: MapAccess<'de>>(
     mut map: A,
 ) -> DeResult<Map<String, Value>, A::Error> {
@@ -1064,7 +1091,8 @@ fn json_map<'de, A: MapAccess<'de>>(
     Ok(entries)
 }
 
-/// The error for a value with a custom YAML tag (serde_norway presents those as enums).
+/// The error for a value with a custom YAML tag (serde_norway presents those as
+/// enums).
 fn unsupported_tag<'de, A: EnumAccess<'de>, T>(
     data: A,
 ) -> DeResult<T, A::Error> {
@@ -1074,8 +1102,9 @@ fn unsupported_tag<'de, A: EnumAccess<'de>, T>(
     )))
 }
 
-/// Lines of `text` as `(content, end)`: `content` without its `\n` / `\r\n`, `end` the byte
-/// offset just past the line break (`text.len()` for an unterminated last line).
+/// Lines of `text` as `(content, end)`: `content` without its `\n` / `\r\n`,
+/// `end` the byte offset just past the line break (`text.len()` for an
+/// unterminated last line).
 fn lines_with_ends(text: &str) -> impl Iterator<Item = (&str, usize)> {
     text.split_inclusive('\n').scan(0, |offset, raw| {
         *offset += raw.len();
@@ -1091,7 +1120,8 @@ fn without_line_break(s: &str) -> &str {
     }
 }
 
-/// `s` without one leading `\n` or `\r\n`; `None` when it does not start with a line break.
+/// `s` without one leading `\n` or `\r\n`; `None` when it does not start with a
+/// line break.
 fn strip_leading_line_break(s: &str) -> Option<&str> {
     s.strip_prefix('\n').or_else(|| s.strip_prefix("\r\n"))
 }
@@ -1119,7 +1149,8 @@ mod tests {
         meta.vars.keys().map(String::as_str).collect()
     }
 
-    // ---- parse_front_matter ------------------------------------------------------------
+    // ---- parse_front_matter
+    // ------------------------------------------------------------
 
     #[test]
     fn empty_yaml_is_default() {
@@ -1248,7 +1279,8 @@ mod tests {
 
     #[test]
     fn yaml_syntax_errors_are_front_matter_errors() {
-        // Line numbers are source lines: the YAML starts on line 2, after the opening `---`.
+        // Line numbers are source lines: the YAML starts on line 2, after the
+        // opening `---`.
         assert_eq!(
             front_matter_error("title: Rust: the good parts\nauthor: Me\n"),
             "mapping values are not allowed in this context at line 2 column 12 (put the value \
@@ -1280,8 +1312,8 @@ mod tests {
         );
     }
 
-    /// A3 (F29): hints for a colon in a plain value and for tab indentation, after the
-    /// position, which still locates the error.
+    /// A3 (F29): hints for a colon in a plain value and for tab indentation,
+    /// after the position, which still locates the error.
     #[test]
     fn yaml_errors_get_hints_for_colons_and_tabs() {
         let quote = |key: &str, value: &str| {
@@ -1350,13 +1382,14 @@ mod tests {
         for yaml in ["", "\n", "~\n", "null\n"] {
             assert_eq!(document_front_matter(yaml, 3).1, [], "{yaml:?}");
         }
-        // a heading after the last key and a blank line: the closing `---` is missing
+        // a heading after the last key and a blank line: the closing `---` is
+        // missing
         let (meta, found) =
             document_front_matter("title: T\n\n# Slide {layout=title}\n\n", 7);
         assert_eq!(meta.unwrap().title.as_deref(), Some("T"));
         assert_eq!(found, [(FRONT_MATTER_UNCLOSED, 4, 7)]);
-        // comments that are not headings: labels, commented-out keys, no blank line before,
-        // or YAML after them
+        // comments that are not headings: labels, commented-out keys, no blank
+        // line before, or YAML after them
         for yaml in [
             "# Front matter: settings for this document.\ntitle: T\n# date: 2026-01-31\n",
             "title: T\n\n# Theme options:\n# theme: dark\n",
@@ -1373,9 +1406,9 @@ mod tests {
             swallowed_heading("a: 1\n\n## Agenda\n\n"),
             Some((4, "## Agenda"))
         );
-        // A3 fix round: valid front matter is no false alarm: options all commented out
-        // (keys or values), and a closing remark right on the closing `---` (as
-        // `strip_delimiters` returns it: no final line break)
+        // A3 fix round: valid front matter is no false alarm: options all
+        // commented out (keys or values), and a closing remark right on the
+        // closing `---` (as `strip_delimiters` returns it: no final line break)
         for yaml in [
             "html:\n  # theme: x\n  # controls: false",
             "# title: My talk\n# author: Me",
@@ -1385,7 +1418,8 @@ mod tests {
         ] {
             assert_eq!(document_front_matter(yaml, 9).1, [], "{yaml:?}");
         }
-        // the same remark followed by a blank line before the `---` is a swallowed heading
+        // the same remark followed by a blank line before the `---` is a
+        // swallowed heading
         let (_, found) = document_front_matter("title: X\n\n# Slide two\n", 6);
         assert_eq!(found, [(FRONT_MATTER_UNCLOSED, 4, 6)]);
         let (_, found) = document_front_matter(
@@ -1393,7 +1427,8 @@ mod tests {
             8,
         );
         assert_eq!(found, [(FRONT_MATTER_UNCLOSED, 4, 8)]);
-        // a heading among commented-out keys still says the document lost its first heading
+        // a heading among commented-out keys still says the document lost its
+        // first heading
         let (_, found) =
             document_front_matter("# date: 2026\n\n# Welcome\n", 6);
         assert_eq!(found, [(FRONT_MATTER_EMPTY, 1, 6)]);
@@ -1408,7 +1443,8 @@ mod tests {
             "expected a mapping at line 5 column 1 (the front matter runs from line 1 to the \
              `---` on line 6; is its closing `---` missing, or was line 1 meant as a thematic break?)"
         );
-        // a YAML error in front matter with a heading after a blank line gets the question
+        // a YAML error in front matter with a heading after a blank line gets
+        // the question
         let (meta, _) =
             document_front_matter("title: T\n\n# Title\n\nSome text\n", 7);
         let Err(Error::FrontMatter(message)) = meta else {
@@ -1570,7 +1606,8 @@ mod tests {
         let core = meta("title: !!str 42\nn: !!int 7\n");
         assert_eq!(core.title.as_deref(), Some("42"));
         assert_eq!(core.vars["n"], 7);
-        // On a string field the scalar text is used and the tag ignored (documented).
+        // On a string field the scalar text is used and the tag ignored
+        // (documented).
         assert_eq!(meta("title: !t x\n").title.as_deref(), Some("x"));
     }
 
@@ -1585,7 +1622,8 @@ mod tests {
         assert_eq!(meta.vars["venue"], "PyData");
     }
 
-    // ---- split_front_matter ------------------------------------------------------------
+    // ---- split_front_matter
+    // ------------------------------------------------------------
 
     #[test]
     fn split_basic() {
@@ -1639,8 +1677,8 @@ mod tests {
             split_front_matter("---\na: 1\n---\n"),
             Some(("a: 1", "", 3))
         );
-        // As in comrak, the line after the opening delimiter never closes the block: an
-        // empty block needs a blank line.
+        // As in comrak, the line after the opening delimiter never closes the
+        // block: an empty block needs a blank line.
         assert_eq!(split_front_matter("---\n---\nbody"), None);
         assert_eq!(split_front_matter("---\n---"), None);
         assert_eq!(split_front_matter("---\r\n---\r\nbody"), None);
@@ -1681,7 +1719,8 @@ mod tests {
         assert_eq!(meta.date.as_deref(), Some("2026-10-08"));
     }
 
-    // ---- strip_delimiters (against real comrak output) -----------------------------------
+    // ---- strip_delimiters (against real comrak output)
+    // -----------------------------------
 
     /// comrak options per markdown-dialect.md §1 (with config defaults).
     fn comrak_options() -> comrak::Options<'static> {
@@ -1712,7 +1751,8 @@ mod tests {
         o
     }
 
-    /// The literal of the document's `FrontMatter` node, if comrak produced one.
+    /// The literal of the document's `FrontMatter` node, if comrak produced
+    /// one.
     fn comrak_literal(document: &str) -> Option<String> {
         let arena = comrak::Arena::new();
         let root = comrak::parse_document(&arena, document, &comrak_options());
@@ -1771,12 +1811,13 @@ mod tests {
         assert_eq!(strip_delimiters("---\na: ---\n"), "a: ---");
     }
 
-    /// Every document of up to five lines built from `---`, `a: 1`, an empty line and `x`
-    /// (LF or CRLF, with or without a final line break): comrak and [`split_front_matter`]
-    /// agree on whether there is front matter, on its YAML, and on where the block ends
-    /// (comrak's literal also takes one following empty line). Lines like `----` or `--- `
-    /// and mixed line breaks are left out: there comrak's substring search has quirks that
-    /// the line-based split deliberately does not copy.
+    /// Every document of up to five lines built from `---`, `a: 1`, an empty
+    /// line and `x` (LF or CRLF, with or without a final line break): comrak
+    /// and [`split_front_matter`] agree on whether there is front matter, on
+    /// its YAML, and on where the block ends (comrak's literal also takes one
+    /// following empty line). Lines like `----` or `--- ` and mixed line breaks
+    /// are left out: there comrak's substring search has quirks that the
+    /// line-based split deliberately does not copy.
     #[test]
     fn split_agrees_with_comrak_on_generated_documents() {
         const ATOMS: [&str; 4] = ["---", "a: 1", "", "x"];
@@ -1863,7 +1904,8 @@ mod tests {
         );
     }
 
-    // ---- meta_from_json -------------------------------------------------------------------
+    // ---- meta_from_json
+    // -------------------------------------------------------------------
 
     #[test]
     fn json_object_follows_the_front_matter_key_rules() {

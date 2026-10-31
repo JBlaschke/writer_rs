@@ -138,7 +138,8 @@ fn reference_fixture_with_heading_id(heading_id: &str) -> Vec<u8> {
         ("word/theme/_rels/theme1.xml.rels", image_relationship("rIdThemeImage", "../media/theme-fill.png")),
         ("word/webSettings.xml", format!(r#"<w:webSettings xmlns:w="{NS_W}"><w:allowPNG/></w:webSettings>"#)),
     ];
-    // Every source part is hand-written; only OPC compression is shared with writer.
+    // Every source part is hand-written; only OPC compression is shared with
+    // writer.
     let options = SimpleFileOptions::default()
         .compression_method(CompressionMethod::Deflated)
         .compression_level(Some(6))

@@ -1,10 +1,12 @@
-//! Placeholder emission: the single place that turns `asset:<id>` placeholders into URLs.
+//! Placeholder emission: the single place that turns `asset:<id>` placeholders
+//! into URLs.
 //!
-//! Contract: `docs/spec/ir.md` §3, `docs/spec/live-reload.md` §1, `docs/spec/html-output.md`
-//! §6.1, `docs/spec/vendored-assets.md` §2. Implemented by T14.
+//! Contract: `docs/spec/ir.md` §3, `docs/spec/live-reload.md` §1,
+//! `docs/spec/html-output.md` §6.1, `docs/spec/vendored-assets.md` §2.
+//! Implemented by T14.
 //!
-//! An [`Emitter`] rewrites every placeholder of a rendered document or stylesheet according
-//! to the [`OutputMode`]:
+//! An [`Emitter`] rewrites every placeholder of a rendered document or
+//! stylesheet according to the [`OutputMode`]:
 //!
 //! | mode | URL for an asset | bytes |
 //! |---|---|---|
@@ -12,74 +14,87 @@
 //! | [`OutputMode::Site`] | `url_prefix` + [`hashed_file_name`] of the asset's file-name hint and a hash of its **bytes**, e.g. `assets/plot-5e0c7b1f9a2d.png` | read now, one [`EmittedFile`] per distinct name |
 //! | [`OutputMode::Serve`] | `/__writer/doc-asset/<id>?v=<content_version>` | read for a content version, cached by file stamp |
 //!
-//! **Site-mode file names are content-addressed** (ir.md §3, audit F20): the hash in the name
-//! is [`content_hash`] of the bytes written, never the registry id (which, for a file asset,
-//! hashes its absolute path). The same document built from two checkouts gives the same names, and
-//! an edited image gets a new name, so a host may cache `assets/` forever. Two assets with the
+//! **Site-mode file names are content-addressed** (ir.md §3, audit F20): the
+//! hash in the name is [`content_hash`] of the bytes written, never the
+//! registry id (which, for a file asset, hashes its absolute path). The same
+//! document built from two checkouts gives the same names, and an edited image
+//! gets a new name, so a host may cache `assets/` forever. Two assets with the
 //! same bytes and the same file-name hint share one file.
 //!
-//! **Site-mode URLs depend on where the text ends up.** [`Emitter::resolve_html`],
-//! [`Emitter::resolve_css`] and [`Emitter::url_for`] return URLs relative to the output
-//! *document* (`url_prefix` + file name, e.g. `assets/plot-<id>.png`): right for the document
-//! itself and for CSS inlined into it (`<style>`). A browser resolves a `url()` inside a
-//! stylesheet *file* against that file's own URL, so a stylesheet written into `assets_dir`
-//! (the site-mode theme CSS `assets/theme-<hash>.css`, the copies made by `style(path)`)
-//! must be resolved with [`Emitter::resolve_css_in_assets_dir`], which writes bare file names
-//! (`plot-<id>.png`). Both methods share [`Emitter::files`]. Standalone and serve URLs do not
-//! depend on the location (`data:` URIs and root-absolute routes).
+//! **Site-mode URLs depend on where the text ends up.**
+//! [`Emitter::resolve_html`], [`Emitter::resolve_css`] and [`Emitter::url_for`]
+//! return URLs relative to the output *document* (`url_prefix` + file name,
+//! e.g. `assets/plot-<id>.png`): right for the document itself and for CSS
+//! inlined into it (`<style>`). A browser resolves a `url()` inside a
+//! stylesheet *file* against that file's own URL, so a stylesheet written into
+//! `assets_dir` (the site-mode theme CSS `assets/theme-<hash>.css`, the copies
+//! made by `style(path)`) must be resolved with
+//! [`Emitter::resolve_css_in_assets_dir`], which writes bare file names
+//! (`plot-<id>.png`). Both methods share [`Emitter::files`]. Standalone and
+//! serve URLs do not depend on the location (`data:` URIs and root-absolute
+//! routes).
 //!
-//! **One output, one file list.** Site mode emits each asset once per output: before
-//! emitting a file the emitter looks for its path in [`Emitter::files`], so that list *is*
-//! the deduplication state. An [`Emitter`] borrows the registry and the mode, so it cannot
-//! be stored in a `'static` closure such as a minijinja template function (minijinja 2.24
-//! requires `Send + Sync + 'static`). Two patterns keep the once-per-id guarantee:
-//! 1. template helpers only write `asset:<id>` placeholders (registering into a registry
-//!    they own) and one emitter resolves the finished document and stylesheets at the end;
-//! 2. helpers keep an owned (or `Arc`) [`AssetRegistry`], an owned [`OutputMode`] and the
-//!    `Vec<EmittedFile>` behind a mutex, create a short-lived emitter per call with
-//!    [`Emitter::with_files`], and put [`Emitter::files`] back afterwards.
+//! **One output, one file list.** Site mode emits each asset once per output:
+//! before emitting a file the emitter looks for its path in [`Emitter::files`],
+//! so that list *is* the deduplication state. An [`Emitter`] borrows the
+//! registry and the mode, so it cannot be stored in a `'static` closure such as
+//! a minijinja template function (minijinja 2.24 requires
+//! `Send + Sync + 'static`). Two patterns keep the once-per-id guarantee:
+//! 1. template helpers only write `asset:<id>` placeholders (registering into a
+//!    registry they own) and one emitter resolves the finished document and
+//!    stylesheets at the end;
+//! 2. helpers keep an owned (or `Arc`) [`AssetRegistry`], an owned
+//!    [`OutputMode`] and the `Vec<EmittedFile>` behind a mutex, create a
+//!    short-lived emitter per call with [`Emitter::with_files`], and put
+//!    [`Emitter::files`] back afterwards.
 //!
-//! **Placeholder scanning.** The placeholder grammar is `asset:` followed by exactly 12
-//! `[0-9a-f]`; a 13th hex digit (`[0-9a-fA-F]`) means the text is not a placeholder (so a
-//! longer hash is never cut to its first 12 chars), any other following character or the end
-//! of the text ends it. Unique ids are collected first, each is resolved once, then all
-//! occurrences are replaced. An id that is not registered is an [`Error::Other`] naming it
-//! (and, in a document, the attribute it was found in).
+//! **Placeholder scanning.** The placeholder grammar is `asset:` followed by
+//! exactly 12 `[0-9a-f]`; a 13th hex digit (`[0-9a-fA-F]`) means the text is
+//! not a placeholder (so a longer hash is never cut to its first 12 chars), any
+//! other following character or the end of the text ends it. Unique ids are
+//! collected first, each is resolved once, then all occurrences are replaced.
+//! An id that is not registered is an [`Error::Other`] naming it (and, in a
+//! document, the attribute it was found in).
 //!
-//! In an HTML document ([`Emitter::resolve_html`]) placeholders are replaced only where the
-//! frontends, the templates' helpers and the notebook attachment resolver write them (ir.md
-//! §3, audit F16): inside the **attribute values** of start tags (`src`, `href`, `srcset`,
-//! `poster`, `data-background-*`, inline `style` `url()`, `data-src`, …) except the
-//! attributes that hold text for people (`alt`, `title`, `placeholder`, `label`, `value`,
-//! `abbr`, `aria-*`; `is_text_attribute`), and inside the content of **`<style>` and
-//! `<script>` elements** (attachments resolved in a notebook cell's CSS or script, `asset()`
-//! in an inline script of a template). Text content is never rewritten: a literal `asset:` +
-//! 12 hex digits in prose, inline code, a code block, speaker notes, alt text or a link title
-//! is left alone. Inside `<style>`/`<script>` only registered ids are replaced (an unknown one
-//! there is a string the author wrote, left alone); an unknown id in an attribute value is an
-//! error. The document is tokenized like a browser does (the Markdown renderer's HTML
-//! tokenizer: comments, raw-text elements and quoted values are honoured), so `<p>asset:…</p>`
-//! and `<code>&lt;img src="asset:…"&gt;</code>` are text. In a stylesheet
+//! In an HTML document ([`Emitter::resolve_html`]) placeholders are replaced
+//! only where the frontends, the templates' helpers and the notebook attachment
+//! resolver write them (ir.md §3, audit F16): inside the **attribute values**
+//! of start tags (`src`, `href`, `srcset`, `poster`, `data-background-*`,
+//! inline `style` `url()`, `data-src`, …) except the attributes that hold text
+//! for people (`alt`, `title`, `placeholder`, `label`, `value`, `abbr`,
+//! `aria-*`; `is_text_attribute`), and inside the content of **`<style>` and
+//! `<script>` elements** (attachments resolved in a notebook cell's CSS or
+//! script, `asset()` in an inline script of a template). Text content is never
+//! rewritten: a literal `asset:` + 12 hex digits in prose, inline code, a code
+//! block, speaker notes, alt text or a link title is left alone. Inside
+//! `<style>`/`<script>` only registered ids are replaced (an unknown one there
+//! is a string the author wrote, left alone); an unknown id in an attribute
+//! value is an error. The document is tokenized like a browser does (the
+//! Markdown renderer's HTML tokenizer: comments, raw-text elements and quoted
+//! values are honoured), so `<p>asset:…</p>` and
+//! `<code>&lt;img src="asset:…"&gt;</code>` are text. In a stylesheet
 //! ([`Emitter::resolve_css`]) the whole text is scanned.
 //!
-//! **Query strings and fragments.** [`register_css_urls`] keeps a reference's `?query#frag`
-//! after the placeholder (`url(asset:<id>?#iefix)`), so site URLs keep it. A
-//! `data:` URI cannot carry a query (it would become part of the payload), and serve
-//! URLs already carry `?v=`, so standalone and serve modes drop a `?query` directly
-//! after a placeholder while keeping a `#fragment`
-//! (fragments are valid on `data:` URIs, e.g. for SVG views). The dropped query ends before
-//! `#`, whitespace, a quote, `(`, `)`, `<`, `>`, `\`, an HTML character reference for a
-//! quote or `#` (`&quot;`, `&#39;`, `&#x27;`, `&apos;`, `&#35;`, …, so an entity-escaped
-//! inline `style` keeps its closing quote; other references such as `&amp;` or `&#38;` are
-//! part of the query) or the end of the text, and never includes trailing commas (`srcset`
+//! **Query strings and fragments.** [`register_css_urls`] keeps a reference's
+//! `?query#frag` after the placeholder (`url(asset:<id>?#iefix)`), so site URLs
+//! keep it. A `data:` URI cannot carry a query (it would become part of the
+//! payload), and serve URLs already carry `?v=`, so standalone and serve modes
+//! drop a `?query` directly after a placeholder while keeping a `#fragment`
+//! (fragments are valid on `data:` URIs, e.g. for SVG views). The dropped query
+//! ends before `#`, whitespace, a quote, `(`, `)`, `<`, `>`, `\`, an HTML
+//! character reference for a quote or `#` (`&quot;`, `&#39;`, `&#x27;`,
+//! `&apos;`, `&#35;`, …, so an entity-escaped inline `style` keeps its closing
+//! quote; other references such as `&amp;` or `&#38;` are part of the query) or
+//! the end of the text, and never includes trailing commas (`srcset`
 //! separators).
 //!
-//! **CSS `url()` registration.** [`register_css_urls`] is the step *before* emission for
-//! stylesheets: it turns relative `url(...)` references into placeholders, registering what
-//! the caller's resolver finds (theme chain or vendor tree lookup is the caller's job). It
-//! tokenizes just enough CSS to be safe: comments and string literals are skipped (so
-//! `content: "url(x.png)"` and a `/*` inside a string are text), a `url(` glued to an
-//! identifier (`myurl(`) is not a URL, and CSS escapes are undone and `%XX` sequences
+//! **CSS `url()` registration.** [`register_css_urls`] is the step *before*
+//! emission for stylesheets: it turns relative `url(...)` references into
+//! placeholders, registering what the caller's resolver finds (theme chain or
+//! vendor tree lookup is the caller's job). It tokenizes just enough CSS to be
+//! safe: comments and string literals are skipped (so `content: "url(x.png)"`
+//! and a `/*` inside a string are text), a `url(` glued to an identifier
+//! (`myurl(`) is not a URL, and CSS escapes are undone and `%XX` sequences
 //! decoded before the resolver sees a path.
 
 use std::borrow::Cow;
@@ -98,8 +113,8 @@ use crate::assets::registry::{
 use crate::assets::{html_attr_values, html_start_tags, raw_text_end};
 use crate::error::{Error, Result};
 
-/// URL prefix under which `writer serve` serves registered document assets by id
-/// (`docs/spec/live-reload.md` §1).
+/// URL prefix under which `writer serve` serves registered document assets by
+/// id (`docs/spec/live-reload.md` §1).
 pub const SERVE_ASSET_PREFIX: &str = "/__writer/doc-asset/";
 
 /// How placeholders become URLs.
@@ -109,12 +124,13 @@ pub enum OutputMode {
     Standalone,
     /// A directory: assets are emitted as files with content-addressed names.
     Site {
-        /// Where emitted files go: each [`EmittedFile::path`] is `assets_dir` joined with the
-        /// hashed file name (relative or absolute exactly as given; the caller writes them).
+        /// Where emitted files go: each [`EmittedFile::path`] is `assets_dir`
+        /// joined with the hashed file name (relative or absolute exactly as
+        /// given; the caller writes them).
         assets_dir: PathBuf,
-        /// Prepended verbatim to the file name to form a URL relative to the output
-        /// *document*; normally `"assets/"`, so it should end with `/`. Not used for
-        /// stylesheets written into `assets_dir`
+        /// Prepended verbatim to the file name to form a URL relative to the
+        /// output *document*; normally `"assets/"`, so it should end with `/`.
+        /// Not used for stylesheets written into `assets_dir`
         /// ([`Emitter::resolve_css_in_assets_dir`] writes bare file names).
         url_prefix: String,
     },
@@ -140,16 +156,17 @@ enum Referrer {
     AssetsDir,
 }
 
-/// Rewrites placeholders for one output. Use one emitter per output (or carry its
-/// [`Emitter::files`] into the next one with [`Emitter::with_files`]) so that site mode
-/// writes each file once, however often it is referenced.
+/// Rewrites placeholders for one output. Use one emitter per output (or carry
+/// its [`Emitter::files`] into the next one with [`Emitter::with_files`]) so
+/// that site mode writes each file once, however often it is referenced.
 #[derive(Debug)]
 pub struct Emitter<'a> {
     registry: &'a AssetRegistry,
     mode: &'a OutputMode,
-    /// Files emitted so far (site mode; always empty otherwise), one per distinct file name
-    /// (at most one per id), in order of first use. This list is also the deduplication
-    /// state: an asset whose path is already in it is not emitted again.
+    /// Files emitted so far (site mode; always empty otherwise), one per
+    /// distinct file name (at most one per id), in order of first use. This
+    /// list is also the deduplication state: an asset whose path is already in
+    /// it is not emitted again.
     pub files: Vec<EmittedFile>,
 }
 
@@ -159,10 +176,11 @@ impl<'a> Emitter<'a> {
         Self::with_files(registry, mode, Vec::new())
     }
 
-    /// An emitter that continues an earlier emission for the same output: `files` are the
-    /// [`Emitter::files`] of a previous emitter, and assets already in them are not emitted
-    /// again. For callers that cannot keep one emitter alive for the whole output (e.g.
-    /// `'static` template helpers; see the module docs).
+    /// An emitter that continues an earlier emission for the same output:
+    /// `files` are the [`Emitter::files`] of a previous emitter, and assets
+    /// already in them are not emitted again. For callers that cannot keep one
+    /// emitter alive for the whole output (e.g. `'static` template helpers; see
+    /// the module docs).
     pub fn with_files(
         registry: &'a AssetRegistry, mode: &'a OutputMode,
         files: Vec<EmittedFile>,
@@ -170,42 +188,49 @@ impl<'a> Emitter<'a> {
         Emitter { registry, mode, files }
     }
 
-    /// Replace every `asset:<id>` in the attribute values (except text attributes such as
-    /// `alt` and `title`) and the `<style>` and `<script>` elements of an HTML document; text
-    /// content is left alone (see the module docs).
+    /// Replace every `asset:<id>` in the attribute values (except text
+    /// attributes such as `alt` and `title`) and the `<style>` and `<script>`
+    /// elements of an HTML document; text content is left alone (see the module
+    /// docs).
     ///
-    /// Site-mode URLs are relative to the document. Errors: an unknown id in an attribute
-    /// value ([`Error::Other`], naming the attribute), a file asset that disappeared
-    /// ([`Error::MissingAsset`], in every mode) or another read failure.
+    /// Site-mode URLs are relative to the document. Errors: an unknown id in an
+    /// attribute value ([`Error::Other`], naming the attribute), a file asset
+    /// that disappeared ([`Error::MissingAsset`], in every mode) or another
+    /// read failure.
     pub fn resolve_html(&mut self, html: &str) -> Result<String> {
         self.resolve_placeholders(html, Referrer::Document, Scope::Html)
     }
 
     /// Replace `asset:<id>` inside a CSS text (typically the output of
-    /// [`register_css_urls`]) that is inlined into the output document (`<style>`): site-mode
-    /// URLs are relative to the document. For a stylesheet written as a file into
-    /// `assets_dir` use [`Emitter::resolve_css_in_assets_dir`]. The whole text is scanned;
+    /// [`register_css_urls`]) that is inlined into the output document
+    /// (`<style>`): site-mode URLs are relative to the document. For a
+    /// stylesheet written as a file into `assets_dir` use
+    /// [`Emitter::resolve_css_in_assets_dir`]. The whole text is scanned;
     /// errors as [`Emitter::resolve_html`].
     pub fn resolve_css(&mut self, css: &str) -> Result<String> {
         self.resolve_placeholders(css, Referrer::Document, Scope::Css)
     }
 
-    /// Like [`Emitter::resolve_css`], for a stylesheet that the caller writes as a file into
-    /// the site-mode `assets_dir` (e.g. `assets/theme-<hash>.css`): site-mode URLs are bare
-    /// file names (`bg-<hash>.png`), because a browser resolves them against the
-    /// stylesheet's own URL. Emitted files are shared with the other methods. In standalone
-    /// and serve mode this is exactly [`Emitter::resolve_css`].
+    /// Like [`Emitter::resolve_css`], for a stylesheet that the caller writes
+    /// as a file into the site-mode `assets_dir` (e.g.
+    /// `assets/theme-<hash>.css`): site-mode URLs are bare file names
+    /// (`bg-<hash>.png`), because a browser resolves them against the
+    /// stylesheet's own URL. Emitted files are shared with the other methods.
+    /// In standalone and serve mode this is exactly [`Emitter::resolve_css`].
     pub fn resolve_css_in_assets_dir(&mut self, css: &str) -> Result<String> {
         self.resolve_placeholders(css, Referrer::AssetsDir, Scope::Css)
     }
 
-    /// URL for one id in the current mode (data URI / "assets/plot-5e0c7b1f9a2d.png" /
-    /// "/__writer/doc-asset/3f9a1c2b7e0d?v=7"); site-mode URLs are relative to the document
-    /// and name the file by a hash of its bytes ([`content_hash`]), not by the id.
+    /// URL for one id in the current mode (data URI /
+    /// "assets/plot-5e0c7b1f9a2d.png" /
+    /// "/__writer/doc-asset/3f9a1c2b7e0d?v=7"); site-mode URLs are relative to
+    /// the document and name the file by a hash of its bytes
+    /// ([`content_hash`]), not by the id.
     ///
-    /// Site mode reads the asset and pushes an [`EmittedFile`] unless [`Emitter::files`]
-    /// already holds its path. Serve mode hashes the bytes for a content version,
-    /// remembered for files while their size and modification time stay unchanged.
+    /// Site mode reads the asset and pushes an [`EmittedFile`] unless
+    /// [`Emitter::files`] already holds its path. Serve mode hashes the bytes
+    /// for a content version, remembered for files while their size and
+    /// modification time stay unchanged.
     pub fn url_for(&mut self, id: &str) -> Result<String> {
         self.url_from(id, Referrer::Document)
     }
@@ -218,8 +243,9 @@ impl<'a> Emitter<'a> {
                 Ok(data_uri(&asset.mime, &self.registry.read(id)?))
             }
             OutputMode::Site { assets_dir, url_prefix } => {
-                // The name hashes the bytes (module docs), so they are read even when the
-                // file was emitted before: once per distinct id and resolve call.
+                // The name hashes the bytes (module docs), so they are read
+                // even when the file was emitted before: once per distinct id
+                // and resolve call.
                 let bytes = self.registry.read(id)?;
                 let name = hashed_file_name(
                     &asset.file_name_hint,
@@ -258,8 +284,9 @@ impl<'a> Emitter<'a> {
         let mut found = find_placeholders(text);
         if scope == Scope::Html && !found.is_empty() {
             found = in_html_values(text, found);
-            // Inside `<style>`/`<script>` an unregistered id is the author's text (a string
-            // in a script), not a placeholder: what writer writes there is registered.
+            // Inside `<style>`/`<script>` an unregistered id is the author's
+            // text (a string in a script), not a placeholder: what writer
+            // writes there is registered.
             found.retain(|p| {
                 !p.in_element() || self.registry.get(p.id).is_some()
             });
@@ -306,8 +333,9 @@ impl<'a> Emitter<'a> {
     }
 }
 
-/// `data:<mime>;base64,<bytes>` with the standard base64 alphabet, padded, no line breaks.
-/// SVG is base64-encoded as well (simplest, and safe inside any attribute or `url()`).
+/// `data:<mime>;base64,<bytes>` with the standard base64 alphabet, padded, no
+/// line breaks. SVG is base64-encoded as well (simplest, and safe inside any
+/// attribute or `url()`).
 pub fn data_uri(mime: &str, bytes: &[u8]) -> String {
     let mut uri =
         String::with_capacity(mime.len() + 13 + bytes.len().div_ceil(3) * 4);
@@ -350,22 +378,25 @@ fn disk_version(
         return Ok(version);
     }
     let version = content_version(&registry.read(id)?);
-    // Stamp before reading so a concurrent edit invalidates this entry next time.
+    // Stamp before reading so a concurrent edit invalidates this entry next
+    // time.
     if let Some((len, time)) = stamp {
         versions().insert(path.to_path_buf(), (len, time, version));
     }
     Ok(version)
 }
 
-/// Deterministic site-mode file name: `"plot.png"` + hash → `"plot-<hash>.png"`; a name
-/// without extension → `"<name>-<hash>"`. The emitter passes [`content_hash`] of the
-/// asset's bytes, so names are content-addressed.
+/// Deterministic site-mode file name: `"plot.png"` + hash →
+/// `"plot-<hash>.png"`; a name without extension → `"<name>-<hash>"`. The
+/// emitter passes [`content_hash`] of the asset's bytes, so names are
+/// content-addressed.
 ///
-/// Only the last path segment of `hint` is used (`/` and `\` separate), and every character
-/// other than ASCII letters, digits, `.`, `-` and `_` becomes `_`, so the result is a safe
-/// single file name and needs no URL escaping. The extension is the part after the last `.`;
-/// leading and trailing dots of the stem are trimmed, and an empty stem becomes `asset`
-/// (`".png"` → `"asset-<id>.png"`, `""` → `"asset-<id>"`).
+/// Only the last path segment of `hint` is used (`/` and `\` separate), and
+/// every character other than ASCII letters, digits, `.`, `-` and `_` becomes
+/// `_`, so the result is a safe single file name and needs no URL escaping. The
+/// extension is the part after the last `.`; leading and trailing dots of the
+/// stem are trimmed, and an empty stem becomes `asset` (`".png"` →
+/// `"asset-<id>.png"`, `""` → `"asset-<id>"`).
 pub fn hashed_file_name(hint: &str, id: &str) -> String {
     let last_segment = hint.rsplit(['/', '\\']).next().unwrap_or_default();
     let name: String = last_segment
@@ -390,49 +421,56 @@ pub fn hashed_file_name(hint: &str, id: &str) -> String {
     }
 }
 
-/// Rewrite relative url(...) references in a CSS file to placeholders, registering them.
-/// `resolve_rel` maps a relative ref to an absolute path or bytes (theme chain lookup is
-/// supplied by the caller). `lenient = true` leaves unresolvable refs untouched (vendor CSS
-/// with woff/ttf fallbacks).
+/// Rewrite relative url(...) references in a CSS file to placeholders,
+/// registering them. `resolve_rel` maps a relative ref to an absolute path or
+/// bytes (theme chain lookup is supplied by the caller). `lenient = true`
+/// leaves unresolvable refs untouched (vendor CSS with woff/ttf fallbacks).
 ///
 /// Details:
-/// - Recognized forms: `url(x)`, `url("x")`, `url('x')`, any case of `url`, with optional
-///   whitespace inside the parentheses and CSS escapes (`url(a\(1\).png)`). The rewritten
-///   reference keeps its quote style: `url("fonts/a.woff2")` → `url("asset:<id>")`.
-/// - Left untouched: references with a scheme (`data:`, `http:`, `https:`, `asset:`, …),
-///   protocol-relative `//…`, root-absolute `/…` (or `\…`, which URL parsers read as `/`),
-///   fragment-only `#…`, empty references, `@import url(…)` (imports are not followed here;
-///   html::styles (T15) hoists absolute imports and rejects relative ones first),
-///   and everything inside `/* comments */` and string literals
-///   (`content: "url(x.png)"` is text). A function whose
-///   name merely ends in `url` (`myurl(…)`) is not a `url()`. These checks apply to the path
-///   as written (CSS escapes undone); percent-decoding cannot get around them (below).
-/// - `resolve_rel` receives the path without its `?query#fragment`, with CSS escapes undone
-///   and `%XX` sequences percent-decoded (kept as written when they do not decode to UTF-8):
-///   `fonts/My Font.woff2` for `url("fonts/My%20Font.woff2?v=1#x")`. A path that decoding
-///   would change in structure (a decoded `/`, `\` or NUL, or a decoded path that is
+/// - Recognized forms: `url(x)`, `url("x")`, `url('x')`, any case of `url`,
+///   with optional whitespace inside the parentheses and CSS escapes
+///   (`url(a\(1\).png)`). The rewritten reference keeps its quote style:
+///   `url("fonts/a.woff2")` → `url("asset:<id>")`.
+/// - Left untouched: references with a scheme (`data:`, `http:`, `https:`,
+///   `asset:`, …), protocol-relative `//…`, root-absolute `/…` (or `\…`, which
+///   URL parsers read as `/`), fragment-only `#…`, empty references,
+///   `@import url(…)` (imports are not followed here; html::styles (T15) hoists
+///   absolute imports and rejects relative ones first), and everything inside
+///   `/* comments */` and string literals (`content: "url(x.png)"` is text). A
+///   function whose name merely ends in `url` (`myurl(…)`) is not a `url()`.
+///   These checks apply to the path as written (CSS escapes undone);
+///   percent-decoding cannot get around them (below).
+/// - `resolve_rel` receives the path without its `?query#fragment`, with CSS
+///   escapes undone and `%XX` sequences percent-decoded (kept as written when
+///   they do not decode to UTF-8): `fonts/My Font.woff2` for
+///   `url("fonts/My%20Font.woff2?v=1#x")`. A path that decoding would change in
+///   structure (a decoded `/`, `\` or NUL, or a decoded path that is
 ///   root-absolute or has a scheme: `url(..%2Fx.png)`, `url(%2Fetc%2Fx.png)`,
-///   `url(C%3A/x.png)`) is passed undecoded instead, as the literal names a browser sees
-///   (`%2F` stays inside its path segment), so it can only name a file where a plain relative
-///   path could. The resolver is called once per distinct path. The suffix follows the
-///   placeholder: the fragment as written, the query as written unless it has CSS escapes
-///   or characters a `url()` must escape, which are undone and percent-encoded (`?v=\31` →
-///   `?v=1`, `?x=\(1\)` → `?x=%281%29`; also a `&` that would form an HTML reference with
-///   the fragment: `?a&#1x` → `?a%26#1x`), so a standalone [`Emitter`] can drop it whole.
+///   `url(C%3A/x.png)`) is passed undecoded instead, as the literal names a
+///   browser sees (`%2F` stays inside its path segment), so it can only name a
+///   file where a plain relative path could. The resolver is called once per
+///   distinct path. The suffix follows the placeholder: the fragment as
+///   written, the query as written unless it has CSS escapes or characters a
+///   `url()` must escape, which are undone and percent-encoded (`?v=\31` →
+///   `?v=1`, `?x=\(1\)` → `?x=%281%29`; also a `&` that would form an HTML
+///   reference with the fragment: `?a&#1x` → `?a%26#1x`), so a standalone
+///   [`Emitter`] can drop it whole.
 /// - [`AssetData::File`] is registered with [`AssetRegistry::register_file`];
-///   [`AssetData::Bytes`] with the MIME type guessed from the path's extension and its last
-///   segment as file-name hint.
+///   [`AssetData::Bytes`] with the MIME type guessed from the path's extension
+///   and its last segment as file-name hint.
 /// - An unresolvable reference with `lenient = false` is
-///   [`Error::MissingAsset`]` { path: <the path given to resolve_rel>, span: None }`. The
-///   path is relative and the error does not name the stylesheet; callers add that context
-///   (e.g. by mapping it to [`Error::Style`] with the stylesheet's name).
+///   [`Error::MissingAsset`]` { path: <the path given to resolve_rel>, span:
+///   None }`. The path is relative and the error does not name the stylesheet;
+///   callers add that context (e.g. by mapping it to [`Error::Style`] with the
+///   stylesheet's name).
 pub fn register_css_urls(
     css: &str, registry: &mut AssetRegistry,
     resolve_rel: &mut dyn FnMut(&str) -> Option<AssetData>, lenient: bool,
 ) -> Result<String> {
     let mut out = String::with_capacity(css.len());
     let mut last = 0;
-    // Decoded path → id (None: unresolvable), so each is resolved once per call.
+    // Decoded path → id (None: unresolvable), so each is resolved once per
+    // call.
     let mut seen: BTreeMap<String, Option<String>> = BTreeMap::new();
     for caps in CSS_TOKEN.captures_iter(css) {
         let (Some(whole), Some((quote, reference))) =
@@ -474,20 +512,21 @@ pub fn register_css_urls(
     Ok(out)
 }
 
-/// Placeholder pattern: group 1 is the id, group 2 a 13th hex digit that disqualifies it.
+/// Placeholder pattern: group 1 is the id, group 2 a 13th hex digit that
+/// disqualifies it.
 static PLACEHOLDER: LazyLock<Regex> = LazyLock::new(|| {
     // A constant pattern covered by the unit tests: compiling it cannot fail.
     Regex::new(r"asset:([0-9a-f]{12})([0-9a-fA-F])?")
         .expect("placeholder regex is valid")
 });
 
-/// The CSS tokens [`register_css_urls`] cares about, tried in this order at each position:
-/// a comment (to the end of the text when unterminated), a string literal (ended by its
-/// quote, a newline or the end of the text), or a `url(…)` preceded by an optional
-/// `@import` and by any identifier characters it is glued to. Only a `url(…)` without
-/// `import` and with an empty `prefix` is a reference; the rest is matched to be skipped.
-/// The argument is `dq`, `sq` (inside double or single quotes) or `uq` (unquoted), escapes
-/// included.
+/// The CSS tokens [`register_css_urls`] cares about, tried in this order at
+/// each position: a comment (to the end of the text when unterminated), a
+/// string literal (ended by its quote, a newline or the end of the text), or a
+/// `url(…)` preceded by an optional `@import` and by any identifier characters
+/// it is glued to. Only a `url(…)` without `import` and with an empty `prefix`
+/// is a reference; the rest is matched to be skipped. The argument is `dq`,
+/// `sq` (inside double or single quotes) or `uq` (unquoted), escapes included.
 static CSS_TOKEN: LazyLock<Regex> = LazyLock::new(|| {
     // A constant pattern covered by the unit tests: compiling it cannot fail.
     Regex::new(concat!(
@@ -500,8 +539,9 @@ static CSS_TOKEN: LazyLock<Regex> = LazyLock::new(|| {
     .expect("CSS token regex is valid")
 });
 
-/// The quote style and the raw argument of a `CSS_TOKEN` match that is a `url()` reference;
-/// `None` for comments, strings, `@import`s and `<identifier>url(` functions.
+/// The quote style and the raw argument of a `CSS_TOKEN` match that is a
+/// `url()` reference; `None` for comments, strings, `@import`s and
+/// `<identifier>url(` functions.
 fn url_argument<'t>(caps: &Captures<'t>) -> Option<(&'static str, &'t str)> {
     if caps.name("import").is_some()
         || caps.name("prefix").is_none_or(|p| !p.is_empty())
@@ -521,15 +561,17 @@ struct Placeholder<'t> {
     id: &'t str,
     /// Byte offset just after the id.
     id_end: usize,
-    /// Byte offset just after a `?query` following the id (`== id_end` when there is none).
+    /// Byte offset just after a `?query` following the id (`== id_end` when
+    /// there is none).
     query_end: usize,
-    /// Where it was found in an HTML document (an attribute's name, or `<style>` /
-    /// `<script>`), for error messages.
+    /// Where it was found in an HTML document (an attribute's name, or
+    /// `<style>` / `<script>`), for error messages.
     place: Option<String>,
 }
 
 impl Placeholder<'_> {
-    /// True if it was found in the content of a `<style>` or `<script>` element.
+    /// True if it was found in the content of a `<style>` or `<script>`
+    /// element.
     fn in_element(&self) -> bool {
         self.place.as_deref().is_some_and(|place| place.starts_with('<'))
     }
@@ -538,7 +580,8 @@ impl Placeholder<'_> {
 /// Which parts of a text the `resolve_*` methods rewrite.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Scope {
-    /// An HTML document: attribute values and `<style>`/`<script>` contents only.
+    /// An HTML document: attribute values and `<style>`/`<script>` contents
+    /// only.
     Html,
     /// A stylesheet: the whole text.
     Css,
@@ -562,8 +605,9 @@ fn find_placeholders(text: &str) -> Vec<Placeholder<'_>> {
         .collect()
 }
 
-/// The placeholders of `found` (all of `html`'s, in order) that lie in a region of
-/// [`html_regions`], each with its region as `place` and its query cut at the region's end.
+/// The placeholders of `found` (all of `html`'s, in order) that lie in a region
+/// of [`html_regions`], each with its region as `place` and its query cut at
+/// the region's end.
 fn in_html_values<'t>(
     html: &str, found: Vec<Placeholder<'t>>,
 ) -> Vec<Placeholder<'t>> {
@@ -584,24 +628,26 @@ fn in_html_values<'t>(
         .collect()
 }
 
-/// The HTML attributes whose value is text for people, not a URL ([`is_text_attribute`]).
+/// The HTML attributes whose value is text for people, not a URL
+/// ([`is_text_attribute`]).
 const TEXT_ATTRS: [&str; 6] =
     ["alt", "title", "placeholder", "label", "value", "abbr"];
 
-/// True if the attribute `name` (lowercase) holds text for people rather than a URL: `alt`,
-/// `title`, `placeholder`, `label`, `value`, `abbr` and every `aria-*` attribute. No
-/// placeholder is ever written there: the emitter leaves their values alone (audit F16) and
-/// the notebook frontend resolves no `attachment:` URL there.
+/// True if the attribute `name` (lowercase) holds text for people rather than a
+/// URL: `alt`, `title`, `placeholder`, `label`, `value`, `abbr` and every
+/// `aria-*` attribute. No placeholder is ever written there: the emitter leaves
+/// their values alone (audit F16) and the notebook frontend resolves no
+/// `attachment:` URL there.
 pub(crate) fn is_text_attribute(name: &str) -> bool {
     TEXT_ATTRS.contains(&name) || name.starts_with("aria-")
 }
 
-/// The byte ranges of `html` where placeholders are replaced (module docs), sorted and
-/// disjoint, each with where it is for messages (an attribute's name, or `<style>` /
-/// `<script>`): the value of every attribute of a start tag (outside comments and raw-text
-/// elements, quotes excluded) except the text attributes ([`is_text_attribute`]), and the
-/// content of every `<style>` and `<script>` element (up to its end tag, or the end of
-/// `html`).
+/// The byte ranges of `html` where placeholders are replaced (module docs),
+/// sorted and disjoint, each with where it is for messages (an attribute's
+/// name, or `<style>` / `<script>`): the value of every attribute of a start
+/// tag (outside comments and raw-text elements, quotes excluded) except the
+/// text attributes ([`is_text_attribute`]), and the content of every `<style>`
+/// and `<script>` element (up to its end tag, or the end of `html`).
 fn html_regions(html: &str) -> Vec<(Range<usize>, String)> {
     let mut regions: Vec<(Range<usize>, String)> = html_attr_values(html)
         .into_iter()
@@ -618,8 +664,9 @@ fn html_regions(html: &str) -> Vec<(Range<usize>, String)> {
     regions
 }
 
-/// The error for an unregistered id found in a document in the value of the attribute
-/// `attribute` (only attribute values make an unknown id an error, see the module docs).
+/// The error for an unregistered id found in a document in the value of the
+/// attribute `attribute` (only attribute values make an unknown id an error,
+/// see the module docs).
 fn unknown_id_in(id: &str, attribute: &str) -> Error {
     Error::Other(format!(
         "unknown asset id '{id}': the placeholder 'asset:{id}' in the `{attribute}` attribute \
@@ -627,10 +674,11 @@ fn unknown_id_in(id: &str, attribute: &str) -> Error {
     ))
 }
 
-/// End of a `?query` starting at byte `pos` (`pos` itself when there is none). The query
-/// stops before `#`, whitespace, quotes, parentheses, `<`, `>`, `\` or an HTML character
-/// reference for a quote or `#` (other references such as `&#38;` are part of the query),
-/// and excludes trailing commas (a `srcset` candidate separator).
+/// End of a `?query` starting at byte `pos` (`pos` itself when there is none).
+/// The query stops before `#`, whitespace, quotes, parentheses, `<`, `>`, `\`
+/// or an HTML character reference for a quote or `#` (other references such as
+/// `&#38;` are part of the query), and excludes trailing commas (a `srcset`
+/// candidate separator).
 fn query_end(text: &str, pos: usize) -> usize {
     let rest = &text[pos..];
     if !rest.starts_with('?') {
@@ -657,12 +705,13 @@ fn query_end(text: &str, pos: usize) -> usize {
     pos + rest[..len].trim_end_matches(',').len()
 }
 
-/// The character an HTML character reference at the start of `s` stands for, and the
-/// reference's byte length. Decoded: numeric references, decimal or hexadecimal with an
-/// optional `;` (`&#39;`, `&#x27`; out-of-range values are U+FFFD), and the named
-/// references that can end a query: `&quot;`/`&QUOT;` (also without `;` unless followed by
-/// an alphanumeric or `=`, the HTML rule for legacy references in attributes), `&apos;` and
-/// `&num;`. Anything else (including `&amp;`) is `None`: plain text to the query scanner.
+/// The character an HTML character reference at the start of `s` stands for,
+/// and the reference's byte length. Decoded: numeric references, decimal or
+/// hexadecimal with an optional `;` (`&#39;`, `&#x27`; out-of-range values are
+/// U+FFFD), and the named references that can end a query: `&quot;`/`&QUOT;`
+/// (also without `;` unless followed by an alphanumeric or `=`, the HTML rule
+/// for legacy references in attributes), `&apos;` and `&num;`. Anything else
+/// (including `&amp;`) is `None`: plain text to the query scanner.
 fn char_reference(s: &str) -> Option<(char, usize)> {
     let rest = s.strip_prefix('&')?;
     for (name, decoded) in
@@ -698,25 +747,27 @@ fn char_reference(s: &str) -> Option<(char, usize)> {
 /// A relative local reference of a CSS `url()`.
 #[derive(Debug, PartialEq, Eq)]
 struct LocalRef<'r> {
-    /// What the resolver gets: the path without `?query#fragment`, CSS escapes undone,
-    /// percent-decoded.
+    /// What the resolver gets: the path without `?query#fragment`, CSS escapes
+    /// undone, percent-decoded.
     path: String,
     /// The `?query#fragment`, exactly as written.
     suffix: &'r str,
 }
 
-/// Splits a raw `url()` argument into a [`LocalRef`] when it is a relative local reference;
-/// `None` for references that stay untouched. The suffix starts at the first `?` or `#`
-/// that is not escaped (an escaped one counts as part of the path).
+/// Splits a raw `url()` argument into a [`LocalRef`] when it is a relative
+/// local reference; `None` for references that stay untouched. The suffix
+/// starts at the first `?` or `#` that is not escaped (an escaped one counts as
+/// part of the path).
 ///
-/// The path must be relative and local ([`is_relative_local`]) as written, CSS escapes
-/// undone. It is then percent-decoded, unless decoding would change its structure: produce a
-/// `/`, a `\` or a NUL, or a path that is not relative and local (`..%2Fx.png`, `a%5Cb.png`,
-/// `a%00.png`, `%2Fetc%2Fx.png`, `C%3A/x.png`). Such a path is kept undecoded, one literal
-/// name per written segment, as a browser reads it (`%2F` stays inside its path segment), so
-/// decoding can never make it root-absolute, give it a scheme or move it to another
-/// directory; the resolver sees it like any other relative path (and, unresolvable, it is
-/// [`Error::MissingAsset`] when not lenient).
+/// The path must be relative and local ([`is_relative_local`]) as written, CSS
+/// escapes undone. It is then percent-decoded, unless decoding would change its
+/// structure: produce a `/`, a `\` or a NUL, or a path that is not relative and
+/// local (`..%2Fx.png`, `a%5Cb.png`, `a%00.png`, `%2Fetc%2Fx.png`,
+/// `C%3A/x.png`). Such a path is kept undecoded, one literal name per written
+/// segment, as a browser reads it (`%2F` stays inside its path segment), so
+/// decoding can never make it root-absolute, give it a scheme or move it to
+/// another directory; the resolver sees it like any other relative path (and,
+/// unresolvable, it is [`Error::MissingAsset`] when not lenient).
 fn local_reference(reference: &str) -> Option<LocalRef<'_>> {
     let reference = reference.trim();
     let (raw_path, suffix) =
@@ -734,14 +785,14 @@ fn local_reference(reference: &str) -> Option<LocalRef<'_>> {
     Some(LocalRef { path: path.into_owned(), suffix })
 }
 
-/// A path the resolver may see: not empty, not root-absolute (`/…`, `//…`, or `\…`, which
-/// URL parsers read as `/`) and without a URL scheme.
+/// A path the resolver may see: not empty, not root-absolute (`/…`, `//…`, or
+/// `\…`, which URL parsers read as `/`) and without a URL scheme.
 fn is_relative_local(path: &str) -> bool {
     !path.is_empty() && !path.starts_with(['/', '\\']) && !has_scheme(path)
 }
 
-/// Byte offset of the first of `targets` in a raw CSS text that is not escaped with `\`
-/// (its length if none).
+/// Byte offset of the first of `targets` in a raw CSS text that is not escaped
+/// with `\` (its length if none).
 fn first_unescaped(text: &str, targets: &[char]) -> usize {
     let mut chars = text.char_indices();
     while let Some((i, c)) = chars.next() {
@@ -754,24 +805,26 @@ fn first_unescaped(text: &str, targets: &[char]) -> usize {
     text.len()
 }
 
-/// The `?query#fragment` suffix of a CSS reference as [`register_css_urls`] writes it after
-/// the placeholder: the fragment as written, the query with CSS escapes undone and every
-/// character percent-encoded that would need a CSS escape in some quote style or would end
-/// the emitter's query scan anywhere but at the query's end (whitespace, controls, quotes,
-/// parentheses, `\`, `#`, `<`, `>`, a `&` starting an HTML reference for a quote or `#` or
-/// one that runs on into the fragment, trailing commas). A standalone emitter can then drop
-/// exactly the whole query instead of gluing the rest of `?v=\31` onto the `data:` URI. A
-/// query without escapes or such characters is kept as written.
+/// The `?query#fragment` suffix of a CSS reference as [`register_css_urls`]
+/// writes it after the placeholder: the fragment as written, the query with CSS
+/// escapes undone and every character percent-encoded that would need a CSS
+/// escape in some quote style or would end the emitter's query scan anywhere
+/// but at the query's end (whitespace, controls, quotes, parentheses, `\`, `#`,
+/// `<`, `>`, a `&` starting an HTML reference for a quote or `#` or one that
+/// runs on into the fragment, trailing commas). A standalone emitter can then
+/// drop exactly the whole query instead of gluing the rest of `?v=\31` onto the
+/// `data:` URI. A query without escapes or such characters is kept as written.
 fn plain_query(suffix: &str) -> Cow<'_, str> {
     let Some(rest) = suffix.strip_prefix('?') else {
         return Cow::Borrowed(suffix);
     };
     let (query, fragment) = rest.split_at(first_unescaped(rest, &['#']));
     let unescaped = css_unescape(query);
-    // Would `c` at byte `i` of the unescaped query need encoding? An HTML reference may run
-    // on into the fragment (`?a&#35;b` is the query `a&` and the fragment `#35;b`; `?a&#1\31`
-    // is `a&` and `#1\31`): the emitter's scan would read it as part of the query and go on
-    // into the fragment, so such a `&` is encoded whatever the reference stands for.
+    // Would `c` at byte `i` of the unescaped query need encoding? An HTML
+    // reference may run on into the fragment (`?a&#35;b` is the query `a&` and
+    // the fragment `#35;b`; `?a&#1\31` is `a&` and `#1\31`): the emitter's scan
+    // would read it as part of the query and go on into the fragment, so such a
+    // `&` is encoded whatever the reference stands for.
     let encode = |i: usize, c: char| {
         let rest = &unescaped[i..];
         let ends_the_scan_badly = || {
@@ -805,10 +858,10 @@ fn plain_query(suffix: &str) -> Cow<'_, str> {
     Cow::Owned(out)
 }
 
-/// Undoes CSS escapes: `\` + 1–6 hex digits (+ one optional whitespace) is that code point
-/// (U+FFFD for zero, surrogates and values past U+10FFFF), `\` + newline is a line
-/// continuation (removed), `\` at the end is dropped, `\` + any other character is that
-/// character.
+/// Undoes CSS escapes: `\` + 1–6 hex digits (+ one optional whitespace) is that
+/// code point (U+FFFD for zero, surrogates and values past U+10FFFF), `\` +
+/// newline is a line continuation (removed), `\` at the end is dropped, `\` +
+/// any other character is that character.
 fn css_unescape(s: &str) -> Cow<'_, str> {
     if !s.contains('\\') {
         return Cow::Borrowed(s);
@@ -849,8 +902,8 @@ fn css_unescape(s: &str) -> Cow<'_, str> {
     Cow::Owned(out)
 }
 
-/// Decodes `%XX` sequences. Malformed sequences stay as written; when the decoded bytes are
-/// not UTF-8 the input is returned unchanged.
+/// Decodes `%XX` sequences. Malformed sequences stay as written; when the
+/// decoded bytes are not UTF-8 the input is returned unchanged.
 fn percent_decode(s: &str) -> Cow<'_, str> {
     if !s.contains('%') {
         return Cow::Borrowed(s);
@@ -886,7 +939,8 @@ fn has_scheme(reference: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'))
 }
 
-/// Registers what a resolver returned for the (decoded) CSS reference `path`; returns the id.
+/// Registers what a resolver returned for the (decoded) CSS reference `path`;
+/// returns the id.
 fn register_resolved(
     registry: &mut AssetRegistry, path: &str, data: AssetData,
 ) -> String {
@@ -930,7 +984,8 @@ mod tests {
         assert_eq!(ids("asset:3f9a1c2b7e0dg"), [ID]);
         assert_eq!(ids("asset:3f9a1c2b7e0d?v=1"), [ID]);
         assert_eq!(ids("asset:3f9a1c2b7e0d.png"), [ID]);
-        // A 13th hex digit, lowercase or uppercase, means it is not a placeholder at all.
+        // A 13th hex digit, lowercase or uppercase, means it is not a
+        // placeholder at all.
         assert!(ids("asset:3f9a1c2b7e0d1").is_empty());
         assert!(ids("asset:3f9a1c2b7e0dA").is_empty());
         assert!(ids(&format!("asset:{}", "a".repeat(64))).is_empty());
@@ -963,8 +1018,8 @@ mod tests {
             ("asset:3f9a1c2b7e0d?a 2x", "?a"),
             ("asset:3f9a1c2b7e0d?a,b, x", "?a,b"),
             ("asset:3f9a1c2b7e0d?a>", "?a"),
-            // An HTML character reference for a quote ends the query (entity-escaped
-            // inline styles); other references are part of it.
+            // An HTML character reference for a quote ends the query
+            // (entity-escaped inline styles); other references are part of it.
             ("asset:3f9a1c2b7e0d?v=1&quot;)", "?v=1"),
             ("asset:3f9a1c2b7e0d?v=1&QUOT;)", "?v=1"),
             ("asset:3f9a1c2b7e0d?v=1&quot)", "?v=1"),
@@ -1060,7 +1115,8 @@ mod tests {
             "data:image/png;base64,iVBORw=="
         );
         assert_eq!(data_uri("text/plain", b""), "data:text/plain;base64,");
-        // Standard alphabet (`+` and `/`), padding, and no line breaks for long input.
+        // Standard alphabet (`+` and `/`), padding, and no line breaks for long
+        // input.
         assert_eq!(data_uri("a/b", &[0xfb, 0xff]), "data:a/b;base64,+/8=");
         let long = data_uri("image/svg+xml", &[b'x'; 1000]);
         assert!(long.starts_with("data:image/svg+xml;base64,eHh4"));
@@ -1084,7 +1140,8 @@ mod tests {
             ("a\\ b.png", Some(("a b.png", ""))),
             ("a\\?b.png?q", Some(("a?b.png", "?q"))),
             ("a\\#b.png", Some(("a#b.png", ""))),
-            // Percent-decoded after unescaping; undecodable sequences stay as written.
+            // Percent-decoded after unescaping; undecodable sequences stay as
+            // written.
             (
                 "fonts/My%20Font.woff2?v=1",
                 Some(("fonts/My Font.woff2", "?v=1")),
@@ -1113,10 +1170,11 @@ mod tests {
         }
     }
 
-    /// Percent-decoding cannot smuggle a reference past the local-path checks: a path that
-    /// would decode to a root-absolute path, a scheme, another directory (an encoded `/` or
-    /// `\`) or a NUL goes to the resolver undecoded, as one literal name per written segment.
-    /// It is never left out silently: unresolvable, it is `MissingAsset` when not lenient.
+    /// Percent-decoding cannot smuggle a reference past the local-path checks:
+    /// a path that would decode to a root-absolute path, a scheme, another
+    /// directory (an encoded `/` or `\`) or a NUL goes to the resolver
+    /// undecoded, as one literal name per written segment. It is never left out
+    /// silently: unresolvable, it is `MissingAsset` when not lenient.
     #[test]
     fn decoded_references_are_checked_like_written_ones() {
         for (reference, expected) in [
@@ -1179,9 +1237,11 @@ mod tests {
             ("?a<b>", "?a%3Cb%3E"),
             ("?a\\#b#c", "?a%23b#c"),
             ("?a=1&quot;b&#39;c", "?a=1%26quot;b%26#39;c"),
-            // `&#35;` is a query `…&` and a fragment `#35;…` that the scan must not join
+            // `&#35;` is a query `…&` and a fragment `#35;…` that the scan must
+            // not join
             ("?a&#35;b", "?a%26#35;b"),
-            // any `&` whose numeric reference runs on into the fragment, whatever it stands for
+            // any `&` whose numeric reference runs on into the fragment,
+            // whatever it stands for
             ("?v=\\31&#1\\(x\\)", "?v=1%26#1\\(x\\)"),
             ("?&#1\\31", "?%26#1\\31"),
             ("?a&#2(", "?a%26#2("),
@@ -1226,7 +1286,8 @@ mod tests {
         }
     }
 
-    /// Resolver that knows exactly the given references and returns their name as bytes.
+    /// Resolver that knows exactly the given references and returns their name
+    /// as bytes.
     fn known(
         refs: &'static [&'static str],
     ) -> impl FnMut(&str) -> Option<AssetData> {
@@ -1317,8 +1378,9 @@ mod tests {
         assert_eq!(registry.len(), 1);
     }
 
-    /// Strict mode with a resolver that knows only `bg.png`: text that merely looks like a
-    /// `url()` is not a reference, and real references after tricky strings are found.
+    /// Strict mode with a resolver that knows only `bg.png`: text that merely
+    /// looks like a `url()` is not a reference, and real references after
+    /// tricky strings are found.
     #[test]
     fn css_strings_and_identifiers_are_not_urls() {
         let strict = |css: &str| {
@@ -1371,7 +1433,8 @@ mod tests {
         ] {
             assert_eq!(strict(css).unwrap(), (css.to_string(), 0), "{css}");
         }
-        // Escaped unquoted references are recognized (and missing ones reported).
+        // Escaped unquoted references are recognized (and missing ones
+        // reported).
         let err = strict(".a{background:url(a\\(1\\).png)}").unwrap_err();
         assert!(
             matches!(&err, Error::MissingAsset { path, .. } if path == Path::new("a(1).png")),
@@ -1585,9 +1648,10 @@ mod tests {
         );
     }
 
-    /// ir.md §3 (audit F16): in a document, placeholders are replaced in attribute values
-    /// (not in text attributes such as `alt` and `title`) and in `<style>`/`<script>`
-    /// elements only; the same text in prose, code, notes, alt text or titles stays.
+    /// ir.md §3 (audit F16): in a document, placeholders are replaced in
+    /// attribute values (not in text attributes such as `alt` and `title`) and
+    /// in `<style>`/`<script>` elements only; the same text in prose, code,
+    /// notes, alt text or titles stays.
     #[test]
     fn html_text_content_is_never_rewritten() {
         let mut registry = AssetRegistry::new();
@@ -1616,7 +1680,8 @@ mod tests {
                 "<div aria-label=\"asset:{id}\" ARIA-DESCRIPTION=asset:{id}></div>"
             ),
             format!("<input placeholder=\"asset:{id}\" value=\"asset:{id}\">"),
-            // Unregistered ids in text, text attributes and scripts are not errors either.
+            // Unregistered ids in text, text attributes and scripts are not
+            // errors either.
             "<p>asset:0123456789ab and `asset:3f9a1c2b7e0d`</p>".to_string(),
             "<img alt=\"asset:0123456789ab\" src=\"x.png\">".to_string(),
             "<a title=\"see asset:0123456789ab\" href=\"https://e.org\">x</a>"
@@ -1627,7 +1692,8 @@ mod tests {
         ] {
             assert_eq!(resolve(&text), text);
         }
-        // Attribute values (any quoting), inline styles and <style>/<script> contents are.
+        // Attribute values (any quoting), inline styles and <style>/<script>
+        // contents are.
         for (html, expected) in [
             (
                 format!("<img src=\"asset:{id}\" alt=\"asset:{id}\">"),
@@ -1709,8 +1775,8 @@ mod tests {
         }
     }
 
-    /// ir.md §3 (audit F20): a site-mode file name hashes the bytes, not the id (which for a
-    /// file asset hashes its absolute path).
+    /// ir.md §3 (audit F20): a site-mode file name hashes the bytes, not the id
+    /// (which for a file asset hashes its absolute path).
     #[test]
     fn site_file_names_hash_the_bytes() {
         let tmp = tempfile::tempdir().unwrap();

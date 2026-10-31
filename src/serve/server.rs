@@ -189,7 +189,8 @@ pub enum ViewOutcome<T> {
     Skipped,
 }
 
-/// All state produced by one attempt; `None` diagnostics retain the stage's list.
+/// All state produced by one attempt; `None` diagnostics retain the stage's
+/// list.
 pub struct Outcome {
     /// Effective batch classification.
     pub kind: ChangeKind,
@@ -231,7 +232,8 @@ pub fn next_build_id(state: &Shared) -> u64 {
     read(state).build_id + 1
 }
 
-/// Store an attempt atomically, preserving last-good values for failed/skipped views.
+/// Store an attempt atomically, preserving last-good values for failed/skipped
+/// views.
 pub fn apply_outcome(state: &Shared, outcome: Outcome) -> BuildEvent {
     let mut state = write(state);
     let web_status = apply_web(&mut state.web, outcome.web);
@@ -300,7 +302,8 @@ struct App {
     events: broadcast::Sender<BuildEvent>,
 }
 
-/// The complete route table; Host checks and shutdown are installed by `serve_until`.
+/// The complete route table; Host checks and shutdown are installed by
+/// `serve_until`.
 pub fn router(state: Shared, events: broadcast::Sender<BuildEvent>) -> Router {
     Router::new()
         .route("/", get(index))
@@ -317,18 +320,19 @@ pub fn router(state: Shared, events: broadcast::Sender<BuildEvent>) -> Router {
         .with_state(App { state, events })
 }
 
-/// Serves `router` on `listener` until `shutdown` completes, then shuts down gracefully:
-/// no new connections are accepted, every open event stream ends, and the call returns once
-/// the remaining requests have finished (at most [`SHUTDOWN_GRACE`] later; a client that
-/// never completes its request would otherwise hold the server).
+/// Serves `router` on `listener` until `shutdown` completes, then shuts down
+/// gracefully: no new connections are accepted, every open event stream ends,
+/// and the call returns once the remaining requests have finished (at most
+/// [`SHUTDOWN_GRACE`] later; a client that never completes its request would
+/// otherwise hold the server).
 ///
-/// Only requests for the listener's address pass the Host check (module docs): exactly
-/// [`serve_until_allowing`] with [`AllowedHosts::new`] of that address.
+/// Only requests for the listener's address pass the Host check (module docs):
+/// exactly [`serve_until_allowing`] with [`AllowedHosts::new`] of that address.
 ///
-/// `router` is normally [`router`]`(…)`, possibly merged with more routes. Errors: the
-/// listener's address cannot be read, or an I/O error of the server ([`Error::Io`]); axum
-/// 0.8 handles accept errors itself and never returns one, so in practice this returns
-/// `Ok(())` after the shutdown.
+/// `router` is normally [`router`]`(…)`, possibly merged with more routes.
+/// Errors: the listener's address cannot be read, or an I/O error of the server
+/// ([`Error::Io`]); axum 0.8 handles accept errors itself and never returns
+/// one, so in practice this returns `Ok(())` after the shutdown.
 pub async fn serve_until<F>(
     listener: TcpListener, router: Router, shutdown: F,
 ) -> Result<()>
@@ -339,8 +343,8 @@ where
     serve_until_allowing(listener, router, shutdown, hosts).await
 }
 
-/// [`serve_until`] answering the requests whose `Host` header `hosts` allows (module docs);
-/// every other request gets `403 Forbidden`.
+/// [`serve_until`] answering the requests whose `Host` header `hosts` allows
+/// (module docs); every other request gets `403 Forbidden`.
 pub async fn serve_until_allowing<F>(
     listener: TcpListener, router: Router, shutdown: F, hosts: AllowedHosts,
 ) -> Result<()>
@@ -354,7 +358,8 @@ where
     let signal = async move {
         shutdown.await;
         tracing::info!("dev server shutting down");
-        // Ends every event stream, so that open browser tabs do not hold the server.
+        // Ends every event stream, so that open browser tabs do not hold the
+        // server.
         let _ = down_tx.send(true);
     };
     let server =
@@ -372,25 +377,28 @@ where
     Ok(())
 }
 
-/// The `Host` headers the dev server answers (module docs, "Host check"): the address it
-/// listens on (any IP address when that is unspecified), `localhost`, `127.0.0.1`,
-/// `[::1]` and the names added with [`AllowedHosts::with_name`], each with the port the
-/// server listens on.
+/// The `Host` headers the dev server answers (module docs, "Host check"): the
+/// address it listens on (any IP address when that is unspecified),
+/// `localhost`, `127.0.0.1`, `[::1]` and the names added with
+/// [`AllowedHosts::with_name`], each with the port the server listens on.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AllowedHosts {
     /// The port the server listens on.
     port: u16,
     /// The host names allowed, lowercase.
     names: BTreeSet<String>,
-    /// The IP addresses allowed (canonical: an IPv4-mapped IPv6 address is the IPv4 one).
+    /// The IP addresses allowed (canonical: an IPv4-mapped IPv6 address is the
+    /// IPv4 one).
     addresses: BTreeSet<IpAddr>,
-    /// True when the server listens on every address: any IP address is allowed.
+    /// True when the server listens on every address: any IP address is
+    /// allowed.
     any_address: bool,
 }
 
 impl AllowedHosts {
-    /// The hosts of a server listening on `addr`: `addr`'s address, `localhost`,
-    /// `127.0.0.1` and `[::1]`, with `addr`'s port (the bound one: not 0).
+    /// The hosts of a server listening on `addr`: `addr`'s address,
+    /// `localhost`, `127.0.0.1` and `[::1]`, with `addr`'s port (the bound one:
+    /// not 0).
     pub fn new(addr: SocketAddr) -> Self {
         let loopback =
             [IpAddr::from([127, 0, 0, 1]), IpAddr::from(Ipv6Addr::LOCALHOST)];
@@ -404,8 +412,8 @@ impl AllowedHosts {
         hosts
     }
 
-    /// The same hosts and `name` (the `--host` the server was started with: a name,
-    /// compared ignoring ASCII case, or an IP address, `[…]` for IPv6).
+    /// The same hosts and `name` (the `--host` the server was started with: a
+    /// name, compared ignoring ASCII case, or an IP address, `[…]` for IPv6).
     pub fn with_name(mut self, name: &str) -> Self {
         let name = name.trim().to_ascii_lowercase();
         let bare = name.strip_prefix('[').and_then(|n| n.strip_suffix(']'));
@@ -419,7 +427,8 @@ impl AllowedHosts {
         self
     }
 
-    /// Allows the address `ip`: every address if it is unspecified (`0.0.0.0`, `::`).
+    /// Allows the address `ip`: every address if it is unspecified (`0.0.0.0`,
+    /// `::`).
     fn add_address(&mut self, ip: IpAddr) {
         match ip.is_unspecified() {
             true => self.any_address = true,
@@ -429,9 +438,9 @@ impl AllowedHosts {
         }
     }
 
-    /// True if a request whose `Host` header is `host` (`None`: it has none) is for this
-    /// server: an allowed name or IP address (IPv6 in brackets), with the server's port,
-    /// or without a port when that is 80.
+    /// True if a request whose `Host` header is `host` (`None`: it has none) is
+    /// for this server: an allowed name or IP address (IPv6 in brackets), with
+    /// the server's port, or without a port when that is 80.
     pub fn allows(&self, host: Option<&str>) -> bool {
         let Some(host) = host else {
             return true;
@@ -449,8 +458,9 @@ impl AllowedHosts {
     }
 }
 
-/// The name and port of a `Host` header value (`name`, `name:port`, `[v6]`, `[v6]:port`),
-/// without the brackets of an IPv6 address; `None` when it is malformed.
+/// The name and port of a `Host` header value (`name`, `name:port`, `[v6]`,
+/// `[v6]:port`), without the brackets of an IPv6 address; `None` when it is
+/// malformed.
 fn split_host(host: &str) -> Option<(&str, Option<u16>)> {
     let (name, port) = match host.strip_prefix('[') {
         Some(rest) => {
@@ -473,8 +483,8 @@ fn split_host(host: &str) -> Option<(&str, Option<u16>)> {
     (!name.is_empty()).then_some((name, port))
 }
 
-/// The Host check (module docs): passes a request that `hosts` allows to `next`, answers
-/// any other with `403 Forbidden`.
+/// The Host check (module docs): passes a request that `hosts` allows to
+/// `next`, answers any other with `403 Forbidden`.
 async fn check_host(
     State(hosts): State<Arc<AllowedHosts>>, request: Request, next: Next,
 ) -> Response {
@@ -508,11 +518,12 @@ impl ShutdownSignal {
     }
 }
 
-/// A stream that ends when the server shuts down (an endless SSE response would otherwise
-/// keep the graceful shutdown waiting).
+/// A stream that ends when the server shuts down (an endless SSE response would
+/// otherwise keep the graceful shutdown waiting).
 struct UntilShutdown<S> {
     inner: S,
-    /// `None` without a signal (a router served by something other than [`serve_until`]).
+    /// `None` without a signal (a router served by something other than
+    /// [`serve_until`]).
     shutdown: Option<Pin<Box<dyn Future<Output = ()> + Send>>>,
     ended: bool,
 }
@@ -719,15 +730,16 @@ async fn build_events(
     event_stream(&app, shutdown.map(|Extension(signal)| signal), KEEP_ALIVE)
 }
 
-/// `hello` with the current build, then one `build` event per [`publish`]ed [`BuildEvent`]
-/// ([`build_stream`]), and a keep-alive comment after `keep_alive` without an event. The
-/// stream ends when `shutdown` fires.
+/// `hello` with the current build, then one `build` event per [`publish`]ed
+/// [`BuildEvent`] ([`build_stream`]), and a keep-alive comment after
+/// `keep_alive` without an event. The stream ends when `shutdown` fires.
 fn event_stream(
     app: &App, shutdown: Option<ShutdownSignal>, keep_alive: Duration,
 ) -> Sse<impl Stream<Item = std::result::Result<Event, Infallible>> + use<>> {
-    // Subscribe before reading the state, so that no build stored after `hello` is missed.
-    // A build stored in between is reported twice (in `hello` and as an event); the client
-    // then refreshes the page it already shows, which changes nothing.
+    // Subscribe before reading the state, so that no build stored after `hello`
+    // is missed. A build stored in between is reported twice (in `hello` and as
+    // an event); the client then refreshes the page it already shows, which
+    // changes nothing.
     let receiver = app.events.subscribe();
     let hello = read(&app.state).hello();
     let builds =
@@ -738,8 +750,9 @@ fn event_stream(
     Sse::new(stream).keep_alive(KeepAlive::new().interval(keep_alive))
 }
 
-/// The build events `receiver` gets. A receiver that fell more than [`EVENT_CAPACITY`]
-/// events behind skips the oldest ones (logged) and goes on with the newest.
+/// The build events `receiver` gets. A receiver that fell more than
+/// [`EVENT_CAPACITY`] events behind skips the oldest ones (logged) and goes on
+/// with the newest.
 fn build_stream(
     receiver: broadcast::Receiver<BuildEvent>,
 ) -> impl Stream<Item = BuildEvent> + Send + Unpin + 'static {
@@ -754,7 +767,8 @@ fn build_stream(
     })
 }
 
-/// An SSE event named `name` with `data` as JSON; `None` (logged) if it cannot be encoded.
+/// An SSE event named `name` with `data` as JSON; `None` (logged) if it cannot
+/// be encoded.
 fn sse_event<T: Serialize>(name: &str, data: &T) -> Option<Event> {
     match Event::default().event(name).json_data(data) {
         Ok(event) => Some(event),
@@ -765,9 +779,10 @@ fn sse_event<T: Serialize>(name: &str, data: &T) -> Option<Event> {
     }
 }
 
-/// The response for helper path `path` to a request with `request` headers: the file (or
-/// the requested range of it) with its MIME type, 404 if there is none. Before any build
-/// succeeded there is no theme, and only `vendor/…` and `writer/…` files exist.
+/// The response for helper path `path` to a request with `request` headers: the
+/// file (or the requested range of it) with its MIME type, 404 if there is
+/// none. Before any build succeeded there is no theme, and only `vendor/…` and
+/// `writer/…` files exist.
 fn helper_asset_response(
     theme: Option<&Theme>, path: &str, request: &HeaderMap,
 ) -> Response {
@@ -793,14 +808,16 @@ fn helper_asset_response(
     }
 }
 
-/// True for a normalized helper path of the embedded tree (`vendor/…`, `writer/…`).
+/// True for a normalized helper path of the embedded tree (`vendor/…`,
+/// `writer/…`).
 fn is_builtin_key(key: &str) -> bool {
     key.starts_with("vendor/") || key.starts_with("writer/")
 }
 
-/// The stylesheet at helper path `key` of `theme`'s chain (`bytes`) as served: its relative
-/// `url()`s rewritten to versioned URLs ([`serve_stylesheet`], module docs); as it is when
-/// it is not UTF-8 or cannot be rewritten (the browser then resolves it as written).
+/// The stylesheet at helper path `key` of `theme`'s chain (`bytes`) as served:
+/// its relative `url()`s rewritten to versioned URLs ([`serve_stylesheet`],
+/// module docs); as it is when it is not UTF-8 or cannot be rewritten (the
+/// browser then resolves it as written).
 fn theme_stylesheet(theme: &Theme, key: &str, bytes: Vec<u8>) -> Vec<u8> {
     let Ok(css) = std::str::from_utf8(&bytes) else {
         return bytes;
@@ -913,7 +930,8 @@ fn fallback_page(state: &ServeState) -> String {
     )
 }
 
-/// Read access to the state. A poisoned lock is used as is: writers only assign fields.
+/// Read access to the state. A poisoned lock is used as is: writers only assign
+/// fields.
 fn read(state: &Shared) -> RwLockReadGuard<'_, ServeState> {
     state.read().unwrap_or_else(PoisonError::into_inner)
 }
@@ -1263,7 +1281,8 @@ mod tests {
         // No Host header at all (HTTP/1.0): browsers always send one.
         assert!(hosts.allows(None));
         for host in [
-            // Addresses this server does not listen on (audit review: the contract's list).
+            // Addresses this server does not listen on (audit review: the
+            // contract's list).
             "192.168.1.5:4321", "[fe80::1]:4321", "127.0.0.2:4321",
             "0.0.0.0:4321", "evil.example:4321", "evil.example",
             "localhost.evil.example:4321", "127.0.0.1.nip.io:4321",
@@ -1286,8 +1305,8 @@ mod tests {
         {
             assert!(!named.allows(Some(host)), "{host}");
         }
-        // Every address (`--host 0.0.0.0`): any IP address is one of the machine's; names
-        // stay limited.
+        // Every address (`--host 0.0.0.0`): any IP address is one of the
+        // machine's; names stay limited.
         let every = AllowedHosts::new(SocketAddr::from(([0, 0, 0, 0], 3000)))
             .with_name("0.0.0.0");
         for host in [
