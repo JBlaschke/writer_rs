@@ -16,7 +16,12 @@ use std::time::{Duration, Instant};
 use regex::Regex;
 use serde_json::{Value, json};
 
-const WAIT: Duration = Duration::from_secs(10);
+/// How long a server may take to start, build, exit or send an event. It only
+/// has to beat a hang: under a parallel runner every watcher start waits for
+/// fseventsd, which serialises FSEvents stream setup across every process on a
+/// Mac, and a loaded one has taken over ten seconds.
+const WAIT: Duration = Duration::from_secs(60);
+/// How long one HTTP exchange may take.
 const HTTP_WAIT: Duration = Duration::from_secs(2);
 
 fn serial() -> MutexGuard<'static, ()> {

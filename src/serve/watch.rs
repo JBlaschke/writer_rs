@@ -18,7 +18,8 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant, SystemTime};
 
 use notify::{
-    Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _,
+    Event, EventKind, PathOp, RecommendedWatcher, RecursiveMode,
+    UpdatePathsError, WatchPathConfig, Watcher as _,
 };
 use typst_kit::packages::FsPackages;
 
@@ -626,13 +627,10 @@ impl Watcher {
             .map(|(dir, _)| dir.clone())
             .collect();
         let unwatched = !stale.is_empty();
-        for dir in stale {
-            self.watched.remove(&dir);
-            if let Err(err) = self.backend.unwatch(&dir) {
-                tracing::debug!("unwatch {}: {err}", dir.display());
-            }
+        for dir in &stale {
+            self.watched.remove(dir);
         }
-        let (watched, result) = self.watch_all(wanted);
+        let (watched, result) = self.apply(stale, wanted);
         // Compare planned coverage, not successful watches: an existing directory
         // that cannot be watched must not cause an endless catch-up/retry loop.
         let appeared = appeared_directories(&missing, &planned);
@@ -644,43 +642,87 @@ impl Watcher {
         result
     }
 
-    /// Watches every directory of `wanted` that is not watched yet. A directory that has
-    /// disappeared in the meantime is watched through its nearest existing ancestor.
-    /// Returns whether a directory was newly watched, and the first error.
-    fn watch_all(
-        &mut self, wanted: BTreeMap<PathBuf, RecursiveMode>,
+    /// Unwatches `stale`, then watches every directory of `wanted` that is not watched
+    /// yet, in one backend update: FSEvents then rebuilds its stream once rather than
+    /// once per directory, and fseventsd serialises those rebuilds across every process
+    /// on the machine. A directory that has disappeared in the meantime is watched
+    /// through its nearest existing ancestor, in a further update. Returns whether a
+    /// directory was newly watched, and the first error.
+    fn apply(
+        &mut self, stale: Vec<PathBuf>,
+        wanted: BTreeMap<PathBuf, RecursiveMode>,
     ) -> (bool, Result<()>) {
-        let mut queue: Vec<(PathBuf, RecursiveMode)> = wanted
-            .into_iter()
-            .filter(|(dir, _)| !self.watched.contains_key(dir))
-            .collect();
+        let mut ops: Vec<PathOp> =
+            stale.into_iter().map(PathOp::unwatch).collect();
+        ops.extend(
+            wanted
+                .into_iter()
+                .filter(|(dir, _)| !self.watched.contains_key(dir))
+                .map(|(dir, mode)| {
+                    PathOp::Watch(dir, WatchPathConfig::new(mode))
+                }),
+        );
         let mut added = false;
         let mut first_error = None;
-        while let Some((dir, mode)) = queue.pop() {
-            // An ancestor queued for a directory that vanished may be wanted itself: watch
-            // it once, recursively when either asks for that.
-            let done = self.watched.get(&dir).is_some_and(|watched| {
-                *watched == mode || *watched == RecursiveMode::Recursive
-            });
-            if done {
-                continue;
-            }
-            match self.backend.watch(&dir, mode) {
-                Ok(()) => {
+        while !ops.is_empty() {
+            // The backend takes the operations and names only the failed one and
+            // those after it: keep what each one watches, to record the applied.
+            let modes: Vec<(PathBuf, Option<RecursiveMode>)> = ops
+                .iter()
+                .map(|op| match op {
+                    PathOp::Watch(dir, config) => {
+                        (dir.clone(), Some(config.recursive_mode()))
+                    }
+                    PathOp::Unwatch(dir) => (dir.clone(), None),
+                })
+                .collect();
+            let (applied, failed, rest) = match self.backend.update_paths(ops) {
+                Ok(()) => (modes.len(), None, Vec::new()),
+                Err(UpdatePathsError {
+                    source,
+                    origin: Some(op),
+                    remaining,
+                }) => {
+                    let applied =
+                        modes.len().saturating_sub(remaining.len() + 1);
+                    (applied, Some((op, source)), remaining)
+                }
+                Err(UpdatePathsError { source, origin: None, remaining }) => {
+                    // The backend took every path but could not start watching
+                    // them; the next update asks for them again.
+                    first_error
+                        .get_or_insert(watch_error("watch", None, source));
+                    (0, None, remaining)
+                }
+            };
+            for (dir, mode) in modes.into_iter().take(applied) {
+                if let Some(mode) = mode {
                     tracing::debug!("watching {} ({mode:?})", dir.display());
                     self.watched.insert(dir, mode);
                     added = true;
                 }
-                Err(err) if is_not_found(&err) => {
+            }
+            ops = rest;
+            match failed {
+                None => {}
+                Some((PathOp::Unwatch(dir), err)) => {
+                    tracing::debug!("unwatch {}: {err}", dir.display());
+                }
+                Some((PathOp::Watch(dir, _), err)) if is_not_found(&err) => {
                     tracing::debug!("not watching {} (missing)", dir.display());
                     lock(&self.shared).missing.insert(dir.clone());
+                    // An ancestor this update still watches itself is watched once,
+                    // as that asks (recursively when either does).
                     if let Some(ancestor) = existing_ancestor(&dir)
                         && !covers(&self.watched, &ancestor)
+                        && !ops.iter().any(|op| {
+                            matches!(op, PathOp::Watch(path, _) if *path == ancestor)
+                        })
                     {
-                        queue.push((ancestor, RecursiveMode::NonRecursive));
+                        ops.push(PathOp::watch_non_recursive(ancestor));
                     }
                 }
-                Err(err) => {
+                Some((PathOp::Watch(dir, _), err)) => {
                     first_error.get_or_insert(watch_error(
                         "watch",
                         Some(&dir),

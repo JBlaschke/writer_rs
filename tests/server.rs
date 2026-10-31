@@ -24,7 +24,9 @@ use writer::serve::server::{
 };
 use writer::serve::watch::ChangeKind;
 
-const WAIT: Duration = Duration::from_secs(10);
+/// How long the server may take to start, answer or close a connection. It
+/// only has to beat a hang; a loaded parallel runner has taken seconds.
+const WAIT: Duration = Duration::from_secs(60);
 const NO_STORE: &str = "no-store";
 const IMMUTABLE: &str = "public, max-age=31536000, immutable";
 
