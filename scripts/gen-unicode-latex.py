@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Regenerate the pinned Unicode/name to LaTeX table; see vendored-assets §3.7."""
+"""Regenerate the pinned Unicode/name to LaTeX table.
+
+See vendored-assets §3.7.
+"""
 
 import argparse
 import hashlib
@@ -65,7 +68,9 @@ def block(text, start, end):
 
 
 def parse_names(text):
-    pattern = re.compile(r'\s*"((?:[^"\\]|\\.)*)"\s*=>\s*"((?:[^"\\]|\\.)*)",\s*')
+    pattern = re.compile(
+        r'\s*"((?:[^"\\]|\\.)*)"\s*=>\s*"((?:[^"\\]|\\.)*)",\s*'
+    )
     rows = []
     for line in block(text, "pub static TYPST_TO_TEX", r"};"):
         if match := pattern.fullmatch(line):
@@ -75,7 +80,9 @@ def parse_names(text):
 
 
 def parse_chars(text):
-    pattern = re.compile(r'''\s*m\.insert\('((?:[^'\\]|\\.)*)',\s*"((?:[^"\\]|\\.)*)"\);\s*''')
+    pattern = re.compile(
+        r'''\s*m\.insert\('((?:[^'\\]|\\.)*)',\s*"((?:[^"\\]|\\.)*)"\);\s*'''
+    )
     rows = []
     for line in block(text, "pub static ref UNICODE_TO_LATEX", r"\s*};"):
         if match := pattern.fullmatch(line):
@@ -88,7 +95,9 @@ def parse_chars(text):
 
 
 def parse_shorthands(text):
-    pattern = re.compile(r'''\s*\("((?:[^"\\]|\\.)*)",\s*'((?:[^'\\]|\\.)*)'\),\s*''')
+    pattern = re.compile(
+        r'''\s*\("((?:[^"\\]|\\.)*)",\s*'((?:[^'\\]|\\.)*)'\),\s*'''
+    )
     rows = []
     for line in block(text, "struct MathShorthand", r"\s*];"):
         if match := pattern.fullmatch(line):
@@ -201,7 +210,9 @@ def resolve(name, symbols, shorthands):
     for index in range(len(parts), 0, -1):
         if items := symbols.get(".".join(parts[:index])):
             requested = frozenset(parts[index:])
-            matches = [(mods, value) for mods, value in items if requested <= mods]
+            matches = [
+                (mods, value) for mods, value in items if requested <= mods
+            ]
             if not matches:
                 return None
             _, value = min(matches, key=lambda item: len(item[0]))
@@ -266,7 +277,8 @@ def alnum(char, chars):
         "BOLD": r"\mathbf{%s}" if ascii_base else r"\boldsymbol{%s}",
         "ITALIC": r"\mathit{%s}", "BOLD ITALIC": r"\boldsymbol{%s}",
         "SCRIPT": r"\mathcal{%s}", "BOLD SCRIPT": r"\boldsymbol{\mathcal{%s}}",
-        "FRAKTUR": r"\mathfrak{%s}", "BOLD FRAKTUR": r"\boldsymbol{\mathfrak{%s}}",
+        "FRAKTUR": r"\mathfrak{%s}",
+        "BOLD FRAKTUR": r"\boldsymbol{\mathfrak{%s}}",
         "DOUBLE-STRUCK": r"\mathbb{%s}", "SANS-SERIF": r"\mathsf{%s}",
         "SANS-SERIF ITALIC": r"\mathsf{%s}",
         "SANS-SERIF BOLD": r"\boldsymbol{\mathsf{%s}}",
@@ -278,7 +290,9 @@ def alnum(char, chars):
 
 def generate(sources, overrides):
     rows = parse_names(sources[("tylax", "src/data/maps.rs")])
-    unicode_rows = parse_chars(sources[("tylax", "src/core/typst2latex/utils.rs")])
+    unicode_rows = parse_chars(
+        sources[("tylax", "src/core/typst2latex/utils.rs")]
+    )
     shorthands = parse_shorthands(sources[("typst-syntax", "src/ast.rs")])
     symbols = parse_codex(sources[("codex", "src/modules/sym.txt")])
     names = {name: {"tex": normalise(tex)} for name, tex in rows}
@@ -319,7 +333,10 @@ def generate(sources, overrides):
     before_alnum = len(chars)
     for value in range(0x1D400, 0x1D800):
         char = chr(value)
-        if char not in chars and char not in deleted and (tex := alnum(char, chars)):
+        if (
+            char not in chars and char not in deleted
+            and (tex := alnum(char, chars))
+        ):
             put(char, tex, "alnum", False)
     for entry in [*names.values(), *chars.values()]:
         packages = {
@@ -361,7 +378,9 @@ def quote(text):
 
 def serialize(names, chars):
     lines = [HEADER.rstrip(), "", "[source]"]
-    lines.extend(f"{name} = {quote(version)}" for name, (version, _) in PINS.items())
+    lines.extend(
+        f"{name} = {quote(version)}" for name, (version, _) in PINS.items()
+    )
     sections = [
         ("names", sorted(names.items())),
         ("chars", [
@@ -418,7 +437,9 @@ def main(argv=None):
         overrides = override_tables(tomllib.loads(
             args.overrides.read_text(encoding="utf-8")
         ))
-        with tempfile.TemporaryDirectory(prefix="writer-unicode-latex-") as temporary:
+        with tempfile.TemporaryDirectory(
+            prefix="writer-unicode-latex-"
+        ) as temporary:
             sources = read_sources(args.archive_dir, temporary)
         names, chars, report = generate(sources, overrides)
         print(

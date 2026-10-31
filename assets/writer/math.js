@@ -2,11 +2,14 @@
 // Renders every [data-math-style] element ("inline" or "display") with KaTeX.
 // window.__writerKatexOptions (set by math_init()) extends the defaults below.
 // Rendered elements are marked data-rendered="1", so
-// window.__writerRenderMath(root) can be called again on new content (live reload).
+// window.__writerRenderMath(root) can be called again on new content
+// (live reload).
 (function () {
     function render(root) {
         if (!window.katex) return;
-        root.querySelectorAll('[data-math-style]:not([data-rendered])').forEach(function (el) {
+        root.querySelectorAll(
+            '[data-math-style]:not([data-rendered])'
+        ).forEach(function (el) {
             if (el.dataset.rendered) return;
             var display = el.dataset.mathStyle === 'display';
             try {
@@ -25,7 +28,9 @@
     }
     window.__writerRenderMath = render;
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { render(document); });
+        document.addEventListener('DOMContentLoaded', function () {
+            render(document);
+        });
     } else {
         render(document);
     }

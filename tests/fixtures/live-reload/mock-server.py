@@ -15,9 +15,11 @@ GET /__mock/restart: restart at build 1 with staged content and drop streams.
 GET /__mock/failroot?on=1|0: fail content fetches without stopping SSE.
 GET /__mock/early?on=1|0: stage the client script in head, before body.
 GET /__mock/reset: reset build 1; /log: return and clear request log.
-POST /__mock/pages: stage {hashes:[16-hex],size_pt:[[w,h]]}; emit pages to apply.
+POST /__mock/pages: stage {hashes:[16-hex],size_pt:[[w,h]]}; emit pages to
+    apply.
 GET /?view=pages&client=1: the real pages client; default remains the T22 spy.
-GET /__mock/pages/hold|release?hash=HASH: gate a page response for revision tests.
+GET /__mock/pages/hold|release?hash=HASH: gate a page response for revision
+    tests.
 
 WRITER_ASSETS overrides the repository assets directory; WRITER_CLIENT overrides
 live-reload.js, useful while testing a scratch implementation. No dependencies.
@@ -58,10 +60,19 @@ def initial_document():
     for index in range(1, 61):
         content = f"Paragraph {index}: stable text for reading-place checks."
         if index == 12:
-            content += '<span id="math" data-tex="x^2" data-math-style="inline">x^2</span>'
+            content += (
+                '<span id="math" data-tex="x^2" data-math-style="inline">'
+                'x^2</span>'
+            )
         if index == 20:
-            content += '<img id="image1" src="/__writer/doc-asset/000000000001?v=1" alt="First">'
-            content += '<img id="image2" src="/__writer/doc-asset/000000000002?v=1" alt="Second">'
+            content += (
+                '<img id="image1" src="/__writer/doc-asset/000000000001?v=1" '
+                'alt="First">'
+            )
+            content += (
+                '<img id="image2" src="/__writer/doc-asset/000000000002?v=1" '
+                'alt="Second">'
+            )
         blocks.append(
             f'<p id="p{index}" data-source="0" '
             f'data-sourcepos="{index * 10}-{index * 10 + 5}">{content}</p>'
@@ -75,7 +86,8 @@ def initial_document():
                 '<section id="include" data-source="1" data-sourcepos="1-90">'
                 '<p id="included" data-source="1" data-sourcepos="40-45">'
                 'Included paragraph.</p>'
-                '<p id="included-narrow" data-source="1" data-sourcepos="41-41">'
+                '<p id="included-narrow" data-source="1" '
+                'data-sourcepos="41-41">'
                 'Narrow included paragraph.</p></section>'
             )
         if index == 52:
@@ -107,7 +119,8 @@ PAGE = """<!DOCTYPE html>
 </body></html>
 """
 
-# Deliberately a spy, not the T24 pages implementation. T22 owns delegation only.
+# Deliberately a spy, not the T24 pages implementation. T22 owns delegation
+# only.
 PAGES = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <title>Mock pages</title></head><body><main data-writer-pages></main>
 <script>window.__qaPages = []; window.__writerPages = {
@@ -224,13 +237,17 @@ class Mock:
     def stage_pages(self, spec):
         hashes, sizes = spec["hashes"], spec["size_pt"]
         if len(hashes) != len(sizes) or any(
-            not isinstance(digest, str) or not re.fullmatch("[0-9a-f]{16}", digest)
-            or len(size) != 2 or any(not isinstance(n, (int, float)) or n <= 0 for n in size)
+            not isinstance(digest, str)
+            or not re.fullmatch("[0-9a-f]{16}", digest)
+            or len(size) != 2
+            or any(not isinstance(n, (int, float)) or n <= 0 for n in size)
             for digest, size in zip(hashes, sizes)
         ):
             raise ValueError("invalid mock pages")
-        self.page_data = {"count": len(hashes), "hashes": list(hashes),
-                          "size_pt": [list(size) for size in sizes]}
+        self.page_data = {
+            "count": len(hashes), "hashes": list(hashes),
+            "size_pt": [list(size) for size in sizes],
+        }
         for index, (digest, size) in enumerate(zip(hashes, sizes), 1):
             self.page_versions.setdefault(digest, page_svg(index, size, digest))
 
@@ -238,17 +255,22 @@ class Mock:
         return {"status": status, **self.page_data}
 
     def snapshot(self):
-        return {"document": self.document, "css": self.css,
-                "title": html.escape(self.title), "lang": html.escape(self.lang),
-                "head": self.head, "body": self.body, "body_end": self.body_end,
-                "assets": dict(self.assets), "build_id": self.build_id,
-                "early": self.early}
+        return {
+            "document": self.document, "css": self.css,
+            "title": html.escape(self.title), "lang": html.escape(self.lang),
+            "head": self.head, "body": self.body, "body_end": self.body_end,
+            "assets": dict(self.assets), "build_id": self.build_id,
+            "early": self.early,
+        }
 
     def hello(self):
-        return {"build_id": self.build_id,
-                "status": "error" if any(v["status"] == "error"
-                                         for v in self.views.values()) else "ok",
-                **self.views, "warnings": self.warnings}
+        return {
+            "build_id": self.build_id,
+            "status": "error" if any(
+                v["status"] == "error" for v in self.views.values()
+            ) else "ok",
+            **self.views, "warnings": self.warnings,
+        }
 
     def emit(self, kind, query):
         self.build_id += 1
@@ -278,12 +300,16 @@ class Mock:
             }]
         changed = None
         if kind == "content" and ("line" in query or "cell" in query):
-            changed = {"file": query.get("file", ["document.md"])[0],
-                       "source": int(query.get("source", ["0"])[0])}
+            changed = {
+                "file": query.get("file", ["document.md"])[0],
+                "source": int(query.get("source", ["0"])[0]),
+            }
             position = "cell" if "cell" in query else "line"
             changed[position] = int(query[position][0])
-        event = {**self.hello(), **event_views, "kind": kind,
-                 "duration_ms": 5, "changed": changed}
+        event = {
+            **self.hello(), **event_views, "kind": kind,
+            "duration_ms": 5, "changed": changed,
+        }
         self.events.append(event)
         self.cond.notify_all()
         return event
@@ -317,9 +343,13 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         url = urlsplit(self.path)
         query = parse_qs(url.query)
-        body = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode()
-        field = {"document": "document", "css": "css", "head": "head",
-                 "body": "body", "bodyend": "body_end"}.get(url.path.split("/")[-1])
+        body = self.rfile.read(
+            int(self.headers.get("Content-Length", 0))
+        ).decode()
+        field = {
+            "document": "document", "css": "css", "head": "head",
+            "body": "body", "bodyend": "body_end",
+        }.get(url.path.split("/")[-1])
         with MOCK.cond:
             if url.path == "/__mock/pages":
                 try:
@@ -343,7 +373,9 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/__mock/"):
             return self.control(path, query)
         with MOCK.cond:
-            MOCK.log.append(f"GET {self.path} [{self.headers.get('Sec-Fetch-Dest', '-')}]")
+            MOCK.log.append(
+                f"GET {self.path} [{self.headers.get('Sec-Fetch-Dest', '-')}]"
+            )
             served = MOCK.served
             state = MOCK.hello()
             fail_root = MOCK.fail_root
@@ -354,9 +386,14 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(204, "", "image/x-icon")
         if path == "/":
             if fail_root:
-                return self.send(503, "deliberate content failure", "text/plain")
+                return self.send(
+                    503, "deliberate content failure", "text/plain"
+                )
             if query.get("view", ["web"])[0] == "pages":
-                page = PAGES_LIVE if query.get("client", ["0"])[0] == "1" else PAGES
+                page = (
+                    PAGES_LIVE if query.get("client", ["0"])[0] == "1"
+                    else PAGES
+                )
             elif served:
                 page = PAGE.format(**served)
                 early = served["early"]
@@ -364,7 +401,9 @@ class Handler(BaseHTTPRequestHandler):
                 page = fallback(state["web"]["error"])
             if early:
                 tag = '<script src="/__writer/live-reload.js"></script>'
-                page = page.replace(tag, "").replace("<head>", "<head>" + tag, 1)
+                page = page.replace(tag, "").replace(
+                    "<head>", "<head>" + tag, 1
+                )
             return self.send(200, page, "text/html; charset=utf-8")
         if path == "/__writer/state":
             return self.send(200, json.dumps(state), "application/json")
@@ -388,14 +427,16 @@ class Handler(BaseHTTPRequestHandler):
             if held and not held.wait(10):
                 return self.send(504, "mock page hold timed out", "text/plain")
             return self.send(200, image, "image/svg+xml", (
-                "public, max-age=31536000, immutable" if immutable else "no-store"
+                "public, max-age=31536000, immutable"
+                if immutable else "no-store"
             ))
         if path == "/__writer/theme.css" and served:
             return self.send(200, served["css"], "text/css")
         if path == "/__writer/live-reload.js":
             morphdom = ASSETS / "vendor/morphdom/morphdom-umd.min.js"
             script = "\n".join([
-                "/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */",
+                "/* morphdom 2.7.8 (MIT), vendored; "
+                "see THIRD-PARTY-LICENSES */",
                 "(function (define, module, exports) {", morphdom.read_text(),
                 "}).call(window);", CLIENT.read_text(),
             ])
@@ -408,10 +449,16 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/__writer/asset/"):
             relative = path.removeprefix("/__writer/asset/")
             target = (ASSETS / relative).resolve()
-            if relative.split("/")[0] in ("vendor", "writer") and ASSETS in target.parents:
+            if (
+                relative.split("/")[0] in ("vendor", "writer")
+                and ASSETS in target.parents
+            ):
                 if target.is_file():
                     mime = mimetypes.guess_type(target.name)[0]
-                    return self.send(200, target.read_bytes(), mime or "application/octet-stream")
+                    return self.send(
+                        200, target.read_bytes(),
+                        mime or "application/octet-stream"
+                    )
             if served and relative in served["assets"]:
                 mime = mimetypes.guess_type(relative)[0] or "text/plain"
                 return self.send(200, served["assets"][relative], mime)
@@ -442,11 +489,15 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/__mock/restart":
                 MOCK.build_id = 1
                 MOCK.events = []
-                MOCK.views = {"web": {"status": "ok"}, "pages": MOCK.pages("ok")}
+                MOCK.views = {
+                    "web": {"status": "ok"}, "pages": MOCK.pages("ok")
+                }
                 MOCK.served = MOCK.snapshot()
                 MOCK.drop_clients()
             elif path == "/__mock/down":
-                MOCK.down_until = time.monotonic() + int(query.get("ms", ["3000"])[0]) / 1000
+                MOCK.down_until = (
+                    time.monotonic() + int(query.get("ms", ["3000"])[0]) / 1000
+                )
                 MOCK.drop_clients()
             elif path == "/__mock/early":
                 MOCK.early = query.get("on", ["1"])[0] == "1"
@@ -472,18 +523,23 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         try:
-            self.wfile.write(f"event: hello\ndata: {json.dumps(hello)}\n\n".encode())
+            self.wfile.write(
+                f"event: hello\ndata: {json.dumps(hello)}\n\n".encode()
+            )
             self.wfile.flush()
             while True:
                 with MOCK.cond:
                     MOCK.cond.wait_for(
-                        lambda: MOCK.generation != generation or len(MOCK.events) > seen, 15
+                        lambda: MOCK.generation != generation
+                            or len(MOCK.events) > seen,
+                        15
                     )
                     if MOCK.generation != generation:
                         return
                     fresh, seen = MOCK.events[seen:], len(MOCK.events)
                 chunk = "".join(
-                    f"event: build\ndata: {json.dumps(event)}\n\n" for event in fresh
+                    f"event: build\ndata: {json.dumps(event)}\n\n"
+                    for event in fresh
                 ) or ": keep-alive\n\n"
                 self.wfile.write(chunk.encode())
                 self.wfile.flush()
@@ -497,7 +553,10 @@ def main():
     args = parser.parse_args()
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     server.daemon_threads = True
-    print(f"mock writer serve on http://127.0.0.1:{server.server_address[1]}/", flush=True)
+    print(
+        f"mock writer serve on http://127.0.0.1:{server.server_address[1]}/",
+        flush=True
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:

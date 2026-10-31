@@ -22,7 +22,9 @@
     const getDoc = () => fetch('/?view=web', { cache: 'no-store' })
         .then((response) => response.ok ? response.text() : null)
         .then(
-            (text) => text && new DOMParser().parseFromString(text, 'text/html'),
+            (text) => text && new DOMParser().parseFromString(
+                text, 'text/html'
+            ),
             () => null
         );
 
@@ -43,7 +45,8 @@
 
     // Baseline: the served page, before scripts have changed its DOM.
     let baseline = '';
-    const ver = (doc) => doc.querySelector('#writer-theme')?.getAttribute('href');
+    const ver = (doc) => doc.querySelector('#writer-theme')
+        ?.getAttribute('href');
     let queue = Promise.resolve();
 
     function store(id) {
@@ -94,7 +97,9 @@
 
     function showOverlay(groups, visible) {
         const old = overlay();
-        const el = old || document.body.appendChild(document.createElement('div'));
+        const el = old || document.body.appendChild(
+            document.createElement('div')
+        );
         const display = old ? old.style.display : 'none';
         el.id = 'writer-overlay';
         el.style.cssText =
@@ -167,7 +172,8 @@
             'background:none;border:0;color:inherit;font:inherit;cursor:pointer';
         if (warningsOpen) {
             const list = panel.appendChild(document.createElement('ol'));
-            list.style.cssText = 'max-height:40vh;overflow:auto;margin:.6em 0 0';
+            list.style.cssText =
+                'max-height:40vh;overflow:auto;margin:.6em 0 0';
             state.warnings.forEach((warning) => {
                 const item = list.appendChild(document.createElement('li'));
                 const where = locationText(warning);
@@ -180,7 +186,9 @@
     function renderToggle() {
         let button = document.getElementById('writer-view-toggle');
         if (!button) {
-            button = document.body.appendChild(document.createElement('button'));
+            button = document.body.appendChild(
+                document.createElement('button')
+            );
             button.id = 'writer-view-toggle';
             button.type = 'button';
             button.title = 'Switch view (p)';
@@ -268,7 +276,9 @@
 
     function syncAttrs(from, to, keep) {
         Array.from(to.attributes).forEach(({ name, value }) => {
-            if (from.getAttribute(name) !== value) from.setAttribute(name, value);
+            if (from.getAttribute(name) !== value) {
+                from.setAttribute(name, value);
+            }
         });
         Array.from(from.attributes).forEach(({ name }) => {
             if (!to.hasAttribute(name) && !keep.includes(name)) {
@@ -310,8 +320,10 @@
         if (!anchor) return null;
         const el = anchor.el;
         return {
-            ...anchor, tag: el.tagName, source: el.getAttribute('data-source'),
-            cell: el.getAttribute('data-cell'), text: el.textContent.slice(0, 200)
+            ...anchor, tag: el.tagName,
+            source: el.getAttribute('data-source'),
+            cell: el.getAttribute('data-cell'),
+            text: el.textContent.slice(0, 200)
         };
     }
 
@@ -446,7 +458,9 @@
         state.retryMs = 500;
         state.connected = true;
         if (prev !== null && +prev !== data.build_id && !again) {
-            return fullReload('build ' + prev + ' -> ' + data.build_id, data.build_id);
+            return fullReload(
+                'build ' + prev + ' -> ' + data.build_id, data.build_id
+            );
         }
         log('connected, build', data.build_id);
         if (again) {
@@ -521,7 +535,8 @@
                 sessionStorage.setItem('writer:view', view);
             } else if (location.pathname === '/') {
                 const stored = sessionStorage.getItem('writer:view');
-                if ((stored === 'web' || stored === 'pages') && stored !== state.view) {
+                if ((stored === 'web' || stored === 'pages')
+                    && stored !== state.view) {
                     location.replace('/?view=' + stored);
                     return false;
                 }
@@ -533,7 +548,8 @@
     window.__writerLiveReload = { connect, disconnect, state, setView };
 
     function boot() {
-        state.view = document.querySelector('[data-writer-pages]') ? 'pages' : 'web';
+        state.view = document.querySelector('[data-writer-pages]')
+            ? 'pages' : 'web';
         if (state.view === 'web') {
             document.documentElement.style.overflowAnchor = 'none';
         }

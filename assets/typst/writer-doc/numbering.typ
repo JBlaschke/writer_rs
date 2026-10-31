@@ -167,7 +167,9 @@
         it
         if oracle-on { context oracle("heading", it,
             if it.numbering == none { none } else {
-                std.numbering(it.numbering, ..counter(heading).at(it.location()))
+                std.numbering(
+                    it.numbering, ..counter(heading).at(it.location())
+                )
             }
         ) }
     }

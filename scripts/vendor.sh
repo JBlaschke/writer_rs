@@ -72,7 +72,8 @@ sha256_of() {
 }
 
 # fetch NAME URL SHA256: download, verify and extract into $WORK/NAME/.
-# npm uses package/, crates use <name>-<version>/, and mitex has no top directory.
+# npm uses package/, crates use <name>-<version>/, and mitex has no top
+# directory.
 fetch() {
     local name="$1"
     local url="$2"

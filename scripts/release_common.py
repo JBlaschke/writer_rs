@@ -32,11 +32,15 @@ def root_name(version, target):
 
 
 def binary_name(target):
-    return "writer.exe" if checked_target(target).endswith("-msvc") else "writer"
+    return (
+        "writer.exe" if checked_target(target).endswith("-msvc") else "writer"
+    )
 
 
 def archive_name(version, target):
-    extension = ".zip" if checked_target(target).endswith("-msvc") else ".tar.gz"
+    extension = (
+        ".zip" if checked_target(target).endswith("-msvc") else ".tar.gz"
+    )
     return root_name(version, target) + extension
 
 

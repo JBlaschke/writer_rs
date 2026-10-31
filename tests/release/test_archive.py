@@ -1,4 +1,7 @@
-"""Pure release helpers: tiny payloads, no Cargo/compiler or native execution."""
+"""Pure release helpers.
+
+Tiny payloads, no Cargo/compiler or native execution.
+"""
 
 import importlib.util
 import os
@@ -16,7 +19,9 @@ sys.path.insert(0, str(SCRIPTS))
 
 
 def module(name):
-    specification = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    specification = importlib.util.spec_from_file_location(
+        name, SCRIPTS / f"{name}.py"
+    )
     value = importlib.util.module_from_spec(specification)
     specification.loader.exec_module(value)
     return value
@@ -43,9 +48,13 @@ class ReleaseArchive(unittest.TestCase):
         (self.notices / "assets/licenses").mkdir(parents=True)
         (self.notices / "crates/example-1.0.0").mkdir(parents=True)
         (self.notices / "EMBEDDED.txt").write_bytes(b"embedded\r\n")
-        (self.notices / "crates.txt").write_bytes(b"example 1.0.0: MIT (https://crates.io)\n")
+        (self.notices / "crates.txt").write_bytes(
+            b"example 1.0.0: MIT (https://crates.io)\n"
+        )
         (self.notices / "assets/licenses/example").write_bytes(b"notice\r\n")
-        (self.notices / "crates/example-1.0.0/LICENSE").write_bytes(b"crate license\n")
+        (self.notices / "crates/example-1.0.0/LICENSE").write_bytes(
+            b"crate license\n"
+        )
 
     def packed(self, target, directory):
         return archive.pack(
@@ -67,15 +76,27 @@ class ReleaseArchive(unittest.TestCase):
         root = root_name("0.1.0", target)
         with tarfile.open(packed) as source:
             members = source.getmembers()
-            names = [item.name.rstrip("/") + ("/" if item.isdir() else "")
-                     for item in members]
-            self.assertEqual(names, sorted(names, key=lambda name: name.encode()))
+            names = [
+                item.name.rstrip("/") + ("/" if item.isdir() else "")
+                for item in members
+            ]
+            self.assertEqual(
+                names, sorted(names, key=lambda name: name.encode())
+            )
             for item in members:
-                self.assertEqual((item.uid, item.gid, item.uname, item.gname), (0, 0, "", ""))
+                self.assertEqual(
+                    (item.uid, item.gid, item.uname, item.gname),
+                    (0, 0, "", "")
+                )
                 self.assertEqual(item.mtime, 1_761_782_400)
-                expected = 0o755 if item.isdir() or item.name == f"{root}/writer" else 0o644
+                expected = (
+                    0o755 if item.isdir() or item.name == f"{root}/writer"
+                    else 0o644
+                )
                 self.assertEqual(item.mode, expected)
-            self.assertEqual(source.extractfile(f"{root}/README.md").read(), b"README\r\n")
+            self.assertEqual(
+                source.extractfile(f"{root}/README.md").read(), b"README\r\n"
+            )
             self.assertEqual(source.extractfile(
                 f"{root}/THIRD-PARTY-LICENSES/assets/licenses/example"
             ).read(), b"notice\r\n")
@@ -90,9 +111,13 @@ class ReleaseArchive(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(binary.external_attr >> 16), 0o755)
             self.assertIsNone(source.testzip())
         expanded = smoke.unpack(packed, self.root / "unpacked", root)
-        self.assertEqual((expanded / "writer.exe").read_bytes(), self.binary.read_bytes())
-        self.assertEqual((expanded / "THIRD-PARTY-LICENSES/EMBEDDED.txt").read_bytes(),
-                         b"embedded\r\n")
+        self.assertEqual(
+            (expanded / "writer.exe").read_bytes(), self.binary.read_bytes()
+        )
+        self.assertEqual(
+            (expanded / "THIRD-PARTY-LICENSES/EMBEDDED.txt").read_bytes(),
+            b"embedded\r\n"
+        )
 
     def test_oversize_and_incomplete_notice_tree_fail_before_new_output(self):
         with self.binary.open("wb") as stream:
@@ -132,8 +157,10 @@ class ReleaseArchive(unittest.TestCase):
                 smoke.safe_members(names, "root")
 
     def test_zip_nonfile_types_refuse_before_any_member_is_written(self):
-        for kind in [stat.S_IFLNK, stat.S_IFIFO, stat.S_IFSOCK,
-                     stat.S_IFCHR, stat.S_IFBLK]:
+        for kind in [
+            stat.S_IFLNK, stat.S_IFIFO, stat.S_IFSOCK,
+            stat.S_IFCHR, stat.S_IFBLK
+        ]:
             with self.subTest(kind=kind):
                 packed = self.root / f"nonfile-{kind}.zip"
                 with zipfile.ZipFile(packed, "w") as source:
@@ -143,7 +170,9 @@ class ReleaseArchive(unittest.TestCase):
                     entry.external_attr = (kind | 0o644) << 16
                     source.writestr(entry, b"not a regular file")
                 destination = self.root / f"rejected-{kind}"
-                with self.assertRaisesRegex(ValueError, "symbolic link|non-file"):
+                with self.assertRaisesRegex(
+                    ValueError, "symbolic link|non-file"
+                ):
                     smoke.unpack(packed, destination, "root")
                 self.assertFalse(destination.exists())
 
@@ -163,7 +192,9 @@ class ReleaseArchive(unittest.TestCase):
 
     def test_failed_disposable_smoke_never_moves_or_removes_checkout_assets(self):
         target = "x86_64-apple-darwin"
-        self.binary.write_bytes(b"\xcf\xfa\xed\xfe" + (0x01000007).to_bytes(4, "little"))
+        self.binary.write_bytes(
+            b"\xcf\xfa\xed\xfe" + (0x01000007).to_bytes(4, "little")
+        )
         self.packed(target, "smoke")
         assets = self.root / "checkout/assets"
         assets.mkdir(parents=True)
@@ -181,7 +212,9 @@ class ReleaseArchive(unittest.TestCase):
 
         def failed_outputs(_binary, temporary, _epoch):
             self.assertNotEqual(temporary, self.root)
-            self.assertEqual((assets / "original").read_bytes(), b"owned source")
+            self.assertEqual(
+                (assets / "original").read_bytes(), b"owned source"
+            )
             unexpected.write_bytes(b"new source data")
             raise ValueError("render failure")
 
@@ -218,7 +251,9 @@ class ReleaseArchive(unittest.TestCase):
                 data[18:20] = (183 if arm else 62).to_bytes(2, "little")
             elif "-apple-" in target:
                 data[:4] = b"\xcf\xfa\xed\xfe"
-                data[4:8] = (0x0100000C if arm else 0x01000007).to_bytes(4, "little")
+                data[4:8] = (
+                    0x0100000C if arm else 0x01000007
+                ).to_bytes(4, "little")
             else:
                 data[:2] = b"MZ"
                 data[60:64] = (80).to_bytes(4, "little")
@@ -226,7 +261,10 @@ class ReleaseArchive(unittest.TestCase):
                 data[84:86] = (0xAA64 if arm else 0x8664).to_bytes(2, "little")
             self.binary.write_bytes(data)
             smoke.verify_architecture(self.binary, target)
-            wrong = target.replace("aarch64-", "x86_64-") if arm else target.replace("x86_64-", "aarch64-")
+            wrong = (
+                target.replace("aarch64-", "x86_64-") if arm
+                else target.replace("x86_64-", "aarch64-")
+            )
             with self.assertRaisesRegex(ValueError, "architecture"):
                 smoke.verify_architecture(self.binary, wrong)
 
@@ -235,7 +273,9 @@ class ReleaseMetadata(unittest.TestCase):
     def test_manual_revision_identity_and_existing_tag_are_checked_without_mutation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "Cargo.toml").write_text('[package]\nname="writer"\nversion="0.1.0"\n')
+            (root / "Cargo.toml").write_text(
+                '[package]\nname="writer"\nversion="0.1.0"\n'
+            )
             calls = []
             def fake_git(_root, *arguments):
                 calls.append(arguments)
@@ -248,11 +288,16 @@ class ReleaseMetadata(unittest.TestCase):
                 result = metadata.metadata(root, "v0.1.0")
             self.assertEqual(result["build_id"], "a" * 40)
             self.assertEqual(result["tag"], "v0.1.0")
-            self.assertTrue(all(call[0] in {"rev-parse", "status", "show"} for call in calls))
+            self.assertTrue(all(
+                call[0] in {"rev-parse", "status", "show"} for call in calls
+            ))
             with patch.object(metadata, "git", side_effect=fake_git):
                 with self.assertRaisesRegex(ValueError, "must equal"):
                     metadata.metadata(root, "v9.0.0")
-            with patch.object(metadata, "git", side_effect=["a" * 40, "", "1761782400", "b" * 40]):
+            with patch.object(
+                metadata, "git",
+                side_effect=["a" * 40, "", "1761782400", "b" * 40]
+            ):
                 with self.assertRaisesRegex(ValueError, "selected revision"):
                     metadata.metadata(root, "v0.1.0")
 

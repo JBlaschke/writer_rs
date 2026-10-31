@@ -21,7 +21,9 @@ def git(root, *arguments):
 
 def metadata(root, tag=None):
     root = Path(root).resolve()
-    package = tomllib.loads((root / "Cargo.toml").read_text(encoding="utf-8"))["package"]
+    package = tomllib.loads(
+        (root / "Cargo.toml").read_text(encoding="utf-8")
+    )["package"]
     if package["name"] != "writer":
         raise ValueError("release input is not the writer package")
     version = checked_version(package["version"])
@@ -32,13 +34,19 @@ def metadata(root, tag=None):
         raise ValueError("release checkout has tracked changes")
     epoch = int(git(root, "show", "-s", "--format=%ct", "HEAD"))
     if not 0 <= epoch <= 0xFFFFFFFF:
-        raise ValueError("commit timestamp does not fit deterministic gzip metadata")
+        raise ValueError(
+            "commit timestamp does not fit deterministic gzip metadata"
+        )
     if tag:
         if tag != f"v{version}":
             raise ValueError(f"existing tag must equal v{version}, got {tag!r}")
-        tagged = git(root, "rev-parse", "--verify", f"refs/tags/{tag}^{{commit}}")
+        tagged = git(
+            root, "rev-parse", "--verify", f"refs/tags/{tag}^{{commit}}"
+        )
         if tagged != revision:
-            raise ValueError("existing release tag does not name the selected revision")
+            raise ValueError(
+                "existing release tag does not name the selected revision"
+            )
     # Artifact-only revision builds always identify their actual commit, even
     # when an optional existing matching tag was checked. No tag is created.
     return {
@@ -67,7 +75,9 @@ def main():
             ) as output:
                 for key in ["version", "revision", "build_id", "epoch"]:
                     output.write(f"{key}={result[key]}\n")
-    except (KeyError, OSError, ValueError, subprocess.CalledProcessError) as error:
+    except (
+        KeyError, OSError, ValueError, subprocess.CalledProcessError
+    ) as error:
         parser.exit(1, f"error: {error}\n")
     print(json.dumps(result, sort_keys=True))
 
