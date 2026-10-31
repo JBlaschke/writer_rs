@@ -14,8 +14,11 @@ use writer::serve::watch::{
     ChangeBatch, ChangeKind, DEBOUNCE, Debounce, WatchSet, Watcher, canonical,
 };
 
-/// How long a batch may take to arrive.
-const BATCH_TIMEOUT: Duration = Duration::from_secs(10);
+/// How long a batch may take to arrive. It only has to beat a hang: under a
+/// parallel runner every watcher start waits for fseventsd, which serialises
+/// FSEvents stream setup across every process on a Mac, and a loaded one has
+/// taken over ten seconds.
+const BATCH_TIMEOUT: Duration = Duration::from_secs(60);
 /// How long to wait to be sure that no (further) batch comes.
 const QUIET: Duration = Duration::from_millis(1200);
 

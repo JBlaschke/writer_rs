@@ -1274,9 +1274,13 @@ mod tests {
         serde_json::to_value(session.state.read().unwrap().hello()).unwrap()
     }
 
-    /// How long a session test may run before it counts as stalled; each one
-    /// takes well under a second, on CI too.
-    const STALL_LIMIT: Duration = Duration::from_secs(120);
+    /// How long a session test may run before it counts as stalled. Alone,
+    /// one takes seconds; under a parallel runner (nextest runs a process per
+    /// test) every watcher start waits for fseventsd, which serialises
+    /// FSEvents stream setup, and a loaded Mac has taken over two minutes.
+    /// The limit only has to beat a hang, which CI's step timeout would
+    /// otherwise report after half an hour.
+    const STALL_LIMIT: Duration = Duration::from_secs(600);
 
     /// Runs `test` on its own thread and fails when it has not finished within
     /// `limit`, instead of hanging the whole run. A stalled thread cannot be

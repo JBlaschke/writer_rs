@@ -25,7 +25,10 @@ use writer::serve::watch::{
 
 const REQUEST: &str = "WRITER_WATCH_LOOP_TEST_REQUEST";
 const PREFIX: &str = "WRITER_WATCH_LOOP_STATUS ";
-const WAIT: Duration = Duration::from_secs(10);
+// A bounded wait only has to beat a hang. Under a parallel runner each child's
+// watcher start waits for fseventsd, which serialises FSEvents stream setup
+// across every process on a Mac, and a loaded one has taken over ten seconds.
+const WAIT: Duration = Duration::from_secs(60);
 const QUIET: Duration = Duration::from_millis(1400);
 // Each child starts a native watcher and its own compiler/font state. Avoid
 // concurrent startup exhausting a loaded runner before the bounded waits begin.
