@@ -339,7 +339,9 @@ pub const MITEX_VERSION: &str = "0.2.7";
 literal. Path rules (lifted with presenter's three `normalize` unit tests): `/` and `\` separate
 segments, empty and `.` segments are dropped, `..` pops a segment, an empty path or one climbing above
 `assets/` is `None`; the final lookup is exact and case-sensitive in debug **and** release builds
-(debug builds check the key against `Assets::iter()` before reading the disk).
+(debug builds read the disk, then check the key against a kept `Assets::iter()` listing, which `list`
+reports; `get` takes the listing again only when it and the disk disagree about the key, so it sees
+files added or removed while the process runs, and no other lookup walks `assets/`).
 
 ### 5.2 Debug from disk, release embedded
 `rust-embed = { version = "8.13.0", features = ["include-exclude"] }` reads `assets/` from disk in
