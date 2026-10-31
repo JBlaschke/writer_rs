@@ -79,6 +79,19 @@ grid = learn_grid(
 )
 ```
 
+- When the argument consists of a single list, dict, or another function call,
+  then it's preferred to group that token with the opening/closing parenthesis.
+  E.g:
+
+```julia
+my_function([
+    "long", "list", "of", "inputs"
+])
+my_outer_function(my_inner_function(
+    param_a, param_b, [x, y, z]
+))
+```
+
 ## Wrapped function declarations and definitions
 
 Declarations use extra indentation to distinguish parameters from the body.
