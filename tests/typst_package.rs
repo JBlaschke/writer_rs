@@ -5,7 +5,7 @@ use std::fs;
 
 use typst::foundations::{Datetime, Label, Smart, Value};
 use typst::introspection::{Introspector, MetadataElem};
-use typst::layout::{Frame, FrameItem};
+use typst::layout::{Frame, FrameItem, Point, Transform};
 use typst::model::Document;
 use typst::text::TextItem;
 use typst::utils::PicoStr;
@@ -138,6 +138,27 @@ fn text_runs<'a>(frame: &'a Frame, runs: &mut Vec<&'a TextItem>) {
         match item {
             FrameItem::Group(group) => text_runs(&group.frame, runs),
             FrameItem::Text(run) => runs.push(run),
+            _ => {}
+        }
+    }
+}
+
+fn positioned_runs<'a>(
+    frame: &'a Frame, transform: Transform,
+    runs: &mut Vec<(Point, &'a TextItem)>,
+) {
+    for (position, item) in frame.items() {
+        let transform =
+            transform.pre_concat(Transform::translate(position.x, position.y));
+        match item {
+            FrameItem::Group(group) => positioned_runs(
+                &group.frame,
+                transform.pre_concat(group.transform),
+                runs,
+            ),
+            FrameItem::Text(run) => {
+                runs.push((Point::zero().transform(transform), run));
+            }
             _ => {}
         }
     }
@@ -635,6 +656,139 @@ fn check_captionless(language: &str) {
             assert_eq!(caption_position < body_position, before, "{text}");
             assert_eq!(text.matches(&caption).count(), 1, "{text}");
         }
+    }
+}
+
+#[test]
+fn listing_lines_stay_left_aligned_inside_figures() {
+    for options in ["numbered: true", "highlight: \"2\""] {
+        for wrapper in ["bare", "captioned", "captionless"] {
+            let listing = format!(
+                "listing({options}, plain: true)[\n```\n\
+                 short\nconsiderably_longer_line\n    indented_line\n```\n]"
+            );
+            let body = match wrapper {
+                "bare" => format!("#{listing}"),
+                "captioned" => format!(
+                    "#figure({listing}, kind: raw, caption: [ListingCaption])"
+                ),
+                _ => format!("#figure({listing}, kind: raw)"),
+            };
+            let source = format!(
+                "{IMPORT}#show: writer-doc\n\
+                 #set page(width: 420pt)\n{body}"
+            );
+            let document = compile(&source, &Config::default(), false);
+            let page = &document.pages()[0];
+            let mut runs = Vec::new();
+            positioned_runs(&page.frame, Transform::identity(), &mut runs);
+            let line = |marker: &str| {
+                let (position, run) = runs
+                    .iter()
+                    .find(|(_, run)| run.text.trim_start() == marker)
+                    .unwrap_or_else(|| panic!("missing {marker}: {runs:?}"));
+                let start = run.text.find(marker).unwrap();
+                let inset = run
+                    .glyphs
+                    .iter()
+                    .take_while(|glyph| glyph.range().start < start)
+                    .map(|glyph| glyph.x_advance.at(run.size).to_pt())
+                    .sum::<f64>();
+                (position.x.to_pt() + inset, run.width().to_pt())
+            };
+            let (short, width) = line("short");
+            let (long, _) = line("considerably_longer_line");
+            let (indented, _) = line("indented_line");
+            assert!(
+                (short - long).abs() < 0.01,
+                "{options}, {wrapper}: line starts {short}, {long}"
+            );
+            assert!(
+                (indented - short - 4.0 * width / 5.0).abs() < 0.01,
+                "{options}, {wrapper}: indentation {indented}, {short}"
+            );
+            if wrapper != "bare" {
+                let marker = if wrapper == "captioned" {
+                    "ListingCaption"
+                } else {
+                    "Listing"
+                };
+                let (caption, _) = runs
+                    .iter()
+                    .find(|(_, run)| run.text.contains(marker))
+                    .expect("listing caption");
+                let (left, right) = runs
+                    .iter()
+                    .filter(|(point, _)| {
+                        (point.y - caption.y).to_pt().abs() < 0.01
+                    })
+                    .fold((f64::INFINITY, f64::NEG_INFINITY), |bounds, run| {
+                        let (point, text) = run;
+                        (
+                            bounds.0.min(point.x.to_pt()),
+                            bounds.1.max((point.x + text.width()).to_pt()),
+                        )
+                    });
+                assert!(
+                    (left + right - page.frame.width().to_pt()).abs() < 0.01,
+                    "{options}, {wrapper}: caption bounds {left}, {right}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn listing_rows_keep_line_leading_and_blank_lines() {
+    for options in ["numbered: true, start: 7", "highlight: \"2\""] {
+        let spacing = |leading: &str| {
+            let source = format!(
+                "{IMPORT}#show: writer-doc\n\
+                 #set par(leading: {leading})\n\
+                 #listing({options}, plain: true)[\n```\n\
+                 first_line\nsecond_line\n\nfourth_line\n```\n]"
+            );
+            let document = compile(&source, &Config::default(), false);
+            let mut runs = Vec::new();
+            positioned_runs(
+                &document.pages()[0].frame,
+                Transform::identity(),
+                &mut runs,
+            );
+            let baseline = |marker: &str| {
+                runs.iter()
+                    .find(|(_, run)| run.text == marker)
+                    .unwrap_or_else(|| panic!("missing {marker}: {runs:?}"))
+                    .0
+                    .y
+                    .to_pt()
+            };
+            let first = baseline("first_line");
+            let second = baseline("second_line");
+            let fourth = baseline("fourth_line");
+            let gap = second - first;
+            assert!(
+                (fourth - second - 2.0 * gap).abs() < 0.01,
+                "{options}, {leading}: blank line changes spacing"
+            );
+            if options.starts_with("numbered") {
+                for (number, code) in
+                    [("7", first), ("8", second), ("10", fourth)]
+                {
+                    assert!(
+                        (baseline(number) - code).abs() < 0.01,
+                        "{options}, {leading}: line {number} baseline"
+                    );
+                }
+            }
+            gap
+        };
+        let compact = spacing("0pt");
+        let spaced = spacing("12pt");
+        assert!(
+            (spaced - compact - 12.0).abs() < 0.01,
+            "{options}: line leading ignored ({compact}, {spaced})"
+        );
     }
 }
 

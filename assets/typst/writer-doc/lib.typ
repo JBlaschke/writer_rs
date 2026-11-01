@@ -235,22 +235,28 @@
     // across multiline strings and comments. Never re-highlight line by line.
     for line in code.lines {
         let number = start + line.number - 1
-        if numbered { rows.push(text(fill: rgb("#666666"), str(number))) }
+        if numbered {
+            rows.push([
+                #text(fill: rgb("#666666"), str(number))#box(height: 0.9em)
+            ])
+        }
         let display = str(number)
         let highlighted = ranges.any(range => (
             decimal-lte(range.first(), display)
             and decimal-lte(display, range.last())
         ))
-        rows.push(block(
-            width: 100%, fill: if highlighted { rgb("#fff1b8") } else { none },
+        rows.push(grid.cell(
+            fill: if highlighted { rgb("#fff1b8") } else { none },
             [#line.body#box(height: 0.9em)]
         ))
     }
     block(width: 100%, inset: 0.6em, fill: rgb("#f7f7f7"))[
         #set text(font: "DejaVu Sans Mono", size: 0.9em)
-        #grid(
+        // Put leading inside cells so adjacent highlights remain continuous.
+        #context grid(
             columns: if numbered { (auto, 1fr) } else { (1fr,) },
-            column-gutter: 0.8em, ..rows
+            inset: (y: par.leading / 2),
+            column-gutter: 0.8em, align: left, ..rows
         )
     ]
 }
