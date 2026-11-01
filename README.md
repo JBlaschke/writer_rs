@@ -3,7 +3,8 @@
 Write a report in Markdown, a saved Jupyter notebook or Typst, then build HTML,
 PDF, Word (`.docx`), LaTeX or Typst source. Preview changes in the browser while
 you write. Figures, tables, equations, references and bibliographies travel
-with the document.
+with the document. A shared `[design]` keeps typography, paragraph styles
+and page furniture consistent across HTML, PDF and Word.
 
 The [website](https://jblaschke.github.io/writer_rs/) has the user guide, the
 examples in every output format and the downloads. Each
@@ -48,6 +49,7 @@ configuration and customization. Start with an example:
 | [Several source files](examples/mixed/README.md) | Nested Markdown and notebook includes |
 | [Native Typst](examples/typst/README.md) | Native PDF with structured HTML and Word outputs |
 | [LaTeX template](examples/latex-template/README.md) | Custom source template and separate latexmk compilation |
+| [Shared letterhead](examples/letter/README.md) | One design for typography, paragraph styles and furniture in HTML, PDF and Word |
 
 The built-in theme, math assets, fonts and document package are embedded.
 External Typst package downloads require an explicit opt-in. Custom content

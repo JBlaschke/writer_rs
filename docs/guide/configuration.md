@@ -16,7 +16,9 @@ Settings combine in this order, from lowest to highest:
 4. Command-line overrides.
 
 Tables merge key by key; lists replace the earlier list. HTML theme variables
-are template defaults, not build settings.
+are template defaults, not build settings. The theme chain also supplies
+the lowest-precedence `[design]` settings, before the project and front
+matter; other theme variables do not enter build configuration.
 
 Paths in `writer.toml` are relative to that file. Front-matter paths are
 relative to the source document. CLI template/reference paths are relative
@@ -283,6 +285,165 @@ setting executes code. See [notebooks](notebooks.md) for precedence and tags.
 | `port` | `3000` | Port; zero chooses a free one |
 | `open` | `false` | Open the preview in a browser |
 | `view` | `""` | Default by input kind, or explicitly web/pages |
+
+## `[design]`
+
+Design settings describe typography, named paragraph styles and page furniture
+for HTML, Typst PDF and Word. They can live in the theme's `theme.toml`, the
+project's `writer.toml` or document front matter. Theme inheritance merges
+parent first; project settings then front matter override individual keys.
+Lists replace earlier lists. An absent or empty design adds nothing.
+
+```yaml
+---
+design:
+  text:
+    size: 12pt
+  page:
+    margin:
+      top: 30mm
+---
+```
+
+Lengths are non-negative strings with `pt`, `mm`, `cm` or `in`; a bare number
+is invalid. Line height accepts a positive number for a multiple of the font
+size or a length for an exact baseline pitch. Colors accept `#rgb`, `#rrggbb`
+or a declared color token: `text`, `accent`, `muted`, `link`, `background`.
+Color tokens can refer to each other but cannot form a cycle. Weights accept
+`normal`, `medium`, `semibold`, `bold` or integers 100–900 in steps of 100.
+
+An unset key keeps the backend's current value. The defaults below describe
+that behavior; selecting one font role does not select any other role.
+`<role>` means `body`, `heading` or `mono`; `<slot>` means `header` or `footer`;
+`<Name>` is an arbitrary declared paragraph-style name.
+
+### Font families and files
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `fonts.body` | Family string or font table | Unset: HTML theme, PDF Libertinus Serif, Word Calibri |
+| `fonts.heading` | Family string or font table | Unset: HTML theme, PDF body font, Word built-in heading fonts |
+| `fonts.mono` | Family string or font table | Unset: HTML theme, PDF DejaVu Sans Mono, Word Consolas |
+| `fonts.<role>.family` | String | Required when using a font table |
+| `fonts.<role>.files` | List of file paths | `[]`; HTML embeds/copies files, PDF loads them, Word uses family names only |
+
+Paths are relative to the file that declares them, before merging. Theme
+paths must remain inside the theme directory. A child font file list replaces
+the parent's list. Files are optional, but each declared file must exist.
+Word's built-in headings use Calibri Light at levels one and two and Calibri
+at later levels; setting `fonts.heading` selects one family for heading and
+title styles.
+
+### Body text
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `text.size` | Length | Unset: HTML theme, PDF and Word 11 pt |
+| `text.line_height` | Positive multiple or Length | Unset: HTML theme, PDF leading 0.65 em, Word multiple 1.1 |
+| `text.paragraph_spacing` | Length | Unset: HTML theme, PDF 1.2 em, Word 0 |
+| `text.justify` | Boolean | Unset: HTML theme, PDF true, Word false |
+
+### Colors
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `colors.text` | Color | Unset: HTML theme, PDF and Word black |
+| `colors.accent` | Color | Unset; used for rules and the HTML accent token |
+| `colors.muted` | Color | Unset; optional footer text color and HTML muted token |
+| `colors.link` | Color | Unset; theme/backend link styling |
+| `colors.background` | Color | Unset; HTML background and PDF page fill; Word does not apply it |
+
+### Page geometry and furniture slots
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `page.paper` | Typst paper-name string | Unset: `[pdf] paper` for PDF/Word, theme print size for HTML |
+| `page.margin` | Length or sides table | Unset: HTML theme, PDF 2.5 cm, Word 1 in; a length sets all four sides |
+| `page.margin.top` | Length | Unset: backend default |
+| `page.margin.right` | Length | Unset: backend default |
+| `page.margin.bottom` | Length | Unset: backend default |
+| `page.margin.left` | Length | Unset: backend default |
+| `page.header_offset` | Length from page top | Unset: PDF 30% of top margin, Word 0.5 in; HTML uses its print layout |
+| `page.footer_offset` | Length from page bottom | Unset: PDF 30% of bottom margin, Word 0.5 in; HTML uses its print layout |
+| `page.print` | `"margin-boxes"` or `"fixed"` | `"margin-boxes"`; HTML print behavior |
+| `page.header` | Furniture table | Unset: retain backend header |
+| `page.footer` | Furniture table | Unset: retain backend footer/page numbering |
+
+HTML recognizes common paper names and writes other names as CSS page sizes.
+Word recognizes A4, A5, US Letter and US Legal and falls back to A4 for other
+names. PDF accepts the Typst paper names. Declaring either Typst furniture
+slot disables the package's built-in page numbering; include `{page}` in your
+footer when you want it.
+
+### Furniture contents and variants
+
+The same keys apply to `[design.page.header]` and `[design.page.footer]` and
+to their optional `.first` and `.rest` variants. A variant replaces the base
+slot for its page class; it does not inherit its contents. An empty table
+explicitly clears the slot or variant. Variants cannot contain more variants.
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `page.<slot>.image` | Path string or image table | None |
+| `page.<slot>.lines` | List of strings or line tables | `[]`; left/main column |
+| `page.<slot>.right_lines` | List of strings or line tables | `[]`; flush-right companion column |
+| `page.<slot>.rule` | Boolean or rule table | False; true uses a 0.5 pt accent/text/black rule, below headers and above footers |
+| `page.<slot>.align` | `left`, `center` or `right` | Header center; footer left; `justify` is invalid |
+| `page.<slot>.size` | Length | Header body size; footer 0.75 × body size |
+| `page.<slot>.color` | Color | Header text color; footer muted color, else text color |
+| `page.<slot>.weight` | Weight | Normal (400) |
+| `page.<slot>.italic` | Boolean | False |
+| `page.<slot>.first` | Furniture table | Base slot on page one |
+| `page.<slot>.rest` | Furniture table | Base slot on subsequent pages |
+
+Text is plain text. `{page}` and `{pages}` are counters in PDF, Word and
+printed HTML; screen HTML uses `1`. Unknown braces stay literal. HTML margin
+boxes use the slot's styling for all lines; individual line styling remains
+available on screen, in fixed HTML furniture, in PDF and in Word.
+
+### Image, line and rule table forms
+
+A string image path is shorthand for `{ src = "path" }`. The line table shape
+below works in both `lines` and `right_lines`.
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `page.<slot>.image.src` | File path | Required in an image table |
+| `page.<slot>.image.width` | Length | Unset: natural size; raster images use 96 dpi |
+| `page.<slot>.image.align` | `left`, `center` or `right` | Slot alignment |
+| `page.<slot>.lines[].text` | String | Required in a line table |
+| `page.<slot>.lines[].weight` | Weight | Slot weight |
+| `page.<slot>.lines[].italic` | Boolean | Slot italic |
+| `page.<slot>.lines[].size` | Length | Slot size |
+| `page.<slot>.lines[].color` | Color | Slot color |
+| `page.<slot>.rule.position` | `"above"` or `"below"` | Below a header; above a footer |
+| `page.<slot>.rule.color` | Color | Accent, else text, else black |
+| `page.<slot>.rule.width` | Length | 0.5 pt |
+
+### Named paragraph styles
+
+A style name matches a div's `custom-style` first and then its classes, after
+ASCII letters are lowercased and every character other than an ASCII letter
+or digit is removed. For example,
+`Inside Address` matches `:::inside-address`. Names that normalize identically
+cannot both be declared. Styles apply to divs, not inline spans.
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `styles.<Name>.font` | `body`, `heading`, `mono` or family string | Unset: inherit; an unset role also inherits |
+| `styles.<Name>.size` | Length | Unset: inherit |
+| `styles.<Name>.line_height` | Positive multiple or Length | Unset: inherit |
+| `styles.<Name>.color` | Color | Unset: inherit |
+| `styles.<Name>.weight` | Weight | Unset: inherit; Word uses bold at 600 or above |
+| `styles.<Name>.italic` | Boolean | Unset: inherit; false explicitly selects normal |
+| `styles.<Name>.align` | `left`, `center`, `right` or `justify` | Unset: inherit |
+| `styles.<Name>.space_before` | Length | Unset: backend default |
+| `styles.<Name>.space_after` | Length | Unset: backend default |
+| `styles.<Name>.keep_together` | Boolean | False; Word keeps each paragraph's lines together, not the whole multi-paragraph div |
+| `styles.<Name>.keep_with_next` | Boolean | False |
+
+The [customization guide](customization.md#cross-format-design) shows complete
+examples, precedence, font handling and the inspection/ejection workflow.
 
 ## Strictness
 

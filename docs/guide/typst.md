@@ -18,7 +18,7 @@ notebook input and rejects a native Typst source.
 ## Start a document
 
 ```typst
-#import "@writer/doc:0.1.0": *
+#import "@writer/doc:0.2.0": *
 
 #show: writer-doc.with(
     title: [My report],
@@ -60,6 +60,46 @@ Use native Typst math such as `$integral_0^1 x^2 dif x$`. Word's default math
 route converts supported equations to editable OMML, with an image fallback.
 LaTeX export converts native math to LaTeX and reports unsupported syntax.
 The [subset contract](../spec/typst-dialect.md) lists exact accepted calls.
+
+## Shared design in Typst
+
+The bundled `writer-doc` uses the same `[design]` as HTML and Word. It receives
+resolved values in `sys.inputs` when Writer compiles a PDF. A custom template
+can inspect them without re-parsing lengths or colors:
+
+```typst
+#let design = if "writer-design" in sys.inputs {
+    json(bytes(sys.inputs.at("writer-design")))
+} else { (:) }
+```
+
+Lengths in that JSON are points; colors are lowercase hex strings. Unset keys
+are `none`. Furniture image paths name registered virtual assets. A template
+that delegates to `writer-doc` receives the design defaults, while explicit
+`writer-doc` arguments and subsequent set/show rules take precedence. A
+fully independent generated-PDF template keeps its own appearance, and
+`check` reports `design-shadowed` when it does not import the bundled document
+package. Native Typst keeps its original styling authority; design checks on
+native inputs are limited to missing resources.
+
+Generated classed divs use the portable `writer-div` helper:
+
+```typst
+#writer-div(style: "Recipient", classes: ("recipient",))[
+    Dr Example
+]
+```
+
+The style names come from `[design.styles]`. The helper applies known styles
+and preserves content for an unknown style. Structured output reads the call
+back into a div, including its classes and `custom-style` attribute.
+
+Standalone Typst source exports do not carry the `writer-design` input or
+copy its design-only font/image resources. They use the document package's
+fallbacks unless the external compiler supplies the design input and files.
+Writer's own PDF build supplies both automatically. See
+[customization](customization.md#cross-format-design) for the shared design
+workflow and [the letter example](../../examples/letter/README.md).
 
 ## Including Markdown and notebooks
 
@@ -117,5 +157,6 @@ not. The [output guide](outputs.md#pdf) shows a small configuration.
 Serve starts in pages for native Typst, with an independent web view available
 through the view button or `p`. Each view retains its previous good result
 when the other fails. Retained preview/watch sessions cache font discovery
-and decoded fonts, including failed font loads. Restart after changing font
-files; a one-shot build creates a fresh session.
+and decoded fonts. Declared design font files are watched and reload when
+changed; restart after changing fonts found through other discovery paths.
+A one-shot build creates a fresh session.

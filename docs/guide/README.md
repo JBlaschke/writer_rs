@@ -16,7 +16,7 @@ document and its resources.
 | [Command line](cli.md) | Commands, flags, exit codes and exact help text |
 | [Troubleshooting](troubleshooting.md) | Checks, source diagnostics and preview recovery |
 
-The repository contains five complete examples:
+The repository contains six complete examples:
 
 | Example | Start here for |
 |---|---|
@@ -25,6 +25,7 @@ The repository contains five complete examples:
 | [Mixed report](../../examples/mixed/README.md) | Markdown and notebook includes with scoped footnotes |
 | [Typst](../../examples/typst/README.md) | One native source with PDF, HTML and Word outputs |
 | [LaTeX template](../../examples/latex-template/README.md) | A custom template and source export |
+| [Shared letterhead](../../examples/letter/README.md) | A cross-format design with named styles and page furniture |
 
 Markdown and notebooks default to HTML, while native Typst defaults to PDF.
 Use `--to html,pdf,docx,latex,typst` to choose outputs from Markdown or a

@@ -70,8 +70,16 @@ timestamp = "2026-10-29T12:00:00Z"
 
 The timestamp can otherwise come from the document date or
 `SOURCE_DATE_EPOCH`. Embedded packages work offline; external package downloads
-require an explicit opt-in. Restart a watch or preview session after changing
-font files because the session caches font discovery and loaded fonts.
+require an explicit opt-in. Font discovery is cached for the session.
+
+A shared `[design]` supplies PDF font families, body size and line height,
+paragraph gaps, colors, page geometry, paragraph styles and page furniture.
+The bundled `writer-doc` reads resolved values through the `writer-design`
+compiler input. A custom template receives them when it delegates to
+`writer-doc`; explicit arguments and later Typst rules take precedence.
+Declared font files load after `pdf.font_paths` and before system fonts.
+Design font and image changes are content inputs and rebuild retained sessions;
+other font discovery remains cached until the session restarts.
 
 ## Word
 
@@ -84,6 +92,18 @@ Writer supplies named styles and field values for captions and references.
 Word may update fields and TOC page numbers when opening the file, depending
 on its settings. A reference document supplies styles and page setup; it is
 not a body template. See [customization](customization.md) for editing it.
+
+Without a reference document, `[design]` generates Word font names, paragraph
+spacing, named styles, page geometry and header/footer parts. First-page
+furniture can differ from the continuation pages. Font files are not embedded;
+Word selects the declared family by name.
+
+A reference document's existing style definitions and body-level section,
+including its referenced headers and footers, take precedence. Missing styles
+can use the design's generated definitions, and a reference without a body
+section can use the generated page setup. `check --target docx` reports
+`design-shadowed` for Markdown/notebook inputs when a reference explains why
+design settings do not appear.
 
 A `:::pagebreak` before a paragraph or heading becomes that paragraph's
 page-break-before property, which Word ignores when the paragraph already

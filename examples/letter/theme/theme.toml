@@ -1,0 +1,80 @@
+name = "letter"
+extends = "default"
+description = "A shared letterhead design for HTML, PDF and Word"
+
+[styles]
+entries = ["styles/letter.css"]
+code_theme = "none"
+
+[design.fonts]
+body = "Source Sans 3"
+heading = "Source Sans 3"
+
+[design.text]
+size = "11pt"
+line_height = 1.35
+paragraph_spacing = "3.6mm"
+justify = false
+
+[design.colors]
+text = "#242424"
+accent = "#a96d4b"
+muted = "#575757"
+link = "accent"
+background = "#ffffff"
+
+[design.page]
+paper = "a4"
+margin = { top = "50mm", right = "22mm", bottom = "38mm", left = "22mm" }
+header_offset = "17mm"
+footer_offset = "10mm"
+
+[design.page.header.first]
+image = { src = "assets/logo.png", width = "50mm" }
+lines = ["Example Institute"]
+color = "accent"
+weight = "semibold"
+
+[design.page.header.rest]
+lines = ["Example Institute | Correspondence"]
+size = "10pt"
+color = "accent"
+weight = "semibold"
+
+[design.page.footer]
+rule = { position = "above", color = "accent", width = "0.25mm" }
+size = "7.5pt"
+lines = [
+    { text = "Example Institute", weight = "bold" },
+    "1 Example Way, Oxford, United Kingdom",
+    "This is a fictional organization and a neutral demonstration logo.",
+    "Page {page} of {pages}",
+]
+right_lines = ["+44 0000 000000", "hello@example.org"]
+
+[design.styles.Recipient]
+space_after = "6mm"
+line_height = "12.1pt"
+keep_together = true
+
+[design.styles."Inside Address"]
+keep_together = true
+
+[design.styles.Salutation]
+space_before = "6mm"
+space_after = "3mm"
+
+[design.styles.Date]
+size = "10pt"
+space_after = "3mm"
+
+[design.styles.Closing]
+space_before = "6mm"
+space_after = "8mm"
+keep_with_next = true
+
+[design.styles.Signature]
+space_before = "0mm"
+space_after = "0mm"
+line_height = "12.1pt"
+keep_together = true

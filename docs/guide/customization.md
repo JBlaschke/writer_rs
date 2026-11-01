@@ -1,8 +1,134 @@
 # Customizing appearance
 
-HTML themes, generated Typst templates, Word reference documents and LaTeX
-templates control different outputs. Select the resource for the output you
-want to change; a CSS theme does not style a Typst PDF or Word document.
+A shared design controls typography, paragraph styles and page furniture in
+HTML, Typst PDF and Word. HTML themes, Typst templates, Word reference
+documents and LaTeX templates provide further control over their outputs.
+
+## Cross-format design
+
+Put `[design]` in an HTML theme's `theme.toml`, in `writer.toml`, or in
+front matter under `design:`. One definition supplies typography, paragraph
+styles and page furniture to HTML, Typst PDF and Word. LaTeX keeps its own
+template settings. With no design, every backend keeps its existing defaults.
+
+Typography and geometry use lengths with `pt`, `mm`, `cm` or `in`. Colors are
+hex values or names from the design's color table:
+
+```toml
+[design.fonts]
+body = "Source Sans 3"
+heading = "Source Sans 3"
+
+[design.text]
+size = "11pt"
+line_height = 1.35
+paragraph_spacing = "3.6mm"
+justify = false
+
+[design.colors]
+text = "#242424"
+accent = "#a96d4b"
+link = "accent"
+
+[design.page]
+paper = "a4"
+margin = { top = "50mm", right = "22mm", bottom = "38mm", left = "22mm" }
+```
+
+Named paragraph styles select document divs by `custom-style` first, then by
+class. Matching ignores case and punctuation: `Inside Address` also matches
+`:::inside-address`. When `custom-style` does not name a design style, the
+first matching class can select one. Inline spans do not receive these paragraph styles.
+
+```toml
+[design.styles.Recipient]
+line_height = "12.1pt"
+space_after = "6mm"
+keep_together = true
+```
+
+```markdown
+:::recipient
+Dr Example
+Example Institute
+:::
+```
+
+HTML writes `data-style="Recipient"`, generated Typst writes
+`writer-div(style: "Recipient", ...)`, and Word selects the corresponding
+paragraph style. A surrounding div's style applies until an inner div selects
+another style. `keep_together` keeps a block together in HTML and PDF; Word
+uses paragraph keep-lines, which prevents splitting each paragraph but can
+still split a div containing several paragraphs. `keep_with_next` keeps the
+block with the following content where the output supports that behavior.
+
+Furniture slots can contain an image, lines, a right column and a rule. Text
+is plain text. `{page}` and `{pages}` become page counters in printed output;
+screen HTML displays `1`. A `first` or `rest` table replaces the base slot for
+that page class; it does not inherit the base slot's contents.
+
+```toml
+[design.page]
+header_offset = "17mm"
+footer_offset = "10mm"
+
+[design.page.header.first]
+image = { src = "assets/logo.png", width = "50mm" }
+lines = ["Example Institute"]
+color = "accent"
+
+[design.page.header.rest]
+lines = ["Example Institute | Correspondence"]
+size = "10pt"
+
+[design.page.footer]
+rule = true
+lines = ["Page {page} of {pages}"]
+```
+
+An empty furniture table explicitly clears an inherited slot. An undeclared
+slot keeps the backend's own furniture, except that Typst disables its built-in
+page numbering whenever either furniture slot is declared. HTML prints through
+page margin boxes by default; `design.page.print = "fixed"` selects repeated fixed furniture.
+Margin boxes flatten per-line styling to the slot's styling; screen HTML,
+Typst and Word support per-line weight, italic, size and color.
+
+Design sources merge parent theme first, then child theme, project settings
+and document front matter. Tables merge by key; lists replace. Resource paths
+are relative to the file declaring them, before merging. Theme resources must
+stay inside their theme. Font and image changes rebuild every affected output.
+
+| Existing customization | How it interacts with design |
+|---|---|
+| HTML theme CSS | Explicit theme rules and token overrides win; dark-mode theme rules still apply. |
+| Typst PDF template | A template delegating to `writer-doc` receives design defaults; explicit arguments and later rules win. |
+| Word reference document | Existing styles and the body section, including referenced headers and footers, win. Missing styles can use generated definitions. |
+
+A font family can be a string or a table with `family` and `files`. HTML emits
+font-face rules and copies or embeds the files. PDF loads those files into its
+font book. Word selects fonts by family name and does not embed the files, so
+readers need the fonts installed. An unset role keeps that backend's default.
+
+Inspect, validate and package a design with:
+
+```sh
+writer dump --design letter.md
+writer check letter.md --target html,pdf,docx
+writer eject theme portable-theme --design letter.md
+```
+
+`dump --design` prints resolved points, colors and absolute paths, or `null`
+when no design is declared. Ejection copies referenced resources under
+`assets/design/` and rewrites paths. `check` reports missing font files and
+images. For Markdown and notebooks, it also reports unavailable PDF font
+families, unused styles and reference documents or templates that shadow the
+design. An unavailable theme produces a warning when HTML is not requested.
+Native Typst keeps its own styling authority and receives only design resource
+checks.
+Missing resources and malformed design values fail a build.
+
+See the [configuration reference](configuration.md#design) for all keys and
+the [letter example](../../examples/letter/README.md) for a complete project.
 
 ## Extend the HTML theme
 

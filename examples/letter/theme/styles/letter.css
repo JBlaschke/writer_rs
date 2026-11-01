@@ -1,0 +1,22 @@
+/* The shared design controls typography, paragraph styles and print layout. */
+@media screen {
+    html {
+        background: #eceae6;
+    }
+
+    body {
+        max-width: 210mm;
+        margin: 2rem auto;
+        background: var(--w-bg);
+        box-shadow: 0 .25rem 1.5rem #0002;
+    }
+
+    .w-furniture { padding-inline: 22mm; }
+    .w-header { padding-top: 17mm; }
+    .w-footer { padding-bottom: 10mm; }
+
+    [data-writer-document] {
+        max-width: none;
+        padding: 8mm 22mm;
+    }
+}
