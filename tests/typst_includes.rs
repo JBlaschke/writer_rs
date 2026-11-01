@@ -279,7 +279,7 @@ fn notebook_module_preserves_empty_entries_imports_escapes_and_exact_source_maps
             .unwrap();
     assert_eq!(fs::read_to_string(root.join("module.ipynb")).unwrap(), bytes);
     assert_eq!(
-        synthesized.text.matches("#import \"@writer/doc:0.1.0\"").count(),
+        synthesized.text.matches("#import \"@writer/doc:0.2.0\"").count(),
         1
     );
     assert_eq!(
@@ -662,7 +662,7 @@ fn selection_notebook() -> String {
 fn selection_source(arguments: &str) -> String {
     format!(
         concat!(
-            "#import \"@writer/doc:0.1.0\": *\n",
+            "#import \"@writer/doc:0.2.0\": *\n",
             "BEGIN-SELECTION\n\n",
             "#include-notebook(path(\"selection.ipynb\"), {arguments})\n\n",
             "END-SELECTION\n",
@@ -857,7 +857,7 @@ fn missing_removed_unknown_and_invalid_selection_refs_have_distinct_contracts()
         assert_eq!(finding.span.as_ref().unwrap().cell, None);
     }
     let string_file = concat!(
-        "#import \"@writer/doc:0.1.0\": *\n",
+        "#import \"@writer/doc:0.2.0\": *\n",
         "#include-notebook(\"selection.ipynb\", cells: 0)\n",
     );
     let parsed = parse(&root, string_file);
@@ -939,7 +939,7 @@ fn missing_removed_unknown_and_invalid_selection_refs_have_distinct_contracts()
     );
 
     let dynamic = concat!(
-        "#import \"@writer/doc:0.1.0\": *\n",
+        "#import \"@writer/doc:0.2.0\": *\n",
         "#include-notebook(path(\"selection\" + \".ipynb\"), cells: 0)\n",
     );
     let parsed = parse(&root, dynamic);
@@ -1121,7 +1121,7 @@ fn mixed_typst_markdown_notebook_chain_keeps_outer_meta_toc_and_nested_spans() {
     );
     write(&root, "leaf.svg", SVG);
     let text = concat!(
-        "#import \"@writer/doc:0.1.0\": *\n",
+        "#import \"@writer/doc:0.2.0\": *\n",
         "#show: writer-doc.with(title: [OUTER-TITLE], toc: 2, numbering: true)\n",
         "#include \"bridge.typ\"\n\n= Native parent <sec-parent>\n\nROOT-AFTER.\n",
     );
@@ -1375,7 +1375,7 @@ fn fragments_resolve_forward_parent_citations_and_independent_same_name_notes_na
         &root,
         "main.typ",
         concat!(
-            "#import \"@writer/doc:0.1.0\": *\n",
+            "#import \"@writer/doc:0.2.0\": *\n",
             "#show: writer-doc.with(numbering: true)\n",
             "#include \"one.md\"\n#include \"two.md\"\n",
             "= Native parent <sec-parent>\n",

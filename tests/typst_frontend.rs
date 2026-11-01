@@ -517,7 +517,7 @@ fn literal_bindings_are_ordered_scoped_and_content_is_walked() {
 fn recognized_import_aliases_and_item_renames_resolve_without_loading_modules()
 {
     let parsed = clean(
-        "#import \"@writer/doc:0.1.0\" as writer\n#import \"@writer/doc:0.1.0\": callout as note\n#writer.callout[One.]\n#note[Two.]\n",
+        "#import \"@writer/doc:0.2.0\" as writer\n#import \"@writer/doc:0.2.0\": callout as note\n#writer.callout[One.]\n#note[Two.]\n",
     );
     assert_eq!(nodes(&json_doc(&parsed), "callout").len(), 2);
     let unknown =
@@ -792,7 +792,7 @@ fn mitex_removes_only_the_exact_leading_configured_macro_block() {
 #[test]
 fn listing_and_code_cells_preserve_input_options_and_each_output_candidate() {
     let parsed = clean(
-        "#import \"@writer/doc:0.1.0\": *\n#listing(numbered: true, start: 4, highlight: \"4-5\", plain: true)[```rust\nlet x = 1;\nlet y = 2;\n```]\n\n#code-cell(index: 2, count: 7, lang: \"python\", input: ```python\nprint(42)\n```)[First output.][Second output.]\n",
+        "#import \"@writer/doc:0.2.0\": *\n#listing(numbered: true, start: 4, highlight: \"4-5\", plain: true)[```rust\nlet x = 1;\nlet y = 2;\n```]\n\n#code-cell(index: 2, count: 7, lang: \"python\", input: ```python\nprint(42)\n```)[First output.][Second output.]\n",
     );
     let value = json_doc(&parsed);
     let code = nodes(&value, "code_block")[0];
@@ -1371,7 +1371,7 @@ fn composed_literal_arrays_count_shared_string_bytes_before_cloning() {
 #[test]
 fn normal_literal_arrays_and_dictionary_aliases_remain_usable() {
     let parsed = clean(
-        "#import \"@writer/doc:0.1.0\": *\n#let first = (name: \"Ada\")\n#let authors = (first, (name: \"Grace\"))\n#show: writer-doc.with(authors: authors)\n#let widths = (1fr, 2fr)\n#table(columns: widths, [A], [B])\n",
+        "#import \"@writer/doc:0.2.0\": *\n#let first = (name: \"Ada\")\n#let authors = (first, (name: \"Grace\"))\n#show: writer-doc.with(authors: authors)\n#let widths = (1fr, 2fr)\n#table(columns: widths, [A], [B])\n",
     );
     assert_eq!(
         parsed

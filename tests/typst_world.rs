@@ -323,7 +323,7 @@ fn writer_doc_other_version() {
     let mut world = world(dir.path());
     set_text(&mut world, "#import \"@writer/doc:9.9.9\": *");
     let error = compile_document(&mut world).into_result().unwrap_err();
-    assert!(error.to_string().contains("latest is 0.1.0"));
+    assert!(error.to_string().contains("latest is 0.2.0"));
 }
 
 #[test]
@@ -334,7 +334,7 @@ fn writer_doc_embedded() {
     }
     let dir = tempfile::tempdir().unwrap();
     let mut world = world(dir.path());
-    set_text(&mut world, "#import \"@writer/doc:0.1.0\": *");
+    set_text(&mut world, "#import \"@writer/doc:0.2.0\": *");
     compile_document(&mut world).into_result().unwrap();
     assert!(world.accessed().is_empty());
 }

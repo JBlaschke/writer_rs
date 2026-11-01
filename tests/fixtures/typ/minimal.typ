@@ -1,4 +1,4 @@
-#import "@writer/doc:0.1.0": *
+#import "@writer/doc:0.2.0": *
 #let first-author = "Ada Lovelace"
 #show: writer-doc.with(
   title: [A *structured* document], subtitle: "Literal metadata",

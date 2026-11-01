@@ -1,1 +1,1 @@
-#import "@writer/doc:0.1.0": writer-doc
+#import "@writer/doc:0.2.0": writer-doc
