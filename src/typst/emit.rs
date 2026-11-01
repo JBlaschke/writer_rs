@@ -327,9 +327,7 @@ impl<'a> Emitter<'a> {
             &string(effective_lang(self.document, self.opts.config)),
         );
         self.argument("numbering", &numbering(self.opts.config));
-        let paper = if self.opts.design.page.paper.is_some()
-            && matches!(self.opts.assets, AssetPaths::Virtual)
-        {
+        let paper = if self.opts.design.page.paper.is_some() {
             "auto".into()
         } else {
             string(&self.opts.config.pdf.paper)

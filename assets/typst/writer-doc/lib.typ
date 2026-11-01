@@ -461,7 +461,7 @@
     ranges
 }
 
-#let listing-grid(code, numbered, start, ranges) = {
+#let listing-grid(code, numbered, start, ranges) = context {
     let rows = ()
     // These lines are highlighted together by Typst, preserving lexer state
     // across multiline strings and comments. Never re-highlight line by line.
@@ -484,7 +484,7 @@
     }
     block(width: 100%, inset: 0.6em, fill: rgb("#f7f7f7"))[
         #set text(
-            font: from-design("fonts.mono.family", "DejaVu Sans Mono"),
+            font: text.font,
             size: 0.9em,
         )
         // Put leading inside cells so adjacent highlights remain continuous.

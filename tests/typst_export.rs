@@ -911,3 +911,33 @@ fn unchanged_original_include_fixture_fails_without_an_export_tree() {
     assert_eq!(tree_snapshot(source.path()), before);
     assert!(!source.path().join("new").exists());
 }
+
+#[test]
+fn exported_source_restores_design_paper_when_the_input_is_supplied() {
+    let source = project("Body only.\n");
+    write(
+        source.path(),
+        "writer.toml",
+        format!("{CONFIG}[design.page]\npaper = 'us-letter'\n",),
+    );
+    let (options, prepared) = prepare(source.path(), "document.md");
+    let destination = tempfile::tempdir().unwrap();
+    let output = destination.path().join("letter.typ");
+    export(&options, &prepared, &output);
+    let compile = |design: &writer::design::Design| {
+        let mut world =
+            world(destination.path(), MainFile::Path(output.clone()));
+        world.set_inputs(world_inputs(
+            &prepared.config, design, &prepared.assets,
+        ));
+        compile_document(&mut world).into_result().unwrap().0
+    };
+    let fallback = compile(&Default::default());
+    assert!(
+        (fallback.pages()[0].frame.width().to_pt() - 210.0 * 72.0 / 25.4).abs()
+            < 0.01
+    );
+    let restored = compile(&prepared.design);
+    assert!((restored.pages()[0].frame.width().to_pt() - 612.0).abs() < 0.01);
+    assert!((restored.pages()[0].frame.height().to_pt() - 792.0).abs() < 0.01);
+}
