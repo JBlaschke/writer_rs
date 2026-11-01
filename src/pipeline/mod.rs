@@ -1719,7 +1719,10 @@ mod tests {
             let world = worlds.get(Some(&prepared), &opts).unwrap();
             let source = world.source(id).unwrap();
             assert!(source.text().contains("= Included"));
-            assert!(source.text().contains("#import \"@writer/doc:0.1.0\""));
+            assert!(source.text().contains(&format!(
+                "#import \"@writer/doc:{}\"",
+                crate::typst::WRITER_DOC_VERSION
+            )));
             assert_eq!(world.file(id).unwrap().as_slice(), b"# Included\n");
         }
     }
