@@ -166,6 +166,7 @@ fn emitted(prepared: &Prepared) -> Emitted {
         &prepared.assets,
         &EmitOptions {
             config: &prepared.config,
+            design: &Default::default(),
             assets: AssetPaths::Virtual,
             template: None,
             bibliography: Vec::new(),

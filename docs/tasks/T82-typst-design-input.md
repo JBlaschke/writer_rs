@@ -36,8 +36,9 @@ pub struct WorldOptions { …, pub font_files: Vec<PathBuf> }                   
 1. `world_inputs(config, design)`: insert `writer-design` = `design.to_json(PathMode::Virtual(registry))`
    compact when declared; update every caller (`from_config`, `WorldSlot::get`, `load_typst_main`,
    the oracle test) so nobody serializes by hand; register furniture images in the registry first.
-2. `WorldOptions.font_files` and the load order (`scan(file)` per file; a unit test that `scan` of
-   a single file path yields its faces); callers pass `design.referenced_files()` filtered to fonts.
+2. `WorldOptions.font_files` and the load order (read each file, parse `Font::iter(Bytes)` and
+   register lazy `FontPath` entries with each face's actual collection index); callers pass
+   `design.font_files()`. A test verifies that a single file adds usable faces to the World.
 3. `lib.typ`: `writer-design`, `from-design`; apply §6.2's table inside `writer-doc` (explicit
    argument → design → built-in), including the leading formula and `set page(margin:)` per side.
 4. Template documentation comment in `template.typ` showing how a non-delegating template reads
@@ -76,11 +77,12 @@ has no special spacing (T84, T85). `letterhead.typ` can already be reduced to a 
 bump (T84), exports copying fonts (open point 5).
 
 ## Hints (verified)
-- `typst_kit::fonts::scan(path: &Path)` (`typst-kit-0.15.1/src/fonts.rs` line 163) walks `path`
-  with `walkdir`; `WalkDir::new(file)` yields the file itself as its single entry, so `scan(file)`
-  loads one file — confirm with the unit test of step 2.
+- `typst_kit::fonts::scan(path: &Path)` (`typst-kit-0.15.1/src/fonts.rs` line 163) delegates to
+  `fontdb::Database::load_fonts_dir` and only accepts directories. For individual files use
+  `typst::text::Font::iter(Bytes)` and register `FontPath { path, index: font.index() }` with the
+  face's metadata. Preserve the actual index: enumerating filtered faces can lose TTC indices.
 - `FontBook::contains_family(&self, family: &str) -> bool` (`typst-library-0.15.1/src/text/font/book.rs`
-  line 54); the World exposes `book()` (`src/typst/world.rs` ~507).
+  line 54) expects a lowercase lookup key; the World exposes `book()`.
 - `typst_kit::fonts::embedded()` yields `(Font, FontInfo)`; `Font::data()` gives the bytes to write
   a fixture font file (no binary fixture needs to be committed).
 - `from-config` in `lib.typ` shows how `writer-config` is decoded (`json(bytes(..))` in 0.15;

@@ -60,7 +60,8 @@ fn id(path: &str) -> FileId {
 
 fn world(root: &Path, main: &str) -> WriterWorld {
     let config = config();
-    let mut inputs = world_inputs(&config);
+    let mut inputs =
+        world_inputs(&config, &Default::default(), &Default::default());
     inputs.insert("writer-oracle".into(), "1".into());
     let mut world = WriterWorld::new(WorldOptions {
         root: root.into(),
@@ -68,12 +69,16 @@ fn world(root: &Path, main: &str) -> WriterWorld {
         today: Datetime::from_ymd(2026, 10, 29).unwrap(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
         inputs,
     })
     .unwrap();
-    world.set_include_provider(Box::new(MarkdownIncludes { config }));
+    world.set_include_provider(Box::new(MarkdownIncludes {
+        config,
+        design: Default::default(),
+    }));
     world
 }
 
@@ -191,7 +196,8 @@ fn markdown_provider_is_an_unresolved_fragment_with_stable_note_identity() {
     write(&root, "notes/part.md", body);
     let mut options = config();
     options.pdf.template = root.join("must-not-be-imported.typ");
-    let provider = MarkdownIncludes { config: options };
+    let provider =
+        MarkdownIncludes { config: options, design: Default::default() };
     let synthesized =
         provider.synthesize(&root.join("notes/part.md"), &root).unwrap();
     assert!(!synthesized.text.contains("#show:"));
@@ -267,9 +273,10 @@ fn notebook_module_preserves_empty_entries_imports_escapes_and_exact_source_maps
     ]);
     let bytes = notebook(cells);
     write(&root, "module.ipynb", &bytes);
-    let synthesized = MarkdownIncludes { config: config() }
-        .synthesize(&root.join("module.ipynb"), &root)
-        .unwrap();
+    let synthesized =
+        MarkdownIncludes { config: config(), design: Default::default() }
+            .synthesize(&root.join("module.ipynb"), &root)
+            .unwrap();
     assert_eq!(fs::read_to_string(root.join("module.ipynb")).unwrap(), bytes);
     assert_eq!(
         synthesized.text.matches("#import \"@writer/doc:0.1.0\"").count(),
@@ -354,9 +361,10 @@ fn provider_warning_dedup_keeps_distinct_cells_in_first_seen_order() {
             code("second", "x=2", json!({"text/latex":"$\\nosuch{x}$"}), &[]),
         ])),
     );
-    let synthesized = MarkdownIncludes { config: config() }
-        .synthesize(&root.join("warnings.ipynb"), &root)
-        .unwrap();
+    let synthesized =
+        MarkdownIncludes { config: config(), design: Default::default() }
+            .synthesize(&root.join("warnings.ipynb"), &root)
+            .unwrap();
     let findings = synthesized.diagnostics.iter().collect::<Vec<_>>();
     assert_eq!(findings.len(), 2, "{:?}", synthesized.diagnostics);
     assert!(
@@ -416,7 +424,10 @@ fn real_provider_cache_keeps_original_read_and_json_bytes_across_reset() {
     let calls = Arc::new(AtomicUsize::new(0));
     let mut world = world(&root, "main.typ");
     world.set_include_provider(Box::new(CountingProvider {
-        provider: MarkdownIncludes { config: config() },
+        provider: MarkdownIncludes {
+            config: config(),
+            design: Default::default(),
+        },
         calls: calls.clone(),
     }));
     for name in ["/part.md", "/saved.ipynb"] {
@@ -450,7 +461,10 @@ fn failed_synthesis_is_cached_attempted_and_recovers_only_after_reset() {
     let calls = Arc::new(AtomicUsize::new(0));
     let mut world = world(&root, "main.typ");
     world.set_include_provider(Box::new(CountingProvider {
-        provider: MarkdownIncludes { config: config() },
+        provider: MarkdownIncludes {
+            config: config(),
+            design: Default::default(),
+        },
         calls: calls.clone(),
     }));
     assert!(world.source(id("/broken.ipynb")).is_err());
@@ -492,7 +506,8 @@ fn provider_canonical_aliases_are_stable_and_outside_root_symlinks_are_refused()
         root.join("escape.md"),
     )
     .unwrap();
-    let provider = MarkdownIncludes { config: config() };
+    let provider =
+        MarkdownIncludes { config: config(), design: Default::default() };
     let actual =
         provider.synthesize(&root.join("notes/part.md"), &root).unwrap();
     assert_eq!(
@@ -519,9 +534,10 @@ fn markdown_provider_keeps_transitive_assets_and_nested_source_spans() {
         "![Nested image](../../picture.svg){#fig-inner}\n",
     );
     write(&root, "picture.svg", SVG);
-    let synthesized = MarkdownIncludes { config: config() }
-        .synthesize(&root.join("parts/outer.md"), &root)
-        .unwrap();
+    let synthesized =
+        MarkdownIncludes { config: config(), design: Default::default() }
+            .synthesize(&root.join("parts/outer.md"), &root)
+            .unwrap();
     assert_eq!(
         synthesized.files,
         [root.join("parts/nested/inner.md"), root.join("picture.svg"),]
@@ -1366,7 +1382,8 @@ fn fragments_resolve_forward_parent_citations_and_independent_same_name_notes_na
             "#bibliography(path(\"refs.bib\"), style: \"ieee\")\n",
         ),
     );
-    let provider = MarkdownIncludes { config: config() };
+    let provider =
+        MarkdownIncludes { config: config(), design: Default::default() };
     let first = provider.synthesize(&root.join("one.md"), &root).unwrap();
     let second = provider.synthesize(&root.join("two.md"), &root).unwrap();
     let first_label =
@@ -1526,7 +1543,8 @@ fn prescribed_plain_includes_suppress_only_automatic_child_tocs() {
     assert!(parsed.document.includes.contains(
         &fs::canonicalize(fixtures.join("include/nb.ipynb")).unwrap()
     ));
-    let provider = MarkdownIncludes { config: config() };
+    let provider =
+        MarkdownIncludes { config: config(), design: Default::default() };
     for name in ["include/part.md", "include/nb.ipynb"] {
         let synthesized =
             provider.synthesize(&fixtures.join(name), &fixtures).unwrap();
@@ -1570,9 +1588,10 @@ fn notebook_module_assets_include_local_files_attachments_and_saved_byte_outputs
         ),
     ]));
     write(&root, "media.ipynb", &bytes);
-    let synthesized = MarkdownIncludes { config: config() }
-        .synthesize(&root.join("media.ipynb"), &root)
-        .unwrap();
+    let synthesized =
+        MarkdownIncludes { config: config(), design: Default::default() }
+            .synthesize(&root.join("media.ipynb"), &root)
+            .unwrap();
     assert_eq!(synthesized.assets.len(), 3);
     assert_eq!(synthesized.files, [root.join("file.svg")]);
     let all_bytes = synthesized

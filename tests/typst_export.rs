@@ -141,7 +141,11 @@ fn compile_tree(root: &Path, main: &str) -> PagedDocument {
     assert!(root.join("packages/writer/doc/0.1.0/typst.toml").is_file());
     assert!(root.join("packages/preview/mitex/0.2.7/typst.toml").is_file());
     let mut world = world(root, MainFile::Path(root.join(main)));
-    let mut inputs = world_inputs(&Config::default());
+    let mut inputs = world_inputs(
+        &Config::default(),
+        &Default::default(),
+        &Default::default(),
+    );
     inputs.insert("writer-oracle".into(), "1".into());
     world.set_inputs(inputs);
     // Deliberately no mounts, assets, IncludeProvider or virtual main source.

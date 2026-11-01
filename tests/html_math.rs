@@ -43,9 +43,10 @@ fn world(root: &Path, config: &Config) -> WriterWorld {
         today: Datetime::from_ymd(2026, 10, 25).unwrap(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
-        inputs: world_inputs(config),
+        inputs: world_inputs(config, &Default::default(), &Default::default()),
     })
     .unwrap()
 }

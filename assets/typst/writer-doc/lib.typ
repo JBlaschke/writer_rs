@@ -27,6 +27,30 @@
     if value == auto { config.at(key, default: fallback) } else { value }
 }
 
+// The resolved design is shared with HTML and DOCX. Missing inputs leave every
+// built-in default intact, including standalone exported Typst documents.
+#let writer-design = if "writer-design" in sys.inputs {
+    json(bytes(sys.inputs.at("writer-design")))
+} else { (:) }
+
+#let from-design(key, default) = {
+    let value = writer-design
+    for part in key.split(".") {
+        if type(value) != dictionary { return default }
+        value = value.at(part, default: none)
+    }
+    if value == none { default } else { value }
+}
+
+#let design-leading(pitch, size) = {
+    if pitch == none { return 0.65em }
+    // Typst's leading is a gap rather than a baseline pitch. The 0.8 factor
+    // approximates font ascent/descent and matches the calibrated letter.
+    calc.max(0pt, if "multiple" in pitch {
+        (pitch.multiple - 0.8) * size
+    } else { pitch.exact * 1pt - 0.8 * size })
+}
+
 #let document-date(date) = {
     if "writer-version" in sys.inputs { return auto }
     if type(date) == datetime { return date }
@@ -108,23 +132,7 @@
     }
 }
 
-#let layout(meta, settings, body) = {
-    set document(
-        title: meta.title,
-        author: meta.authors.map(it => it.at("name", default: "")),
-        date: document-date(meta.date), keywords: meta.keywords,
-        description: meta.description
-    )
-    set page(
-        paper: settings.paper, margin: (x: 2.5cm, y: 2.5cm), numbering: "1"
-    )
-    set text(
-        font: "Libertinus Serif", size: 11pt,
-        lang: settings.lang.lang, region: settings.lang.region
-    )
-    set par(justify: true)
-    show std.math.equation: set text(font: "New Computer Modern Math")
-    show raw: set text(font: "DejaVu Sans Mono")
+#let reference-layout(meta, settings, body) = {
     set outline(title: settings.toc-title)
     // Citation entries may use another locale, but their heading stays here.
     let bib-title = settings.reference-title
@@ -141,12 +149,49 @@
     } else { numbered-layout(meta, settings, body) }
 }
 
+#let design-layout(meta, settings, body) = {
+    if settings.link-fill != none {
+        show link: set text(fill: settings.link-fill)
+        reference-layout(meta, settings, body)
+    } else { reference-layout(meta, settings, body) }
+}
+
+#let layout(meta, settings, body) = {
+    set document(
+        title: meta.title,
+        author: meta.authors.map(it => it.at("name", default: "")),
+        date: document-date(meta.date), keywords: meta.keywords,
+        description: meta.description
+    )
+    set page(
+        paper: settings.paper, margin: settings.margin, numbering: "1",
+        fill: settings.background,
+    )
+    set text(
+        font: settings.font, size: settings.size, fill: settings.text-fill,
+        lang: settings.lang.lang, region: settings.lang.region
+    )
+    set par(
+        justify: settings.justify, leading: settings.leading,
+        spacing: settings.spacing,
+    )
+    show std.math.equation: set text(font: "New Computer Modern Math")
+    show raw: set text(font: settings.mono-font)
+    if settings.heading-font != none {
+        show heading: set text(font: settings.heading-font)
+        design-layout(meta, settings, body)
+    } else { design-layout(meta, settings, body) }
+}
+
 #let writer-doc(
             title: none, subtitle: none, author: none, authors: (), date: none,
             abstract: none, abstract-title: auto, keywords: (),
             description: none, lang: auto, toc: auto, toc-title: auto,
             numbering: auto, bibliography: none, reference-section-title: auto,
             cite-style: auto, csl: auto, cite-locale: auto, paper: auto,
+            font: auto, heading-font: auto, mono-font: auto, size: auto,
+            leading: auto, spacing: auto, justify: auto, margin: auto,
+            text-fill: auto, link-fill: auto, background: auto,
             markdown: (:), math: (:), references: (:), html: (:), pdf: (:),
             docx: (:), latex: (:), typst: (:), notebook: (:), ..extra, body
         ) = {
@@ -177,12 +222,60 @@
         date: date, abstract: abstract, keywords: keywords,
         description: description,
     )
+    let body-size = if size == auto {
+        from-design("text.size", 11) * 1pt
+    } else { size }
+    let chosen-margin = if margin != auto { margin } else {
+        let sides = from-design("page.margin", (:))
+        let side(key) = {
+            let value = sides.at(key, default: none)
+            if value == none { 2.5cm } else { value * 1pt }
+        }
+        (top: side("top"), right: side("right"),
+            bottom: side("bottom"), left: side("left"))
+    }
+    let colour(key, fallback) = {
+        let value = from-design(key, none)
+        if value == none { fallback } else { rgb(value) }
+    }
     let settings = (
+        font: if font == auto {
+            from-design("fonts.body.family", "Libertinus Serif")
+        } else { font },
+        heading-font: if heading-font == auto {
+            from-design("fonts.heading.family", none)
+        } else { heading-font },
+        mono-font: if mono-font == auto {
+            from-design("fonts.mono.family", "DejaVu Sans Mono")
+        } else { mono-font },
+        size: body-size,
+        leading: if leading == auto {
+            design-leading(from-design("text.line_height", none), body-size)
+        } else { leading },
+        spacing: if spacing == auto {
+            let value = from-design("text.paragraph_spacing", none)
+            if value == none { 1.2em } else { value * 1pt }
+        } else { spacing },
+        justify: if justify == auto {
+            from-design("text.justify", true)
+        } else { justify },
+        margin: chosen-margin,
+        text-fill: if text-fill == auto {
+            colour("colors.text", black)
+        } else { text-fill },
+        link-fill: if link-fill == auto {
+            colour("colors.link", none)
+        } else { link-fill },
+        background: if background == auto {
+            colour("colors.background", auto)
+        } else { background },
         lang: language(from-config(lang, config, "lang", "en")),
         toc: from-config(toc, config, "toc", false), toc-title: toc-title,
         numbering: numbers, bibliography: bibliography,
         paper: from-config(
-            paper, pdf, "paper", config.at("paper", default: "a4")
+            paper, pdf, "paper", from-design(
+                "page.paper", config.at("paper", default: "a4")
+            )
         ),
         style: if cite-style != auto { cite-style }
             else if csl != auto { csl } else { "ieee" },
@@ -251,7 +344,10 @@
         ))
     }
     block(width: 100%, inset: 0.6em, fill: rgb("#f7f7f7"))[
-        #set text(font: "DejaVu Sans Mono", size: 0.9em)
+        #set text(
+            font: from-design("fonts.mono.family", "DejaVu Sans Mono"),
+            size: 0.9em,
+        )
         // Put leading inside cells so adjacent highlights remain continuous.
         #context grid(
             columns: if numbered { (auto, 1fr) } else { (1fr,) },

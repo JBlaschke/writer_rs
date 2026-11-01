@@ -63,9 +63,13 @@ fn inline(value: Value) -> Inline {
     serde_json::from_value(value).unwrap()
 }
 
+static DESIGN: std::sync::LazyLock<writer::design::Design> =
+    std::sync::LazyLock::new(Default::default);
+
 fn options(config: &Config) -> EmitOptions<'_> {
     EmitOptions {
         config,
+        design: &DESIGN,
         assets: AssetPaths::Virtual,
         template: None,
         bibliography: vec!["refs.bib".into()],
@@ -92,7 +96,8 @@ fn fixture() -> (Document, AssetRegistry) {
 }
 
 fn world(root: &Path, config: &Config) -> WriterWorld {
-    let mut inputs = world_inputs(config);
+    let mut inputs =
+        world_inputs(config, &Default::default(), &Default::default());
     inputs.insert("writer-oracle".into(), "1".into());
     WriterWorld::new(WorldOptions {
         root: root.into(),
@@ -100,6 +105,7 @@ fn world(root: &Path, config: &Config) -> WriterWorld {
         today: Datetime::from_ymd(2026, 10, 24).unwrap(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
         inputs,
@@ -1574,6 +1580,7 @@ fn corpus_options(config: &Config) -> EmitOptions<'_> {
     });
     EmitOptions {
         config,
+        design: &DESIGN,
         assets: AssetPaths::Virtual,
         template,
         bibliography,

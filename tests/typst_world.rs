@@ -35,9 +35,14 @@ fn options(root: &Path, main: MainFile) -> WorldOptions {
         today: today(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
-        inputs: world_inputs(&Config::default()),
+        inputs: world_inputs(
+            &Config::default(),
+            &Default::default(),
+            &Default::default(),
+        ),
     }
 }
 
@@ -434,7 +439,11 @@ fn pdf_is_reproducible() {
 fn oracle_query() {
     let dir = tempfile::tempdir().unwrap();
     let mut world = world(dir.path());
-    let mut inputs = world_inputs(&Config::default());
+    let mut inputs = world_inputs(
+        &Config::default(),
+        &Default::default(),
+        &Default::default(),
+    );
     inputs.insert("writer-oracle".into(), "1".into());
     world.set_inputs(inputs);
     set_text(

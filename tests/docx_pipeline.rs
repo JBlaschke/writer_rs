@@ -390,6 +390,7 @@ fn renderer_borrows_world_and_restores_main_after_each_route() {
         today: Datetime::from_ymd(2026, 10, 27).unwrap(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
         inputs: BTreeMap::new(),

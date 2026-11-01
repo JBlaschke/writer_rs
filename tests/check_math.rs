@@ -213,6 +213,7 @@ fn configured_macros_tags_and_environment_preparation_match_the_pdf_emitter() {
         &prepared.assets,
         &EmitOptions {
             config: &prepared.config,
+            design: &Default::default(),
             assets: AssetPaths::Virtual,
             template: None,
             bibliography: Vec::new(),

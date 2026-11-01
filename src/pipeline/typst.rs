@@ -70,6 +70,7 @@ pub fn build(
     let first_level = first_level_includes(prepared)?;
     let runs = include_runs(&prepared.document.blocks, &first_level, stem, out);
     let options = EmitOptions {
+        design: &prepared.design,
         config: &prepared.config,
         assets: AssetPaths::Export { dir: directory.clone() },
         template,

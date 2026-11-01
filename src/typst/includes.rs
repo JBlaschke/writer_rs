@@ -21,6 +21,8 @@ use super::world::{IncludeProvider, Synthesized};
 pub struct MarkdownIncludes {
     /// Parent document's effective settings.
     pub config: Config,
+    /// Resolved paragraph styles of the parent document.
+    pub design: crate::design::Design,
 }
 
 impl IncludeProvider for MarkdownIncludes {
@@ -113,6 +115,7 @@ impl IncludeProvider for MarkdownIncludes {
         parsed.document.meta = DocMeta::default();
         let files = dependencies(&parsed, &path);
         let options = EmitOptions {
+            design: &self.design,
             config: &config,
             assets: AssetPaths::Virtual,
             template: None,
@@ -420,7 +423,10 @@ mod tests {
     use crate::config::HeadingNumbering;
 
     fn provider() -> MarkdownIncludes {
-        MarkdownIncludes { config: Config::default() }
+        MarkdownIncludes {
+            config: Config::default(),
+            design: Default::default(),
+        }
     }
 
     #[test]

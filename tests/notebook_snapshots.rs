@@ -532,6 +532,7 @@ fn no_escape_byte_in_emitters() {
         &parsed.assets,
         &TypstOptions {
             config: &config,
+            design: &Default::default(),
             assets: AssetPaths::Virtual,
             template: None,
             bibliography: Vec::new(),

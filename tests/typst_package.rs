@@ -48,9 +48,14 @@ fn compile_failure(source: &str) -> String {
         today: Datetime::from_ymd(2026, 10, 24).unwrap(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
-        inputs: world_inputs(&Config::default()),
+        inputs: world_inputs(
+            &Config::default(),
+            &Default::default(),
+            &Default::default(),
+        ),
     })
     .unwrap();
     world.set_main_text(source, SourceMap::default());
@@ -83,7 +88,8 @@ fn compile_with(
         writer::vendor::get("typst/writer-doc/template.typ").unwrap(),
     )
     .unwrap();
-    let mut inputs = world_inputs(config);
+    let mut inputs =
+        world_inputs(config, &Default::default(), &Default::default());
     if enabled {
         inputs.insert("writer-oracle".into(), "1".into());
     }
@@ -97,6 +103,7 @@ fn compile_with(
         today: Datetime::from_ymd(2026, 10, 24).unwrap(),
         system_fonts: false,
         font_paths: Vec::new(),
+        font_files: Vec::new(),
         package_paths: Vec::new(),
         allow_packages: false,
         inputs,

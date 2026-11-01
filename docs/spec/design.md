@@ -504,10 +504,12 @@ package version becomes `0.2.0` (a new export; `WRITER_DOC_VERSION`, the import 
 ### 6.5 Fonts
 `WorldOptions` gains `font_files: Vec<PathBuf>` (= `design.referenced_files()` filtered to fonts, i.e.
 `fonts.*.files`), loaded after `[pdf] font_paths` and before the system fonts (typst-dialect.md
-§6.6): `fonts.extend(typst_kit::fonts::scan(file))` per file (`scan` walks a path with `walkdir`,
-which yields a file path as itself: Verified API hints; verify in T82). Order matters: embedded → `font_paths`
-→ design files → system, so a design file never shadows the package's embedded families and
-`system_fonts = false` stays byte-identical across machines when the design ships its fonts. A
+§6.6). Individual files are read and parsed with `typst::text::Font::iter(Bytes)`; each face's
+metadata and actual collection index register a lazy `typst_kit::fonts::FontPath` in the font
+store. `typst_kit::fonts::scan` accepts directories, not individual files. Order matters:
+embedded → `font_paths` → design files → system, so a design file never shadows the package's
+embedded families. `system_fonts = false` stays byte-identical across machines when the design
+ships its fonts. A
 family named without files that the book does not contain is `design-font-family` in `check` (§10);
 at build time Typst falls back as it does today (its own warning).
 
@@ -785,7 +787,7 @@ nothing is generated (§7.3).
 | `design-font-file` | error | a `fonts.<role>.files` path does not exist (also a build error, §4.3) |
 | `design-image-missing` | error | a furniture image path does not exist (also a build error) |
 | `design-theme-unavailable` | warning | §1.4: the theme could not be resolved for a non-HTML target; the design was merged without it |
-| `design-font-family` | warning | `check --target pdf`: a declared family (with no files) is not in the World's font book after §6.5 (`FontBook::contains_family`, case-sensitive family name) |
+| `design-font-family` | warning | `check --target pdf`: a declared family (with no files) is not in the World's font book after §6.5 (`FontBook::contains_family` queried with a lower-case family name, matching Typst font selection) |
 | `design-style-unused` | warning | a `[design.styles]` name that no `Div` of the document selects (§8.2); evaluated on the resolved IR |
 | `design-shadowed` | note | per target: a `[docx] reference_doc` whose `sectPr` or style names override design keys (names the parts: "page setup", "styles: Recipient, Date", "header/footer"); a `[pdf] template` that does not import `@writer/doc` while a design is declared |
 Config errors of §4.4 fail `check` and `build` alike. `check` without `--target` runs the
@@ -973,15 +975,16 @@ so an edit elsewhere keeps the Libraries.
     installed packages must expose `writer-div` for exported sources to compile.
 
 ## Verified API hints (for the task files; each says where it was read)
-- `typst::text::FontInfo::iter(data: Bytes) -> impl Iterator<Item = FontInfo>` and
+- `typst::text::FontInfo::iter(data: &[u8]) -> impl Iterator<Item = FontInfo>` and
   `Font::new(data: Bytes, index: u32) -> Option<Font>` (`typst-library-0.15.1/src/text/font/mod.rs`
   lines 63, 80); `FontInfo { family: String, variant: FontVariant { style, weight, stretch }, flags,
   coverage }`; `FontWeight::to_number() -> u16`; `FontBook::contains_family(&self, &str) -> bool`
   and `select_family` (`text/font/book.rs` lines 54, 81).
 - `typst_kit::fonts::{embedded(), system(), scan(path: &Path)}` (`typst-kit-0.15.1/src/fonts.rs`
   lines 135, 148, 163); the World already calls `scan` per `[pdf] font_paths` entry
-  (`src/typst/world.rs` 140–144). `scan` uses `walkdir`, which yields a file path as its only entry
-  (verify in T82 with a one-file test).
+  (`src/typst/world.rs` 140–144). `scan` delegates to `fontdb::Database::load_fonts_dir` and accepts
+  directories only. Individual files use `Font::iter(Bytes)` and retain each face's collection
+  index in a lazy `FontPath` entry.
 - `block(sticky: bool)` keeps a block with the next one (`typst-library-0.15.1/src/layout/container.rs`
   line 388); `block(breakable: false)` is keep-together.
 - `Theme::vars()` / `deep_merge` (`src/theme/mod.rs` 500–512, 1027–1038) is the merge to reuse;

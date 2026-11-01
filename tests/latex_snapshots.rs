@@ -1691,6 +1691,7 @@ fn shared_typst_latex_export_names_never_assign_different_bytes_to_one_path() {
         &registry,
         &writer::typst::emit::EmitOptions {
             config: &config,
+            design: &Default::default(),
             assets: writer::typst::emit::AssetPaths::Export {
                 dir: "paper.final_assets".into(),
             },
