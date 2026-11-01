@@ -88,6 +88,7 @@ fn emit(doc: &Document) -> DocxOutput {
         &assets,
         &mut NoRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &Config::default(),
             reference: None,
             source_date_epoch: Some("0".into()),

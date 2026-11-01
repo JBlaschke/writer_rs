@@ -60,6 +60,7 @@ fn emit(reference: Option<&Path>) -> DocxOutput {
         &assets,
         &mut renderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &Config::default(),
             reference,
             source_date_epoch: None,

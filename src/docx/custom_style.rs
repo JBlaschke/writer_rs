@@ -220,6 +220,7 @@ pub fn reference_docx() -> Result<Vec<u8>> {
         &assets,
         &mut NoRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &config,
             reference: None,
             source_date_epoch: None,

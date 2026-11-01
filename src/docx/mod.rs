@@ -3,6 +3,7 @@
 
 pub mod body;
 pub mod custom_style;
+pub mod design;
 pub mod fields;
 pub mod footnotes;
 pub mod images;
@@ -65,6 +66,8 @@ pub trait Renderer {
 
 /// Options for deterministic DOCX emission.
 pub struct DocxOptions<'a> {
+    /// Resolved cross-format typography and page setup.
+    pub design: &'a crate::design::Design,
     /// Effective document configuration.
     pub config: &'a Config,
     /// Absolute reference path, resolved by pipeline preparation.
@@ -90,6 +93,8 @@ pub struct DocxOutput {
 pub struct Emitter<'a> {
     /// Resolved input document.
     pub doc: &'a Document,
+    /// Resolved design shared with the other output backends.
+    pub design: &'a crate::design::Design,
     /// Effective configuration.
     pub config: &'a Config,
     /// Registered input assets.
@@ -280,10 +285,12 @@ fn prepare_emitter<'a>(
 ) -> Result<Emitter<'a>> {
     let mut styles = match reference {
         Some(reference) => reference_result(
-            StyleTable::from_reference(&reference.styles_xml),
+            StyleTable::from_reference_with_design(
+                &reference.styles_xml, opts.design,
+            ),
             opts.reference,
         )?,
-        None => StyleTable::builtin(),
+        None => StyleTable::generated(opts.design),
     };
     styles.set_lang(language);
     let numbering = reference_result(
@@ -295,7 +302,8 @@ fn prepare_emitter<'a>(
     let (kept, copied) = reference
         .map(|r| (r.kept_rels.clone(), r.copied_parts.clone()))
         .unwrap_or_default();
-    let builtin_footer = reference.is_none_or(|r| r.sect_pr.is_none());
+    let builtin_footer = reference.is_none_or(|r| r.sect_pr.is_none())
+        && opts.design.page.footer.is_none();
     let mut package = Package::new(kept, copied, has_notes, builtin_footer);
     if let Some(reference) = reference {
         package.set_defaults(reference.copied_defaults.clone());
@@ -304,6 +312,7 @@ fn prepare_emitter<'a>(
         reference,
         &opts.config.pdf.paper,
         package.footer().map(|(_, id)| id),
+        opts.design,
     );
     let lang = LangTag::effective(&doc.meta, opts.config)
         .unwrap_or_else(|| LangTag { lang: "en".into(), region: None });
@@ -311,6 +320,7 @@ fn prepare_emitter<'a>(
     let content = footnotes::ContentState::new(doc, &mut ids);
     Ok(Emitter {
         doc,
+        design: opts.design,
         config: opts.config,
         assets,
         renderer,

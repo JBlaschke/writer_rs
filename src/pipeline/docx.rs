@@ -58,9 +58,18 @@ pub fn build(
     doc: &Document, assets: &AssetRegistry, config: &Config, out: &Path,
     world: &mut WriterWorld,
 ) -> Result<Diagnostics> {
+    build_with_design(doc, assets, config, &Default::default(), out, world)
+}
+
+/// Builds Word output with the prepared cross-format design.
+pub fn build_with_design(
+    doc: &Document, assets: &AssetRegistry, config: &Config,
+    design: &crate::design::Design, out: &Path, world: &mut WriterWorld,
+) -> Result<Diagnostics> {
     let reference = (!config.docx.reference_doc.as_os_str().is_empty())
         .then_some(config.docx.reference_doc.as_path());
     let options = DocxOptions {
+        design,
         config,
         reference,
         source_date_epoch: std::env::var("SOURCE_DATE_EPOCH").ok(),

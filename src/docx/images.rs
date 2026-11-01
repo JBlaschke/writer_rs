@@ -564,6 +564,7 @@ mod tests {
         let config = Config::default();
         let assets = AssetRegistry::new();
         let opts = DocxOptions {
+            design: &Default::default(),
             config: &config,
             reference: None,
             source_date_epoch: None,

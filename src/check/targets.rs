@@ -214,7 +214,12 @@ fn docx(
         }
     };
     let reference = &prepared.config.docx.reference_doc;
+    if prepared.document.source.kind != SourceKind::Typst {
+        diagnostics
+            .extend(super::design::docx_shadowed(&prepared.design, reference));
+    }
     let options = crate::docx::DocxOptions {
+        design: &prepared.design,
         config: &prepared.config,
         reference: (!reference.as_os_str().is_empty())
             .then_some(reference.as_path()),

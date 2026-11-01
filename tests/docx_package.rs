@@ -106,6 +106,7 @@ fn output(
             &AssetRegistry::new(),
             &mut NoRenderer,
             &DocxOptions {
+                design: &Default::default(),
                 config,
                 reference,
                 source_date_epoch: epoch.map(str::to_owned),
@@ -264,6 +265,7 @@ fn footnotes_in_resolved_citations_reserve_the_part() {
         &AssetRegistry::new(),
         &mut NoRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &config,
             reference: None,
             source_date_epoch: None,
@@ -293,6 +295,7 @@ fn language_preserves_the_script_subtag() {
         &AssetRegistry::new(),
         &mut NoRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &config,
             reference: None,
             source_date_epoch: None,
@@ -321,6 +324,7 @@ fn write_document(
             assets,
             &mut NoRenderer,
             &DocxOptions {
+                design: &Default::default(),
                 config: &Config::default(),
                 reference: None,
                 source_date_epoch: None,

@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Range;
 use std::sync::LazyLock;
 
+use crate::design::Design;
 use crate::error::{Diagnostics, Error, Result};
 
 use super::validate::{XmlNode, parse_xml};
@@ -248,6 +249,7 @@ static BUILTIN: LazyLock<Builtin> = LazyLock::new(|| {
 /// a paragraph and its character counterpart can link to each other.
 #[derive(Debug, Clone)]
 pub struct StyleTable {
+    design: Design,
     source: String,
     append_at: usize,
     appended: Vec<String>,
@@ -260,6 +262,12 @@ pub struct StyleTable {
 impl StyleTable {
     /// Starts with `docDefaults` and one default style of each kind.
     pub fn builtin() -> Self {
+        Self::generated(&Design::default())
+    }
+
+    /// Starts with design defaults, appending vocabulary styles as needed.
+    /// An undeclared design preserves the original lazy asset selection.
+    pub fn generated(design: &Design) -> Self {
         // Both the source and its selected definitions are repository assets.
         let tree = style_root(&BUILTIN.source)
             .expect("checked built-in styles have a styles root");
@@ -279,7 +287,11 @@ impl StyleTable {
             }
         }
         source.push_str("</w:styles>");
-        Self::read(&source).expect("selected built-in styles are valid")
+        let source = super::design::apply_tokens(&source, design);
+        let mut table =
+            Self::read(&source).expect("selected built-in styles are valid");
+        table.design = design.clone();
+        table
     }
 
     /// Keeps the reference's root and children, supplying missing known ids.
@@ -288,7 +300,15 @@ impl StyleTable {
     /// formatting. Definitions needed by its `basedOn`, `next` and `link`
     /// references are appended when the target is one of writer's known ids.
     pub fn from_reference(styles_xml: &str) -> Result<Self> {
+        Self::from_reference_with_design(styles_xml, &Design::default())
+    }
+
+    /// Keeps reference formatting and applies tokens only to missing styles.
+    pub fn from_reference_with_design(
+        styles_xml: &str, design: &Design,
+    ) -> Result<Self> {
         let mut table = Self::read(styles_xml)?;
+        table.design = design.clone();
         let tree = style_root(styles_xml)?;
         let references: Vec<_> = tree
             .children
@@ -328,6 +348,7 @@ impl StyleTable {
             source.push_str("></w:styles>");
         }
         let mut table = Self {
+            design: Design::default(),
             append_at: source
                 .rfind("</w:styles>")
                 .expect("a normalized styles root has a closing tag"),
@@ -425,6 +446,7 @@ impl StyleTable {
                 );
             }
         }
+        let raw = super::design::apply_tokens(&raw, &self.design);
         self.appended.push(raw);
         id
     }
@@ -481,10 +503,13 @@ impl StyleTable {
             .any(|(other, existing)| *other != kind && *existing == lower)
         {
             let effective = format!("{name} {}", kind.suffix());
-            self.diagnostics.warn("docx-style-kind-mismatch", format!(
-                "DOCX style {name:?} has another kind; using {effective:?} for a {} style",
-                kind.xml_name(),
-            ));
+            self.diagnostics.warn(
+                "docx-style-kind-mismatch",
+                format!(
+                    "DOCX style {name:?} has another kind; using {effective:?} for a {} style",
+                    kind.xml_name(),
+                ),
+            );
             effective
         } else {
             name.into()
@@ -1288,4 +1313,34 @@ Heading 4 Unlisted|Heading4Unlisted|paragraph|Heading4|BodyText||1|0
 Heading 5 Unlisted|Heading5Unlisted|paragraph|Heading5|BodyText||1|0
 Heading 6 Unlisted|Heading6Unlisted|paragraph|Heading6|BodyText||1|0
 ";
+}
+
+#[cfg(test)]
+mod design_tests {
+    use super::*;
+
+    #[test]
+    fn undeclared_design_preserves_the_original_lazy_asset_selection() {
+        let tree = style_root(&BUILTIN.source).unwrap();
+        let mut expected = format!(
+            "{XML_HEAD}{}",
+            &BUILTIN.source[tree.range.start..tree.open_end]
+        );
+        for node in &tree.children {
+            if node.name == "w:docDefaults"
+                || (node.name == "w:style"
+                    && matches!(
+                        node.attr("w:default"),
+                        Some("1" | "true" | "on")
+                    ))
+            {
+                expected.push_str(&BUILTIN.source[node.range.clone()]);
+            }
+        }
+        expected.push_str("</w:styles>");
+        assert_eq!(
+            StyleTable::generated(&Design::default()).to_xml(),
+            expected
+        );
+    }
 }
