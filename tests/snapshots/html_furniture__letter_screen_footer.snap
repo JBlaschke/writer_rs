@@ -1,0 +1,5 @@
+---
+source: tests/html_furniture.rs
+expression: stable_assets(&footer)
+---
+<div class="w-furniture w-footer w-footer-first" data-align="left" style="font-weight:400;font-style:normal;font-size:7.5pt;color:#575757"><hr class="w-furniture-rule" style="border-color:#a96d4b;border-width:0.709pt"><div class="w-furniture-lines"><p class="w-furniture-line" style="font-weight:700">Ellison Institute of Technology, Oxford Limited</p><p class="w-furniture-line">Registered Office: Winchester House, The Oxford Science Park,</p><p class="w-furniture-line">Heatley Road, Littlemore, Oxford, OX4 4GE, United Kingdom.</p><p class="w-furniture-line">Company No. 13773507 | Registered in England and Wales</p></div><div class="w-furniture-lines w-furniture-right"><p class="w-furniture-line">+44 1865 649525</p><p class="w-furniture-line">oxford@eit.org</p></div></div>

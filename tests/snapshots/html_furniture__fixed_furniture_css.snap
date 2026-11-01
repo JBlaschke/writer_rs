@@ -1,0 +1,22 @@
+---
+source: tests/html_furniture.rs
+expression: "output.theme_css.split(\"/* design: layout */\").nth(1).unwrap()"
+---
+
+.w-furniture{display:grid;grid-template-columns:1fr auto;gap:0 1em}
+.w-furniture[data-align=left]{text-align:left}
+.w-furniture[data-align=center]{text-align:center}
+.w-furniture[data-align=right]{text-align:right}
+.w-furniture-lines{grid-column:1}
+.w-furniture-right{grid-column:2;text-align:right}
+.w-furniture>.w-furniture-lines:only-of-type{grid-column:1/-1}
+.w-furniture-image,.w-furniture-rule{grid-column:1/-1}
+.w-furniture-image{justify-self:center}
+.w-furniture[data-align=left] .w-furniture-image{justify-self:left}
+.w-furniture[data-align=right] .w-furniture-image{justify-self:right}
+.w-furniture-line{margin:0}
+.w-furniture-rule{width:100%;margin:0;border-style:solid none none}
+.w-furniture[data-print-copy]{display:none}
+@media print{.w-furniture[data-print-copy]{display:grid}.w-header-rest,.w-footer-rest{position:fixed;left:0;right:0}.w-header-rest{top:48.189pt}.w-footer-rest{bottom:28.346pt}}
+@page{@bottom-left{content:none}@bottom-center{content:none}@bottom-right{content:none}}
+@page{@top-left{content:none}@top-center{content:none}@top-right{content:none}}

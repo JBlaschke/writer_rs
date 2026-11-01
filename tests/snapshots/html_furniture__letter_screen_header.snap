@@ -1,0 +1,5 @@
+---
+source: tests/html_furniture.rs
+expression: stable_assets(&header)
+---
+<div class="w-furniture w-header w-header-first" data-align="center" style="font-weight:600;font-style:normal;font-size:11pt;color:#a96d4b"><img class="w-furniture-image" src="asset:LOGO" alt="" style="width:141.732pt"><div class="w-furniture-lines"><p class="w-furniture-line">Generative Biology Institute</p></div></div>

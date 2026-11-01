@@ -157,6 +157,7 @@ pub fn layout_css(
     }
     // Named styles and furniture append their CSS here in the later tasks.
     css.push_str(&styles_css(design));
+    css.push_str(&furniture_css(design, _targets)?);
     Ok(css)
 }
 
@@ -308,6 +309,464 @@ pub fn styles_css(design: &Design) -> String {
         }
     }
     css
+}
+
+/// A page furniture slot exposed to HTML templates.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FurnitureSlot {
+    /// The page header.
+    Header,
+    /// The page footer.
+    Footer,
+}
+
+/// Which page class a furniture helper renders.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FurnitureVariant {
+    /// The first printed page or continuous screen page.
+    First,
+    /// The continuation pages.
+    Rest,
+}
+
+impl FurnitureSlot {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Header => "header",
+            Self::Footer => "footer",
+        }
+    }
+
+    fn slot(self, design: &Design) -> Option<&crate::design::Slot> {
+        match self {
+            Self::Header => design.page.header.as_ref(),
+            Self::Footer => design.page.footer.as_ref(),
+        }
+    }
+}
+
+impl FurnitureVariant {
+    fn name(self) -> &'static str {
+        match self {
+            Self::First => "first",
+            Self::Rest => "rest",
+        }
+    }
+
+    fn furniture(
+        self, slot: &crate::design::Slot,
+    ) -> Option<&crate::design::Furniture> {
+        match self {
+            Self::First => slot.first.as_ref(),
+            Self::Rest => slot.rest.as_ref(),
+        }
+    }
+}
+
+/// Escaped screen markup for one declared furniture variant.
+pub fn furniture_html(
+    design: &Design, slot: FurnitureSlot, variant: FurnitureVariant,
+    targets: &mut Targets<'_>,
+) -> Result<String> {
+    use super::emit::escape;
+    use crate::design::RulePosition;
+    if !design.declared {
+        return Ok(String::new());
+    }
+    let Some(furniture) =
+        slot.slot(design).and_then(|slot| variant.furniture(slot))
+    else {
+        return Ok(String::new());
+    };
+    let mut props = vec![
+        format!("font-weight:{}", furniture.weight.0),
+        format!(
+            "font-style:{}",
+            if furniture.italic { "italic" } else { "normal" }
+        ),
+    ];
+    if let Some(size) = furniture.size {
+        props.push(format!("font-size:{}", css_pt(size)));
+    } else if slot == FurnitureSlot::Footer {
+        props.push("font-size:0.75em".into());
+    }
+    if let Some(color) = furniture.color {
+        props.push(format!("color:{}", css_color(color)));
+    }
+    let mut html = format!(
+        "<div class=\"w-furniture w-{} w-{}-{}\" data-align=\"{}\" style=\"{}\">",
+        slot.name(),
+        slot.name(),
+        variant.name(),
+        furniture_align(furniture.align),
+        escape(&props.join(";")),
+    );
+    if let Some(rule) =
+        furniture.rule.filter(|rule| rule.position == RulePosition::Above)
+    {
+        html.push_str(&rule_html(rule));
+    }
+    if let Some(image) = &furniture.image {
+        let url = file_url(&image.path, targets)?;
+        let mut style = Vec::new();
+        if let Some(width) = image.width {
+            style.push(format!("width:{}", css_pt(width)));
+        }
+        if let Some(align) = image.align {
+            style.push(format!("justify-self:{}", furniture_align(align)));
+        }
+        let _ = write!(
+            html,
+            "<img class=\"w-furniture-image\" src=\"{}\" alt=\"\"",
+            escape(&url)
+        );
+        if !style.is_empty() {
+            let _ = write!(html, " style=\"{}\"", escape(&style.join(";")));
+        }
+        html.push('>');
+    }
+    for (lines, class) in [
+        (&furniture.lines, "w-furniture-lines"),
+        (&furniture.right_lines, "w-furniture-lines w-furniture-right"),
+    ] {
+        if lines.is_empty() {
+            continue;
+        }
+        let _ = write!(html, "<div class=\"{class}\">");
+        for line in lines {
+            let mut props = Vec::new();
+            if let Some(weight) = line.weight {
+                props.push(format!("font-weight:{}", weight.0));
+            }
+            if let Some(italic) = line.italic {
+                props.push(format!(
+                    "font-style:{}",
+                    if italic { "italic" } else { "normal" }
+                ));
+            }
+            if let Some(size) = line.size {
+                props.push(format!("font-size:{}", css_pt(size)));
+            }
+            if let Some(color) = line.color {
+                props.push(format!("color:{}", css_color(color)));
+            }
+            html.push_str("<p class=\"w-furniture-line\"");
+            if !props.is_empty() {
+                let _ = write!(html, " style=\"{}\"", escape(&props.join(";")));
+            }
+            html.push('>');
+            for segment in crate::design::segments(&line.text) {
+                html.push_str(&match segment {
+                    crate::design::Segment::Text(text) => escape(&text),
+                    crate::design::Segment::Page
+                    | crate::design::Segment::Pages => "1".into(),
+                });
+            }
+            html.push_str("</p>");
+        }
+        html.push_str("</div>");
+    }
+    if let Some(rule) =
+        furniture.rule.filter(|rule| rule.position == RulePosition::Below)
+    {
+        html.push_str(&rule_html(rule));
+    }
+    html.push_str("</div>");
+    Ok(html)
+}
+
+fn rule_html(rule: crate::design::Rule) -> String {
+    format!(
+        "<hr class=\"w-furniture-rule\" style=\"border-color:{};border-width:{}\">",
+        css_color(rule.color),
+        css_pt(rule.width),
+    )
+}
+
+fn furniture_align(align: crate::design::Align) -> &'static str {
+    match align {
+        crate::design::Align::Left => "left",
+        crate::design::Align::Center => "center",
+        crate::design::Align::Right => "right",
+        crate::design::Align::Justify => "justify",
+    }
+}
+
+/// Screen furniture and either print margin boxes or fixed copies.
+pub fn furniture_css(
+    design: &Design, targets: &mut Targets<'_>,
+) -> Result<String> {
+    if !design.declared
+        || design.page.header.is_none() && design.page.footer.is_none()
+    {
+        return Ok(String::new());
+    }
+    let mut css = String::from(
+        ".w-furniture{display:grid;grid-template-columns:1fr auto;gap:0 1em}\n\
+         .w-furniture[data-align=left]{text-align:left}\n\
+         .w-furniture[data-align=center]{text-align:center}\n\
+         .w-furniture[data-align=right]{text-align:right}\n\
+         .w-furniture-lines{grid-column:1}\n\
+         .w-furniture-right{grid-column:2;text-align:right}\n\
+         .w-furniture>.w-furniture-lines:only-of-type{grid-column:1/-1}\n\
+         .w-furniture-image,.w-furniture-rule{grid-column:1/-1}\n\
+         .w-furniture-image{justify-self:center}\n\
+         .w-furniture[data-align=left] .w-furniture-image{justify-self:left}\n\
+         .w-furniture[data-align=right] .w-furniture-image{justify-self:right}\n\
+         .w-furniture-line{margin:0}\n\
+         .w-furniture-rule{width:100%;margin:0;border-style:solid none none}\n\
+         .w-furniture[data-print-copy]{display:none}\n",
+    );
+    match design.page.print {
+        crate::design::PrintMode::MarginBoxes => {
+            css.push_str("@media print{.w-furniture{display:none}}\n");
+            for slot in [FurnitureSlot::Header, FurnitureSlot::Footer] {
+                let Some(resolved) = slot.slot(design) else {
+                    continue;
+                };
+                for variant in [FurnitureVariant::Rest, FurnitureVariant::First]
+                {
+                    let page = if variant == FurnitureVariant::First {
+                        " :first"
+                    } else {
+                        ""
+                    };
+                    let _ = write!(css, "@page{page}{{");
+                    let mut occupied = Vec::new();
+                    if let Some(furniture) = variant.furniture(resolved) {
+                        let both = !furniture.right_lines.is_empty();
+                        let position = if both {
+                            "left"
+                        } else {
+                            furniture_align(furniture.align)
+                        };
+                        let name = box_name(slot, position);
+                        let _ = write!(
+                            css,
+                            "@{name}{{{}}}",
+                            margin_box(
+                                design, slot, furniture, &furniture.lines,
+                                true, targets
+                            )?,
+                        );
+                        occupied.push(position);
+                        if both {
+                            let name = box_name(slot, "right");
+                            let _ = write!(
+                                css,
+                                "@{name}{{{}}}",
+                                margin_box(
+                                    design, slot, furniture,
+                                    &furniture.right_lines, false, targets
+                                )?,
+                            );
+                            occupied.push("right");
+                        }
+                    }
+                    // Clear every unused box, including the default theme's
+                    // centred page number, when this slot was declared empty.
+                    for position in ["left", "center", "right"] {
+                        if !occupied.contains(&position) {
+                            let _ = write!(
+                                css,
+                                "@{}{{content:none}}",
+                                box_name(slot, position)
+                            );
+                        }
+                    }
+                    css.push_str("}\n");
+                }
+            }
+        }
+        crate::design::PrintMode::Fixed => {
+            css.push_str("@media print{.w-furniture[data-print-copy]{display:grid}.w-header-rest,.w-footer-rest{position:fixed;left:0;right:0}");
+            for slot in [FurnitureSlot::Header, FurnitureSlot::Footer] {
+                if slot.slot(design).is_none() {
+                    continue;
+                }
+                let (edge, offset) = match slot {
+                    FurnitureSlot::Header => ("top", design.page.header_offset),
+                    FurnitureSlot::Footer => {
+                        ("bottom", design.page.footer_offset)
+                    }
+                };
+                let _ = write!(
+                    css,
+                    ".w-{}-rest{{{edge}:{}}}",
+                    slot.name(),
+                    css_pt(offset.unwrap_or(Pt(0.0))),
+                );
+            }
+            css.push_str("}\n");
+            if design.page.footer.is_some() {
+                css.push_str("@page{@bottom-left{content:none}@bottom-center{content:none}@bottom-right{content:none}}\n");
+            }
+            if design.page.header.is_some() {
+                css.push_str("@page{@top-left{content:none}@top-center{content:none}@top-right{content:none}}\n");
+            }
+        }
+    }
+    Ok(css)
+}
+
+fn box_name(slot: FurnitureSlot, position: &str) -> String {
+    let edge = if slot == FurnitureSlot::Header {
+        "top"
+    } else {
+        "bottom"
+    };
+    format!("{edge}-{position}")
+}
+
+fn margin_box(
+    design: &Design, slot: FurnitureSlot, furniture: &crate::design::Furniture,
+    lines: &[crate::design::Line], image_and_rule: bool,
+    targets: &mut Targets<'_>,
+) -> Result<String> {
+    let mut props = vec![format!("content:{}", furniture_content(lines))];
+    props.push("white-space:pre-line".into());
+    if image_and_rule && let Some(image) = &furniture.image {
+        let url = file_url(&image.path, targets)?;
+        let bytes = std::fs::read(&image.path)?;
+        let dimensions = furniture_image_dimensions(&bytes);
+        let width = image
+            .width
+            .or_else(|| dimensions.map(|(width, _)| Pt(width * 0.75)));
+        let align = furniture_align(image.align.unwrap_or(furniture.align));
+        props.push(format!(
+            "background:url({url}) no-repeat top {align}/{} auto",
+            width.map_or_else(|| "auto".into(), css_pt),
+        ));
+        // A CSS background has no intrinsic width. Keep an image-only box
+        // wide enough for its logo without fixing wider text to that width.
+        if let Some(width) = width {
+            props.push(format!("min-width:{}", css_pt(width)));
+        }
+        if let (Some(width), Some((pixel_width, pixel_height))) =
+            (width, dimensions)
+        {
+            let height = width.0 * pixel_height / pixel_width;
+            let extra = furniture
+                .rule
+                .filter(|rule| {
+                    rule.position == crate::design::RulePosition::Above
+                })
+                .map_or(0.0, |_| 4.0);
+            props.push(format!("padding-top:{}", css_pt(Pt(height + extra))));
+        }
+    }
+    let size = furniture.size.map_or_else(
+        || {
+            if slot == FurnitureSlot::Footer {
+                "calc(var(--w-font-size,11pt)*0.75)".into()
+            } else {
+                "var(--w-font-size,11pt)".into()
+            }
+        },
+        css_pt,
+    );
+    let height = design
+        .text
+        .line_height
+        .map_or_else(|| "var(--w-line-height,normal)".into(), css_line_height);
+    let family = design.fonts.body.as_ref().map_or_else(
+        || "var(--w-font-body,system-ui,sans-serif)".into(),
+        |font| format!("{},system-ui,sans-serif", css_string(&font.family)),
+    );
+    props.push(format!(
+        "font:{} {}{size}/{height} {family}",
+        furniture.weight.0,
+        if furniture.italic { "italic " } else { "" },
+    ));
+    if let Some(color) = furniture.color {
+        props.push(format!("color:{}", css_color(color)));
+    }
+    let align = if furniture.right_lines.is_empty() {
+        furniture_align(furniture.align)
+    } else if image_and_rule {
+        "left"
+    } else {
+        "right"
+    };
+    props.push(format!("text-align:{align}"));
+    let (edge, offset) = if slot == FurnitureSlot::Header {
+        ("top", design.page.header_offset)
+    } else {
+        ("bottom", design.page.footer_offset)
+    };
+    props.push(format!("vertical-align:{edge}"));
+    if let Some(offset) = offset {
+        props.push(format!("margin-{edge}:{}", css_pt(offset)));
+    }
+    // Both columns need the same border so a two-column footer's rule is
+    // continuous. The image remains in the left column only.
+    if let Some(rule) = furniture.rule {
+        let side = match rule.position {
+            crate::design::RulePosition::Above => "top",
+            crate::design::RulePosition::Below => "bottom",
+        };
+        props.push(format!(
+            "border-{side}:{} solid {}",
+            css_pt(rule.width),
+            css_color(rule.color)
+        ));
+        if !(side == "top" && image_and_rule && furniture.image.is_some()) {
+            props.push(format!("padding-{side}:4pt"));
+        }
+    }
+    Ok(props.join(";"))
+}
+
+// Raster metadata is cheap; Typst's existing SVG decoder also handles
+// viewBox-only documents and compressed SVG without another parser.
+fn furniture_image_dimensions(bytes: &[u8]) -> Option<(f64, f64)> {
+    let dimensions = imagesize::blob_size(bytes)
+        .ok()
+        .map(|size| (size.width as f64, size.height as f64))
+        .or_else(|| {
+            typst::visualize::SvgImage::new(typst::foundations::Bytes::new(
+                bytes.to_owned(),
+            ))
+            .ok()
+            .map(|image| (image.width(), image.height()))
+        });
+    dimensions.filter(|(width, height)| {
+        width.is_finite() && height.is_finite() && *width > 0.0 && *height > 0.0
+    })
+}
+
+fn furniture_content(lines: &[crate::design::Line]) -> String {
+    use crate::design::Segment;
+    let mut parts = Vec::new();
+    let mut text = String::new();
+    for (index, line) in lines.iter().enumerate() {
+        if index > 0 {
+            text.push('\n');
+        }
+        for segment in crate::design::segments(&line.text) {
+            match segment {
+                Segment::Text(value) => text.push_str(&value),
+                Segment::Page | Segment::Pages => {
+                    if !text.is_empty() {
+                        parts.push(css_string(&text).replace("\\a ", "\\A "));
+                        text.clear();
+                    }
+                    parts.push(
+                        if segment == Segment::Page {
+                            "counter(page)"
+                        } else {
+                            "counter(pages)"
+                        }
+                        .into(),
+                    );
+                }
+            }
+        }
+    }
+    if !text.is_empty() || parts.is_empty() {
+        parts.push(css_string(&text).replace("\\a ", "\\A "));
+    }
+    parts.join(" ")
 }
 
 #[cfg(test)]

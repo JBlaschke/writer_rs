@@ -9,7 +9,7 @@
 </head>
 <body>
 {% block body_start %}{% endblock %}
-{% block main %}{{ html.main|safe }}{% endblock %}
+{% block main %}{{ design_furniture("header", "first") }}{{ html.main|safe }}{{ design_furniture("footer", "first") }}{% endblock %}
 {% block scripts %}{% include "partials/scripts.html" %}{% endblock %}
 {% block body_end %}{% endblock %}
 </body>
