@@ -268,6 +268,7 @@ Options:
       --latex           Print generated LaTeX source
       --context         Print the HTML template context as JSON
       --licenses        Print notices for embedded third-party files and data
+      --design          Print the resolved design as JSON
       --no-resolve      Print the parsed IR before reference resolution
       --default-config  Print the built-in default writer.toml (takes no INPUT)
   -h, --help            Print help
@@ -338,11 +339,12 @@ Arguments:
   <DIR>  Destination directory
 
 Options:
-  -v, --verbose...     Log more: -v info, -vv debug (RUST_LOG applies on top)
-  -q, --quiet          Print only errors (RUST_LOG is ignored)
-      --config <PATH>  Use this writer.toml instead of searching beside the input
-      --licenses       Print notices for embedded third-party files and data
-  -h, --help           Print help
+      --design <INPUT>  Include the document's resolved design and its referenced files
+  -v, --verbose...      Log more: -v info, -vv debug (RUST_LOG applies on top)
+  -q, --quiet           Print only errors (RUST_LOG is ignored)
+      --config <PATH>   Use this writer.toml instead of searching beside the input
+      --licenses        Print notices for embedded third-party files and data
+  -h, --help            Print help
 ```
 
 ### Typst template

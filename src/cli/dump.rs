@@ -27,7 +27,11 @@ pub fn run(args: &DumpArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
     opts.config_path = global.config.clone();
     let prepared = prepared(&opts, args.no_resolve, global)?;
     let mut diagnostics = prepared.diagnostics.clone();
-    let text = if args.context {
+    let text = if args.design {
+        serde_json::to_string_pretty(
+            &prepared.design.to_json(crate::design::PathMode::Real),
+        )?
+    } else if args.context {
         let mut worlds = WorldSlot::new();
         let world = worlds.get(Some(&prepared), &opts).map_err(|failure| {
             report_diagnostics(&diagnostics, global);

@@ -1,0 +1,4 @@
+[design.styles."Inside Address"]
+space_after = "1mm"
+[design.styles.inside-address]
+space_after = "2mm"

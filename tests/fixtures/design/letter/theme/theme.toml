@@ -1,0 +1,76 @@
+name        = "letterhead"
+description = "Institute letterhead: first-page logo, compact continuation header, legal footer"
+
+extends = "default"
+
+[design.fonts]
+body = "Source Sans 3"
+heading = "Source Sans 3"
+
+[design.text]
+size              = "11pt"
+line_height       = 1.35
+paragraph_spacing = "3.6mm"
+justify           = false
+
+[design.colors]
+text   = "#242424"
+accent = "#a96d4b"
+muted  = "#575757"
+link   = "accent"
+
+[design.page]
+paper         = "a4"
+margin        = { top = "50mm", right = "22mm", bottom = "38mm", left = "22mm" }
+header_offset = "17mm"
+footer_offset = "10mm"
+
+[design.page.header.first]
+image  = { src = "assets/logo.png", width = "50mm" }
+lines  = ["Generative Biology Institute"]
+color  = "accent"
+weight = "semibold"
+
+[design.page.header.rest]
+lines  = ["EIT Oxford | Generative Biology Institute"]
+size   = "10pt"
+color  = "accent"
+weight = "semibold"
+
+[design.page.footer]
+rule  = { position = "above", color = "accent", width = "0.25mm" }
+size  = "7.5pt"
+lines = [
+    { text = "Ellison Institute of Technology, Oxford Limited", weight = "bold" },
+    "Registered Office: Winchester House, The Oxford Science Park,",
+    "Heatley Road, Littlemore, Oxford, OX4 4GE, United Kingdom.",
+    "Company No. 13773507 | Registered in England and Wales",
+]
+right_lines = ["+44 1865 649525", "oxford@eit.org"]
+
+[design.styles.Recipient]
+space_after   = "6mm"
+line_height   = "12.1pt"
+keep_together = true
+
+[design.styles."Inside Address"]
+keep_together = true
+
+[design.styles.Salutation]
+space_before = "6mm"
+space_after  = "3mm"
+
+[design.styles.Date]
+size        = "10pt"
+space_after = "3mm"
+
+[design.styles.Closing]
+space_before   = "6mm"
+space_after    = "8mm"
+keep_with_next = true
+
+[design.styles.Signature]
+space_before  = "0mm"
+space_after   = "0mm"
+line_height   = "12.1pt"
+keep_together = true

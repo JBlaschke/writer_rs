@@ -1,0 +1,292 @@
+---
+source: tests/design_config.rs
+expression: value
+---
+{
+  "fonts": {
+    "body": {
+      "family": "Source Sans 3",
+      "files": []
+    },
+    "heading": {
+      "family": "Source Sans 3",
+      "files": []
+    },
+    "mono": null
+  },
+  "text": {
+    "size": 11.0,
+    "line_height": {
+      "multiple": 1.35
+    },
+    "paragraph_spacing": 10.205,
+    "justify": false
+  },
+  "colors": {
+    "text": "#242424",
+    "accent": "#a96d4b",
+    "muted": "#575757",
+    "link": "#a96d4b",
+    "background": null
+  },
+  "page": {
+    "paper": "a4",
+    "margin": {
+      "top": 141.732,
+      "right": 62.362,
+      "bottom": 107.717,
+      "left": 62.362
+    },
+    "header_offset": 48.189,
+    "footer_offset": 28.346,
+    "print": "margin-boxes",
+    "header": {
+      "first": {
+        "image": {
+          "path": "<theme>/assets/logo.png",
+          "width": 141.732,
+          "align": null
+        },
+        "lines": [
+          {
+            "text": "Generative Biology Institute",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          }
+        ],
+        "right_lines": [],
+        "rule": null,
+        "align": "center",
+        "size": 11.0,
+        "color": "#a96d4b",
+        "weight": 600,
+        "italic": false
+      },
+      "rest": {
+        "image": null,
+        "lines": [
+          {
+            "text": "EIT Oxford | Generative Biology Institute",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          }
+        ],
+        "right_lines": [],
+        "rule": null,
+        "align": "center",
+        "size": 10.0,
+        "color": "#a96d4b",
+        "weight": 600,
+        "italic": false
+      }
+    },
+    "footer": {
+      "first": {
+        "image": null,
+        "lines": [
+          {
+            "text": "Ellison Institute of Technology, Oxford Limited",
+            "weight": 700,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "Registered Office: Winchester House, The Oxford Science Park,",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "Heatley Road, Littlemore, Oxford, OX4 4GE, United Kingdom.",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "Company No. 13773507 | Registered in England and Wales",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          }
+        ],
+        "right_lines": [
+          {
+            "text": "+44 1865 649525",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "oxford@eit.org",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          }
+        ],
+        "rule": {
+          "position": "above",
+          "color": "#a96d4b",
+          "width": 0.709
+        },
+        "align": "left",
+        "size": 7.5,
+        "color": "#575757",
+        "weight": 400,
+        "italic": false
+      },
+      "rest": {
+        "image": null,
+        "lines": [
+          {
+            "text": "Ellison Institute of Technology, Oxford Limited",
+            "weight": 700,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "Registered Office: Winchester House, The Oxford Science Park,",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "Heatley Road, Littlemore, Oxford, OX4 4GE, United Kingdom.",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "Company No. 13773507 | Registered in England and Wales",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          }
+        ],
+        "right_lines": [
+          {
+            "text": "+44 1865 649525",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          },
+          {
+            "text": "oxford@eit.org",
+            "weight": null,
+            "italic": null,
+            "size": null,
+            "color": null
+          }
+        ],
+        "rule": {
+          "position": "above",
+          "color": "#a96d4b",
+          "width": 0.709
+        },
+        "align": "left",
+        "size": 7.5,
+        "color": "#575757",
+        "weight": 400,
+        "italic": false
+      }
+    }
+  },
+  "styles": {
+    "Closing": {
+      "font": null,
+      "size": null,
+      "line_height": null,
+      "color": null,
+      "weight": null,
+      "italic": null,
+      "align": null,
+      "space_before": 17.008,
+      "space_after": 22.677,
+      "keep_together": false,
+      "keep_with_next": true
+    },
+    "Date": {
+      "font": null,
+      "size": 10.0,
+      "line_height": null,
+      "color": null,
+      "weight": null,
+      "italic": null,
+      "align": null,
+      "space_before": null,
+      "space_after": 8.504,
+      "keep_together": false,
+      "keep_with_next": false
+    },
+    "Inside Address": {
+      "font": null,
+      "size": null,
+      "line_height": null,
+      "color": null,
+      "weight": null,
+      "italic": null,
+      "align": null,
+      "space_before": null,
+      "space_after": null,
+      "keep_together": true,
+      "keep_with_next": false
+    },
+    "Recipient": {
+      "font": null,
+      "size": null,
+      "line_height": {
+        "exact": 12.1
+      },
+      "color": null,
+      "weight": null,
+      "italic": null,
+      "align": null,
+      "space_before": null,
+      "space_after": 17.008,
+      "keep_together": true,
+      "keep_with_next": false
+    },
+    "Salutation": {
+      "font": null,
+      "size": null,
+      "line_height": null,
+      "color": null,
+      "weight": null,
+      "italic": null,
+      "align": null,
+      "space_before": 17.008,
+      "space_after": 8.504,
+      "keep_together": false,
+      "keep_with_next": false
+    },
+    "Signature": {
+      "font": null,
+      "size": null,
+      "line_height": {
+        "exact": 12.1
+      },
+      "color": null,
+      "weight": null,
+      "italic": null,
+      "align": null,
+      "space_before": 0.0,
+      "space_after": 0.0,
+      "keep_together": true,
+      "keep_with_next": false
+    }
+  }
+}

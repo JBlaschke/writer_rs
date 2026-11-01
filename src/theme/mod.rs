@@ -501,6 +501,27 @@ impl Theme {
         self.merged(|manifest| &manifest.vars)
     }
 
+    /// Design sources in inheritance order, with each source's own directory.
+    pub fn design_layers(&self) -> Vec<crate::design::Layer<'_>> {
+        self.chain
+            .iter()
+            .rev()
+            .map(|dir| {
+                let base_dir = match &dir.source {
+                    ThemeSource::Disk { dir } => dir.as_path(),
+                    ThemeSource::Embedded { .. } => Path::new("/"),
+                };
+                crate::design::Layer {
+                    table: dir.manifest.design.clone(),
+                    base_dir,
+                    origin: crate::design::Origin::Theme {
+                        file: base_dir.join("theme.toml"),
+                    },
+                }
+            })
+            .collect()
+    }
+
     fn merged(
         &self, table: impl Fn(&ThemeManifest) -> &Map<String, Value>,
     ) -> Map<String, Value> {
@@ -1024,7 +1045,9 @@ pub(crate) fn closest_name<'c>(
 
 /// Merges `over` into `base`: objects present on both sides merge recursively,
 /// anything else in `over` replaces the value in `base`.
-fn deep_merge(base: &mut Map<String, Value>, over: &Map<String, Value>) {
+pub(crate) fn deep_merge(
+    base: &mut Map<String, Value>, over: &Map<String, Value>,
+) {
     for (key, value) in over {
         match (base.get_mut(key), value) {
             (Some(Value::Object(base_map)), Value::Object(over_map)) => {

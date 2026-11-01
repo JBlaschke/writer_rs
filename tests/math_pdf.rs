@@ -150,6 +150,7 @@ fn document(
     (
         BuildOptions::new(input),
         Prepared {
+            design: Default::default(),
             document,
             assets: AssetRegistry::new(),
             config,

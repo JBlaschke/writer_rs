@@ -48,6 +48,9 @@ pub struct Config {
     pub notebook: NotebookConfig,
     /// `[serve]` settings.
     pub serve: ServeConfig,
+    /// Raw design settings, validated after theme and metadata merging.
+    #[serde(skip_serializing_if = "Map::is_empty")]
+    pub design: Map<String, Value>,
 }
 
 /// `[document]` configuration (config.md §2).
@@ -744,6 +747,7 @@ impl Config {
         let mut latex = front_table(meta, "latex")?;
         let typst = front_table(meta, "typst")?;
         let notebook = front_table(meta, "notebook")?;
+        let design = front_table(meta, "design")?;
 
         dedicated(meta, "toc", &mut document, "toc");
         if let Some(value) = meta.vars.get("bibliography") {
@@ -786,6 +790,7 @@ impl Config {
         overlay_table(&mut next.latex, "latex", &latex)?;
         overlay_table(&mut next.typst, "typst", &typst)?;
         overlay_table(&mut next.notebook, "notebook", &notebook)?;
+        crate::theme::deep_merge(&mut next.design, &design);
         *self = next;
         Ok(())
     }
@@ -1080,6 +1085,9 @@ host = "127.0.0.1"
 port = 3000
 open = false
 view = ""                  # "" → "pages" for .typ inputs, "web" otherwise | "web" | "pages"
+
+# [design]                # optional cross-format typography, styles and furniture
+# See docs/spec/design.md for all keys; unset values keep backend defaults.
 "###;
 
 #[cfg(test)]

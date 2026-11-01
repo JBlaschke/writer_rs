@@ -297,17 +297,20 @@ pub struct DumpArgs {
     #[arg(required_unless_present = "default_config")]
     pub input: Option<PathBuf>,
     /// Print resolved document IR as JSON (the default).
-    #[arg(long, conflicts_with_all = ["typst", "latex", "context"])]
+    #[arg(long, conflicts_with_all = ["typst", "latex", "context", "design"])]
     pub ir: bool,
     /// Print generated typst source.
-    #[arg(long, conflicts_with_all = ["latex", "context", "no_resolve"])]
+    #[arg(long, conflicts_with_all = ["latex", "context", "design", "no_resolve"])]
     pub typst: bool,
     /// Print generated LaTeX source.
-    #[arg(long, conflicts_with_all = ["context", "no_resolve"])]
+    #[arg(long, conflicts_with_all = ["context", "design", "no_resolve"])]
     pub latex: bool,
     /// Print the HTML template context as JSON.
-    #[arg(long, conflicts_with = "no_resolve")]
+    #[arg(long, conflicts_with_all = ["design", "no_resolve"])]
     pub context: bool,
+    /// Print the resolved design as JSON.
+    #[arg(long, conflicts_with = "no_resolve")]
+    pub design: bool,
     /// Print the parsed IR before reference resolution.
     #[arg(long)]
     pub no_resolve: bool,
@@ -315,7 +318,7 @@ pub struct DumpArgs {
     #[arg(
         long,
         conflicts_with_all = [
-            "input", "ir", "typst", "latex", "context", "no_resolve"
+            "input", "ir", "typst", "latex", "context", "design", "no_resolve"
         ]
     )]
     pub default_config: bool,
@@ -366,6 +369,9 @@ pub enum EjectCommand {
 pub struct EjectDirectoryArgs {
     /// Destination directory.
     pub dir: PathBuf,
+    /// Include the document's resolved design and its referenced files.
+    #[arg(long, value_name = "INPUT")]
+    pub design: Option<PathBuf>,
 }
 
 /// Arguments for an ejected file.
