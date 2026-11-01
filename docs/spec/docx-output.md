@@ -107,6 +107,12 @@ and `footnotes.xml` roots declare pandoc's namespaces `w`, `m`, `r`, `o`, `v`, `
 `wp` (URIs as R3 §2.6). Text goes through the lifted `escape`/`clean` (`& < > "`, non-XML-1.0
 characters dropped); every `w:t`, `w:instrText` and `m:t` has `xml:space="preserve"`.
 
+> **Contract change (coordinator, 2026-11-01):** with a declared `[design.page] header`/`footer`
+> slot and no reference `sectPr`, writer generates `word/header<k>.xml` / `word/footer<k>.xml` parts
+> (one per distinct furniture, `first`/`default` references, `w:titlePg`), their `_rels` and
+> `word/media/` images (design.md §7.2, §9.5); a declared footer slot replaces the built-in `PAGE`
+> footer. `DocxOptions` gains `design: &Design` (T83, T87).
+
 ### 1.3 `docProps/core.xml` and `app.xml`
 `<cp:coreProperties>` with the five namespace declarations of R3 §2.5 and, in this order, only
 non-empty children: `dc:title` (meta.title), `dc:creator` (author names joined `"; "`),
@@ -180,11 +186,21 @@ their `basedOn`/`next`/`link` rewritten from writer's ids to the table's ids for
 the missing `TableNormal`), and an appended definition never carries `w:default="1"` when the
 table already has a default style of that type (V14).
 
+> **Contract change (coordinator, 2026-11-01):** `builtin()` becomes `generated(&Design::default())`
+> and must stay byte-identical to `assets/docx/styles.xml` (a test); `StyleTable::generated(design:
+> &Design)` applies design.md §7.1's edits and appends `[design.styles]` definitions (design.md §8.5),
+> which `custom(name, Paragraph, None)` then finds by name (T83, T85).
+
 ### 2.2 Built-in `styles.xml`: explicit fonts and hex colours, no theme attributes
 No `asciiTheme`/`hAnsiTheme`/`eastAsiaTheme`/`cstheme`/`themeColor`/`themeShade`/`themeTint`/`themeFill*`
 (V17), no theme part. `rPrDefault` = `<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="{lang}"/>`,
 `pPrDefault` = `<w:spacing w:after="0" w:line="264" w:lineRule="auto"/>`; fonts H = `Calibri Light`, M =
 `Consolas` (`ascii`/`hAnsi`/`cs`); one `w:default="1"` per type (Normal, Default Paragraph Font, Normal Table).
+
+> **Contract change (coordinator, 2026-11-01):** design tokens edit the built-in XML, not replace
+> it: `rPrDefault` fonts/size/colour, `pPrDefault` spacing and justification, the heading and code
+> fonts, the Hyperlink colour (design.md §7.1, table). A `[design.styles]` name equal to a §2.3 name
+> replaces that definition's `pPr`/`rPr` while keeping its id (design.md §8.1).
 
 ### 2.3 Vocabulary (pandoc's names; writer's own marked †). `sp a/b` = `w:spacing before/after` (twips), `sz` half-points
 | w:name | styleId | type | basedOn | next | link | custom | pPr / rPr / tblPr |
@@ -301,6 +317,11 @@ Headings, code, captions, figures, equations and cells keep their own styles. Em
 (no inlines) are not emitted. A paragraph whose only inline is `Math` gets a trailing run
 `U+200B` (pandoc #11674). Between two sibling `w:tbl` elements an empty `<w:p/>` is emitted; a
 body, footnote or cell whose last element would be a `w:tbl` gets a trailing `<w:p/>`.
+
+> **Contract change (coordinator, 2026-11-01):** the `Div` entry becomes: `Div` for which
+> design.md §8.2's `style_for` selects a design style → that style (`custom(name, Paragraph,
+> None)`, which finds the generated definition), by `custom-style` **or** by class; otherwise a
+> `Div` with `custom-style` → that style as today (T85).
 
 ### 4.2 Inlines → runs (T40, `src/docx/inline.rs`)
 | Inline | XML |
@@ -685,6 +706,13 @@ reference has neither: a4 → 11906 − 2880 = 9026 twips, a T04 unit test; pand
 `<w:sectPr><w:footerReference w:type="default" r:id="{footer rel}"/><w:footnotePr><w:numRestart w:val="eachSect"/></w:footnotePr><w:pgSz w:w="…" w:h="…"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/><w:cols w:space="720"/></w:sectPr>`.
 `word/footer{k}.xml`: `<w:ftr xmlns:w=… xmlns:r=…><w:p><w:pPr><w:pStyle w:val="{footer}"/></w:pPr>{PAGE field}</w:p></w:ftr>`.
 
+> **Contract change (coordinator, 2026-11-01):** without a reference (or with one lacking a
+> body-level `sectPr`) the built-in `sectPr` is generated from the design: `pgSz` from
+> `[design.page] paper` else `[pdf] paper`, `pgMar` sides from `margin` (unset 1440), `header`/`footer`
+> from `header_offset`/`footer_offset` (unset 720), `w:titlePg` and header/footer references for the
+> generated parts (design.md §7.2). A reference's body-level `sectPr` wins entirely, as do its styles
+> for the names it defines; the precedence table is design.md §7.3 (T83, T87).
+
 ### 6.4 Settings
 Built-in `assets/docx/settings.xml` children: `<w:zoom w:percent="100"/>`,
 `<w:defaultTabStop w:val="720"/>`, `<w:characterSpacingControl w:val="doNotCompress"/>`,
@@ -790,6 +818,10 @@ page size come through); the file opens in LibreOffice and Google Docs.
 | `docx-svg-no-fallback` | warning | SVG fallback PNG failed; SVG-only blip (T41) |
 
 Diagnostics carry the enclosing block's span; an invalid reference document is an error, not a diagnostic.
+
+> **Contract change (coordinator, 2026-11-01):** `check --target docx` adds `design-shadowed` (note):
+> the reference document's `sectPr` or style names override design keys; the message names the parts
+> (design.md §10). Design font files are not embedded (design.md §7.4, open point 1).
 
 ## 9. Verified API hints
 ```rust

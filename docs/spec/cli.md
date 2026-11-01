@@ -125,6 +125,10 @@ writer dump --default-config
   > `required_unless_present = "default_config"`, and `--default-config` conflicting with
   > `INPUT` and every other dump flag).
 
+> **Contract change (coordinator, 2026-11-01):** `writer dump <INPUT> --design` prints the merged,
+> resolved design as pretty JSON (design.md §3.3 with real paths) or `null` when none is declared;
+> it conflicts with the other dump flags like `--context` (design.md §4.1, T80).
+
 ## init
 ```
 writer init [DIR] [--typst] [--bib] [--force]
@@ -146,6 +150,11 @@ writer eject latex-template <FILE.tex>      # the sample BYO LaTeX template
 ```
 - Never overwrites an existing path (exit 2). Prints what was written and the config line to
   use it.
+
+> **Contract change (coordinator, 2026-11-01):** `writer eject theme <DIR> [--design <INPUT>]`: the
+> ejected `theme.toml` gains a commented `[design]` reference block; with `--design INPUT` it holds
+> INPUT's merged `[design]` with the referenced fonts and images copied to `DIR/assets/design/`
+> (design.md §4.2, T80). The other eject subcommands are unchanged.
 
 ## Global flags
 `-v/-vv` raise `tracing` verbosity (`-v` also shows info-level diagnostics such as

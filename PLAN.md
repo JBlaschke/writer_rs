@@ -323,6 +323,7 @@ writer_rs/                                                                    ow
 ├── src/math/mod.rs: T00 (skeleton)   latex_source.rs: T30 (T33 adds private shared preflight)   latex_mathml.rs: T1A   omml.rs and private omml/{parse,fold,render,text}.rs: T42   typst_to_latex.rs and private typst_to_latex/{symbols,calls}.rs + assets/math/unicode-latex.toml: T51
 ├── src/html/{emit,highlight}.rs: T13   {mod,context,document,paths,styles}.rs: T15   math.rs: T1A
 ├── src/theme/{mod,manifest,resolve,templates}.rs                               T15
+├── src/design/{mod,parse,merge,resolve,json}.rs: T80   src/html/design.rs: T81 → T85 → T86   src/docx/design.rs: T83 → T87 (T85 additive)   src/check/design.rs: T80 (T82, T83, T85 additive)   examples/letter/: T89   (design layer, docs/spec/design.md; M8)
 ├── src/docx/{mod,package,styles,numbering,reference,validate}.rs: T04   {body,inline,footnotes}.rs: T40   {tables,images,fields,toc}.rs: T41   math.rs: T42   custom_style.rs: T43
 ├── src/latex/{emit,escape}.rs: T60   {mod,template,assets,preamble}.rs: T61
 ├── src/pipeline/mod.rs (dispatch, every arm): T16   html.rs: T16   pdf.rs: T32   typst.rs (export): T34   docx.rs: T41   latex.rs: T61   typst_source.rs (.typ inputs): T52
@@ -484,6 +485,20 @@ presenter_rs per R8 §10.
 | T78 | *Stretch:* web view of arbitrary typst through typst's HTML export (`typst-html`) | M | T52 |
 | T79 | *Stretch:* SCSS themes (lift the grass stack) and the `minijinja` 3 upgrade | M | T19 |
 
+### M8 — Cross-format design layer (`docs/spec/design.md`; added 2026-11-01)
+| ID | Task | Size | Depends on |
+|---|---|---|---|
+| T80 | `[design]` schema, theme-chain and config merge, resolution to points (`src/design/*`), `Prepared.design`, `dump --design`, `eject theme --design`, `design-font-file`/`design-image-missing` checks | L | T16, T71, T72 |
+| T81 | HTML tokens: generated `@font-face` and `:root --w-*` block before the theme entries, `@page`/paragraph layout block after them, `theme.design` in the context | M | T80 |
+| T82 | Typst: `sys.inputs.writer-design`, `writer-doc` defaults from the design (fonts, size, leading, spacing, colours, paper, margins), design font files in the World, `design-font-family`/`design-shadowed` | M | T80 |
+| T83 | DOCX: `styles.xml` and `sectPr` generated from the design (byte-identical to the assets without one), reference-document precedence, `design-shadowed` | M | T80 |
+| T84 | Typst emitter keeps div classes: `#writer-div(style:, classes:)[..]`, `@writer/doc` 0.2.0, frontend allow-list, snapshots | S | T80, T82 |
+| T85 | Named paragraph styles in all three backends (`data-style` rules, `writer-div` body, appended DOCX styles and the class route), `design-style-unused` | M | T81, T83, T84 |
+| T86 | HTML page furniture: `design_furniture` helper in the default template, `@page` margin boxes / fixed mode | M | T85 |
+| T87 | DOCX page furniture: generated header/footer parts, media, `titlePg`, fields | M | T85 |
+| T88 | Typst page furniture: `writer-furniture`, `page(background:)` placement, counters | M | T85 |
+| T89 | Guide sections (customization, configuration, outputs, typst) and `examples/letter/` | M | T86, T87, T88 |
+
 ### Dependency graph (what each task unblocks; derived from the dependency column)
 
 ```
@@ -512,6 +527,13 @@ w7  T24 ─► T52                                   T33 ─► T71
     T43 ─► T72                                   T61 ─► T72, T74, T71
 w8  T52 ─► T53, T71, T78                         T72 ─► T74
 w9  T53 ─► T74        T71 ─► T74
+
+M8 (design layer, 2026-11-01; T80 waits for the core milestones through T16, T71, T72):
+w10 T80 ─► T81, T82, T83, T84
+w11 T81 ─► T85        T82 ─► T84        T83 ─► T85
+w12 T84 ─► T85
+w13 T85 ─► T86, T87, T88
+w14 T86 ─► T89        T87 ─► T89        T88 ─► T89
 ```
 
 ### Waves (computed from the dependency column; no task depends on a task in its own wave)
@@ -528,7 +550,12 @@ w9  T53 ─► T74        T71 ─► T74
 | 7 | T24, T33, T43, T61 | 4 |
 | 8 | T52, T72 | 2 |
 | 9 | T53, T71, T78 | 3 |
-| 10 | T74 | 1 |
+| 10 | T74, T80 | 2 |
+| 11 | T81, T82, T83 | 3 |
+| 12 | T84 | 1 |
+| 13 | T85 | 1 |
+| 14 | T86, T87, T88 | 3 |
+| 15 | T89 | 1 |
 
 Edges added after the first plan (`A → B`: B depends on A). Requested in the specs' Deviations:
 T03 → T15, T14 → T12, T13 → T18, T13 → T60, T30 → T1A, T16 → T1A (html-output.md, math.md);
@@ -553,7 +580,13 @@ for `Emitted.map`, `WRITER_DOC_VERSION` for the `@writer/doc` import; T30 stays 
 (the typst equations of `math/typst/*.typ` and their `docx` rows in `math/expectations.toml`, math.md
 §10; T42 stays in wave 6).
 No other wave changes; `docs/tasks/README.md` (status rows and wave table) must be regenerated from
-this section. The same review moved `src/typst/sourcemap.rs` (`SourceMap` with `from_lines`) and the
+this section.
+M8 (coordinator, 2026-11-01, `docs/spec/design.md`): T80 depends on T16 (pipeline), T71 (`check`)
+and T72 (`eject`), so the design layer starts in wave 10 beside T74 (`scripts/waves.py`); T84 depends on
+T82 because both edit `lib.typ`; T86–T88 depend on T85 because they extend the same backend files
+(`src/html/design.rs`, `src/docx/design.rs`, `lib.typ`) after the named styles land; T89 waits for
+all three furniture tasks. The design.md contract-change notes of the same date in config.md,
+html-output.md, typst-dialect.md, docx-output.md, cli.md and live-reload.md record the edges' reasons. The same review moved `src/typst/sourcemap.rs` (`SourceMap` with `from_lines`) and the
 `IncludeProvider` trait and `Synthesized` (in `world.rs`) to T03, because T03's World signatures use
 them (typst-dialect.md §1, §5.1, §6.1, §6.4; notebook-mapping.md §7.3); without a provider,
 `source()` of a `.md`/`.ipynb` returns `FileError::Other(Some("including .md/.ipynb from typst
