@@ -149,11 +149,150 @@
     } else { numbered-layout(meta, settings, body) }
 }
 
+// Furniture lines are plain text. Only page placeholders expand, in context.
+#let furniture-text(value) = context {
+    let start = 0
+    for item in value.matches(regex("\\{pages?\\}")) {
+        value.slice(start, item.start)
+        if item.text == "{page}" { counter(page).display() }
+        else { str(counter(page).final().first()) }
+        start = item.end
+    }
+    value.slice(start)
+}
+
+#let furniture-align(value) = {
+    if value == "center" { center }
+    else if value == "right" { right } else { left }
+}
+
+#let furniture-line(item, spec) = {
+    let inherited(key, fallback) = {
+        let value = item.at(key, default: none)
+        if value == none { spec.at(key, default: fallback) } else { value }
+    }
+    let size = inherited("size", none)
+    let fill = inherited("color", none)
+    text(
+        size: if size == none { 1em } else { size * 1pt },
+        fill: if fill == none { text.fill } else { rgb(fill) },
+        weight: inherited("weight", 400),
+        style: if inherited("italic", false) { "italic" } else { "normal" },
+        furniture-text(item.text),
+    )
+}
+
+#let furniture-rule(spec) = {
+    if spec != none {
+        // Keep the rule clear of text even when its last baseline is the
+        // paragraph's bottom edge.
+        block(
+            width: 100%,
+            above: if spec.position == "below" { 0.3em } else { 0pt },
+            below: if spec.position == "above" { 0.3em } else { 0pt },
+            line(length: 100%, stroke: spec.width * 1pt + rgb(spec.color)),
+        )
+    }
+}
+
+#let writer-furniture(spec, text-width) = context {
+    if spec == none { return none }
+    let size = if spec.size == none { text.size } else { spec.size * 1pt }
+    let fill = if spec.color == none { text.fill } else { rgb(spec.color) }
+    set text(size: size, fill: fill, weight: spec.weight,
+        style: if spec.italic { "italic" } else { "normal" })
+    set par(
+        first-line-indent: 0pt, spacing: 0pt, justify: false,
+        leading: design-leading(from-design("text.line_height", none), size),
+    )
+    block(width: text-width, above: 0pt, below: 0pt)[
+        #if spec.rule != none and spec.rule.position == "above" {
+            furniture-rule(spec.rule)
+        }
+        #if spec.image != none {
+            let img = spec.image
+            let alignment = if img.align == none { spec.align }
+                else { img.align }
+            align(furniture-align(alignment), image(
+                img.path,
+                width: if img.width == none { auto } else { img.width * 1pt },
+            ))
+        }
+        #if spec.right_lines.len() > 0 {
+            grid(
+                columns: (1fr, auto), column-gutter: 1em,
+                align: (left, right),
+                spec.lines.map(item => furniture-line(item, spec))
+                    .join(linebreak()),
+                spec.right_lines.map(item => furniture-line(item, spec))
+                    .join(linebreak()),
+            )
+        } else if spec.lines.len() > 0 {
+            align(furniture-align(spec.align),
+                spec.lines.map(item => furniture-line(item, spec))
+                    .join(linebreak()))
+        }
+        #if spec.rule != none and spec.rule.position == "below" {
+            furniture-rule(spec.rule)
+        }
+    ]
+}
+
+#let furniture-background(settings) = context {
+    let first = counter(page).get().first() == 1
+    let side(key, axis) = {
+        let value = settings.margin
+        if type(value) == dictionary {
+            value.at(key, default: value.at(axis, default: 2.5cm))
+        } else { value }
+    }
+    let margin = (top: side("top", "y"), right: side("right", "x"),
+        bottom: side("bottom", "y"), left: side("left", "x"))
+    let text-width = page.width - margin.left - margin.right
+    let header = from-design("page.header", none)
+    if header != none {
+        let chosen = if first { header.first } else { header.rest }
+        if chosen != none {
+            let offset = from-design("page.header_offset", none)
+            let offset = if offset == none { margin.top * 0.3 }
+                else { offset * 1pt }
+            place(top + left, dx: margin.left, dy: offset,
+                writer-furniture(chosen, text-width))
+        }
+    }
+    let footer = from-design("page.footer", none)
+    if footer != none {
+        let chosen = if first { footer.first } else { footer.rest }
+        if chosen != none {
+            let offset = from-design("page.footer_offset", none)
+            let offset = if offset == none { margin.bottom * 0.3 }
+                else { offset * 1pt }
+            let content = if chosen.size == none {
+                text(size: 0.75em, writer-furniture(chosen, text-width))
+            } else { writer-furniture(chosen, text-width) }
+            place(bottom + left, dx: margin.left, dy: -offset, content)
+        }
+    }
+}
+
+#let furniture-layout(meta, settings, body) = {
+    if (
+        from-design("page.header", none) != none
+        or from-design("page.footer", none) != none
+    ) {
+        set page(
+            header: none, footer: none, numbering: none,
+            background: furniture-background(settings),
+        )
+        reference-layout(meta, settings, body)
+    } else { reference-layout(meta, settings, body) }
+}
+
 #let design-layout(meta, settings, body) = {
     if settings.link-fill != none {
         show link: set text(fill: settings.link-fill)
-        reference-layout(meta, settings, body)
-    } else { reference-layout(meta, settings, body) }
+        furniture-layout(meta, settings, body)
+    } else { furniture-layout(meta, settings, body) }
 }
 
 #let layout(meta, settings, body) = {

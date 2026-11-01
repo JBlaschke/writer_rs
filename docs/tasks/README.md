@@ -82,7 +82,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | done |
 | T86 | Page furniture: HTML | M8 | M | T85 | done |
 | T87 | Page furniture: DOCX | M8 | M | T85 | done |
-| T88 | Page furniture: Typst | M8 | M | T85 | todo |
+| T88 | Page furniture: Typst | M8 | M | T85 | done |
 | T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | todo |
 
 ## Order of execution (waves, computed from the dependency column)
