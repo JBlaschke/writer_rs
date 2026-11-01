@@ -311,6 +311,135 @@ pub fn section(
     )
 }
 
+/// Formats a paragraph style, retaining its existing ID and base definition.
+pub fn style_xml(
+    name: &str, style: &crate::design::Style, design: &Design,
+    ids: &super::styles::StyleTable,
+) -> String {
+    use super::styles::StyleKind;
+    use super::xml::{NS_W, STYLE};
+    use crate::design::{Align, FontRef};
+    let id = ids
+        .id_for(name, StyleKind::Paragraph)
+        .expect("design style registered before formatting");
+    let fragment =
+        ids.definition_xml(id).expect("registered design definition");
+    let source = format!("<root xmlns:w=\"{NS_W}\">{fragment}</root>");
+    let root = parse_xml(&source).expect("registered style XML");
+    let tree = &root.children[0];
+    let attrs = tree
+        .attrs
+        .iter()
+        .map(|(key, value)| format!("{key}=\"{}\"", escape(value)))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut definition = Props::new("w:style", STYLE).with_attrs(&attrs);
+    for child in &tree.children {
+        if let Some(&tag) = STYLE.iter().find(|&&tag| tag == child.name)
+            && !["w:pPr", "w:rPr", "w:name"].contains(&tag)
+        {
+            definition.set(tag, &source[child.range.clone()]);
+        }
+    }
+    definition.set("w:name", property("w:name", &[("w:val", name.to_owned())]));
+    definition.set("w:qFormat", "<w:qFormat/>");
+    let mut paragraph = Props::new("w:pPr", PPR);
+    if style.keep_with_next {
+        paragraph.set("w:keepNext", "<w:keepNext/>");
+    }
+    if style.keep_together {
+        paragraph.set("w:keepLines", "<w:keepLines/>");
+    }
+    let mut spacing = Vec::new();
+    if let Some(space) = style.space_before {
+        spacing.push(("w:before", twips(space).to_string()));
+    }
+    if let Some(space) = style.space_after {
+        spacing.push(("w:after", twips(space).to_string()));
+    }
+    if let Some(height) = style.line_height {
+        let (line, rule) = match height {
+            LineHeight::Multiple(n) => ((n * 240.0).round() as u32, "auto"),
+            LineHeight::Exact(pt) => (twips(pt), "exact"),
+        };
+        spacing.push(("w:line", line.to_string()));
+        spacing.push(("w:lineRule", rule.into()));
+    }
+    if !spacing.is_empty() {
+        paragraph.set("w:spacing", property("w:spacing", &spacing));
+    }
+    if style.space_before.is_some() || style.space_after.is_some() {
+        paragraph.set("w:contextualSpacing", "<w:contextualSpacing/>");
+    }
+    if let Some(align) = style.align {
+        let align = match align {
+            Align::Left => "left",
+            Align::Center => "center",
+            Align::Right => "right",
+            Align::Justify => "both",
+        };
+        paragraph.set("w:jc", property("w:jc", &[("w:val", align.into())]));
+    }
+    definition.set("w:pPr", paragraph.to_xml());
+    let mut run = Props::new("w:rPr", RPR);
+    if let Some(font) = &style.font {
+        let family = match font {
+            FontRef::Family(family) => Some(family.as_str()),
+            role => design.font_for(role).map(|font| font.family.as_str()),
+        };
+        if let Some(family) = family {
+            run.set(
+                "w:rFonts",
+                property(
+                    "w:rFonts",
+                    &[
+                        ("w:ascii", family.into()),
+                        ("w:hAnsi", family.into()),
+                        ("w:cs", family.into()),
+                    ],
+                ),
+            );
+        }
+    }
+    if let Some(weight) = style.weight {
+        for tag in ["w:b", "w:bCs"] {
+            run.set(
+                tag,
+                if weight.0 >= 600 {
+                    format!("<{tag}/>")
+                } else {
+                    format!("<{tag} w:val=\"0\"/>")
+                },
+            );
+        }
+    }
+    if let Some(italic) = style.italic {
+        for tag in ["w:i", "w:iCs"] {
+            run.set(
+                tag,
+                if italic {
+                    format!("<{tag}/>")
+                } else {
+                    format!("<{tag} w:val=\"0\"/>")
+                },
+            );
+        }
+    }
+    if let Some(color) = style.color {
+        run.set("w:color", property("w:color", &[("w:val", hex(color))]));
+    }
+    if let Some(size) = style.size {
+        for tag in ["w:sz", "w:szCs"] {
+            run.set(
+                tag,
+                property(tag, &[("w:val", half_points(size).to_string())]),
+            );
+        }
+    }
+    definition.set("w:rPr", run.to_xml());
+    definition.to_xml()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -156,6 +156,7 @@ pub fn layout_css(
         let _ = writeln!(css, "@page{{{}}}", page.join(";"));
     }
     // Named styles and furniture append their CSS here in the later tasks.
+    css.push_str(&styles_css(design));
     Ok(css)
 }
 
@@ -235,6 +236,78 @@ pub(crate) fn file_url(
             Emitter::new(&registry, &OutputMode::Serve).url_for(&id)
         }
     }
+}
+
+/// Paragraph style rules selected by the resolved design's declared names.
+pub fn styles_css(design: &Design) -> String {
+    use crate::design::{Align, FontRef};
+    let mut css = String::new();
+    for (name, style) in &design.styles {
+        let mut declarations = Vec::new();
+        if let Some(font) = &style.font {
+            let value = match font {
+                FontRef::Body => "var(--w-font-body)".into(),
+                FontRef::Heading => "var(--w-font-heading)".into(),
+                FontRef::Mono => "var(--w-font-mono)".into(),
+                FontRef::Family(family) => css_string(family),
+            };
+            declarations.push(format!("font-family:{value}"));
+        }
+        if let Some(size) = style.size {
+            declarations.push(format!("font-size:{}", css_pt(size)));
+        }
+        if let Some(height) = style.line_height {
+            declarations
+                .push(format!("line-height:{}", css_line_height(height)));
+        }
+        if let Some(color) = style.color {
+            declarations.push(format!("color:{}", css_color(color)));
+        }
+        if let Some(weight) = style.weight {
+            declarations.push(format!("font-weight:{}", weight.0));
+        }
+        if let Some(italic) = style.italic {
+            declarations.push(format!(
+                "font-style:{}",
+                if italic { "italic" } else { "normal" }
+            ));
+        }
+        if let Some(align) = style.align {
+            let value = match align {
+                Align::Left => "left",
+                Align::Center => "center",
+                Align::Right => "right",
+                Align::Justify => "justify",
+            };
+            declarations.push(format!("text-align:{value}"));
+        }
+        if let Some(space) = style.space_before {
+            declarations.push(format!("margin-top:{}", css_pt(space)));
+        }
+        if let Some(space) = style.space_after {
+            declarations.push(format!("margin-bottom:{}", css_pt(space)));
+        }
+        if style.keep_together {
+            declarations.push("break-inside:avoid".into());
+        }
+        if style.keep_with_next {
+            declarations.push("break-after:avoid".into());
+        }
+        let _ = writeln!(
+            css,
+            "[data-style={}]{{{}}}",
+            css_string(name),
+            declarations.join(";")
+        );
+        if style.align.is_some() {
+            let _ = writeln!(
+                css,
+                "[data-style={}] p{{text-align:inherit}}",
+                css_string(name)
+            );
+        }
+    }
+    css
 }
 
 #[cfg(test)]

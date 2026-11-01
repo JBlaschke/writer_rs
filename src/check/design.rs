@@ -151,3 +151,31 @@ pub fn docx_shadowed(
         .with_path(path),
     ]
 }
+
+/// Reports declared styles which no div in the resolved document selects.
+pub fn unused_styles(
+    design: &Design, document: &crate::ir::Document,
+) -> Vec<Diagnostic> {
+    if document.source.kind == crate::ir::SourceKind::Typst {
+        return Vec::new();
+    }
+    let mut selected = std::collections::BTreeSet::new();
+    crate::ir::walk_blocks(document, &mut |block| {
+        if let crate::ir::Block::Div { attrs, .. } = block
+            && let Some(name) = crate::design::style_for(design, attrs)
+        {
+            selected.insert(name.to_owned());
+        }
+    });
+    design
+        .styles
+        .keys()
+        .filter(|name| !selected.contains(*name))
+        .map(|name| {
+            Diagnostic::warning(
+                "design-style-unused",
+                format!("design style {name:?} is not selected by any div"),
+            )
+        })
+        .collect()
+}

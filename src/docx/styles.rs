@@ -291,6 +291,7 @@ impl StyleTable {
         let mut table =
             Self::read(&source).expect("selected built-in styles are valid");
         table.design = design.clone();
+        table.install_design_styles(&BTreeSet::new());
         table
     }
 
@@ -308,6 +309,13 @@ impl StyleTable {
         styles_xml: &str, design: &Design,
     ) -> Result<Self> {
         let mut table = Self::read(styles_xml)?;
+        let reference_names = table
+            .names
+            .keys()
+            .filter_map(|(kind, name)| {
+                (*kind == StyleKind::Paragraph).then_some(name.clone())
+            })
+            .collect();
         table.design = design.clone();
         let tree = style_root(styles_xml)?;
         let references: Vec<_> = tree
@@ -336,7 +344,89 @@ impl StyleTable {
                 }
             }
         }
+        table.install_design_styles(&reference_names);
         Ok(table)
+    }
+
+    /// Returns a preserved or appended style definition by its reserved id.
+    pub(crate) fn definition_xml(&self, id: &str) -> Option<String> {
+        for raw in &self.appended {
+            let wrapper = format!("<root xmlns:w=\"{NS_W}\">{raw}</root>");
+            let root = parse_xml(&wrapper).ok()?;
+            let tree = root.children.first()?;
+            if tree.attr("w:styleId") == Some(id) {
+                return Some(raw.clone());
+            }
+        }
+        let tree = style_root(&self.source).ok()?;
+        let node = tree.children.iter().find(|node| {
+            node.name == "w:style" && node.attr("w:styleId") == Some(id)
+        })?;
+        Some(self.source[node.range.clone()].into())
+    }
+
+    /// Replaces one existing definition without changing its id/name lookup.
+    pub(crate) fn replace_definition(&mut self, id: &str, xml: String) {
+        for raw in &mut self.appended {
+            let wrapper = format!("<root xmlns:w=\"{NS_W}\">{raw}</root>");
+            let root = parse_xml(&wrapper).expect("stored style is valid");
+            let tree = root.children.first().expect("one style definition");
+            if tree.attr("w:styleId") == Some(id) {
+                *raw = xml;
+                return;
+            }
+        }
+        let tree = style_root(&self.source).expect("stored styles are valid");
+        let node = tree
+            .children
+            .iter()
+            .find(|node| {
+                node.name == "w:style" && node.attr("w:styleId") == Some(id)
+            })
+            .expect("style id was reserved before replacement");
+        self.source.replace_range(node.range.clone(), &xml);
+        self.append_at = self
+            .source
+            .rfind("</w:styles>")
+            .expect("definition replacement preserves the root");
+    }
+
+    fn install_design_styles(&mut self, reference_names: &BTreeSet<String>) {
+        let styles = self.design.styles.clone();
+        let mut selected = Vec::new();
+        for name in styles.keys() {
+            if let Some(reference) = reference_names.iter().find(|reference| {
+                crate::design::normalise_style_key(reference)
+                    == crate::design::normalise_style_key(name)
+            }) {
+                let id = self.names[&(StyleKind::Paragraph, reference.clone())]
+                    .clone();
+                self.names
+                    .insert((StyleKind::Paragraph, name.to_lowercase()), id);
+                continue;
+            }
+            let vocabulary = VOCABULARY.iter().find(|(candidate, kind)| {
+                *kind == StyleKind::Paragraph
+                    && crate::design::normalise_style_key(candidate)
+                        == crate::design::normalise_style_key(name)
+            });
+            let id = if let Some((vocabulary, _)) = vocabulary {
+                self.ensure(vocabulary, StyleKind::Paragraph)
+            } else {
+                self.custom(name, StyleKind::Paragraph, None)
+            };
+            self.names.insert(
+                (StyleKind::Paragraph, name.to_lowercase()),
+                id.clone(),
+            );
+            selected.push((name, id));
+        }
+        for (name, id) in selected {
+            let xml = super::design::style_xml(
+                name, &styles[name], &self.design, self,
+            );
+            self.replace_definition(&id, xml);
+        }
     }
 
     fn read(xml: &str) -> Result<Self> {
