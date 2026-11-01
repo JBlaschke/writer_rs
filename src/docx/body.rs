@@ -75,6 +75,8 @@ static TOKEN_SCOPES: LazyLock<Vec<(Scope, &'static str)>> =
 pub(crate) struct BodyState {
     lists: Vec<ListFrame>,
     in_abstract: bool,
+    /// A page break that the next paragraph's properties carry.
+    pending_page_break: bool,
 }
 
 struct ListFrame {
@@ -146,12 +148,18 @@ impl Emitter<'_> {
     /// Writes siblings, preserving paragraph adjacency across raw blocks.
     pub(crate) fn blocks(&mut self, blocks: &[Block]) {
         let mut preceding_paragraph = false;
-        for block in blocks {
+        for (index, block) in blocks.iter().enumerate() {
             let previous_span = self.content.span.clone();
             if let Some(span) = block.span() {
                 self.content.span = Some(span.clone());
             }
-            self.block(block, preceding_paragraph);
+            if matches!(block, Block::PageBreak { .. })
+                && next_starts_own_paragraph(&blocks[index + 1..])
+            {
+                self.content.body.pending_page_break = true;
+            } else {
+                self.block(block, preceding_paragraph);
+            }
             self.content.span = previous_span;
             if !matches!(block, Block::Raw { .. }) {
                 preceding_paragraph = matches!(block, Block::Paragraph { .. });
@@ -206,6 +214,8 @@ impl Emitter<'_> {
                 });
                 self.end_paragraph();
             }
+            // Only before a block without a paragraph of its own; `blocks`
+            // defers the other breaks onto the next paragraph's properties.
             Block::PageBreak { .. } => {
                 self.start_paragraph(ParaProps::default());
                 self.buffer().push_str("<w:r><w:br w:type=\"page\"/></w:r>");
@@ -339,6 +349,8 @@ impl Emitter<'_> {
 
     /// Starts a paragraph, including deferred list and footnote markers.
     pub(crate) fn start_paragraph(&mut self, mut props: ParaProps) {
+        props.page_break_before |=
+            std::mem::take(&mut self.content.body.pending_page_break);
         if props.style.as_deref().is_some_and(|style| {
             self.styles.id_for("heading 1", StyleKind::Paragraph) == Some(style)
         }) {
@@ -720,9 +732,31 @@ impl Emitter<'_> {
 
     /// OOXML bodies, footnotes and cells must not end with a table.
     pub(crate) fn finish_block_sequence(&mut self) {
+        debug_assert!(!self.content.body.pending_page_break);
         if last_element_is_table(self.buffer()) {
             self.buffer().push_str("<w:p/>");
         }
+    }
+}
+
+/// Whether the first element the remaining blocks write is a paragraph of
+/// their own, which can carry a page break as `w:pageBreakBefore`.
+///
+/// Word renders a break paragraph that lands at the top of a page as a blank
+/// page, while a paragraph that already starts a page ignores the property.
+fn next_starts_own_paragraph(blocks: &[Block]) -> bool {
+    match blocks.iter().find(|block| !writes_nothing(block)) {
+        Some(Block::Paragraph { inlines, .. }) => !inlines.is_empty(),
+        Some(Block::Heading { .. }) => true,
+        _ => false,
+    }
+}
+
+/// Raw blocks for other formats leave the DOCX body untouched.
+fn writes_nothing(block: &Block) -> bool {
+    match block {
+        Block::Raw { format, .. } => format != "openxml",
+        _ => false,
     }
 }
 

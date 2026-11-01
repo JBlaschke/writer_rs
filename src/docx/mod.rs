@@ -1129,6 +1129,8 @@ pub mod xml {
         pub style: Option<String>,
         /// Keep this paragraph with the following paragraph.
         pub keep_next: bool,
+        /// Start this paragraph on a new page.
+        pub page_break_before: bool,
         /// List level and numbering instance identifier.
         pub num: Option<(u8, u32)>,
         /// Complete `w:pBdr` element.
@@ -1151,6 +1153,7 @@ pub mod xml {
             let mut props = Props::new("w:pPr", PPR);
             val(&mut props, "w:pStyle", self.style.as_deref());
             flag(&mut props, "w:keepNext", self.keep_next);
+            flag(&mut props, "w:pageBreakBefore", self.page_break_before);
             if let Some((level, id)) = self.num {
                 props.set("w:numPr", format!(
                     "<w:numPr><w:ilvl w:val=\"{level}\"/><w:numId w:val=\"{id}\"/></w:numPr>"
@@ -1430,6 +1433,7 @@ mod tests {
         let para = ParaProps {
             style: Some("BodyText".into()),
             keep_next: true,
+            page_break_before: true,
             num: Some((2, 1001)),
             border: Some("<w:pBdr/>".into()),
             shading: Some("<w:shd/>".into()),
@@ -1441,8 +1445,8 @@ mod tests {
         assert_eq!(
             children(&para.to_xml()),
             [
-                "w:pStyle", "w:keepNext", "w:numPr", "w:pBdr", "w:shd",
-                "w:tabs", "w:spacing", "w:ind", "w:jc",
+                "w:pStyle", "w:keepNext", "w:pageBreakBefore", "w:numPr",
+                "w:pBdr", "w:shd", "w:tabs", "w:spacing", "w:ind", "w:jc",
             ]
         );
         let run = RunProps {

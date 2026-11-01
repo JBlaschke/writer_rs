@@ -14,6 +14,7 @@ use writer::docx::{
 };
 use writer::error::Result;
 use writer::ir::{Block, Document, MathDialect};
+use writer::pipeline::{self, BuildOptions, Mode};
 use writer::resolve::anchor;
 
 #[path = "common/docx.rs"]
@@ -125,6 +126,18 @@ fn emit(
 
 fn render(name: &str) -> DocxOutput {
     emit(&fixture(name), &Config::default(), None)
+}
+
+/// The body part of a Markdown source prepared by the pipeline.
+fn markdown_body(text: &str) -> String {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("document.md");
+    std::fs::write(&path, text).unwrap();
+    let mut options = BuildOptions::new(&path);
+    options.mode = Mode::Check;
+    let prepared = pipeline::prepare(&options).unwrap();
+    let output = emit(&prepared.document, &prepared.config, None);
+    xml_parts(&output).remove("word/document.xml").unwrap()
 }
 
 fn parts(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
@@ -259,6 +272,35 @@ fn paragraph_context_and_title_metadata() {
     assert!(xml.contains("<w:t xml:space=\"preserve\">\u{200b}</w:t>"));
     assert!(has_style(xml, "HorizontalRule"));
     assert!(xml.contains("<w:br w:type=\"page\"/>"));
+}
+
+#[test]
+fn page_breaks_before_paragraphs_and_headings_become_properties() {
+    let xml = markdown_body(concat!(
+        ":::pagebreak\n:::\n\n# Heading\n\nText.\n\n:::pagebreak\n:::\n\n",
+        "```{=html}\n<hr>\n```\n\nAfter.\n",
+    ));
+    assert!(paragraph(&xml, "Heading").contains(
+        "<w:pPr><w:pStyle w:val=\"Heading1\"/><w:pageBreakBefore/></w:pPr>"
+    ));
+    assert!(paragraph(&xml, "After").contains(concat!(
+        "<w:pPr><w:pStyle w:val=\"FirstParagraph\"/>",
+        "<w:pageBreakBefore/></w:pPr>"
+    )));
+    assert_eq!(xml.matches("<w:pageBreakBefore/>").count(), 2);
+    assert!(!xml.contains("<w:br w:type=\"page\"/>"));
+}
+
+#[test]
+fn page_breaks_before_other_blocks_stay_break_paragraphs() {
+    let xml = markdown_body(concat!(
+        "Intro.\n\n:::pagebreak\n:::\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n",
+        ":::pagebreak\n:::\n",
+    ));
+    let break_paragraph = "<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>";
+    assert_eq!(xml.matches(break_paragraph).count(), 2);
+    assert!(xml.contains(&format!("{break_paragraph}<w:tbl>")));
+    assert!(!xml.contains("<w:pageBreakBefore/>"));
 }
 
 #[test]

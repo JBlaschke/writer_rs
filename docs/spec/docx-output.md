@@ -327,7 +327,7 @@ direct flags accumulate.
 | `BlockQuote`, `Div` | children in the §4.1 container; a `Div`/`Callout`/`Cell`/`CodeBlock`/bare `Table` with `attrs.id` gets a block-level bookmark (`w:bookmarkStart` before its first element, `w:bookmarkEnd` after its last; pandoc's `wrapBookmark`) |
 | `Raw` | `openxml`: verbatim at block level (§4.7); others dropped (`check` reports `raw-skipped`) |
 | `ThematicBreak` | `<w:p><w:pPr><w:pStyle w:val="{Horizontal Rule}"/></w:pPr></w:p>` |
-| `PageBreak` | `<w:p><w:r><w:br w:type="page"/></w:r></w:p>` |
+| `PageBreak` | before a non-empty `Paragraph` or a `Heading` (`Raw` blocks of other formats in between write nothing and are skipped): `<w:pageBreakBefore/>` in that paragraph's `w:pPr`, which Word ignores when the paragraph already starts a page; before anything else, or at the end of a block sequence: `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`. Word renders a break paragraph that lands at the top of a page as a blank page, so a break after content that exactly fills its page, such as a TOC, must not be a paragraph |
 
 ### 4.4 Title block and headings
 Before the body, from `DocMeta` (plain text runs; DocMeta strings are not Markdown): `Title`,
