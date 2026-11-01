@@ -264,8 +264,8 @@ fn table_styles_and_plain_caption_follow_precedence() {
         )));
     }
     let doc = document(vec![json!({
-        "type": "figure", "kind": "table", "caption": null,
-        "attrs": {}, "body": [table(vec![json!({})], vec![vec![cell("No caption")]])]
+        "type": "figure", "kind": "table", "caption": null, "attrs": {},
+        "body": [table(vec![json!({})], vec![vec![cell("No caption")]])]
     })]);
     let output = emit(&doc);
     assert!(!xml_parts(&output)["word/document.xml"].contains("w:tblCaption"));
@@ -500,7 +500,9 @@ fn excessive_colspan_drops_without_expanding_the_column_grid() {
     let doc = document(vec![table(
         vec![json!({}); 2],
         vec![vec![
-            json!({"inlines": [text("DROPPED HUGE SPAN")], "colspan": u32::MAX}),
+            json!({
+                "inlines": [text("DROPPED HUGE SPAN")], "colspan": u32::MAX
+            }),
             cell("first"),
             cell("second"),
         ]],
@@ -544,8 +546,10 @@ fn table_cells_do_not_inherit_outer_list_numbering_and_tables_end_in_paragraphs(
  {
     let value = table(vec![json!({})], vec![vec![cell("listed table")]]);
     let doc = document(vec![
-        json!({"type": "list", "kind": {"kind": "ordered", "start": 1}, "tight": false,
-            "items": [{"blocks": [value.clone()]}]}),
+        json!({
+            "type": "list", "kind": {"kind": "ordered", "start": 1},
+            "tight": false, "items": [{"blocks": [value.clone()]}]
+        }),
         value.clone(),
         value.clone(),
         json!({"type": "paragraph", "inlines": [{

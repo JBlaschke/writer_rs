@@ -309,18 +309,22 @@ mod tests {
             asset(&other, "shared.png", false),
         ];
         let error = materialise(&conflict, &registry, None).unwrap_err();
-        assert!(
-            matches!(error, Error::Other(message) if message.contains("shared.png") && message.contains("conflicting"))
-        );
+        assert!(matches!(
+            error,
+            Error::Other(message)
+                if message.contains("shared.png")
+                    && message.contains("conflicting")
+        ));
         for id in [&first, &other] {
             let aliases = [
                 asset(&first, "shared.png", false),
                 asset(id, "SHARED.png", false),
             ];
             let error = materialise(&aliases, &registry, None).unwrap_err();
-            assert!(
-                matches!(error, Error::Other(message) if message.contains("ASCII case"))
-            );
+            assert!(matches!(
+                error,
+                Error::Other(message) if message.contains("ASCII case")
+            ));
         }
     }
 
@@ -334,9 +338,11 @@ mod tests {
         };
         let error =
             materialise(&[file], &AssetRegistry::new(), None).unwrap_err();
-        assert!(
-            matches!(error, Error::Resource { what: "bibliography", path: found, .. } if found == path)
-        );
+        assert!(matches!(
+            error,
+            Error::Resource { what: "bibliography", path: found, .. }
+                if found == path
+        ));
         assert!(!directory.path().join("copied.bib").exists());
     }
 }

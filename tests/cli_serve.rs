@@ -890,7 +890,11 @@ fn interrupt_ends_an_active_sse_connection_and_exits_zero() {
 fn interrupt_during_the_first_build_exits_zero_without_binding() {
     let _turn = serial();
     let dir = project();
-    let large: String = (0..30000).map(|index| format!("Paragraph {index}: Text with *emphasis*, `code` and a reference.\n\n")).collect();
+    let large: String = (0..30000)
+        .map(|index| format!(
+            "Paragraph {index}: Text with *emphasis*, `code` and a reference.\n\n"
+        ))
+        .collect();
     write(&dir.path().join("big.md"), &large);
     let mut command = Command::new(env!("CARGO_BIN_EXE_writer"));
     command.args(["-v", "serve", "big.md", "--port", "0"]);
@@ -1219,10 +1223,15 @@ fn included_notebook_edits_and_late_cell_errors_keep_real_provenance() {
             }],
         })
     };
-    let mut notebook = json!({"nbformat":4,"nbformat_minor":5,
-        "metadata":{"language_info":{"name":"python"}}, "cells":[
-            {"cell_type":"markdown","id":"intro","source":"Notebook intro.\n","metadata":{}},
-            plot("#214d72"),
+    let mut notebook = json!({
+        "nbformat": 4, "nbformat_minor": 5,
+        "metadata": {"language_info": {"name": "python"}},
+        "cells": [
+            {
+                "cell_type": "markdown", "id": "intro",
+                "source": "Notebook intro.\n", "metadata": {}
+            },
+            plot("#214d72")
         ]
     });
     let path = dir.path().join("book.ipynb");
@@ -1240,9 +1249,11 @@ fn included_notebook_edits_and_late_cell_errors_keep_real_provenance() {
     });
     assert_ne!(updated["pages"]["hashes"], initial["pages"]["hashes"]);
     let good = assert_page_resource(&server, &updated, 0);
-    notebook["cells"][1] = json!({"cell_type":"raw","id":"plot",
-        "metadata":{"raw_mimetype":"text/typst"},
-        "source":"#t53_unknown_cell()\n"});
+    notebook["cells"][1] = json!({
+        "cell_type": "raw", "id": "plot",
+        "metadata": {"raw_mimetype": "text/typst"},
+        "source": "#t53_unknown_cell()\n"
+    });
     write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
     let failed = events.build(&server, id(&updated), |event| {
         event["pages"]["status"] == "error"

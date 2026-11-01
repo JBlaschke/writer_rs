@@ -418,8 +418,18 @@ impl<'a> Walker<'a, '_, '_, '_> {
     fn misplaced_equation_label(
         &mut self, node: &'a AstNode<'a>, span: &SourceSpan,
     ) {
-        let math = node.children().any(|n| matches!(&n.data().value, NodeValue::Math(math) if math.display_math));
-        let label = node.children().any(|n| matches!(&n.data().value, NodeValue::Text(text) if text.contains("{#")));
+        let math = node.children().any(|n| {
+            matches!(
+                &n.data().value,
+                NodeValue::Math(math) if math.display_math
+            )
+        });
+        let label = node.children().any(|n| {
+            matches!(
+                &n.data().value,
+                NodeValue::Text(text) if text.contains("{#")
+            )
+        });
         if math && label {
             self.warn(
                 "equation-label-misplaced",
@@ -478,9 +488,16 @@ impl<'a> Walker<'a, '_, '_, '_> {
             rows.push(Row { cells });
         }
         if body.last().and_then(|row| row.cells.first()).is_some_and(|cell| {
-            matches!(cell.inlines.first(), Some(Inline::Text { text }) if text.starts_with(": "))
+            matches!(
+                cell.inlines.first(),
+                Some(Inline::Text { text }) if text.starts_with(": ")
+            )
         }) {
-            self.warn("table-caption-pandoc-colon", "use a separate `Table:` paragraph for a table caption", span);
+            self.warn(
+                "table-caption-pandoc-colon",
+                "use a separate `Table:` paragraph for a table caption",
+                span,
+            );
         }
         Ok(Block::Table {
             columns,
@@ -505,7 +522,9 @@ impl<'a> Walker<'a, '_, '_, '_> {
                 text.strip_prefix("Table:").unwrap_or(text).trim_start().into();
         }
         let parsed = self.caption_attrs(&mut caption, &caption_span);
-        caption.retain(|inline| !matches!(inline, Inline::Text { text } if text.is_empty()));
+        caption.retain(|inline| {
+            !matches!(inline, Inline::Text { text } if text.is_empty())
+        });
         let caption = (!caption.is_empty()).then_some(caption);
         let attrs = self.attrs(parsed, &caption_span);
         let table = self.table(table, &self.span(table))?;
@@ -888,7 +907,11 @@ impl<'a> Walker<'a, '_, '_, '_> {
             Some("listing") => FigureKind::Listing,
             Some("other") => FigureKind::Other,
             Some(value) => {
-                self.warn("invalid-directive-arg", format!("unknown figure kind `{value}`; use image, table, listing or other"), &span);
+                self.warn(
+                    "invalid-directive-arg",
+                    format!("unknown figure kind `{value}`; use image, table, listing or other"),
+                    &span
+                );
                 FigureKind::Other
             }
         };
@@ -1149,7 +1172,11 @@ impl<'a> Walker<'a, '_, '_, '_> {
             if let Some(value) = attrs.pairs.get(key)
                 && !valid_dimension(value)
             {
-                self.warn("invalid-dimension", format!("invalid image {key} `{value}`; use a number with %, px, pt, cm, mm, in or em"), span);
+                self.warn(
+                    "invalid-dimension",
+                    format!("invalid image {key} `{value}`; use a number with %, px, pt, cm, mm, in or em"),
+                    span
+                );
                 attrs.pairs.remove(key);
             }
         }
@@ -1188,7 +1215,12 @@ impl<'a> Walker<'a, '_, '_, '_> {
 
 fn is_table_caption(node: &AstNode<'_>) -> bool {
     matches!(node.data().value, NodeValue::Paragraph)
-        && node.first_child().is_some_and(|first| matches!(&first.data().value, NodeValue::Text(text) if text.starts_with("Table:")))
+        && node.first_child().is_some_and(|first| {
+            matches!(
+                &first.data().value,
+                NodeValue::Text(text) if text.starts_with("Table:")
+            )
+        })
 }
 
 fn presenter_separator(line: &str) -> bool {
@@ -1579,7 +1611,8 @@ impl Listing {
 #[cfg(test)]
 thread_local! {
     /// How many directories [`Listing`] read on this thread (tests count them).
-    static DIRECTORY_READS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static DIRECTORY_READS: std::cell::Cell<usize> =
+        const { std::cell::Cell::new(0) };
 }
 
 /// Counts one directory listing read (`directory_reads`, in tests); nothing
@@ -2025,11 +2058,18 @@ mod implicit_image_note_tests {
         let (caption, alt) = image(
             "![Caption *note[^a]* again[^a]](images/plot.png)\n\n[^a]: A named note.\n",
         );
-        assert!(matches!(&caption[1], Inline::Emph { inlines }
-            if matches!(&inlines[1], Inline::Footnote { label: Some(label), .. } if label == "a")));
-        assert!(
-            matches!(caption.last(), Some(Inline::FootnoteRef { label, .. }) if label == "a")
-        );
+        assert!(matches!(
+            &caption[1],
+            Inline::Emph { inlines }
+                if matches!(
+                    &inlines[1],
+                    Inline::Footnote { label: Some(label), .. } if label == "a"
+                )
+        ));
+        assert!(matches!(
+            caption.last(),
+            Some(Inline::FootnoteRef { label, .. }) if label == "a"
+        ));
         assert!(matches!(&alt[1], Inline::Emph { inlines }
             if inlines == &[Inline::Text { text: "note".into() }]));
         let mut stripped = caption;
@@ -2068,8 +2108,14 @@ mod implicit_image_note_tests {
         remove_alt_footnotes(&mut alt);
         assert!(matches!(&alt[1], Inline::Strong { inlines }
             if inlines == &[Inline::Text { text: "note".into() }]));
-        assert!(matches!(&caption[1], Inline::Strong { inlines }
-            if matches!(inlines.get(1), Some(Inline::Footnote { label: None, .. }))));
+        assert!(matches!(
+            &caption[1],
+            Inline::Strong { inlines }
+                if matches!(
+                    inlines.get(1),
+                    Some(Inline::Footnote { label: None, .. })
+                )
+        ));
         assert_eq!(
             crate::ir::plain_text(&alt),
             crate::ir::plain_text(&caption)
@@ -2441,7 +2487,12 @@ mod tests {
             Block::Math { .. }
         ));
         let result = parsed("Before $$x$$ after {#eq-misplaced}\n");
-        assert!(paragraph(&result.document.blocks[0]).iter().any(|inline| matches!(inline, Inline::Math { source, .. } if source == "x")));
+        assert!(paragraph(&result.document.blocks[0]).iter().any(
+            |inline| matches!(
+                inline,
+                Inline::Math { source, .. } if source == "x"
+            )
+        ));
         assert!(codes(&result).contains(&"equation-label-misplaced"));
         let result = parsed("- $$x$$\n\n> $$y$$\n");
         let mut math = 0;
@@ -2546,8 +2597,14 @@ mod tests {
         assert!(text.contains("asset:") && !text.contains("images/plot.png"));
         assert_eq!(result.document.assets.len(), 1);
         let inlines = paragraph(&result.document.blocks[1]);
-        assert!(!inlines.iter().any(|inline| matches!(inline, Inline::Raw { text, .. } if text.starts_with("<!--"))));
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Raw { format, text } if format == "html" && text == "<b>")));
+        assert!(!inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Raw { text, .. } if text.starts_with("<!--")
+        )));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Raw { format, text } if format == "html" && text == "<b>"
+        )));
     }
 
     #[test]
@@ -2686,10 +2743,10 @@ mod tests {
             ("callout custom", "custom"),
             ("callout kind=special", "special"),
         ] {
-            assert!(
-                matches!(&parsed(&format!(":::{info}\nBody\n:::\n")).document.blocks[0],
-                Block::Callout { kind, .. } if kind == expected)
-            );
+            assert!(matches!(
+                &parsed(&format!(":::{info}\nBody\n:::\n")).document.blocks[0],
+                Block::Callout { kind, .. } if kind == expected
+            ));
         }
         for (info, class) in [
             ("columns widths='1fr 2fr'", "columns"),
@@ -2727,20 +2784,23 @@ mod tests {
             let result = parsed(&format!(
                 ":::{info}\n\\section{{Raw}}\n\n  untouched\n:::\n"
             ));
-            assert!(
-                matches!(&result.document.blocks[0], Block::Raw { format, text, .. }
-                if format == "latex" && text == "\\section{Raw}\n\n  untouched\n")
-            );
+            assert!(matches!(
+                &result.document.blocks[0],
+                Block::Raw { format, text, .. }
+                    if format == "latex"
+                        && text == "\\section{Raw}\n\n  untouched\n"
+            ));
         }
         let result =
             parsed(":::notes\nHidden\n:::\n\n:::comment\nAlso hidden\n:::\n");
         assert!(result.document.blocks.is_empty());
         assert!(result.diagnostics.iter().next().is_none());
         let result = parsed("::: {.note title='Pandoc'}\nBody\n:::\n");
-        assert!(
-            matches!(&result.document.blocks[0], Block::Callout { kind, title: Some(title), .. }
-            if kind == "note" && plain_text(title) == "Pandoc")
-        );
+        assert!(matches!(
+            &result.document.blocks[0],
+            Block::Callout { kind, title: Some(title), .. }
+                if kind == "note" && plain_text(title) == "Pandoc"
+        ));
         let mut config = Config::default();
         config.document.toc = Toc::Depth(5);
         let result = parse(&source(), ":::toc\n:::\n", &config).unwrap();
@@ -2946,9 +3006,10 @@ mod tests {
         let result = parsed("\\@key and \\@@other\n");
         let inlines = paragraph(&result.document.blocks[0]);
         assert_eq!(inlines[0], Inline::text("@"));
-        assert!(
-            matches!(&inlines[1], Inline::Text { text } if text.starts_with("key and "))
-        );
+        assert!(matches!(
+            &inlines[1],
+            Inline::Text { text } if text.starts_with("key and ")
+        ));
         assert!(
             inlines
                 .iter()
@@ -2959,7 +3020,12 @@ mod tests {
         let mut config = Config::default();
         config.markdown.superscript = true;
         config.markdown.subscript = true;
-        let result = parse(&source(), "*em* **strong** ~~strike~~ x^2^ H~2~O `code`{.plain}\nsoft  \nhard\n", &config).unwrap();
+        let result = parse(
+            &source(),
+            "*em* **strong** ~~strike~~ x^2^ H~2~O `code`{.plain}\nsoft  \nhard\n",
+            &config
+        )
+        .unwrap();
         let inlines = paragraph(&result.document.blocks[0]);
         for expected in [
             "emph", "strong", "strikeout", "superscript", "subscript", "code",
@@ -2994,8 +3060,15 @@ mod tests {
         let result =
             parsed("[link](url){title=Attribute} `<b>x</b>`{=html} trailing\n");
         let inlines = paragraph(&result.document.blocks[0]);
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Link { title, .. } if title.as_deref() == Some("Attribute"))));
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Raw { format, text } if format == "html" && text == "<b>x</b>")));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Link { title, .. } if title.as_deref() == Some("Attribute")
+        )));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Raw { format, text }
+                if format == "html" && text == "<b>x</b>"
+        )));
         assert!(plain_text(inlines).ends_with(" trailing"));
     }
 
@@ -3031,9 +3104,10 @@ mod tests {
             .expect("invalid label reported");
         assert_eq!(diagnostic.level, Level::Error);
         let result = parsed("# No automatic label\n");
-        assert!(
-            matches!(&result.document.blocks[0], Block::Heading { attrs, .. } if attrs.id.is_none())
-        );
+        assert!(matches!(
+            &result.document.blocks[0],
+            Block::Heading { attrs, .. } if attrs.id.is_none()
+        ));
     }
 
     #[test]
@@ -3081,7 +3155,12 @@ mod tests {
     fn front_matter_and_toc() {
         let config = Config::default();
         let before = serde_json::to_value(&config).unwrap();
-        let result = parse(&source(), "---\ntitle: Title\nauthor: [A, B]\ntoc: 2\nmarkdown: {superscript: true}\nabstract: |\n  Abstract $x$ and note^[A note].\n---\n\n# Heading\n\nx^2^\n", &config).unwrap();
+        let result = parse(
+            &source(),
+            "---\ntitle: Title\nauthor: [A, B]\ntoc: 2\nmarkdown: {superscript: true}\nabstract: |\n  Abstract $x$ and note^[A note].\n---\n\n# Heading\n\nx^2^\n",
+            &config
+        )
+        .unwrap();
         assert_eq!(serde_json::to_value(&config).unwrap(), before);
         assert_eq!(result.document.meta.title.as_deref(), Some("Title"));
         assert_eq!(result.document.meta.authors.len(), 2);
@@ -3247,7 +3326,11 @@ mod tests {
             parse_blocks("---\ntitle: Ordinary text\n---\n", &config, &mut ctx)
                 .unwrap();
         assert!(matches!(blocks[0], Block::ThematicBreak { .. }));
-        assert!(blocks.iter().any(|block| matches!(block, Block::Heading { inlines, .. } if plain_text(inlines) == "title: Ordinary text")));
+        assert!(blocks.iter().any(|block| matches!(
+            block,
+            Block::Heading { inlines, .. }
+                if plain_text(inlines) == "title: Ordinary text"
+        )));
         let _ = parse_blocks(
             ":::callout title='A: title'\nBody\n:::\n\n# Bad {#bad!}\n",
             &config,
@@ -3306,9 +3389,10 @@ mod tests {
         let result = parsed(
             "__u__\n\n==h==\n\n++i++\n\n||s||\n\n>>> quoted\n\n-# x\n\n%%c%%\n\n[[w]]\n",
         );
-        assert!(
-            matches!(&paragraph(&result.document.blocks[0])[0], Inline::Strong { inlines } if plain_text(inlines) == "u")
-        );
+        assert!(matches!(
+            &paragraph(&result.document.blocks[0])[0],
+            Inline::Strong { inlines } if plain_text(inlines) == "u"
+        ));
         for (index, text) in [
             (1, "==h=="),
             (2, "++i++"),

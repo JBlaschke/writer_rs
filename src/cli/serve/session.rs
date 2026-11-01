@@ -107,7 +107,9 @@ impl Session {
         &mut self, queued: Vec<ChangeBatch>, stages: &mut impl BuildStages,
     ) {
         let batch = merge_batches(queued, &self.set);
-        tracing::info!(kind = kind_name(batch.kind), paths = ?batch.paths, "changed");
+        tracing::info!(
+            kind = kind_name(batch.kind), paths = ?batch.paths, "changed"
+        );
         let started = Instant::now();
         let build_id = server::next_build_id(&self.state);
         let mut opts = self.opts.clone();
@@ -614,8 +616,10 @@ fn subset_diagnostic_index(
     diagnostics: &Diagnostics, failure: &BuildFailure,
 ) -> Option<usize> {
     let subset = pipeline::subset_error(diagnostics)?;
-    if !matches!(failure.error.as_ref(), Error::Parse { message, .. } if *message == subset.message)
-    {
+    if !matches!(
+        failure.error.as_ref(),
+        Error::Parse { message, .. } if *message == subset.message
+    ) {
         return None;
     }
     diagnostics.iter().position(|diagnostic| std::ptr::eq(diagnostic, subset))
@@ -1087,7 +1091,13 @@ mod tests {
         assert_eq!(restart_note(&listening, &listening), None);
         let configured =
             ServeConfig { host: "::1".into(), port: 0, ..Default::default() };
-        assert_eq!(restart_note(&listening, &configured), Some("[serve] now asks for [::1]:0, but the server was started with 127.0.0.1:0: restart writer serve to apply it".into()));
+        assert_eq!(
+            restart_note(&listening, &configured),
+            Some(
+                "[serve] now asks for [::1]:0, but the server was started with 127.0.0.1:0: restart writer serve to apply it"
+                    .into()
+            )
+        );
     }
 
     #[test]
@@ -1594,7 +1604,11 @@ mod tests {
         prepared.config.typst.package_paths = vec![root.join("old-packages")];
         let mut session = session(opts.clone());
         session.ready_world(Some(&prepared), &opts).unwrap();
-        std::fs::write(root.join("writer.toml"), "[pdf]\nsystem_fonts = false\n[typst]\npackage_paths = ['new-packages']\n").unwrap();
+        std::fs::write(
+            root.join("writer.toml"),
+            "[pdf]\nsystem_fonts = false\n[typst]\npackage_paths = ['new-packages']\n"
+        )
+        .unwrap();
         session.ready_world(None, &opts).unwrap();
         let old = typst::syntax::RootedPath::new(
             typst::syntax::VirtualRoot::Project,

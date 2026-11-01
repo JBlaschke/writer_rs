@@ -168,6 +168,9 @@ enum CallError {
     Browser(Failure),
 }
 
+/// The outcome of one call to the page.
+type CallResult<T> = std::result::Result<T, CallError>;
+
 impl From<Failure> for CallError {
     fn from(failure: Failure) -> CallError {
         CallError::Browser(failure)
@@ -356,7 +359,7 @@ impl Page {
     /// meanwhile. `stage` names what is going on in error messages.
     fn run<T>(
         &mut self, stage: &'static str,
-        step: impl FnOnce(&mut Cdp<'_>, &str) -> std::result::Result<T, CallError>,
+        step: impl FnOnce(&mut Cdp<'_>, &str) -> CallResult<T>,
     ) -> Result<T> {
         let deadline = Instant::now() + self.timeout;
         let mut cdp = Cdp::new(&mut self.browser, deadline);
@@ -426,7 +429,7 @@ impl Drop for Page {
 
 /// Opens a blank page with a flat session, enables the domains whose events
 /// [`Cdp`] handles and the page's lifecycle events; returns the session id.
-fn open_page(cdp: &mut Cdp<'_>) -> std::result::Result<String, CallError> {
+fn open_page(cdp: &mut Cdp<'_>) -> CallResult<String> {
     let target =
         cdp.call(None, "Target.createTarget", json!({ "url": "about:blank" }))?;
     let target_id = string_field(&target, "targetId")?;
@@ -450,7 +453,7 @@ fn open_page(cdp: &mut Cdp<'_>) -> std::result::Result<String, CallError> {
 fn call(
     cdp: &mut Cdp<'_>, session: &str, method: &str, params: Value,
     watch: &mut dyn FnMut(&Value),
-) -> std::result::Result<Value, CallError> {
+) -> CallResult<Value> {
     let id = cdp.send(Some(session), method, params)?;
     loop {
         let mut message = cdp.next_message()?;
@@ -842,7 +845,7 @@ impl<'a> Cdp<'a> {
     /// its result, handling the events that arrive meanwhile.
     fn call(
         &mut self, session: Option<&str>, method: &str, params: Value,
-    ) -> std::result::Result<Value, CallError> {
+    ) -> CallResult<Value> {
         let id = self.send(session, method, params)?;
         loop {
             let mut message = self.next_message()?;
@@ -1495,7 +1498,10 @@ mod tests {
     fn event(frame: &str, loader: &str, name: &str) -> Value {
         json!({
             "method": "Page.lifecycleEvent",
-            "params": { "frameId": frame, "loaderId": loader, "name": name, "timestamp": 1.0 },
+            "params": {
+                "frameId": frame, "loaderId": loader,
+                "name": name, "timestamp": 1.0
+            },
         })
     }
 
@@ -1917,8 +1923,11 @@ mod tests {
         let all: Vec<_> = incoming.try_iter().collect();
         assert!(matches!(
             all.as_slice(),
-            [Incoming::Message(first), Incoming::Message(second), Incoming::Closed]
-                if first == br#"{"id":1}"# && second == br#"{"id":2}"#
+            [
+                Incoming::Message(first),
+                Incoming::Message(second),
+                Incoming::Closed
+            ] if first == br#"{"id":1}"# && second == br#"{"id":2}"#
         ));
     }
 

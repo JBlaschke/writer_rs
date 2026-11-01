@@ -210,9 +210,14 @@ impl Emitter<'_> {
                         output.literal(" ");
                     } else {
                         output.literal("\\\\\n");
-                        if inlines.get(index + 1).is_some_and(|inline|
-                            matches!(inline, Inline::Text { text } if text.starts_with('*')))
-                        { output.literal("{}"); }
+                        if inlines.get(index + 1).is_some_and(|inline| {
+                            matches!(
+                                inline,
+                                Inline::Text { text } if text.starts_with('*')
+                            )
+                        }) {
+                            output.literal("{}");
+                        }
                     }
                 }
                 Inline::Span { attrs, inlines } => {

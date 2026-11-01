@@ -27,7 +27,10 @@ use crate::ir::SourceSpan;
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     /// A source file could not be parsed.
-    #[error("{}:{} {message}", .path.display(), .line.map(|l| l.to_string()).unwrap_or_default())]
+    #[error(
+        "{}:{} {message}",
+        .path.display(), .line.map(|l| l.to_string()).unwrap_or_default()
+    )]
     Parse {
         /// The file that failed to parse.
         path: PathBuf,
@@ -51,7 +54,10 @@ pub enum Error {
         message: String,
     },
     /// A template failed to load or render.
-    #[error("template '{template}'{}: {message}", .line.map(|l| format!(" line {l}")).unwrap_or_default())]
+    #[error(
+        "template '{template}'{}: {message}",
+        .line.map(|l| format!(" line {l}")).unwrap_or_default()
+    )]
     Template {
         /// Template name, e.g. `layouts/title.html`.
         template: String,
@@ -77,7 +83,10 @@ pub enum Error {
         span: Option<SourceSpan>,
     },
     /// A typst compile error, mapped to the user's source where possible.
-    #[error("{}:{} {message}", .path.display(), .line.map(|l| l.to_string()).unwrap_or_default())]
+    #[error(
+        "{}:{} {message}",
+        .path.display(), .line.map(|l| l.to_string()).unwrap_or_default()
+    )]
     Compile {
         /// Source file where compilation failed.
         path: PathBuf,
@@ -405,7 +414,8 @@ fn notebook_cell(text: &str, cell: usize) -> Option<serde_json::Value> {
 thread_local! {
     /// How many notebooks [`notebook_cell`] parsed on this thread (tests count
     /// them).
-    static NOTEBOOK_PARSES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static NOTEBOOK_PARSES: std::cell::Cell<usize> =
+        const { std::cell::Cell::new(0) };
 }
 
 /// `cell N, line M: rest` or `cell N: rest` at the start of `message` (the

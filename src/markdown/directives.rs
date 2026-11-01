@@ -135,10 +135,16 @@ pub fn colon_prepass<'t>(
     for node in root.descendants() {
         if !matches!(node.data().value, NodeValue::Paragraph)
             || !node.parent().is_some_and(|parent| {
-                matches!(parent.data().value, NodeValue::Document | NodeValue::BlockDirective(_))
+                matches!(
+                    parent.data().value,
+                    NodeValue::Document | NodeValue::BlockDirective(_)
+                )
             })
             || !node.first_child().is_some_and(|first| {
-                matches!(&first.data().value, NodeValue::Text(text) if text.starts_with(":::"))
+                matches!(
+                    &first.data().value,
+                    NodeValue::Text(text) if text.starts_with(":::")
+                )
             })
         {
             continue;
@@ -474,17 +480,19 @@ mod tests {
         let root = parse_document(&arena, &edited, &opts);
         let first = root.first_child().unwrap();
         let data = first.data();
-        assert!(
-            matches!(&data.value, NodeValue::BlockDirective(d) if d.info == "figure #fig:wrapped")
-        );
+        assert!(matches!(
+            &data.value,
+            NodeValue::BlockDirective(d) if d.info == "figure #fig:wrapped"
+        ));
         assert_eq!(
             (data.sourcepos.start.line, data.sourcepos.end.line),
             (1, 5)
         );
         let last = root.last_child().unwrap().first_child().unwrap();
-        assert!(
-            matches!(&last.data().value, NodeValue::Text(text) if text == "after")
-        );
+        assert!(matches!(
+            &last.data().value,
+            NodeValue::Text(text) if text == "after"
+        ));
     }
 
     #[test]

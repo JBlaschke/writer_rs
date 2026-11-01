@@ -144,10 +144,13 @@ fn every_fixture_is_snapshotted() {
     for name in fixture_names() {
         match parse_fixture(&name) {
             Ok(parsed) => {
-                insta::assert_json_snapshot!(name.clone(), stable_json(&parsed.document), {
-                    ".source.path" => "[path]",
-                    ".source.base_dir" => "[path]",
-                });
+                insta::assert_json_snapshot!(
+                    name.clone(), stable_json(&parsed.document),
+                    {
+                        ".source.path" => "[path]",
+                        ".source.base_dir" => "[path]",
+                    }
+                );
                 let diagnostics = parsed
                     .diagnostics
                     .iter()

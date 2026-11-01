@@ -636,9 +636,10 @@ mod tests {
             source,
         )
         .unwrap_err();
-        assert!(
-            matches!(*missing.error, Error::Compile { path, line: None, .. } if path == source)
-        );
+        assert!(matches!(
+            *missing.error,
+            Error::Compile { path, line: None, .. } if path == source
+        ));
     }
 
     #[test]

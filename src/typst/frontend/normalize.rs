@@ -495,9 +495,11 @@ mod tests {
             Inline::FootnoteRef { label: "writer-fn-two".into(), number: None }
         );
         assert_eq!(inlines[1], existing);
-        assert!(
-            matches!(&inlines[2], Inline::Footnote { label: Some(label), .. } if label == "writer-fn-two")
-        );
+        assert!(matches!(
+            &inlines[2],
+            Inline::Footnote { label: Some(label), .. }
+                if label == "writer-fn-two"
+        ));
     }
 }
 

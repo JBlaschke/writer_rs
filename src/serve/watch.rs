@@ -734,7 +734,10 @@ impl Watcher {
                     if let Some(ancestor) = existing_ancestor(&dir)
                         && !covers(&self.watched, &ancestor)
                         && !ops.iter().any(|op| {
-                            matches!(op, PathOp::Watch(path, _) if *path == ancestor)
+                            matches!(
+                                op,
+                                PathOp::Watch(path, _) if *path == ancestor
+                            )
                         })
                     {
                         ops.push(PathOp::watch_non_recursive(ancestor));

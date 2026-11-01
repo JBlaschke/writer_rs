@@ -1437,7 +1437,11 @@ mod tests {
         // reported).
         let err = strict(".a{background:url(a\\(1\\).png)}").unwrap_err();
         assert!(
-            matches!(&err, Error::MissingAsset { path, .. } if path == Path::new("a(1).png")),
+            matches!(
+                &err,
+                Error::MissingAsset { path, .. }
+                    if path == Path::new("a(1).png")
+            ),
             "{err:?}"
         );
     }
@@ -1484,7 +1488,11 @@ mod tests {
         )
         .unwrap_err();
         assert!(
-            matches!(&err, Error::MissingAsset { path, .. } if path == Path::new("fonts/My Font.woff2")),
+            matches!(
+                &err,
+                Error::MissingAsset { path, .. }
+                    if path == Path::new("fonts/My Font.woff2")
+            ),
             "{err:?}"
         );
     }

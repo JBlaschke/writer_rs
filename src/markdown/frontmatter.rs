@@ -280,7 +280,9 @@ pub fn parse_document_front_matter(
                  missing, or was line 1 meant as a thematic break?)"
             ))
         }
-        Error::FrontMatter(message) if !headings_after_blank(yaml).is_empty() => {
+        Error::FrontMatter(message)
+            if !headings_after_blank(yaml).is_empty() =>
+        {
             Error::FrontMatter(format!(
                 "{message} ({extent}; is its closing `---` missing?)"
             ))
@@ -1459,9 +1461,10 @@ mod tests {
         );
         // other errors are unchanged
         let (meta, _) = document_front_matter("html: fade\n", 3);
-        assert!(
-            matches!(meta, Err(Error::FrontMatter(m)) if m.ends_with("at line 2 column 7"))
-        );
+        assert!(matches!(
+            meta,
+            Err(Error::FrontMatter(m)) if m.ends_with("at line 2 column 7")
+        ));
     }
 
     #[test]
@@ -2171,11 +2174,16 @@ mod tests {
     #[test]
     fn merge_config_like_keys() {
         let mut config = Config::default();
-        config.merge_front_matter(&meta("toc: 2\nnumbering: true\ntheme: x\npaper: us-letter\ncite_style: apa\n")).unwrap();
+        config
+            .merge_front_matter(&meta(
+                "toc: 2\nnumbering: true\ntheme: x\npaper: us-letter\ncite_style: apa\n"
+            ))
+            .unwrap();
         assert!(matches!(config.document.toc, Toc::Depth(2)));
-        assert!(
-            matches!(&config.numbering.headings, HeadingNumbering::Pattern(p) if p == "1.1")
-        );
+        assert!(matches!(
+            &config.numbering.headings,
+            HeadingNumbering::Pattern(p) if p == "1.1"
+        ));
         assert_eq!(config.html.theme, "x");
         assert_eq!(config.pdf.paper, "us-letter");
         assert_eq!(config.references.style, "apa");
@@ -2190,9 +2198,10 @@ mod tests {
         config
             .merge_front_matter(&meta("numbering: {figures: section}\n"))
             .unwrap();
-        assert!(
-            matches!(&config.numbering.headings, HeadingNumbering::Pattern(p) if p == "I.A")
-        );
+        assert!(matches!(
+            &config.numbering.headings,
+            HeadingNumbering::Pattern(p) if p == "I.A"
+        ));
         assert!(matches!(config.numbering.figures, FigureNumbering::Section));
     }
 

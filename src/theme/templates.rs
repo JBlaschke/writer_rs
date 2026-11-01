@@ -66,7 +66,9 @@ fn load(
     match theme.read_template(name) {
         Ok(found) => {
             if let Some((from, _)) = &found {
-                tracing::trace!(template = name, theme = %from, "loaded template");
+                tracing::trace!(
+                    template = name, theme = %from, "loaded template"
+                );
             }
             Ok(found.map(|(_, source)| source))
         }
@@ -289,7 +291,9 @@ mod tests {
         let theme = disk_theme(tmp.path(), &[("a.html", source)]);
         for debug in [false, true] {
             let env = environment(&theme, debug).unwrap();
-            let ctx = minijinja::context! { meta => minijinja::context! { title => "T" } };
+            let ctx = minijinja::context! {
+                meta => minijinja::context! { title => "T" }
+            };
             assert_eq!(
                 env.get_template("a.html").unwrap().render(&ctx).unwrap(),
                 "[]"

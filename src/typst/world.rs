@@ -651,8 +651,10 @@ fn is_virtual(id: FileId) -> bool {
 
 fn debug_writer_package(id: FileId) -> bool {
     cfg!(debug_assertions)
-        && matches!(id.root(),
-            VirtualRoot::Package(spec) if spec.namespace == "writer" && spec.name == "doc"
+        && matches!(
+            id.root(),
+            VirtualRoot::Package(spec)
+                if spec.namespace == "writer" && spec.name == "doc"
         )
 }
 

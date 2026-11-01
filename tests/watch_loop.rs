@@ -516,7 +516,11 @@ fn first_failed_build_watches_missing_asset_creation_in_new_directories() {
         Loop::spawn(Request::html(&input, &output, Stop::Built(2)));
     let first = running.next("missing asset failure");
     assert!(
-        matches!(&first, Status::Built { prepared: false, failure: Some(error), .. } if error.contains("plot.png")),
+        matches!(
+            &first,
+            Status::Built { prepared: false, failure: Some(error), .. }
+                if error.contains("plot.png")
+        ),
         "{first:?}"
     );
     assert!(

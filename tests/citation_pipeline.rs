@@ -360,9 +360,10 @@ fn build_and_dump_fail_global_resource_errors_without_writing_or_truncating() {
     ] {
         write(root, "writer.toml", configuration);
         let failure = pipeline::prepare(&options(root)).unwrap_err();
-        assert!(
-            matches!(failure.error.as_ref(), Error::Resource { what, .. } if *what == category)
-        );
+        assert!(matches!(
+            failure.error.as_ref(),
+            Error::Resource { what, .. } if *what == category
+        ));
         let output = writer(root)
             .args(["build", "document.md", "--to", "html"])
             .output()
@@ -404,9 +405,10 @@ fn configured_resource_errors_are_fatal_before_native_only_pdf_authority() {
             &mut WorldSlot::new(),
         );
         let failure = report.prepared.unwrap_err();
-        assert!(
-            matches!(failure.error.as_ref(), Error::Resource { what, .. } if *what == category)
-        );
+        assert!(matches!(
+            failure.error.as_ref(),
+            Error::Resource { what, .. } if *what == category
+        ));
         assert!(report.targets.is_empty());
         assert!(!root.join("never").exists());
     }

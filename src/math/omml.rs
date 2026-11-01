@@ -240,7 +240,10 @@ mod tests {
 
     #[test]
     fn normalization_ignores_annotations_and_folds_script_selectors() {
-        let xml = from_mathml("<math><semantics><mstyle mathcolor='red'><mi>ℱ︀</mi></mstyle><annotation-xml><foreign/></annotation-xml></semantics><mspace/><mo>⁡</mo></math>").unwrap();
+        let xml = from_mathml(
+            "<math><semantics><mstyle mathcolor='red'><mi>ℱ︀</mi></mstyle><annotation-xml><foreign/></annotation-xml></semantics><mspace/><mo>⁡</mo></math>"
+        )
+        .unwrap();
         assert!(xml.contains("<m:scr m:val=\"script\"/>"));
         assert!(xml.contains("<m:t>F</m:t>"));
         assert!(!xml.contains("color"));

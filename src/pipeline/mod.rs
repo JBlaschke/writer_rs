@@ -846,8 +846,17 @@ fn build_target(
             )?;
             Ok((vec![out.to_path_buf()], diagnostics))
         }
-        Target::Latex => return latex::build_observed(prepared, opts, out, world, record),
-        Target::Typst if prepared.document.source.kind == SourceKind::Typst => Err(Error::Other("cannot export a .typ input to typst; use writer build part.md --to typst".into())),
+        Target::Latex => {
+            return latex::build_observed(prepared, opts, out, world, record);
+        }
+        Target::Typst
+            if prepared.document.source.kind == SourceKind::Typst =>
+        {
+            Err(Error::Other(
+                "cannot export a .typ input to typst; use writer build part.md --to typst"
+                    .into()
+            ))
+        }
         Target::Typst => typst::build(prepared, opts, out, world),
     }.map_err(Into::into)
 }
@@ -896,7 +905,12 @@ pub fn not_implemented(what: &str, task: &str) -> Error {
 
 /// Whether an error is one of the explicit future-task stubs.
 pub fn is_not_implemented(error: &Error) -> bool {
-    matches!(error, Error::Other(message) if message.contains(": not implemented yet (") && message.ends_with(')'))
+    matches!(
+        error,
+        Error::Other(message)
+            if message.contains(": not implemented yet (")
+                && message.ends_with(')')
+    )
 }
 
 /// Retains one compiler world throughout a build or preview session.
@@ -1606,9 +1620,11 @@ mod tests {
         let Err(failure) = web_page(&prepared, &opts, world) else {
             panic!("subset error rendered");
         };
-        assert!(
-            matches!(*failure.error, Error::Parse { path, line: Some(3), .. } if path == Path::new("inner.typ"))
-        );
+        assert!(matches!(
+            *failure.error,
+            Error::Parse { path, line: Some(3), .. }
+                if path == Path::new("inner.typ")
+        ));
         assert!(failure.diagnostics.is_empty());
     }
 

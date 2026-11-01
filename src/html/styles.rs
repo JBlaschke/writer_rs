@@ -553,9 +553,10 @@ a::before { content: "@import url(string.css);" }
                 &mut Vec::new(),
             )
             .unwrap_err();
-            assert!(
-                matches!(err, Error::Style { ref file, .. } if file == "@t/styles/a.css")
-            );
+            assert!(matches!(
+                err,
+                Error::Style { ref file, .. } if file == "@t/styles/a.css"
+            ));
             assert!(err.to_string().contains("line 2:"), "{err}");
             assert!(
                 err.to_string().contains("list the file in [styles] entries"),

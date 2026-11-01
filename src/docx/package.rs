@@ -561,8 +561,11 @@ mod tests {
                 "{explicit:?}, {date:?}, {epoch:?}"
             );
         }
-        assert!(matches!(core_timestamp("yesterday", None, None),
-            Err(Error::Config(message)) if message.starts_with("invalid [pdf] timestamp")));
+        assert!(matches!(
+            core_timestamp("yesterday", None, None),
+            Err(Error::Config(message))
+                if message.starts_with("invalid [pdf] timestamp")
+        ));
     }
 
     #[test]

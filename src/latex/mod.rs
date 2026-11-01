@@ -301,9 +301,14 @@ fn render_context(
     json!({
         "preamble": preamble(&emitted.usage, config), "body": emitted.body,
         "title": text(meta.title.as_deref()),
-        "subtitle": text(meta.subtitle.as_deref()), "date": text(meta.date.as_deref()),
+        "subtitle": text(meta.subtitle.as_deref()),
+        "date": text(meta.date.as_deref()),
         "authors": authors, "abstract": emitted.abstract_,
-        "keywords": meta.keywords.iter().map(|keyword| text(Some(keyword))).collect::<Vec<_>>(),
+        "keywords": meta
+            .keywords
+            .iter()
+            .map(|keyword| text(Some(keyword)))
+            .collect::<Vec<_>>(),
         "lang": lang, "toc": emitted.toc, "bibliography": bibliography,
         "has_citations": document.features.citations,
         "cite": match config.latex.cite {
@@ -312,7 +317,8 @@ fn render_context(
         },
         "emit_bibliography": config.latex.emit_bibliography,
         "has_math": emitted.usage.math, "has_code": emitted.usage.code,
-        "has_highlighted": emitted.usage.highlighted, "has_cells": emitted.usage.cells,
+        "has_highlighted": emitted.usage.highlighted,
+        "has_cells": emitted.usage.cells,
         "vars": meta.vars,
     })
 }
@@ -719,15 +725,18 @@ mod tests {
             ["plot.png", "diagram.svg.pdf", "refs.bib", "refs-2.bib",]
         );
         assert_eq!(format!("{:?}", first.files), format!("{:?}", second.files));
-        assert!(
-            matches!(&first.files[0].source, FileSource::Asset { id, render: false } if id == &png)
-        );
-        assert!(
-            matches!(&first.files[1].source, FileSource::Asset { id, render: true } if id == &svg)
-        );
-        assert!(
-            matches!(&first.files[2].source, FileSource::Bib(path) if path == &root.join("a/refs.bib"))
-        );
+        assert!(matches!(
+            &first.files[0].source,
+            FileSource::Asset { id, render: false } if id == &png
+        ));
+        assert!(matches!(
+            &first.files[1].source,
+            FileSource::Asset { id, render: true } if id == &svg
+        ));
+        assert!(matches!(
+            &first.files[2].source,
+            FileSource::Bib(path) if path == &root.join("a/refs.bib")
+        ));
         assert!(needs_world(&first.files));
         let findings = first.diagnostics.into_vec();
         assert_eq!(findings.len(), 2);

@@ -1078,7 +1078,9 @@ fn footnote_backlinks_for_nonparagraph_end_and_unnumbered_notes() {
     ])]);
     let (emitted, _) = render(&doc, &Config::default(), false);
     assert!(!emitted.main.contains("Hidden"));
-    assert!(emitted.footnotes.contains("<hr>\n<p><a class=\"footnote-back\" href=\"#fnref-1\" role=\"doc-backlink\">↩︎</a></p>\n"));
+    assert!(emitted.footnotes.contains(
+        "<hr>\n<p><a class=\"footnote-back\" href=\"#fnref-1\" role=\"doc-backlink\">↩︎</a></p>\n"
+    ));
 }
 
 #[test]
@@ -1405,7 +1407,13 @@ fn localization_and_title_overrides() {
     ]);
     doc.meta.lang = Some("de".into());
     doc.meta.abstract_ = Some(vec![paragraph("Abstract")]);
-    doc.meta.vars = json!({"toc-title": "Index", "abstract-title": "Summary", "reference-section-title": "References"}).as_object().unwrap().clone();
+    doc.meta.vars = json!({
+        "toc-title": "Index", "abstract-title": "Summary",
+        "reference-section-title": "References"
+    })
+    .as_object()
+    .unwrap()
+    .clone();
     doc.resolved.toc.push(TocEntry {
         level: 1,
         number: None,
@@ -1582,7 +1590,9 @@ fn abstract_notes_precede_body_notes_and_keep_abstract_positions_off() {
     }]);
     let emitted = render(&doc, &Config::default(), true).0;
     assert!(emitted.title_block.contains("id=\"fnref-1\""));
-    assert!(emitted.body.contains("<a class=\"ref\" href=\"#x\">Ref</a><sup class=\"footnote-ref\"><a id=\"fnref-2\""));
+    assert!(emitted.body.contains(
+        "<a class=\"ref\" href=\"#x\">Ref</a><sup class=\"footnote-ref\"><a id=\"fnref-2\""
+    ));
     assert!(emitted.body.contains("id=\"fnref-1-2\""));
     assert!(
         emitted.footnotes.find("id=\"fn-1\"").unwrap()

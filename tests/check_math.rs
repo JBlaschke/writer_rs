@@ -59,8 +59,10 @@ fn pdf_config() -> Config {
 }
 
 fn notebook(cells: Vec<Value>) -> String {
-    json!({"nbformat":4,"nbformat_minor":5,"metadata":{},"cells":cells})
-        .to_string()
+    json!({
+        "nbformat": 4, "nbformat_minor": 5, "metadata": {}, "cells": cells
+    })
+    .to_string()
 }
 
 fn code_cell(tags: &[&str], data: Value) -> Value {
@@ -321,8 +323,11 @@ fn included_markdown_and_notebook_locations_keep_file_line_and_cell() {
         assert_eq!(span.file.as_ref(), Some(&expected));
     }
     let book = notebook(vec![
-        json!({"cell_type":"markdown","metadata":{},"source":"First.\n"}),
-        json!({"cell_type":"markdown","metadata":{},"source":"Cell two.\n\n$\\foo{x}$\n"}),
+        json!({"cell_type": "markdown", "metadata": {}, "source": "First.\n"}),
+        json!({
+            "cell_type": "markdown", "metadata": {},
+            "source": "Cell two.\n\n$\\foo{x}$\n"
+        }),
     ]);
     write(directory.path(), "cells.ipynb", &book);
     let diagnostics = checked(&options(directory.path(), "cells.ipynb", None));

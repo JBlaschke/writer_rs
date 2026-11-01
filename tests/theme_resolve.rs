@@ -226,7 +226,8 @@ fn disk_chain_merges_and_concatenates_parent_first() {
     assert_eq!(
         Value::Object(theme.vars()),
         json!({
-            "accent": "blue", "font": "serif", "nested": {"a": 1, "b": 3, "c": 4},
+            "accent": "blue", "font": "serif",
+            "nested": {"a": 1, "b": 3, "c": 4},
         })
     );
     let styles = theme.style_entries().unwrap();

@@ -366,7 +366,9 @@ fn mathml_syntax_error() {
         eq.diagnostics.iter().next().unwrap().message,
         r#"invalid LaTeX math: Unknown command "\foo". at bytes 0..4 of the equation"#
     );
-    assert!(eq.html.contains(r#"<span class="math-error" title="0: Unknown command &quot;\foo&quot;."><code>\foo{x}</code></span>"#));
+    assert!(eq.html.contains(
+        r#"<span class="math-error" title="0: Unknown command &quot;\foo&quot;."><code>\foo{x}</code></span>"#
+    ));
     assert!(!eq.html.contains("data-math-style"));
     assert!(eq.assets.is_empty());
 }

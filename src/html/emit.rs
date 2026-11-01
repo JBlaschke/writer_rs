@@ -1441,7 +1441,10 @@ impl<'d> Emitter<'d, '_, '_> {
             out.push_str(&format!("<p class=\"date\">{}</p>\n", escape(date)));
         }
         if let Some(abstract_) = &meta.abstract_ {
-            out.push_str(&format!("<section class=\"abstract\" role=\"doc-abstract\">\n<p class=\"abstract-title\">{}</p>\n", self.variable_title("abstract-title", Term::Abstract)));
+            out.push_str(&format!(
+                "<section class=\"abstract\" role=\"doc-abstract\">\n<p class=\"abstract-title\">{}</p>\n",
+                self.variable_title("abstract-title", Term::Abstract)
+            ));
             self.abstract_mode = true;
             out.push_str(&self.blocks(abstract_));
             self.abstract_mode = false;
@@ -1556,7 +1559,10 @@ impl<'d> Emitter<'d, '_, '_> {
                 escape(&entry.key)
             ));
             if let Some(prefix) = &entry.prefix {
-                out.push_str(&format!("<div class=\"csl-left-margin\">{}</div><div class=\"csl-right-inline\">{}</div>", self.inlines(prefix), self.inlines(&entry.inlines)));
+                out.push_str(&format!(
+                    "<div class=\"csl-left-margin\">{}</div><div class=\"csl-right-inline\">{}</div>",
+                    self.inlines(prefix), self.inlines(&entry.inlines)
+                ));
             } else {
                 out.push_str(&self.inlines(&entry.inlines));
             }
@@ -1584,8 +1590,16 @@ impl<'d> Emitter<'d, '_, '_> {
             self.current_span = body.span;
             let count = self.notes.counts.get(&number).copied().unwrap_or(1);
             let backs: Vec<_> = (1..=count).map(|ordinal| {
-                let id = if ordinal == 1 { format!("fnref-{number}") } else { format!("fnref-{number}-{ordinal}") };
-                let suffix = if ordinal == 1 { String::new() } else { format!("<sup>{ordinal}</sup>") };
+                let id = if ordinal == 1 {
+                    format!("fnref-{number}")
+                } else {
+                    format!("fnref-{number}-{ordinal}")
+                };
+                let suffix = if ordinal == 1 {
+                    String::new()
+                } else {
+                    format!("<sup>{ordinal}</sup>")
+                };
                 format!("<a class=\"footnote-back\" href=\"#{id}\" role=\"doc-backlink\">↩︎{suffix}</a>")
             }).collect();
             let backs = backs.join(" ");

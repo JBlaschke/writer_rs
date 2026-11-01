@@ -819,7 +819,12 @@ impl<'a> Emitter<'a> {
                     self.write(")");
                     return true;
                 }
-                Err(message) => self.warning("math-conversion-failed", format!("pdf: cannot convert equation ({message}); used the source text")),
+                Err(message) => self.warning(
+                    "math-conversion-failed",
+                    format!(
+                        "pdf: cannot convert equation ({message}); used the source text"
+                    )
+                ),
             }
             let fallback = format!("#raw({})", string(source));
             self.typst_math(&fallback, display, unnumbered);
@@ -1053,8 +1058,10 @@ impl<'a> Emitter<'a> {
                 }
                 let url = self.asset_url(url)?;
                 self.write(&format!("#link({})", string(&url)));
-                if !matches!(inlines.as_slice(), [Inline::Text { text }] if text == &url)
-                {
+                if !matches!(
+                    inlines.as_slice(),
+                    [Inline::Text { text }] if text == &url
+                ) {
                     self.write("[");
                     self.inlines(inlines, indent, single_line, definition)?;
                     self.write("]");
@@ -1552,7 +1559,11 @@ fn label_character(c: char) -> bool {
 
 fn citation_space(inline: &Inline) -> bool {
     matches!(inline, Inline::SoftBreak)
-        || matches!(inline, Inline::Text { text } if text.chars().all(|c| matches!(c, ' ' | '\t')))
+        || matches!(
+            inline,
+            Inline::Text { text }
+                if text.chars().all(|c| matches!(c, ' ' | '\t'))
+        )
 }
 
 fn edge(inline: &Inline, first: bool) -> Option<char> {

@@ -113,19 +113,28 @@ fn compile(world: &mut WriterWorld) -> PagedDocument {
 }
 
 fn notebook(cells: Value) -> String {
-    json!({"nbformat":4,"nbformat_minor":5,
-        "metadata":{"language_info":{"name":"python"}},"cells":cells})
+    json!({
+        "nbformat": 4, "nbformat_minor": 5,
+        "metadata": {"language_info": {"name": "python"}}, "cells": cells
+    })
     .to_string()
 }
 
 fn md(id: &str, text: &str, tags: &[&str]) -> Value {
-    json!({"cell_type":"markdown","id":id,"source":text,"metadata":{"tags":tags}})
+    json!({
+        "cell_type": "markdown", "id": id, "source": text,
+        "metadata": {"tags": tags}
+    })
 }
 
 fn code(id: &str, text: &str, output: Value, tags: &[&str]) -> Value {
-    json!({"cell_type":"code","id":id,"source":text,"execution_count":1,
-        "metadata":{"tags":tags},"outputs":[{"output_type":"display_data",
-            "metadata":{},"data":output}]})
+    json!({
+        "cell_type": "code", "id": id, "source": text, "execution_count": 1,
+        "metadata": {"tags": tags},
+        "outputs": [{
+            "output_type": "display_data", "metadata": {}, "data": output
+        }]
+    })
 }
 
 fn relative(path: &Path, root: &Path) -> String {
@@ -133,22 +142,41 @@ fn relative(path: &Path, root: &Path) -> String {
 }
 
 fn provider_snapshot(synthesized: &Synthesized, root: &Path) -> Value {
-    let lines = (1..=synthesized.map.len()).map(|line| {
-        synthesized.map.lookup(line).map(|span| json!({
-            "start_line":span.start_line,"end_line":span.end_line,"cell":span.cell,
-            "file":span.file.as_ref().map(|file| relative(file,root)),
-        }))
-    }).collect::<Vec<_>>();
-    let diagnostics = synthesized.diagnostics.iter().map(|finding| json!({
-        "code":finding.code,"level":finding.level,"message":finding.message,
-        "path":finding.path.as_ref().map(|path| relative(path,root)),
-        "span":finding.span.as_ref().map(|span| json!({
-            "start_line":span.start_line,"end_line":span.end_line,"cell":span.cell,
-            "file":span.file.as_ref().map(|path| relative(path,root)),
-        })),
-    })).collect::<Vec<_>>();
-    json!({"text":synthesized.text,"map":lines,"diagnostics":diagnostics,
-        "files":synthesized.files.iter().map(|path| relative(path,root)).collect::<Vec<_>>()})
+    let lines = (1..=synthesized.map.len())
+        .map(|line| {
+            synthesized.map.lookup(line).map(|span| {
+                json!({
+                    "start_line": span.start_line, "end_line": span.end_line,
+                    "cell": span.cell,
+                    "file": span.file.as_ref().map(|file| relative(file, root)),
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+    let diagnostics = synthesized
+        .diagnostics
+        .iter()
+        .map(|finding| {
+            json!({
+                "code": finding.code, "level": finding.level,
+                "message": finding.message,
+                "path": finding.path.as_ref().map(|path| relative(path, root)),
+                "span": finding.span.as_ref().map(|span| json!({
+                    "start_line": span.start_line, "end_line": span.end_line,
+                    "cell": span.cell,
+                    "file": span.file.as_ref().map(|path| relative(path, root)),
+                })),
+            })
+        })
+        .collect::<Vec<_>>();
+    json!({
+        "text": synthesized.text, "map": lines, "diagnostics": diagnostics,
+        "files": synthesized
+            .files
+            .iter()
+            .map(|path| relative(path, root))
+            .collect::<Vec<_>>()
+    })
 }
 
 #[test]
@@ -214,14 +242,28 @@ fn notebook_module_preserves_empty_entries_imports_escapes_and_exact_source_maps
     let root = fs::canonicalize(directory.path()).unwrap();
     write(&root, "helper.typ", "#let message = [RAW-IMPORT-MARKER]\n");
     let cells = json!([
-        md("intro\"\\\n\u{1}", "MARKDOWN-CELL-ZERO $x^2$.\n", &["paper","quoted\"\\\n\u{1}"]),
+        md(
+            "intro\"\\\n\u{1}", "MARKDOWN-CELL-ZERO $x^2$.\n",
+            &["paper", "quoted\"\\\n\u{1}"]
+        ),
         code("code", "print('CODE-INPUT')", json!({"text/plain":"CODE-OUTPUT"}), &["paper"]),
         md("empty-md", "", &[]),
-        {"cell_type":"code","id":"empty-code","source":"","metadata":{},"execution_count":null,"outputs":[]},
+        {
+            "cell_type": "code", "id": "empty-code", "source": "",
+            "metadata": {}, "execution_count": null, "outputs": []
+        },
         md("removed", "REMOVED-CONTENT", &["remove-cell"]),
         {"cell_type":"mystery","id":"unknown","source":"UNKNOWN-CONTENT","metadata":{}},
-        {"cell_type":"raw","id":"raw","source":"#import \"helper.typ\": message\n#message","metadata":{"raw_mimetype":"text/typst"}},
-        {"cell_type":"raw","id":"raw-md","source":"RAW-MARKDOWN-CELL-SEVEN","metadata":{"raw_mimetype":"text/markdown"}},
+        {
+            "cell_type": "raw", "id": "raw",
+            "source": "#import \"helper.typ\": message\n#message",
+            "metadata": {"raw_mimetype": "text/typst"}
+        },
+        {
+            "cell_type": "raw", "id": "raw-md",
+            "source": "RAW-MARKDOWN-CELL-SEVEN",
+            "metadata": {"raw_mimetype": "text/markdown"}
+        }
     ]);
     let bytes = notebook(cells);
     write(&root, "module.ipynb", &bytes);
@@ -512,7 +554,11 @@ fn compiler_error_in_a_later_notebook_cell_uses_its_real_file_cell_and_line() {
         "late.ipynb",
         notebook(json!([
             md("first", "FIRST", &[]), md("second", "SECOND", &[]),
-            {"cell_type":"raw","id":"bad","source":"#missing_native_function()","metadata":{"raw_mimetype":"text/typst"}},
+            {
+                "cell_type": "raw", "id": "bad",
+                "source": "#missing_native_function()",
+                "metadata": {"raw_mimetype": "text/typst"}
+            }
         ])),
     );
     write(&root, "main.typ", "#include \"late.ipynb\"\n");
@@ -579,12 +625,21 @@ fn selection_notebook() -> String {
         code("one", "#| lst-label: lst-one\n#| lst-cap: LISTING-CAPTION\nINPUT-ONE",
             json!({"text/plain":"OUTPUT-ONE"}), &["paper"]),
         md("two", "TWO-MARKER", &["appendix"]),
-        md("removed", "REMOVED-MARKER", &["paper","remove-cell"]),
+        md("removed", "REMOVED-MARKER", &["paper", "remove-cell"]),
         {"cell_type":"mystery","id":"unknown","source":"UNKNOWN-MARKER","metadata":{}},
         md("empty", "", &["paper"]),
-        code("input-hidden", "#| echo: false\nHIDDEN-INPUT", json!({"text/plain":"POLICY-OUTPUT"}), &["paper"]),
-        code("output-hidden", "#| output: false\nPOLICY-INPUT", json!({"text/plain":"HIDDEN-OUTPUT"}), &["paper"]),
-        {"cell_type":"raw","id":"raw","source":"RAW-MARKER","metadata":{"raw_mimetype":"text/markdown","tags":["raw"]}},
+        code(
+            "input-hidden", "#| echo: false\nHIDDEN-INPUT",
+            json!({"text/plain": "POLICY-OUTPUT"}), &["paper"]
+        ),
+        code(
+            "output-hidden", "#| output: false\nPOLICY-INPUT",
+            json!({"text/plain": "HIDDEN-OUTPUT"}), &["paper"]
+        ),
+        {
+            "cell_type": "raw", "id": "raw", "source": "RAW-MARKER",
+            "metadata": {"raw_mimetype": "text/markdown", "tags": ["raw"]}
+        }
     ]))
 }
 
@@ -912,7 +967,10 @@ fn malformed_duplicate_ids_document_the_first_original_vs_first_retained_differe
  {
     for first in [
         md("duplicate", "REMOVED-FIRST", &["remove-cell"]),
-        json!({"cell_type":"mystery","id":"duplicate","source":"UNKNOWN-FIRST","metadata":{}}),
+        json!({
+            "cell_type": "mystery", "id": "duplicate",
+            "source": "UNKNOWN-FIRST", "metadata": {}
+        }),
     ] {
         let directory = tempfile::tempdir().unwrap();
         let root = fs::canonicalize(directory.path()).unwrap();
@@ -990,7 +1048,10 @@ fn eager_native_content_can_fail_even_when_the_raw_or_math_cell_is_unselected()
             "selection.ipynb",
             notebook(json!([
                 md("safe", "SELECTED-SAFE-CONTENT", &[]),
-                {"cell_type":"raw","id":"unselected","source":raw,"metadata":{"raw_mimetype":"text/typst"}},
+                {
+                    "cell_type": "raw", "id": "unselected", "source": raw,
+                    "metadata": {"raw_mimetype": "text/typst"}
+                }
             ])),
         );
         let parsed = parse(&root, &selection_source("cells: 0"));
@@ -1035,7 +1096,7 @@ fn mixed_typst_markdown_notebook_chain_keeps_outer_meta_toc_and_nested_spans() {
         &[]
     ),])))
     .unwrap();
-    nb["metadata"]["writer"] = json!({"title":"Notebook child","toc":true});
+    nb["metadata"]["writer"] = json!({"title": "Notebook child", "toc": true});
     write(&root, "parts/nb.ipynb", nb.to_string());
     write(
         &root,
@@ -1257,7 +1318,11 @@ fn compiler_nested_provider_error_prefers_the_mapped_notebook_file() {
         "nested.ipynb",
         notebook(json!([
             md("safe", "SAFE", &[]),
-            {"cell_type":"raw","id":"error","source":"#missing_nested_symbol","metadata":{"raw_mimetype":"text/typst"}},
+            {
+                "cell_type": "raw", "id": "error",
+                "source": "#missing_nested_symbol",
+                "metadata": {"raw_mimetype": "text/typst"}
+            }
         ])),
     );
     write(&root, "main.typ", "#include \"outer.md\"\n");

@@ -201,7 +201,8 @@ fn context_has_the_spec_shape() {
     assert_eq!(
         ctx["math"],
         json!({
-            "katex": true, "mathml": false, "typst_mathml": false, "image": false,
+            "katex": true, "mathml": false, "typst_mathml": false,
+            "image": false,
         })
     );
     insta::assert_json_snapshot!("context", ctx, {
@@ -262,7 +263,9 @@ fn helpers_in_three_modes() {
         let doc = render_sample(&theme, mode.clone());
         match mode {
             OutputMode::Standalone => {
-                assert!(doc.html.contains("<style>\n.helper { background: url(data:image/svg+xml;base64,"));
+                assert!(doc.html.contains(
+                    "<style>\n.helper { background: url(data:image/svg+xml;base64,"
+                ));
                 assert!(doc.html.contains("<script>\nwindow.writerChild"));
                 assert!(doc.html.contains(
                     "<img id=\"helper-asset\" src=\"data:image/svg+xml;base64,"
@@ -307,16 +310,24 @@ fn helpers_in_three_modes() {
                 assert!(logo_url.is_match(css));
             }
             OutputMode::Serve => {
-                assert!(doc.html.contains("<link rel=\"stylesheet\" href=\"/__writer/asset/@child-theme/styles/helper.css\">"));
-                assert!(doc.html.contains("<script src=\"/__writer/asset/@child-theme/scripts/child.js\"></script>"));
+                assert!(doc.html.contains(
+                    "<link rel=\"stylesheet\" href=\"/__writer/asset/@child-theme/styles/helper.css\">"
+                ));
+                assert!(doc.html.contains(
+                    "<script src=\"/__writer/asset/@child-theme/scripts/child.js\"></script>"
+                ));
                 let logo =
                     std::fs::read(dir.path().join("assets/logo.svg")).unwrap();
                 assert!(doc.html.contains(&format!(
                     "<img id=\"helper-asset\" src=\"{}\">",
                     versioned("logo.svg", &logo),
                 )));
-                assert!(doc.html.contains("<div id=\"helper-theme\"><link id=\"writer-theme\" rel=\"stylesheet\" href=\"/__writer/theme.css?v=7\">"));
-                assert!(doc.html.contains("<div id=\"helper-live\"><script src=\"/__writer/live-reload.js\"></script></div>"));
+                assert!(doc.html.contains(
+                    "<div id=\"helper-theme\"><link id=\"writer-theme\" rel=\"stylesheet\" href=\"/__writer/theme.css?v=7\">"
+                ));
+                assert!(doc.html.contains(
+                    "<div id=\"helper-live\"><script src=\"/__writer/live-reload.js\"></script></div>"
+                ));
             }
         }
     }
@@ -369,7 +380,9 @@ fn site_output_writes_hashed_files() {
 #[test]
 fn serve_output_uses_dev_server_urls() {
     let doc = render_sample(&child_theme(), OutputMode::Serve);
-    assert!(doc.html.contains("<link id=\"writer-theme\" rel=\"stylesheet\" href=\"/__writer/theme.css?v=7\">"));
+    assert!(doc.html.contains(
+        "<link id=\"writer-theme\" rel=\"stylesheet\" href=\"/__writer/theme.css?v=7\">"
+    ));
     assert!(doc.html.contains("data-sourcepos=\"3-3\" data-source=\"0\""));
     assert!(
         doc.html.contains("<script src=\"/__writer/live-reload.js\"></script>")
@@ -403,8 +416,12 @@ fn code_css_only_with_features_code() {
         &Config::default(),
         OutputMode::Standalone,
     );
-    assert!(doc.theme_css.contains("/* code theme: Nord */\n@media not all and (prefers-color-scheme: dark) {\n"));
-    assert!(doc.theme_css.contains("/* code theme (dark): OneHalfDark */\n@media (prefers-color-scheme: dark) {\n"));
+    assert!(doc.theme_css.contains(
+        "/* code theme: Nord */\n@media not all and (prefers-color-scheme: dark) {\n"
+    ));
+    assert!(doc.theme_css.contains(
+        "/* code theme (dark): OneHalfDark */\n@media (prefers-color-scheme: dark) {\n"
+    ));
 }
 
 struct FakeMath(MathUsage);
@@ -507,7 +524,9 @@ fn stylesheet_imports_and_entries() {
     .unwrap();
     for output in [OutputMode::Standalone, site(), OutputMode::Serve] {
         let doc = render_sample(&copied_theme(&dir), output.clone());
-        assert!(doc.theme_css.starts_with("/* hoisted from @child-theme/styles/child.css */\n@import url(https://fonts.example/x.css);\n"));
+        assert!(doc.theme_css.starts_with(
+            "/* hoisted from @child-theme/styles/child.css */\n@import url(https://fonts.example/x.css);\n"
+        ));
         assert_eq!(
             doc.diagnostics
                 .iter()
@@ -538,7 +557,11 @@ fn tmtheme_code_theme_is_compiled() {
             "code_theme = \"styles/code.tmTheme\"",
         );
     std::fs::write(dir.path().join("theme.toml"), manifest).unwrap();
-    std::fs::write(dir.path().join("styles/code.tmTheme"), r##"<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>name</key><string>Tiny</string><key>settings</key><array><dict><key>settings</key><dict><key>background</key><string>#FFFFFF</string><key>foreground</key><string>#111111</string></dict></dict><dict><key>scope</key><string>comment</string><key>settings</key><dict><key>foreground</key><string>#112233</string></dict></dict></array></dict></plist>"##).unwrap();
+    std::fs::write(
+        dir.path().join("styles/code.tmTheme"),
+        r##"<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>name</key><string>Tiny</string><key>settings</key><array><dict><key>settings</key><dict><key>background</key><string>#FFFFFF</string><key>foreground</key><string>#111111</string></dict></dict><dict><key>scope</key><string>comment</string><key>settings</key><dict><key>foreground</key><string>#112233</string></dict></dict></array></dict></plist>"##
+    )
+    .unwrap();
     let doc = render_sample(&copied_theme(&dir), OutputMode::Standalone);
     assert!(
         doc.theme_css.contains("code theme: @child-theme/styles/code.tmTheme")
@@ -665,9 +688,12 @@ fn render_is_deterministic() {
 #[test]
 fn attrs_and_json_filters_in_templates() {
     let dir = tempfile::tempdir().unwrap();
-    let theme = disk_theme(dir.path(), "name = \"filters\"\nextends = \"default\"\n", &[
-        ("templates/document.html", br#"{{ html.main|safe }}|<x{{ {'data-q': 'a"b', 'data-n': none}|attrs }}>|{{ {'b': '</script>', 'a': 1}|json }}|{{ theme.chain|json(indent=2) }}"#),
-    ]);
+    let theme = disk_theme(
+        dir.path(), "name = \"filters\"\nextends = \"default\"\n",
+        &[
+            ("templates/document.html", br#"{{ html.main|safe }}|<x{{ {'data-q': 'a"b', 'data-n': none}|attrs }}>|{{ {'b': '</script>', 'a': 1}|json }}|{{ theme.chain|json(indent=2) }}"#),
+        ]
+    );
     let doc = render_sample(&theme, OutputMode::Standalone);
     assert!(doc.html.contains(
         "|<x data-q=\"a&quot;b\">|{\"a\":1,\"b\":\"\\u003c/script\\u003e\"}|[\n  \"filters\",\n  \"default\"\n]"
@@ -738,11 +764,14 @@ fn backslash_style_entries_resolve_urls_next_to_the_stylesheet() {
 #[test]
 fn style_urls_resolve_to_the_same_files_in_every_mode() {
     let dir = tempfile::tempdir().unwrap();
-    let theme = disk_theme(dir.path(), "name = \"m\"\nextends = \"default\"\n", &[
-        ("templates/document.html", b"{{ html.main|safe }}{{ style('@m/styles/linked.css') }}{{ live_reload() }}"),
-        ("styles/linked.css", b".x { background: url(img/x.png); }"),
-        ("styles/img/x.png", b"x-bytes"),
-    ]);
+    let theme = disk_theme(
+        dir.path(), "name = \"m\"\nextends = \"default\"\n",
+        &[
+            ("templates/document.html", b"{{ html.main|safe }}{{ style('@m/styles/linked.css') }}{{ live_reload() }}"),
+            ("styles/linked.css", b".x { background: url(img/x.png); }"),
+            ("styles/img/x.png", b"x-bytes"),
+        ]
+    );
     let doc = render_sample(&theme, OutputMode::Standalone);
     assert!(doc.html.contains(
         ".x { background: url(data:image/png;base64,eC1ieXRlcw==); }"
@@ -775,7 +804,9 @@ fn style_urls_resolve_to_the_same_files_in_every_mode() {
         b"x-bytes"
     );
     let doc = render_sample(&theme, OutputMode::Serve);
-    assert!(doc.html.contains("<link rel=\"stylesheet\" href=\"/__writer/asset/@m/styles/linked.css\">"));
+    assert!(doc.html.contains(
+        "<link rel=\"stylesheet\" href=\"/__writer/asset/@m/styles/linked.css\">"
+    ));
     let css = html::serve_stylesheet(
         &theme,
         "@m/styles/linked.css",

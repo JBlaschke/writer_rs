@@ -616,7 +616,11 @@ mod tests {
         assert_eq!(ErrorPayload::from(&parse).excerpt, None);
 
         let notebook = tmp.path().join("notebook.ipynb");
-        fs::write(&notebook, r##"{"cells":[{"cell_type":"markdown","source":["# T\n",":::bad x=\"a"]}]}"##).unwrap();
+        fs::write(
+            &notebook,
+            r##"{"cells":[{"cell_type":"markdown","source":["# T\n",":::bad x=\"a"]}]}"##
+        )
+        .unwrap();
         let in_cell = Error::Parse {
             path: notebook,
             line: None,
@@ -697,7 +701,11 @@ mod tests {
     fn notebook_front_matter_and_missing_assets_preserve_cell_locations() {
         let tmp = tempfile::tempdir().unwrap();
         let notebook = tmp.path().join("notebook.ipynb");
-        fs::write(&notebook, r##"{"cells":[{"cell_type":"markdown","source":["---\n","title: a: b\n","---\n","![x](x.png)\n"]}]}"##).unwrap();
+        fs::write(
+            &notebook,
+            r##"{"cells":[{"cell_type":"markdown","source":["---\n","title: a: b\n","---\n","![x](x.png)\n"]}]}"##
+        )
+        .unwrap();
         let front = Error::FrontMatter(
             "cell 0: mapping values are not allowed in this context at line 2 column 9".into(),
         );
@@ -772,7 +780,11 @@ mod tests {
     fn compile_failure_uses_the_first_error_diagnostic_and_its_cell() {
         let tmp = tempfile::tempdir().unwrap();
         let notebook = tmp.path().join("included.ipynb");
-        fs::write(&notebook, r##"{"cells":[{"cell_type":"markdown","source":["# T\n","#foo()\n"]}]}"##).unwrap();
+        fs::write(
+            &notebook,
+            r##"{"cells":[{"cell_type":"markdown","source":["# T\n","#foo()\n"]}]}"##
+        )
+        .unwrap();
         let diagnostics: Diagnostics = vec![
             Diagnostic::warning("warning", "ignore location")
                 .with_path("warning.typ"),

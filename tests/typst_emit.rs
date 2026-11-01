@@ -348,13 +348,15 @@ fn shorthand_references_do_not_gain_visible_expression_terminators() {
             span: None,
         },
         Block::paragraph(vec![
-            inline(
-                json!({"type": "ref", "target": "sec-main", "supplement": null, "form": "normal"}),
-            ),
+            inline(json!({
+                "type": "ref", "target": "sec-main",
+                "supplement": null, "form": "normal"
+            })),
             Inline::text("(tail) "),
-            inline(
-                json!({"type": "ref", "target": "sec-main", "supplement": null, "form": "normal"}),
-            ),
+            inline(json!({
+                "type": "ref", "target": "sec-main",
+                "supplement": null, "form": "normal"
+            })),
             Inline::text(";end"),
         ]),
     ]);
@@ -827,9 +829,10 @@ fn missing_asset_placeholders_fail_instead_of_emitting_broken_paths() {
 #[test]
 fn unresolved_documents_use_placeholders_but_fragments_keep_syntax() {
     let doc = document(vec![Block::paragraph(vec![
-        inline(
-            json!({"type": "ref", "target": "sec-whole", "supplement": null, "form": "normal"}),
-        ),
+        inline(json!({
+            "type": "ref", "target": "sec-whole",
+            "supplement": null, "form": "normal"
+        })),
         Inline::text(" "),
         inline(
             json!({"type": "cite", "items": [{"key": "knuth1984"}], "mode": "normal"}),
@@ -890,13 +893,15 @@ fn unresolved_fragment_compiles_in_the_whole_document_scope() {
     let fragment = Fragment {
         document: document(vec![Block::paragraph(vec![
             Inline::text("Included reference "),
-            inline(
-                json!({"type": "ref", "target": "sec-whole", "supplement": null, "form": "normal"}),
-            ),
+            inline(json!({
+                "type": "ref", "target": "sec-whole",
+                "supplement": null, "form": "normal"
+            })),
             Inline::text(" and cite "),
-            inline(
-                json!({"type": "cite", "items": [{"key": "knuth1984"}], "mode": "normal"}),
-            ),
+            inline(json!({
+                "type": "cite", "items": [{"key": "knuth1984"}],
+                "mode": "normal"
+            })),
             Inline::Footnote {
                 blocks: vec![paragraph("Fragment note.")],
                 label: Some("odd name!".into()),
@@ -1139,18 +1144,25 @@ fn unnumbered_references_link_text_and_ambiguous_labels_use_ref_calls() {
             span: None,
         },
         Block::paragraph(vec![
-            inline(
-                json!({"type": "ref", "target": "sec-off", "form": "normal", "supplement": null,
-                "resolved": {"kind": "heading", "number": "", "text": [{"type": "text", "text": "Unnumbered"}], "anchor": "sec-off"}}),
-            ),
+            inline(json!({
+                "type": "ref", "target": "sec-off", "form": "normal",
+                "supplement": null,
+                "resolved": {
+                    "kind": "heading", "number": "",
+                    "text": [{"type": "text", "text": "Unnumbered"}],
+                    "anchor": "sec-off"
+                }
+            })),
             Inline::text("; "),
-            inline(
-                json!({"type": "ref", "target": "sec-end.", "form": "normal", "supplement": []}),
-            ),
+            inline(json!({
+                "type": "ref", "target": "sec-end.", "form": "normal",
+                "supplement": []
+            })),
             Inline::text("; "),
-            inline(
-                json!({"type": "ref", "target": "sec-end.", "form": "page", "supplement": [{"type": "text", "text": "page"}]}),
-            ),
+            inline(json!({
+                "type": "ref", "target": "sec-end.", "form": "page",
+                "supplement": [{"type": "text", "text": "page"}]
+            })),
         ]),
     ]);
     for (label, number) in [("sec-off", None), ("sec-end.", Some("1".into()))] {
@@ -1770,9 +1782,10 @@ fn labelled_nested_footnotes_do_not_add_spaces_before_punctuation() {
     assert_eq!(inlines[0], Inline::text("Outer"));
     assert_eq!(inlines[2], Inline::text(", repeat"));
     assert_eq!(inlines[4], Inline::text(" , retained."));
-    assert!(
-        matches!(&inlines[3], Inline::FootnoteRef { label, .. } if label == "outer")
-    );
+    assert!(matches!(
+        &inlines[3],
+        Inline::FootnoteRef { label, .. } if label == "outer"
+    ));
     let Inline::Footnote { blocks, label, .. } = &inlines[1] else {
         panic!("outer note");
     };
@@ -1783,9 +1796,10 @@ fn labelled_nested_footnotes_do_not_add_spaces_before_punctuation() {
     };
     assert_eq!(inlines.len(), 3);
     assert_eq!(inlines[0], Inline::text("Nested"));
-    assert!(
-        matches!(&inlines[1], Inline::Footnote { label: Some(label), .. } if label == "inner")
-    );
+    assert!(matches!(
+        &inlines[1],
+        Inline::Footnote { label: Some(label), .. } if label == "inner"
+    ));
     assert_eq!(inlines[2], Inline::text("."));
 }
 

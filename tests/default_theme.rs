@@ -604,7 +604,11 @@ Large content.
 #[test]
 fn showcase_builds_and_every_class_is_styled() {
     let dir = tempfile::tempdir().unwrap();
-    std::fs::write(dir.path().join("dot.svg"), r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>"#).unwrap();
+    std::fs::write(
+        dir.path().join("dot.svg"),
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>"#
+    )
+    .unwrap();
     std::fs::write(dir.path().join("showcase.md"), SHOWCASE).unwrap();
     assert_cmd::Command::new(env!("CARGO_BIN_EXE_writer"))
         .current_dir(dir.path())

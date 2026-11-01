@@ -392,7 +392,12 @@ mod tests {
 
     #[test]
     fn repr_html_div_with_style() {
-        assert!(parse_html_table("<!--pandas--><style scoped>.x{}</style><div><style scoped>.dataframe{}</style><table><tr><td>1</td></tr></table></div>").is_some());
+        assert!(
+            parse_html_table(
+                "<!--pandas--><style scoped>.x{}</style><div><style scoped>.dataframe{}</style><table><tr><td>1</td></tr></table></div>"
+            )
+            .is_some()
+        );
         for html in [
             "text<table><tr><td>1</td></tr></table>",
             "<div><div><table><tr><td>1</td></tr></table></div></div>",
@@ -420,7 +425,10 @@ mod tests {
 
     #[test]
     fn truncated_note() {
-        let parsed = parse_html_table("<div><table><tr><td>…</td></tr></table><p>100 rows × 2 columns</p></div>").unwrap();
+        let parsed = parse_html_table(
+            "<div><table><tr><td>…</td></tr></table><p>100 rows × 2 columns</p></div>"
+        )
+        .unwrap();
         assert_eq!(parsed.note.as_deref(), Some("100 rows × 2 columns"));
         assert!(!truncation_note("100 rows x 2 columns"));
         assert!(!truncation_note("-1 rows × 2 columns"));
@@ -428,7 +436,10 @@ mod tests {
 
     #[test]
     fn styler_caption_and_nbsp() {
-        let parsed = parse_html_table("<style>.row{}</style><table id=\"T_x\"><caption> Styled caption </caption><thead><tr><th>&nbsp;</th><th>A&nbsp;B</th></tr></thead><tbody><tr><th><b>&nbsp;</b></th><td> \t A  <strong> bold </strong><em> italic</em><code>x&lt;y</code><sub>2</sub><sup>3</sup><a href=\"../x?a=1&amp;b=2\" title=\"t\"> link </a><br><p>one</p><div>two</div> </td></tr></tbody></table>").unwrap();
+        let parsed = parse_html_table(
+            "<style>.row{}</style><table id=\"T_x\"><caption> Styled caption </caption><thead><tr><th>&nbsp;</th><th>A&nbsp;B</th></tr></thead><tbody><tr><th><b>&nbsp;</b></th><td> \t A  <strong> bold </strong><em> italic</em><code>x&lt;y</code><sub>2</sub><sup>3</sup><a href=\"../x?a=1&amp;b=2\" title=\"t\"> link </a><br><p>one</p><div>two</div> </td></tr></tbody></table>"
+        )
+        .unwrap();
         assert_eq!(parsed.caption.as_deref(), Some("Styled caption"));
         let Block::Table { head, body, attrs, .. } = parsed.table else {
             panic!()
@@ -443,7 +454,11 @@ mod tests {
                 .iter()
                 .any(|inline| matches!(inline, Inline::Strong { .. }))
         );
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Link { url, title: Some(title), .. } if url == "../x?a=1&b=2" && title == "t")));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Link { url, title: Some(title), .. }
+                if url == "../x?a=1&b=2" && title == "t"
+        )));
         assert_eq!(
             inlines
                 .iter()
@@ -472,7 +487,12 @@ mod tests {
 
     #[test]
     fn nested_table_rejects() {
-        assert!(parse_html_table("<table><tr><td><table><tr><td>x</td></tr></table></td></tr></table>").is_none());
+        assert!(
+            parse_html_table(
+                "<table><tr><td><table><tr><td>x</td></tr></table></td></tr></table>"
+            )
+            .is_none()
+        );
     }
 
     #[test]

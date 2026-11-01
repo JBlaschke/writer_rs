@@ -383,9 +383,10 @@ fn each_preflight_rejection_keeps_source_labels_and_numbering_in_a_pdf() {
             if display {
                 assert!(source.text.contains("$ #raw("), "{}", source.text);
                 assert!(source.text.contains(" <eq-fallback>"));
-                assert!(
-                    matches!(&prepared.document.blocks[0], Block::Math { number: Some(number), .. } if number == "1")
-                );
+                assert!(matches!(
+                    &prepared.document.blocks[0],
+                    Block::Math { number: Some(number), .. } if number == "1"
+                ));
             } else {
                 assert!(source.text.contains("$#raw("), "{}", source.text);
             }
@@ -578,7 +579,13 @@ fn strict_mixed_builds_keep_both_outputs_and_escalate_only_conversion_findings()
 {
     for strict in [false, true] {
         let directory = tempfile::tempdir().unwrap();
-        fs::write(directory.path().join("writer.toml"), format!("[build]\nout_dir='out'\n[pdf]\nsystem_fonts=false\ntimestamp='{TIMESTAMP}'\n")).unwrap();
+        fs::write(
+            directory.path().join("writer.toml"),
+            format!(
+                "[build]\nout_dir='out'\n[pdf]\nsystem_fonts=false\ntimestamp='{TIMESTAMP}'\n"
+            )
+        )
+        .unwrap();
         fs::write(
             directory.path().join("document.md"),
             "# Per-equation recovery\n\n$\\foo{x}$\n",

@@ -312,7 +312,12 @@ pub struct DumpArgs {
     #[arg(long)]
     pub no_resolve: bool,
     /// Print the built-in default writer.toml (takes no INPUT).
-    #[arg(long, conflicts_with_all = ["input", "ir", "typst", "latex", "context", "no_resolve"])]
+    #[arg(
+        long,
+        conflicts_with_all = [
+            "input", "ir", "typst", "latex", "context", "no_resolve"
+        ]
+    )]
     pub default_config: bool,
 }
 
@@ -1038,11 +1043,16 @@ mod tests {
         macro_rules! most_verbose {
             ($target:literal) => {
                 [
-                    tracing::enabled!(target: $target, Level::TRACE).then_some("trace"),
-                    tracing::enabled!(target: $target, Level::DEBUG).then_some("debug"),
-                    tracing::enabled!(target: $target, Level::INFO).then_some("info"),
-                    tracing::enabled!(target: $target, Level::WARN).then_some("warn"),
-                    tracing::enabled!(target: $target, Level::ERROR).then_some("error"),
+                    tracing::enabled!(target: $target, Level::TRACE)
+                        .then_some("trace"),
+                    tracing::enabled!(target: $target, Level::DEBUG)
+                        .then_some("debug"),
+                    tracing::enabled!(target: $target, Level::INFO)
+                        .then_some("info"),
+                    tracing::enabled!(target: $target, Level::WARN)
+                        .then_some("warn"),
+                    tracing::enabled!(target: $target, Level::ERROR)
+                        .then_some("error"),
                 ]
                 .into_iter()
                 .flatten()

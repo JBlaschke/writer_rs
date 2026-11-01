@@ -189,9 +189,15 @@ fn notebook_exports_materialize_sources_and_explicit_markdown_format_is_supporte
  {
     let directory = project("unused\n");
     write(directory.path(), "part.md", "Notebook included part.\n");
-    let notebook = json!({"nbformat":4,"nbformat_minor":5,"metadata":{},"cells":[
-        {"cell_type":"markdown","metadata":{},"source":"Notebook.\n\n:::include part.md\n:::\n"}
-    ]});
+    let notebook = json!({
+        "nbformat": 4, "nbformat_minor": 5, "metadata": {},
+        "cells": [
+            {
+                "cell_type": "markdown", "metadata": {},
+                "source": "Notebook.\n\n:::include part.md\n:::\n"
+            }
+        ]
+    });
     write(directory.path(), "analysis.ipynb", notebook.to_string());
     let result = build(directory.path(), "analysis.ipynb").output().unwrap();
     assert!(

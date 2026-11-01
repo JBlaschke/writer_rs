@@ -113,9 +113,10 @@ fn syntax_error_shape() {
         r#"<span class="math-error" title="0: Unknown command &quot;\foo&quot;."><code>\foo{x}</code></span>"#
     );
     let error = to_mathml(r"\frac{a}{b", false, &BTreeMap::new()).unwrap_err();
-    assert!(
-        matches!(error, MathError::Syntax { range: Some(range), .. } if range == (10..10))
-    );
+    assert!(matches!(
+        error,
+        MathError::Syntax { range: Some(range), .. } if range == (10..10)
+    ));
 }
 
 #[test]

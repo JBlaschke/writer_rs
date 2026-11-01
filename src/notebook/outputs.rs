@@ -1115,9 +1115,18 @@ mod tests {
     fn last_candidate_guarantee() {
         let (rendered, _, diagnostics) = convert(
             json!([
-                {"output_type":"display_data","data":{"text/html":"<b>hello</b>"}},
-                {"output_type":"display_data","data":{"text/html":"<i>hi</i>","text/plain":"hi"}},
-                {"output_type":"display_data","data":{"application/javascript":"alert(1)"}},
+                {
+                    "output_type": "display_data",
+                    "data": {"text/html": "<b>hello</b>"}
+                },
+                {
+                    "output_type": "display_data",
+                    "data": {"text/html": "<i>hi</i>", "text/plain": "hi"}
+                },
+                {
+                    "output_type": "display_data",
+                    "data": {"application/javascript": "alert(1)"}
+                }
             ]),
             CellOptions::default(),
             Path::new("."),
@@ -1142,15 +1151,17 @@ mod tests {
     fn numbered_output_single_candidate() {
         let (rendered, _, _) = convert(
             json!([
-                {"output_type":"display_data","data":{
-                    "text/html":"<h1>unselected</h1>", "text/markdown":"# Heading", "text/plain":"Heading"
+                {"output_type": "display_data", "data": {
+                    "text/html": "<h1>unselected</h1>",
+                    "text/markdown": "# Heading", "text/plain": "Heading"
                 }},
-                {"output_type":"display_data","data":{
-                    "text/latex":"$$ x $$", "text/plain":"x"
+                {"output_type": "display_data", "data": {
+                    "text/latex": "$$ x $$", "text/plain": "x"
                 }},
-                {"output_type":"display_data","data":{
-                    "text/markdown":"one[^1] twice[^1]\n\n[^1]: note", "text/plain":"fallback"
-                }},
+                {"output_type": "display_data", "data": {
+                    "text/markdown": "one[^1] twice[^1]\n\n[^1]: note",
+                    "text/plain": "fallback"
+                }}
             ]),
             CellOptions::default(),
             Path::new("."),
@@ -1196,11 +1207,22 @@ mod tests {
     fn image_assets_and_invalid_fallback() {
         let (rendered, assets, diagnostics) = convert(
             json!([
-                {"output_type":"display_data","data":{"image/png":"%%%", "text/plain":"fallback"}},
-                {"output_type":"execute_result","data":{"image/png":["YW", "Jj\n"]},"execution_count":7,
-                    "metadata":{"image/png":{"width":64.0},"height":-1}},
-                {"output_type":"display_data","data":{"image/png":"YWJj"},"metadata":{"width":32,"height":20}},
-                {"output_type":"display_data","data":{"image/png":""}},
+                {
+                    "output_type": "display_data",
+                    "data": {"image/png": "%%%", "text/plain": "fallback"}
+                },
+                {
+                    "output_type": "execute_result",
+                    "data": {"image/png": ["YW", "Jj\n"]},
+                    "execution_count": 7,
+                    "metadata": {"image/png": {"width": 64.0}, "height": -1}
+                },
+                {
+                    "output_type": "display_data",
+                    "data": {"image/png": "YWJj"},
+                    "metadata": {"width": 32, "height": 20}
+                },
+                {"output_type": "display_data", "data": {"image/png": ""}}
             ]),
             CellOptions::default(),
             Path::new("."),
@@ -1274,9 +1296,10 @@ mod tests {
             &notebook_dir,
         );
         assert_eq!(assets.len(), 1);
-        assert!(
-            matches!(&assets.iter().next().unwrap().data, AssetData::File(path) if path.ends_with("inside.png"))
-        );
+        assert!(matches!(
+            &assets.iter().next().unwrap().data,
+            AssetData::File(path) if path.ends_with("inside.png")
+        ));
         let document = fragment_document(
             rendered.outputs[0].candidates[0].blocks.clone(),
             &source(&notebook_dir),
@@ -1392,9 +1415,12 @@ mod tests {
 
     #[test]
     fn table_metadata_and_processing_switch() {
-        let outputs = json!([{"output_type":"display_data","data":{"text/html":
-            "<table><caption>Caption</caption><tr><td>value</td></tr></table><p>100 rows × 1 columns</p>"
-        }}]);
+        let outputs = json!([{
+            "output_type": "display_data",
+            "data": {
+                "text/html": "<table><caption>Caption</caption><tr><td>value</td></tr></table><p>100 rows × 1 columns</p>"
+            }
+        }]);
         let (rendered, _, _) =
             convert(outputs.clone(), CellOptions::default(), Path::new("."));
         assert_eq!(
@@ -1419,8 +1445,17 @@ mod tests {
     fn interactive_fallback_and_error_text() {
         let (rendered, _, diagnostics) = convert(
             json!([
-                {"output_type":"display_data","data":{"application/vnd.plotly.v1+json":{},"text/html":"<script>x</script>","text/plain":"plot"}},
-                {"output_type":"error","ename":"Oops","evalue":"bad","traceback":[]},
+                {
+                    "output_type": "display_data",
+                    "data": {
+                        "application/vnd.plotly.v1+json": {},
+                        "text/html": "<script>x</script>", "text/plain": "plot"
+                    }
+                },
+                {
+                    "output_type": "error", "ename": "Oops", "evalue": "bad",
+                    "traceback": []
+                }
             ]),
             CellOptions::default(),
             Path::new("."),
@@ -1448,9 +1483,10 @@ mod tests {
         let options =
             CellOptions { show_output: false, ..CellOptions::default() };
         let (rendered, assets, diagnostics) = convert(
-            json!([
-                {"output_type":"display_data","data":{"image/png":"%%%","text/html":"<script>x</script>"}},
-            ]),
+            json!([{
+                "output_type": "display_data",
+                "data": {"image/png": "%%%", "text/html": "<script>x</script>"}
+            }]),
             options,
             Path::new("."),
         );

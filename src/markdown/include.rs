@@ -230,7 +230,10 @@ fn expand(
     if !keys.is_empty() {
         parsed.diagnostics.push(Diagnostic::warning(
             "include-meta-ignored",
-            format!("`{written}` sets {}; an included file's document metadata is ignored", and_list(&keys)),
+            format!(
+                "`{written}` sets {}; an included file's document metadata is ignored",
+                and_list(&keys)
+            )
         ).with_path(&source.path).with_span(span.clone()));
     }
     Ok(parsed)
@@ -250,7 +253,10 @@ fn at_directive(
 
 fn read_included(path: &Path) -> std::result::Result<String, String> {
     let bytes = std::fs::read(path).map_err(|error| match error.kind() {
-        std::io::ErrorKind::NotFound => "file not found (a relative path starts at the directory of the file with the directive)".to_owned(),
+        std::io::ErrorKind::NotFound => {
+            "file not found (a relative path starts at the directory of the file with the directive)"
+                .to_owned()
+        }
         _ => format!("cannot read it: {error}"),
     })?;
     String::from_utf8(bytes)

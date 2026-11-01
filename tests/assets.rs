@@ -234,7 +234,11 @@ fn font_face_fallbacks_lenient_and_strict() {
     let err =
         register_css_urls(css, &mut strict, &mut resolver, false).unwrap_err();
     assert!(
-        matches!(&err, Error::MissingAsset { path, span: None } if path == Path::new("fonts/a.woff")),
+        matches!(
+            &err,
+            Error::MissingAsset { path, span: None }
+                if path == Path::new("fonts/a.woff")
+        ),
         "{err:?}"
     );
 }
@@ -306,7 +310,12 @@ fn deleted_file_is_missing_asset_at_emit_time() {
 
     // Deleted between parse and emit.
     std::fs::remove_file(&path).unwrap();
-    let is_missing = |err: &Error| matches!(err, Error::MissingAsset { path, span: None } if *path == stored);
+    let is_missing = |err: &Error| {
+        matches!(
+            err,
+            Error::MissingAsset { path, span: None } if *path == stored
+        )
+    };
     let err = registry.read(&id).unwrap_err();
     assert!(is_missing(&err), "{err:?}");
 
@@ -361,7 +370,11 @@ fn katex_css_inlines_woff2_fonts_and_leaves_fallbacks_untouched() {
     )
     .unwrap_err();
     assert!(
-        matches!(&err, Error::MissingAsset { path, .. } if path.extension().is_some_and(|e| e == "woff")),
+        matches!(
+            &err,
+            Error::MissingAsset { path, .. }
+                if path.extension().is_some_and(|e| e == "woff")
+        ),
         "{err:?}"
     );
 }
@@ -687,7 +700,11 @@ fn percent_encoded_references_cannot_escape_the_relative_path_rules() {
         )
         .unwrap_err();
         assert!(
-            matches!(&err, Error::MissingAsset { path, span: None } if path == Path::new(reference)),
+            matches!(
+                &err,
+                Error::MissingAsset { path, span: None }
+                    if path == Path::new(reference)
+            ),
             "{reference}: {err:?}"
         );
         assert_eq!(calls, [reference]);

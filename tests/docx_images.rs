@@ -403,7 +403,10 @@ fn repeated_media_share_bytes_but_relationships_and_drawing_ids_are_part_local()
     let doc = document(vec![paragraph(vec![
         image(&url, json!({})),
         image(&url, json!({"width": "1in"})),
-        json!({"type": "footnote", "number": 1, "blocks": [paragraph(vec![image(&url, json!({}))])]}),
+        json!({
+            "type": "footnote", "number": 1,
+            "blocks": [paragraph(vec![image(&url, json!({}))])]
+        }),
     ])]);
     let output = emit(&doc, &assets, &mut FakeRenderer::default());
     let parts = parts(&output);
@@ -432,8 +435,13 @@ fn table_images_use_the_cell_content_width() {
     let doc = document(vec![json!({
         "type": "table", "columns": [{"width": 0.5}, {"width": 0.5}],
         "head": [], "foot": [],
-        "body": [{"cells": [{"inlines": [image(&url, json!({"width": "100%"}))]},
-            {"inlines": []}]}], "attrs": {}
+        "body": [{
+            "cells": [
+                {"inlines": [image(&url, json!({"width": "100%"}))]},
+                {"inlines": []}
+            ]
+        }],
+        "attrs": {}
     })]);
     let output = emit(&doc, &assets, &mut FakeRenderer::default());
     let parts = parts(&output);

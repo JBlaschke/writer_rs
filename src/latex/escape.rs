@@ -180,10 +180,10 @@ impl Replacement {
     }
 }
 
-fn replace(
-    s: &str,
-    mut replacement: impl FnMut(char, Option<char>, Option<char>) -> Replacement,
-) -> Cow<'_, str> {
+fn replace<R>(s: &str, mut replacement: R) -> Cow<'_, str>
+where
+    R: FnMut(char, Option<char>, Option<char>) -> Replacement,
+{
     let mut output: Option<String> = None;
     let mut chars = s.char_indices().peekable();
     let mut previous = None;
@@ -638,7 +638,7 @@ mod tests {
         assert_eq!(writercode(r"\{a}"), r"\textbackslash{}\{a\}");
         let untouched = "[]'`\" $%&_#~^|<> α — 😀\n\r\t";
         borrowed(writercode(untouched), untouched);
-        assert_eq!(writercode("α\\β{γ}\n"), "α\\textbackslash{}β\\{γ\\}\n",);
+        assert_eq!(writercode("α\\β{γ}\n"), "α\\textbackslash{}β\\{γ\\}\n");
     }
 
     #[test]

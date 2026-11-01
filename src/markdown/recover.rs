@@ -975,7 +975,8 @@ mod tests {
         }
         assert!(matches!(
             read("python {numbered lines=1|3}"),
-            Some((rest, ElementAttrs::Invalid(_))) if rest == "python {numbered lines=1|3}"
+            Some((rest, ElementAttrs::Invalid(_)))
+                if rest == "python {numbered lines=1|3}"
         ));
     }
 

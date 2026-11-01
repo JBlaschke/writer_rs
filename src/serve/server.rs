@@ -647,10 +647,14 @@ async fn live_reload_js() -> Response {
         for key in keys {
             match crate::vendor::get(key) {
                 Some(bytes) => files.push(bytes.into_owned()),
-                None => return server_error(&format!("embedded {key} is missing")),
+                None => {
+                    return server_error(&format!("embedded {key} is missing"));
+                }
             }
         }
-        let mut bytes = b"/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */\n(function (define, module, exports) {\n".to_vec();
+        let mut bytes =
+            b"/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */\n(function (define, module, exports) {\n"
+                .to_vec();
         bytes.extend_from_slice(&files[0]);
         bytes.extend_from_slice(b"\n}).call(window);\n");
         bytes.extend_from_slice(&files[1]);
@@ -698,12 +702,18 @@ async fn page_svg(
     };
     match page {
         Some((svg, cache)) => (
-            [(header::CONTENT_TYPE, "image/svg+xml"),
-             (header::CACHE_CONTROL, cache),
-             (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
-             (header::CONTENT_SECURITY_POLICY, "default-src 'none'; img-src data:; style-src 'unsafe-inline'")],
-            svg,
-        ).into_response(),
+            [
+                (header::CONTENT_TYPE, "image/svg+xml"),
+                (header::CACHE_CONTROL, cache),
+                (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
+                (
+                    header::CONTENT_SECURITY_POLICY,
+                    "default-src 'none'; img-src data:; style-src 'unsafe-inline'"
+                )
+            ],
+            svg
+        )
+        .into_response(),
         None => not_found(&file),
     }
 }

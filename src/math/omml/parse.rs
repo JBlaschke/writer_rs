@@ -408,7 +408,11 @@ fn ncname(value: &str) -> bool {
     chars.next().is_some_and(name_start)
         && chars.all(|ch| {
             name_start(ch)
-                || matches!(ch, '-' | '.' | '0'..='9' | '\u{b7}' | '\u{300}'..='\u{36f}' | '\u{203f}'..='\u{2040}')
+                || matches!(
+                    ch,
+                    '-' | '.' | '0'..='9' | '\u{b7}' | '\u{300}'..='\u{36f}'
+                    | '\u{203f}'..='\u{2040}'
+                )
         })
 }
 
@@ -601,12 +605,16 @@ mod tests {
             "<math>".repeat(MAX_DEPTH + 1),
             "</math>".repeat(MAX_DEPTH + 1)
         );
-        assert!(
-            matches!(parse(&deep), Err(MathError::Unsupported { element, .. }) if element == "depth limit")
-        );
+        assert!(matches!(
+            parse(&deep),
+            Err(MathError::Unsupported { element, .. })
+                if element == "depth limit"
+        ));
         let many = format!("<math>{}</math>", "<mi/>".repeat(MAX_NODES));
-        assert!(
-            matches!(parse(&many), Err(MathError::Unsupported { element, .. }) if element == "node limit")
-        );
+        assert!(matches!(
+            parse(&many),
+            Err(MathError::Unsupported { element, .. })
+                if element == "node limit"
+        ));
     }
 }

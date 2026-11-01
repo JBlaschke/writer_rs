@@ -484,8 +484,12 @@ fn offscreen_main_include_and_notebook_edits_scroll_to_their_source() {
     let server = Server::start(&project, "document.md", 0);
     let mut page = open(&chrome, &server);
     evaluate(&mut page, "scrollTo(0, 0)");
-    let line = evaluate(&mut page,
-        "+[...document.querySelectorAll('p[data-source=\"0\"]')].find((el) => el.textContent.startsWith('Paragraph 42:')).dataset.sourcepos.split('-')[0]").as_u64().unwrap() as usize;
+    let line = evaluate(
+        &mut page,
+        "+[...document.querySelectorAll('p[data-source=\"0\"]')].find((el) => el.textContent.startsWith('Paragraph 42:')).dataset.sourcepos.split('-')[0]"
+    )
+    .as_u64()
+    .unwrap() as usize;
     let id = build_id(&mut page);
     project.edit_line("document.md", line, " Main offscreen marker.");
     wait_build(
@@ -1262,7 +1266,7 @@ fn pages_are_presized_lazy_and_refresh_only_changed_hashes_at_page_seven() {
     );
     record(
         "pages lazy sizing and page7 anchor/page5 requests",
-        &json!({"initial":initial,"before":before,"after":changed}),
+        &json!({"initial": initial, "before": before, "after": changed}),
     );
     assert_console_clean(&mut page);
 }
@@ -1382,7 +1386,7 @@ fn pages_zoom_keys_buttons_storage_and_fit_resize_preserve_the_anchor() {
         "{fit}"
     );
     assert!(fit["anchorError"].as_f64().unwrap() <= 1.0, "{fit}");
-    record("pages zoom/storage/typing/fit", &json!({"keys":keys,"fit":fit}));
+    record("pages zoom/storage/typing/fit", &json!({"keys": keys, "fit": fit}));
     assert_console_clean(&mut page);
 }
 

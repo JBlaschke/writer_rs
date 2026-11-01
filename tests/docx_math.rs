@@ -440,8 +440,13 @@ fn forced_images_keep_prepared_sources_baselines_svg_png_and_note_relationships(
     let source = r"\RR^2 \tag{7}";
     let mut doc = document(vec![paragraph(vec![
         inline(source, "latex"),
-        json!({"type":"footnote","label":"note","number":1,
-        "blocks":[paragraph(vec![inline("x","typst")]),display("y","typst",None,None)]}),
+        json!({
+            "type": "footnote", "label": "note", "number": 1,
+            "blocks": [
+                paragraph(vec![inline("x", "typst")]),
+                display("y", "typst", None, None)
+            ]
+        }),
     ])]);
     doc.features.footnotes = true;
     let mut renderer = Fake::default();
@@ -523,12 +528,15 @@ fn forced_images_keep_prepared_sources_baselines_svg_png_and_note_relationships(
 #[test]
 fn macro_diagnostics_are_once_only_and_inherit_the_first_equation_location() {
     let mut config = Config::default();
-    config
-        .math
-        .katex_options
-        .insert("macros".into(), json!({"invalid":"x","\\RR":"\\mathbb{R}"}));
+    config.math.katex_options.insert(
+        "macros".into(),
+        json!({"invalid": "x", "\\RR": "\\mathbb{R}"}),
+    );
     let mut first = display(r"\RR^2", "latex", None, None);
-    first["span"] = json!({"start_line":7,"end_line":8,"cell":2,"file":"/source/included.ipynb"});
+    first["span"] = json!({
+        "start_line": 7, "end_line": 8, "cell": 2,
+        "file": "/source/included.ipynb"
+    });
     let doc = document(vec![first, display(r"\RR^3", "latex", None, None)]);
     let output = emit(&doc, &config, &mut Fake::default(), None);
     let diagnostics = warning(&output, "math-macro-invalid", 1);
@@ -547,8 +555,13 @@ fn macro_diagnostics_are_once_only_and_inherit_the_first_equation_location() {
 #[test]
 fn numbered_frames_keep_forward_refs_number_bookmarks_and_seq_corrections() {
     let label = "eq-forward";
-    let reference = json!({"type":"ref","target":label,"supplement":null,"form":"normal", "resolved":{
-        "kind":"equation","number":"1","text":[text("Equation 1")],"anchor":label}});
+    let reference = json!({
+        "type": "ref", "target": label, "supplement": null, "form": "normal",
+        "resolved": {
+            "kind": "equation", "number": "1", "text": [text("Equation 1")],
+            "anchor": label
+        }
+    });
     let mut page_reference = reference.clone();
     page_reference["form"] = json!("page");
     page_reference["supplement"] = json!([]);
@@ -667,7 +680,9 @@ fn numbered_frames_keep_forward_refs_number_bookmarks_and_seq_corrections() {
         assert_eq!(number.children[start - 1].text_content(), "(");
         assert_eq!(number.children[end + 1].text_content(), ")");
     }
-    assert!(tree.descendants("w:bookmarkStart").iter().any(|n|n.attr("w:name")==Some(anchor("eq-unnumbered").as_str())));
+    assert!(tree.descendants("w:bookmarkStart").iter().any(
+        |n| n.attr("w:name") == Some(anchor("eq-unnumbered").as_str())
+    ));
 }
 
 #[test]
@@ -680,7 +695,10 @@ fn section_sequences_and_the_headings_off_fallback_keep_effective_policy() {
         config.numbering.headings = headings.clone();
         let section = !matches!(headings, HeadingNumbering::Off);
         let doc = document(vec![
-            json!({"type":"heading","level":1,"inlines":[text("Chapter")],"attrs":{},"number":"1."}),
+            json!({
+                "type": "heading", "level": 1, "inlines": [text("Chapter")],
+                "attrs": {}, "number": "1."
+            }),
             display(
                 "x",
                 "typst",
@@ -709,11 +727,33 @@ fn equation_styles_ignore_ambient_containers_and_number_frames_ignore_list_inden
  {
     let equation = |name| display(name, "typst", Some(name), None);
     let mut doc = document(vec![
-        json!({"type":"block_quote","blocks":[equation("quote")]}),
-        json!({"type":"callout","kind":"note","title":null,"attrs":{},"blocks":[equation("callout")]}),
-        json!({"type":"definition_list","items":[{"term":[text("Term")],"definitions":[[equation("definition")]]}]}),
-        json!({"type":"div","attrs":{"pairs":{"custom-style":"Custom Equation"}},"blocks":[equation("custom")]}),
-        json!({"type":"list","kind":{"kind":"ordered","start":1},"tight":false,"items":[{"blocks":[paragraph(vec![text("List parent")]),display("list","typst",Some("eq-list"),Some("1"))]}]}),
+        json!({"type": "block_quote", "blocks": [equation("quote")]}),
+        json!({
+            "type": "callout", "kind": "note", "title": null, "attrs": {},
+            "blocks": [equation("callout")]
+        }),
+        json!({
+            "type": "definition_list",
+            "items": [{
+                "term": [text("Term")],
+                "definitions": [[equation("definition")]]
+            }]
+        }),
+        json!({
+            "type": "div",
+            "attrs": {"pairs": {"custom-style": "Custom Equation"}},
+            "blocks": [equation("custom")]
+        }),
+        json!({
+            "type": "list", "kind": {"kind": "ordered", "start": 1},
+            "tight": false,
+            "items": [{
+                "blocks": [
+                    paragraph(vec![text("List parent")]),
+                    display("list", "typst", Some("eq-list"), Some("1"))
+                ]
+            }]
+        }),
     ]);
     doc.meta.abstract_ =
         Some(vec![serde_json::from_value(equation("abstract")).unwrap()]);
@@ -795,7 +835,11 @@ fn reference_normal_size_scales_both_picture_extent_and_inline_descent() {
 fn real_pipeline_math_builds_are_valid_deterministic_and_independent_of_pdf_failure()
  {
     let directory = tempfile::tempdir().unwrap();
-    fs::write(directory.path().join("document.md"),"---\ndate: 2026-10-28\n---\n\n# Math\n\nInline $x^2$.\n\n$$x=1$$ {#eq-one}\n").unwrap();
+    fs::write(
+        directory.path().join("document.md"),
+        "---\ndate: 2026-10-28\n---\n\n# Math\n\nInline $x^2$.\n\n$$x=1$$ {#eq-one}\n"
+    )
+    .unwrap();
     fs::write(
         directory.path().join("writer.toml"),
         "[pdf]\nsystem_fonts=false\n",

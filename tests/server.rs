@@ -358,7 +358,9 @@ fn serves_the_exact_morphdom_wrapper_and_pages_client() {
     let client = server.get("/__writer/live-reload.js");
     assert_eq!(client.status, 200);
     client.assert_headers("text/javascript; charset=utf-8", NO_STORE);
-    let mut expected = b"/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */\n(function (define, module, exports) {\n".to_vec();
+    let mut expected =
+        b"/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */\n(function (define, module, exports) {\n"
+            .to_vec();
     expected.extend_from_slice(include_bytes!(
         "../assets/vendor/morphdom/morphdom-umd.min.js"
     ));

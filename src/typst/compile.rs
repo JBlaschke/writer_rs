@@ -394,8 +394,10 @@ mod tests {
         let diagnostics =
             vec![Diagnostic::error("typst-error", "bad source")].into();
         let result = Compiled::<()> { output: None, diagnostics }.into_result();
-        assert!(matches!(result,
-            Err(Error::Compile { path, line: None, .. }) if path == std::path::Path::new(MAIN_PATH)
+        assert!(matches!(
+            result,
+            Err(Error::Compile { path, line: None, .. })
+                if path == std::path::Path::new(MAIN_PATH)
         ));
         let result =
             Compiled::<()> { output: None, diagnostics: Diagnostics::new() }

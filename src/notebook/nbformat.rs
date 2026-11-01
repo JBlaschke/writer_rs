@@ -637,7 +637,9 @@ mod tests {
     }
 
     fn parse_cells(cells: Value) -> (Notebook, Diagnostics) {
-        let notebook = json!({ "cells": cells, "metadata": {}, "nbformat": 4, "nbformat_minor": 5 });
+        let notebook = json!({
+            "cells": cells, "metadata": {}, "nbformat": 4, "nbformat_minor": 5
+        });
         parse_notebook(Path::new("nb.ipynb"), &notebook.to_string()).unwrap()
     }
 
@@ -698,9 +700,10 @@ mod tests {
             stream,
             Output::Stream { name: "stdout".into(), text: "a\nb".into() }
         );
-        let result: Output = serde_json::from_value(
-            json!({"output_type": "execute_result", "data": {"text/plain": "1"}, "metadata": {}, "execution_count": null}),
-        )
+        let result: Output = serde_json::from_value(json!({
+            "output_type": "execute_result", "data": {"text/plain": "1"},
+            "metadata": {}, "execution_count": null
+        }))
         .unwrap();
         assert!(matches!(
             result,

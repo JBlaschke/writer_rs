@@ -64,7 +64,9 @@ pub fn resolve(spec: &str, search_roots: &[&Path]) -> Result<Theme> {
         chain.push(dir);
     }
     check_root_templates(spec, &chain)?;
-    tracing::debug!(theme = spec, chain = %chain_text(&chain), "resolved theme");
+    tracing::debug!(
+        theme = spec, chain = %chain_text(&chain), "resolved theme"
+    );
     Ok(Theme { chain })
 }
 

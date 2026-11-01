@@ -596,7 +596,11 @@ mod tests {
         let nested = directory.path().join("nested.md");
         let image = directory.path().join("image.svg");
         fs::write(&nested, "Nested body.\n").unwrap();
-        fs::write(&image, b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"/>").unwrap();
+        fs::write(
+            &image,
+            b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"/>"
+        )
+        .unwrap();
         fs::write(
             &path,
             concat!(

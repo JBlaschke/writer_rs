@@ -55,7 +55,10 @@ fn notebook(cells: Value) -> String {
 }
 
 fn markdown_cell(source: &str) -> Value {
-    json!({"cell_type": "markdown", "id": "markdown", "metadata": {}, "source": source})
+    json!({
+        "cell_type": "markdown", "id": "markdown", "metadata": {},
+        "source": source
+    })
 }
 
 fn json_output(mut command: Command) -> (Output, Vec<Value>) {
@@ -354,7 +357,10 @@ fn included_markdown_and_notebook_diagnostics_keep_paths_and_cells() {
     ]);
     let json = notebook(json!([
         markdown_cell("# Included notebook\n\n![Missing](missing-nb.png)\n"),
-        {"cell_type": "code", "id": "saved", "metadata": {}, "source": "1", "execution_count": 1, "outputs": []},
+        {
+            "cell_type": "code", "id": "saved", "metadata": {}, "source": "1",
+            "execution_count": 1, "outputs": []
+        },
     ]));
     std::fs::write(dir.path().join("part.ipynb"), json).unwrap();
     let input = dir.path().join("root.md");

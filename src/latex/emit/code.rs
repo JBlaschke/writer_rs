@@ -80,10 +80,12 @@ impl Emitter<'_> {
             {
                 options.insert(0, format!("language={language}"));
             } else if let Some(language) = lang {
-                self.once(format!("listings:{}", language.to_ascii_lowercase()), Level::Warning,
-                    "latex-listings-language", format!(
-                        "latex: listings has no language for `{language}`",
-                    ));
+                self.once(
+                    format!("listings:{}", language.to_ascii_lowercase()),
+                    Level::Warning,
+                    "latex-listings-language",
+                    format!("latex: listings has no language for `{language}`"),
+                );
             }
         }
         let terminator = format!("\\end{{{env}}}");
