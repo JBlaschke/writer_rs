@@ -83,6 +83,21 @@ fn letter_variants_place_logo_and_footer_at_design_offsets() {
     for page in document.pages() {
         assert!(text(&page.frame).contains("Company No. 13773507"));
         assert!(text(&page.frame).contains("oxford@eit.org"));
+        let left = find_run(
+            &page.frame,
+            Transform::identity(),
+            "Ellison Institute of Technology, Oxford Limited",
+        )
+        .unwrap();
+        let right =
+            find_run(&page.frame, Transform::identity(), "+44 1865 649525")
+                .unwrap();
+        assert!(
+            (left.0.y.to_pt() - right.0.y.to_pt()).abs() < 1.0,
+            "footer columns start on different lines: left={:?}, right={:?}",
+            left.0,
+            right.0
+        );
         let mut rules = Vec::new();
         rule_geometry(&page.frame, Transform::identity(), &mut rules);
         assert_eq!(rules.len(), 1);

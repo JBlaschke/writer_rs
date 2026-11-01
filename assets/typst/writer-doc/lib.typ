@@ -221,7 +221,7 @@
         #if spec.right_lines.len() > 0 {
             grid(
                 columns: (1fr, auto), column-gutter: 1em,
-                align: (left, right),
+                align: (left + top, right + top),
                 spec.lines.map(item => furniture-line(item, spec))
                     .join(linebreak()),
                 spec.right_lines.map(item => furniture-line(item, spec))
