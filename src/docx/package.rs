@@ -187,6 +187,86 @@ impl Package {
         self.footer.as_ref().map(|(path, id)| (path.as_str(), id.as_str()))
     }
 
+    /// Reserves the smallest free header/footer part and document relation.
+    pub(crate) fn reserve_furniture(
+        &mut self, header: bool,
+    ) -> (usize, String) {
+        let (kind, relation, content_type) = if header {
+            ("header", super::xml::REL_HEADER, super::xml::CT_HEADER)
+        } else {
+            ("footer", REL_FOOTER, super::xml::CT_FOOTER)
+        };
+        let mut number = 1;
+        loop {
+            let target = format!("{kind}{number}.xml");
+            let path = format!("word/{target}");
+            let occupied = self.parts.contains_key(&path)
+                || self.copied.contains_key(&path)
+                || self.doc_rels.entries.iter().any(|rel| rel.target == target);
+            if !occupied {
+                let id = self.doc_rels.add(relation, &target, false);
+                self.insert(path, Vec::new(), content_type);
+                return (number, id);
+            }
+            number += 1;
+        }
+    }
+
+    /// Installs one part, rewriting local media targets when a name is taken.
+    pub(crate) fn install_furniture(
+        &mut self, mut part: super::furniture::FurniturePart,
+    ) {
+        for (name, bytes) in part.media {
+            let mut candidate = name.clone();
+            let mut suffix = 1;
+            loop {
+                let path = format!("word/media/{candidate}");
+                let existing =
+                    self.parts.get(&path).or_else(|| self.copied.get(&path));
+                if existing.is_none_or(|(existing, _)| existing == &bytes) {
+                    break;
+                }
+                let (stem, extension) =
+                    name.rsplit_once('.').unwrap_or((&name, "bin"));
+                candidate = format!("{stem}-{suffix}.{extension}");
+                suffix += 1;
+            }
+            if candidate != name {
+                for relation in &mut part.rels {
+                    if relation.target == format!("media/{name}") {
+                        relation.target = format!("media/{candidate}");
+                    }
+                }
+            }
+            let extension = candidate.rsplit('.').next().unwrap_or("bin");
+            let content_type =
+                mime_guess::from_ext(extension).first_or_octet_stream();
+            self.defaults
+                .insert(extension.into(), content_type.essence_str().into());
+            let path = format!("word/media/{candidate}");
+            if !self.parts.contains_key(&path)
+                && !self.copied.contains_key(&path)
+            {
+                self.insert(path, bytes, content_type.essence_str());
+            }
+        }
+        if !part.rels.is_empty() {
+            let name =
+                part.name.strip_prefix("word/").expect("Word furniture part");
+            self.insert(
+                format!("word/_rels/{name}.rels"),
+                Rels::new(part.rels).to_xml(),
+                CT_RELS,
+            );
+        }
+        let content_type = if part.name.starts_with("word/header") {
+            super::xml::CT_HEADER
+        } else {
+            super::xml::CT_FOOTER
+        };
+        self.insert(part.name, part.xml, content_type);
+    }
+
     /// Retains content type Defaults used by copied reference parts.
     pub(crate) fn set_defaults(&mut self, defaults: BTreeMap<String, String>) {
         self.defaults = defaults;
@@ -292,8 +372,7 @@ impl Package {
                 continue;
             }
             let extension = path.rsplit('.').next().unwrap_or("");
-            let copied_default = self.copied.contains_key(path)
-                && defaults.get(extension) == Some(content_type);
+            let copied_default = defaults.get(extension) == Some(content_type);
             if !copied_default {
                 overrides.insert(part_uri(path), content_type.clone());
             }

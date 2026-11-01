@@ -282,20 +282,20 @@ impl Emitter<'_> {
         let id = self.ids.doc_pr;
         self.ids.doc_pr += 1;
         let props = xml::RunProps { position, ..Default::default() }.to_xml();
-        self.buffer().push_str(&format!(concat!(
-            "<w:r>{props}<w:drawing><wp:inline distT=\"0\" distB=\"0\" distL=\"0\" distR=\"0\">",
-            "<wp:extent cx=\"{width}\" cy=\"{height}\"/><wp:effectExtent l=\"0\" t=\"0\" r=\"0\" b=\"0\"/>",
-            "<wp:docPr id=\"{id}\" name=\"Picture {id}\" descr=\"{alt}\"{title}/>",
-            "<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect=\"1\"/></wp:cNvGraphicFramePr>",
-            "<a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><pic:pic>",
-            "<pic:nvPicPr><pic:cNvPr id=\"0\" name=\"{name}\"/><pic:cNvPicPr><a:picLocks noChangeAspect=\"1\" noChangeArrowheads=\"1\"/></pic:cNvPicPr></pic:nvPicPr>",
-            "<pic:blipFill><a:blip r:embed=\"{rel}\">{svg}</a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill>",
-            "<pic:spPr bwMode=\"auto\"><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{width}\" cy=\"{height}\"/></a:xfrm>",
-            "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/><a:ln w=\"9525\"><a:noFill/><a:headEnd/><a:tailEnd/></a:ln></pic:spPr>",
-            "</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>",
-        ), props = props, width = width, height = height, id = id,
-            title = title, svg = svg, alt = xml::escape(alt),
-            name = xml::escape(name), rel = xml::escape(rel)));
+        self.buffer().push_str(
+            &InlineDrawing {
+                props: &props,
+                width,
+                height,
+                id,
+                title: &title,
+                svg: &svg,
+                alt,
+                name,
+                rel,
+            }
+            .to_xml(),
+        );
     }
 }
 
@@ -437,7 +437,7 @@ fn jpeg_dpi(bytes: &[u8]) -> (f64, f64) {
     (96.0, 96.0)
 }
 
-fn normal_scale(source: &str) -> f64 {
+pub(crate) fn normal_scale(source: &str) -> f64 {
     let Ok(tree) = parse_xml(source) else {
         return 1.0;
     };
@@ -467,6 +467,49 @@ fn child<'a>(node: &'a XmlNode, name: &str) -> Option<&'a XmlNode> {
 fn run_size(node: &XmlNode) -> Option<f64> {
     let size: f64 = child(node, "w:sz")?.attr("w:val")?.parse().ok()?;
     (size.is_finite() && size > 0.0).then_some(size)
+}
+
+/// Shared inline drawing serialization for body and furniture pictures.
+pub(crate) struct InlineDrawing<'a> {
+    pub(crate) props: &'a str,
+    pub(crate) width: u64,
+    pub(crate) height: u64,
+    pub(crate) id: u32,
+    pub(crate) title: &'a str,
+    pub(crate) svg: &'a str,
+    pub(crate) alt: &'a str,
+    pub(crate) name: &'a str,
+    pub(crate) rel: &'a str,
+}
+
+impl InlineDrawing<'_> {
+    pub(crate) fn to_xml(&self) -> String {
+        let Self { props, width, height, id, title, svg, alt, name, rel } =
+            self;
+        format!(
+            concat!(
+                "<w:r>{props}<w:drawing><wp:inline distT=\"0\" distB=\"0\" distL=\"0\" distR=\"0\">",
+                "<wp:extent cx=\"{width}\" cy=\"{height}\"/><wp:effectExtent l=\"0\" t=\"0\" r=\"0\" b=\"0\"/>",
+                "<wp:docPr id=\"{id}\" name=\"Picture {id}\" descr=\"{alt}\"{title}/>",
+                "<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect=\"1\"/></wp:cNvGraphicFramePr>",
+                "<a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><pic:pic>",
+                "<pic:nvPicPr><pic:cNvPr id=\"0\" name=\"{name}\"/><pic:cNvPicPr><a:picLocks noChangeAspect=\"1\" noChangeArrowheads=\"1\"/></pic:cNvPicPr></pic:nvPicPr>",
+                "<pic:blipFill><a:blip r:embed=\"{rel}\">{svg}</a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill>",
+                "<pic:spPr bwMode=\"auto\"><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{width}\" cy=\"{height}\"/></a:xfrm>",
+                "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/><a:ln w=\"9525\"><a:noFill/><a:headEnd/><a:tailEnd/></a:ln></pic:spPr>",
+                "</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>",
+            ),
+            props = props,
+            width = width,
+            height = height,
+            id = id,
+            title = title,
+            svg = svg,
+            alt = xml::escape(alt),
+            name = xml::escape(name),
+            rel = xml::escape(rel)
+        )
+    }
 }
 
 #[cfg(test)]

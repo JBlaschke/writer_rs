@@ -6,6 +6,7 @@ pub mod custom_style;
 pub mod design;
 pub mod fields;
 pub mod footnotes;
+mod furniture;
 pub mod images;
 pub mod inline;
 pub mod math;
@@ -237,6 +238,7 @@ pub fn write(
         language,
         has_notes,
     )?;
+    furniture::generate(&mut emitter, reference.as_ref())?;
     let footer = emitter.package.footer().map(|(path, _)| path.to_owned());
     emitter.document();
     emitter.finish_footnotes();

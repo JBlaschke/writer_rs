@@ -47,7 +47,7 @@ fn property(name: &str, attrs: &[(&str, String)]) -> String {
 }
 
 fn run_props(
-    node: &XmlNode, design: &Design, defaults: bool, scale: bool,
+    node: &XmlNode, design: &Design, defaults: bool, scale: bool, heading: bool,
 ) -> String {
     let mut props = Props::new("w:rPr", RPR);
     for child in &node.children {
@@ -57,6 +57,8 @@ fn run_props(
     }
     let font = if defaults {
         design.fonts.body.as_ref()
+    } else if heading {
+        design.fonts.heading.as_ref()
     } else {
         let family = node
             .children
@@ -167,14 +169,15 @@ fn paragraph_defaults(node: &XmlNode, design: &Design) -> String {
 }
 
 fn rewrite(
-    node: &XmlNode, design: &Design, parent: &str, hyperlink: bool, scale: bool,
+    node: &XmlNode, design: &Design, parent: &str, hyperlink: bool,
+    scale: bool, heading: bool,
 ) -> String {
     let hyperlink = hyperlink
         || (node.name == "w:style"
             && node.children.iter().any(|n| {
                 n.name == "w:name" && n.attr("w:val") == Some("Hyperlink")
             }));
-    let scale = if node.name == "w:style" {
+    let (scale, heading) = if node.name == "w:style" {
         let name = node
             .children
             .iter()
@@ -182,7 +185,15 @@ fn rewrite(
             .and_then(|n| n.attr("w:val"))
             .unwrap_or("")
             .to_ascii_lowercase();
-        name.starts_with("heading ")
+        // Heading levels three onward and some linked character styles use
+        // Calibri rather than Calibri Light in the asset. Select by role,
+        // including Title and Subtitle, instead of relying on the old family.
+        let heading = name.starts_with("heading ")
+            || matches!(
+                name.as_str(),
+                "title" | "title char" | "subtitle" | "subtitle char"
+            );
+        let scale = name.starts_with("heading ")
             || matches!(
                 name.as_str(),
                 "title"
@@ -197,13 +208,14 @@ fn rewrite(
                     | "footnote reference"
                     | "source code"
                     | "verbatim char"
-            )
+            );
+        (scale, heading)
     } else {
-        scale
+        (scale, heading)
     };
     if node.name == "w:rPr" {
         let mut result =
-            run_props(node, design, parent == "w:rPrDefault", scale);
+            run_props(node, design, parent == "w:rPrDefault", scale, heading);
         if hyperlink && let Some(color) = design.colors.link {
             let tree = fragment(&result);
             let mut props = Props::new("w:rPr", RPR);
@@ -230,7 +242,7 @@ fn rewrite(
         escape(&node.text),
         node.children
             .iter()
-            .map(|n| rewrite(n, design, &node.name, hyperlink, scale))
+            .map(|n| rewrite(n, design, &node.name, hyperlink, scale, heading))
             .collect::<String>()
     );
     if contents.is_empty() {
@@ -260,7 +272,7 @@ pub fn apply_tokens(styles_xml: &str, design: &Design) -> String {
             (tree, prefix)
         }
     };
-    format!("{prefix}{}", rewrite(&tree, design, "", false, false))
+    format!("{prefix}{}", rewrite(&tree, design, "", false, false, false))
 }
 
 // A style/rPr extracted from the asset relies on its root's w namespace.
