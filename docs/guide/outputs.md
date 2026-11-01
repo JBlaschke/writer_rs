@@ -85,6 +85,12 @@ Word may update fields and TOC page numbers when opening the file, depending
 on its settings. A reference document supplies styles and page setup; it is
 not a body template. See [customization](customization.md) for editing it.
 
+A `:::pagebreak` before a paragraph or heading becomes that paragraph's
+page-break-before property, which Word ignores when the paragraph already
+starts a page. Content that exactly fills the page before the break, such as
+a table of contents, therefore never leaves a blank page. Before a table,
+figure, code block or list the break stays a paragraph holding a page break.
+
 ## LaTeX source
 
 ```sh
