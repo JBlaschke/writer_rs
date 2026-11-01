@@ -282,8 +282,8 @@ fn dump_never_decodes_images_and_prepared_dump_does_not_reread_bibliography() {
     success(&result);
     assert_eq!(String::from_utf8(result.stdout).unwrap(), dump);
     assert_eq!(inventory(root.path()), before);
-    // The CLI prepares and therefore reads the library. The pure prepared
-    // dump only renders its existing plan, even if that resource later vanishes.
+    // The CLI prepares and therefore reads the library. The pure prepared dump
+    // only renders its existing plan, even if that resource later vanishes.
     fs::remove_file(root.path().join("refs.bib")).unwrap();
     let before = inventory(root.path());
     let (again, diagnostics) =

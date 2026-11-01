@@ -246,7 +246,10 @@ fn apply_layer(
                 diagnostics.push(
                     Diagnostic::error(
                         "label-invalid",
-                        format!("label `{}` is invalid; use letters, digits, `_`, `-`, `:` or `.`", value.as_str().unwrap_or_default()),
+                        format!(
+                            "label `{}` is invalid; use letters, digits, `_`, `-`, `:` or `.`",
+                            value.as_str().unwrap_or_default()
+                        ),
                     ).with_path(path).with_span(span.clone()),
                 );
             }
@@ -630,7 +633,10 @@ mod tests {
         let metadata = json!({
             "tags": ["hide_input", "remove-output", "remove_cell", "same"],
             "jupyter": {"source_hidden": true, "outputs_hidden": true},
-            "writer": {"include": true, "echo": false, "output": true, "tags": ["same", "metadata"]},
+            "writer": {
+                "include": true, "echo": false, "output": true,
+                "tags": ["same", "metadata"]
+            },
         });
         let (options, diagnostics) = parsed(
             "#| echo: fenced\n#| tags: [same, final]\nx",

@@ -12,7 +12,8 @@ use super::calls::{blocks, literal};
 use super::literals::{Args, Literal};
 
 const INVALID: &str = "E-TYP-ARG-INVALID";
-/// Bound the structured output before any grid allocation; native PDF is separate.
+/// Bound the structured output before any grid allocation; native PDF is
+/// separate.
 const GRID_SLOTS: usize = 65_536;
 
 pub(super) fn table<'a>(

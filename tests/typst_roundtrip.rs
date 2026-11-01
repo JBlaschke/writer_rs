@@ -886,15 +886,17 @@ fn snapshot_asset_redaction_does_not_rewrite_source_bytes_or_unregistered_urls()
     let id = assets.register_bytes(vec![1, 2, 3], "image/png", "sample.png");
     let source = format!("asset:{id} ?# `quotes` \\n");
     let unknown = "asset:ffffffffffff";
-    let value = serde_json::json!({"blocks":[{"type":"paragraph","inlines":[
-        {"type":"image","url":format!("asset:{id}?v=2#panel")},
-        {"type":"link","url":format!("asset:{id}")},
-        {"type":"math","source":source,"dialect":"typst"},
-        {"type":"code","text":source},
-        {"type":"text","text":source},
-        {"type":"raw","format":"typst","text":source},
-        {"type":"image","url":unknown}
-    ]}]});
+    let value = serde_json::json!({
+        "blocks": [{"type": "paragraph", "inlines": [
+            {"type": "image", "url": format!("asset:{id}?v=2#panel")},
+            {"type": "link", "url": format!("asset:{id}")},
+            {"type": "math", "source": source, "dialect": "typst"},
+            {"type": "code", "text": source},
+            {"type": "text", "text": source},
+            {"type": "raw", "format": "typst", "text": source},
+            {"type": "image", "url": unknown}
+        ]}]
+    });
     let redacted = stable_snapshot(value.clone(), &assets);
     assert_eq!(
         redacted["blocks"][0]["inlines"][0]["url"],

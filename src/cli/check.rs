@@ -62,7 +62,8 @@ fn check_input(
     })
 }
 
-/// `check` reports format failures as diagnostics, unlike the shared usage helper.
+/// `check` reports format failures as diagnostics, unlike the shared usage
+/// helper.
 fn kind(input: &Path) -> crate::error::Result<SourceKind> {
     ir::detect_kind(input).map_err(|error| {
         let message = error.to_string();
@@ -192,8 +193,15 @@ mod tests {
         assert_eq!(
             value,
             json!([
-                { "level":"warning", "code":"missing-asset", "message":"not found", "file":"source.ipynb", "line":4, "cell":2 },
-                { "level":"info", "code":"note", "message":"explanation", "file":null, "line":null, "cell":null },
+                {
+                    "level": "warning", "code": "missing-asset",
+                    "message": "not found", "file": "source.ipynb",
+                    "line": 4, "cell": 2
+                },
+                {
+                    "level": "info", "code": "note", "message": "explanation",
+                    "file": null, "line": null, "cell": null
+                }
             ])
         );
         assert_eq!(json_report(&Diagnostics::new()).unwrap(), "[]");

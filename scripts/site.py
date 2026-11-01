@@ -160,7 +160,9 @@ def source_within(root: Path, path: Path) -> Path:
         resolved = path.resolve(strict=True)
         resolved.relative_to(root)
     except (OSError, ValueError) as error:
-        raise SiteError(f"source path is missing or outside the repository: {path}") from error
+        raise SiteError(
+            f"source path is missing or outside the repository: {path}"
+        ) from error
     return resolved
 
 
@@ -168,13 +170,21 @@ def require_complete_guide(root: Path) -> None:
     for name in GUIDE_PAGES:
         path = root / "docs/guide" / f"{name}.md"
         if not path.is_file():
-            raise SiteError(f"complete guide prerequisite missing: docs/guide/{name}.md")
+            raise SiteError(
+                f"complete guide prerequisite missing: docs/guide/{name}.md"
+            )
         text = path.read_text(encoding="utf-8")
         if MILESTONE.search(text):
-            raise SiteError(f"guide still contains an internal milestone identifier: {path.name}")
+            raise SiteError(
+                "guide still contains an internal milestone identifier: "
+                f"{path.name}"
+            )
     cli = (root / "docs/guide/cli.md").read_text(encoding="utf-8")
     if re.search(r"^\$ writer[^\n]*--help\r?\n```", cli, re.M):
-        raise SiteError("generate and validate final guide help fences before building the site")
+        raise SiteError(
+            "generate and validate final guide help fences before building "
+            "the site"
+        )
     config = (root / "docs/guide/configuration.md").read_text(encoding="utf-8")
     marker = "<!-- generated: writer dump --default-config -->"
     if marker not in config or re.search(r"```toml\s*```", config):
@@ -186,11 +196,21 @@ def pages(root: Path) -> list[Page]:
     for name in GUIDE_PAGES:
         leaf = "index" if name == "README" else name
         key = "guide" if name == "README" else f"guide-{name}"
-        result.append(Page(key, root / "docs/guide" / f"{name}.md", f"guide/{leaf}.html"))
+        result.append(Page(
+            key, root / "docs/guide" / f"{name}.md", f"guide/{leaf}.html"
+        ))
     for name in EXAMPLES:
-        filename = {"notebook": "analysis.ipynb", "typst": "document.typ"}.get(name, "document.md")
-        result.append(Page(f"example-{name}", root / "examples" / name / filename, f"examples/{name}/index.html"))
-    return [Page(page.key, source_within(root, page.source), page.route) for page in result]
+        filename = {
+            "notebook": "analysis.ipynb", "typst": "document.typ"
+        }.get(name, "document.md")
+        result.append(Page(
+            f"example-{name}", root / "examples" / name / filename,
+            f"examples/{name}/index.html"
+        ))
+    return [
+        Page(page.key, source_within(root, page.source), page.route)
+        for page in result
+    ]
 
 
 def srcset_urls(value: str) -> list[tuple[int, int]]:
@@ -198,7 +218,10 @@ def srcset_urls(value: str) -> list[tuple[int, int]]:
     found = []
     index = 0
     while index < len(value):
-        while index < len(value) and (value[index].isspace() or value[index] == ","):
+        while (
+            index < len(value)
+            and (value[index].isspace() or value[index] == ",")
+        ):
             index += 1
         start = index
         while index < len(value) and not value[index].isspace():
@@ -255,16 +278,25 @@ def katex_legacy_rules(root: Path) -> dict[str, frozenset[str]]:
         urls = css_urls(block[0])
         if len(urls) != 3:
             continue
-        face = re.fullmatch(r"fonts/(KaTeX_[A-Za-z0-9]+-[A-Za-z0-9]+)\.woff2", urls[0])
+        face = re.fullmatch(
+            r"fonts/(KaTeX_[A-Za-z0-9]+-[A-Za-z0-9]+)\.woff2", urls[0]
+        )
         if face is None:
             continue
-        expected = [f"fonts/{face[1]}.{suffix}" for suffix in ("woff2", "woff", "ttf")]
+        expected = [
+            f"fonts/{face[1]}.{suffix}" for suffix in ("woff2", "woff", "ttf")
+        ]
         if urls != expected:
             continue
         font = source_within(root, css.parent / urls[0]).read_bytes()
         if not font.startswith(b"wOF2"):
-            raise SiteError(f"canonical KaTeX font lacks WOFF2 signature: {urls[0]}")
-        embedded = "data:font/woff2;base64," + base64.b64encode(font).decode("ascii")
+            raise SiteError(
+                f"canonical KaTeX font lacks WOFF2 signature: {urls[0]}"
+            )
+        embedded = (
+            "data:font/woff2;base64,"
+            + base64.b64encode(font).decode("ascii")
+        )
         standalone = block[0].replace(urls[0], embedded, 1)
         rules[standalone] = frozenset(urls[1:])
     return rules
@@ -277,7 +309,9 @@ class AttributeRewriter(HTMLParser):
         super().__init__(convert_charrefs=False)
         self.text = text
         self.rewrite = rewrite
-        self.starts = [0] + [index + 1 for index, char in enumerate(text) if char == "\n"]
+        self.starts = [0] + [
+            index + 1 for index, char in enumerate(text) if char == "\n"
+        ]
         self.edits = []
 
     def handle_starttag(self, tag, attrs):
@@ -295,7 +329,10 @@ class AttributeRewriter(HTMLParser):
         offset = self.starts[line - 1] + column
         for match in ATTRIBUTE.finditer(raw, opening.end()):
             name = match["name"].lower()
-            group = next((key for key in ("double", "single", "bare") if match[key] is not None), None)
+            group = next((
+                key for key in ("double", "single", "bare")
+                if match[key] is not None
+            ), None)
             if name not in URL_ATTRIBUTES or group is None:
                 continue
             original = html.unescape(match[group])
@@ -308,7 +345,10 @@ class AttributeRewriter(HTMLParser):
                 changed = self.rewrite(tag, name, original)
             if changed != original:
                 start, end = match.span(group)
-                self.edits.append((offset + start, offset + end, html.escape(changed, quote=True)))
+                self.edits.append((
+                    offset + start, offset + end,
+                    html.escape(changed, quote=True)
+                ))
 
     def result(self):
         self.feed(self.text)
@@ -331,10 +371,15 @@ class Mapper:
         self.prefix = normalize_prefix(prefix)
         self.by_key = {page.key: page for page in all_pages}
         self.by_source = {page.source: page for page in all_pages}
-        if len(self.by_key) != len(all_pages) or len(self.by_source) != len(all_pages):
+        if (
+            len(self.by_key) != len(all_pages)
+            or len(self.by_source) != len(all_pages)
+        ):
             raise SiteError("site page keys and source paths must be unique")
         if len({page.route.casefold() for page in all_pages}) != len(all_pages):
-            raise SiteError("site page routes must be distinct on case-insensitive hosts")
+            raise SiteError(
+                "site page routes must be distinct on case-insensitive hosts"
+            )
         self.claimed = {}
         for page in all_pages:
             self.claim(page.route)
@@ -351,7 +396,9 @@ class Mapper:
         key = route.casefold()
         previous = self.claimed.get(key)
         if previous is not None and previous != route:
-            raise SiteError(f"case-only artifact path collision: {previous} and {route}")
+            raise SiteError(
+                f"case-only artifact path collision: {previous} and {route}"
+            )
         self.claimed[key] = route
 
     def local(self, route: str, current: Page, query="", fragment="") -> str:
@@ -359,16 +406,24 @@ class Mapper:
             return "#" + fragment
         path = (
             self.prefix + quote(route, safe="/") if self.prefix
-            else quote(posixpath.relpath(route, posixpath.dirname(current.route) or "."), safe="/")
+            else quote(
+                posixpath.relpath(
+                    route, posixpath.dirname(current.route) or "."
+                ),
+                safe="/"
+            )
         )
         return urlunsplit(("", "", path, query, fragment))
 
     def repository_source(self, path: Path, fragment="", query="") -> str:
-        relative = source_within(self.root, path).relative_to(self.root).as_posix()
+        relative = (
+            source_within(self.root, path).relative_to(self.root).as_posix()
+        )
         kind = "tree" if path.is_dir() else "blob"
         return urlunsplit((
             "https", urlsplit(self.repo).netloc,
-            urlsplit(self.repo).path + f"/{kind}/{self.sha}/" + quote(relative, safe="/"),
+            urlsplit(self.repo).path + f"/{kind}/{self.sha}/"
+            + quote(relative, safe="/"),
             query, fragment
         ))
 
@@ -387,7 +442,9 @@ class Mapper:
             destination.write_bytes(source.read_bytes())
         return route
 
-    def rewrite(self, current: Page, tag: str, attribute: str, value: str) -> str:
+    def rewrite(
+                self, current: Page, tag: str, attribute: str, value: str
+            ) -> str:
         if value.startswith("writer-site:"):
             key, _, fragment = value.removeprefix("writer-site:").partition("#")
             if key == "source":
@@ -395,7 +452,10 @@ class Mapper:
             if key == "repository":
                 return self.repo + "/tree/" + self.sha
             if key in ("license", "embedded-notices"):
-                route = "licenses/LICENSE" if key == "license" else "licenses/embedded.txt"
+                route = (
+                    "licenses/LICENSE" if key == "license"
+                    else "licenses/embedded.txt"
+                )
                 return self.local(route, current)
             if key.startswith("artifact/"):
                 # A file the build writes itself, such as an example's PDF.
@@ -405,11 +465,15 @@ class Mapper:
                 return self.local(route, current, fragment=fragment)
             if key not in self.by_key:
                 raise SiteError(f"unknown site navigation key: {key}")
-            return self.local(self.by_key[key].route, current, fragment=fragment)
+            return self.local(
+                self.by_key[key].route, current, fragment=fragment
+            )
         parsed = urlsplit(value)
         if parsed.scheme or parsed.netloc:
             if parsed.scheme not in ("", "https", "http", "mailto", "data"):
-                raise SiteError(f"unresolved or unsupported emitted URL: {value}")
+                raise SiteError(
+                    f"unresolved or unsupported emitted URL: {value}"
+                )
             return value
         if not parsed.path:
             return value
@@ -421,10 +485,14 @@ class Mapper:
         if page is None and source.is_dir():
             page = self.by_source.get((source / "README.md").resolve())
         if page is not None:
-            return self.local(page.route, current, parsed.query, parsed.fragment)
+            return self.local(
+                page.route, current, parsed.query, parsed.fragment
+            )
         if tag == "a" and attribute == "href":
             return self.repository_source(source, parsed.fragment, parsed.query)
-        return self.local(self.resource(source), current, parsed.query, parsed.fragment)
+        return self.local(
+            self.resource(source), current, parsed.query, parsed.fragment
+        )
 
 
 class References(HTMLParser):
@@ -445,7 +513,9 @@ class References(HTMLParser):
                 identifiers.add(value)
             if name in URL_ATTRIBUTES:
                 if name == "srcset":
-                    self.urls.extend(value[start:end] for start, end in srcset_urls(value))
+                    self.urls.extend(
+                        value[start:end] for start, end in srcset_urls(value)
+                    )
                 else:
                     self.urls.append(value)
             if name == "style":
@@ -467,7 +537,9 @@ class References(HTMLParser):
             self.urls.extend(css_urls(data, self.legacy_rules))
 
 
-def artifact_target(current: str, value: str, prefix: str) -> tuple[str, str] | None:
+def artifact_target(
+            current: str, value: str, prefix: str
+        ) -> tuple[str, str] | None:
     parsed = urlsplit(value)
     if parsed.netloc or parsed.scheme:
         if parsed.scheme not in ("", "https", "http", "mailto", "data"):
@@ -486,7 +558,9 @@ def artifact_target(current: str, value: str, prefix: str) -> tuple[str, str] | 
             raise SiteError(f"local link escapes configured prefix: {value}")
         route = path[len(mount):]
     else:
-        route = posixpath.normpath(posixpath.join(posixpath.dirname(current), decoded))
+        route = posixpath.normpath(
+            posixpath.join(posixpath.dirname(current), decoded)
+        )
         if route == ".." or route.startswith("../"):
             raise SiteError(f"local link escapes artifact root: {value}")
     if parsed.path.endswith("/"):
@@ -506,23 +580,40 @@ def validate_site(
                 for url in css_urls(css, legacy_rules))
             for forbidden in forbidden_paths:
                 if str(forbidden) in html.unescape(unquote(css)):
-                    raise SiteError(f"checkout/build path leaked into {path.relative_to(output)}")
+                    raise SiteError(
+                        "checkout/build path leaked into "
+                        f"{path.relative_to(output)}"
+                    )
         if path.suffix.lower() not in (".html", ".svg"):
             continue
         text = path.read_text(encoding="utf-8")
         decoded = html.unescape(unquote(text))
         for forbidden in forbidden_paths:
-            if str(forbidden) in decoded or str(forbidden).replace("\\", "/") in decoded:
-                raise SiteError(f"checkout/build path leaked into {path.relative_to(output)}")
+            if (
+                str(forbidden) in decoded
+                or str(forbidden).replace("\\", "/") in decoded
+            ):
+                raise SiteError(
+                    "checkout/build path leaked into "
+                    f"{path.relative_to(output)}"
+                )
         refs = References(legacy_rules)
         refs.feed(text)
         refs.close()
         if refs.duplicates:
-            raise SiteError(f"duplicate ids in {path.relative_to(output)}: {sorted(refs.duplicates)}")
+            raise SiteError(
+                f"duplicate ids in {path.relative_to(output)}: "
+                f"{sorted(refs.duplicates)}"
+            )
         parsed_pages[path.relative_to(output).as_posix()] = refs
-    if not any(PurePosixPath(route).suffix.lower() == ".html" for route in parsed_pages):
+    if not any(
+        PurePosixPath(route).suffix.lower() == ".html" for route in parsed_pages
+    ):
         raise SiteError("site has no HTML pages")
-    references = [(current, value) for current, refs in parsed_pages.items() for value in refs.urls]
+    references = [
+        (current, value)
+        for current, refs in parsed_pages.items() for value in refs.urls
+    ]
     references.extend(local_css)
     for current, value in references:
         target = artifact_target(current, value, prefix)
@@ -533,7 +624,9 @@ def validate_site(
         try:
             path.resolve().relative_to(output.resolve())
         except ValueError as error:
-            raise SiteError(f"local link escapes artifact: {current}: {value}") from error
+            raise SiteError(
+                f"local link escapes artifact: {current}: {value}"
+            ) from error
         if not path.is_file():
             raise SiteError(f"missing local target: {current}: {value}")
         if fragment and path.suffix.lower() in (".html", ".svg"):
@@ -649,23 +742,29 @@ def build_example(
             continue
         export = work / f"{page.key}-{target}"
         command(
-            binary, [*base, "--to", target, "-o", str(export / (stem + suffix))],
+            binary,
+            [*base, "--to", target, "-o", str(export / (stem + suffix))],
             root, environment
         )
         route = f"{folder}/{stem}-{target}.zip"
         mapper.claim(route)
-        pack(export, artifact / route, f"{stem}-{target}", source_epoch(environment))
+        pack(
+            export, artifact / route, f"{stem}-{target}",
+            source_epoch(environment)
+        )
         outputs.append(Output(target, route, (artifact / route).stat().st_size))
     thumbnail = f"{folder}/page-1.png"
     mapper.claim(thumbnail)
     first_page(gs, artifact / f"{folder}/{stem}.pdf", artifact / thumbnail)
     context = json.loads(command(
-        binary, ["--config", str(config), "dump", str(page.source), "--context"],
+        binary,
+        ["--config", str(config), "dump", str(page.source), "--context"],
         root, environment
     ))
     title = context.get("document", {}).get("meta", {}).get("title")
     return Example(
-        page, title if isinstance(title, str) and title else page.source.parent.name,
+        page,
+        title if isinstance(title, str) and title else page.source.parent.name,
         tuple(outputs), thumbnail, png_size(artifact / thumbnail)
     )
 
@@ -734,7 +833,9 @@ def excerpt(path: Path) -> str:
     return html.escape(text, quote=False)
 
 
-def examples_section(examples: list[Example], mapper: Mapper, root: Path) -> str:
+def examples_section(
+            examples: list[Example], mapper: Mapper, root: Path
+        ) -> str:
     cards = []
     for example in examples:
         page = example.page
@@ -744,23 +845,32 @@ def examples_section(examples: list[Example], mapper: Mapper, root: Path) -> str
         relative = page.source.relative_to(root).as_posix()
         chips = []
         for output in example.outputs:
-            short = next(short for target, _, short in FORMATS if target == output.target)
+            short = next(
+                short for target, _, short in FORMATS
+                if target == output.target
+            )
             chips.append(
-                f'<li><a class="fmt-{output.target}" href="{output_link(output)}">'
+                f'<li><a class="fmt-{output.target}" '
+                f'href="{output_link(output)}">'
                 f"{html.escape(short)}</a></li>"
             )
         source = html.escape(mapper.repository_source(page.source))
-        chips.append(f'<li><a class="source-link" href="{source}">Source</a></li>')
+        chips.append(
+            f'<li><a class="source-link" href="{source}">Source</a></li>'
+        )
         cards.append(
             '<article class="card">\n'
             f'<a class="thumb" href="writer-site:{page.key}" tabindex="-1">'
             f'<img src="writer-site:artifact/{html.escape(example.thumbnail)}" '
             f'alt="" loading="lazy" width="{width}" height="{height}"></a>\n'
             '<div class="body">\n'
-            f'<p class="kicker">examples/{html.escape(name)} · {html.escape(kind)}</p>\n'
-            f'<h3><a href="writer-site:{page.key}">{html.escape(example.title)}</a></h3>\n'
+            f'<p class="kicker">examples/{html.escape(name)} · '
+            f'{html.escape(kind)}</p>\n'
+            f'<h3><a href="writer-site:{page.key}">'
+            f'{html.escape(example.title)}</a></h3>\n'
             f'<p class="description">{html.escape(description)}</p>\n'
-            f"<pre><code>writer build {html.escape(relative)} --to pdf</code></pre>\n"
+            f"<pre><code>writer build {html.escape(relative)} --to pdf"
+            "</code></pre>\n"
             f'<ul class="chips">{"".join(chips)}</ul>\n'
             "</div>\n"
             "</article>"
@@ -777,7 +887,9 @@ def guide_section(root: Path) -> str:
         if heading:
             title = heading[1].strip()
         key = "guide" if name == "README" else f"guide-{name}"
-        items.append(f'<li><a href="writer-site:{key}">{html.escape(title)}</a></li>')
+        items.append(
+            f'<li><a href="writer-site:{key}">{html.escape(title)}</a></li>'
+        )
     return '<ul class="guide">\n' + "\n".join(items) + "\n</ul>"
 
 
@@ -786,7 +898,8 @@ def download_section(release: dict | None, repo: str) -> str:
     if not release or not release.get("assets"):
         return (
             "<p class=\"release\">No release has been published yet. "
-            f'Releases will appear on the <a href="{releases}">releases page</a>.</p>'
+            "Releases will appear on the "
+            f'<a href="{releases}">releases page</a>.</p>'
         )
     tag = release["tag_name"]
     assets = {asset["name"]: asset for asset in release["assets"]}
@@ -805,8 +918,9 @@ def download_section(release: dict | None, repo: str) -> str:
     date = (release.get("published_at") or "")[:10]
     parts = [
         f'<p class="release"><strong>Latest release: '
-        f'<a href="{html.escape(release["html_url"])}">writer {html.escape(tag)}</a>'
-        "</strong>" + (f", published {html.escape(date)}" if date else "") + ".</p>"
+        f'<a href="{html.escape(release["html_url"])}">'
+        f"writer {html.escape(tag)}</a></strong>"
+        + (f", published {html.escape(date)}" if date else "") + ".</p>"
     ]
     if rows:
         parts.append(
@@ -819,13 +933,15 @@ def download_section(release: dict | None, repo: str) -> str:
     if sums:
         sums_url = html.escape(sums["browser_download_url"])
         notes.append(
-            f'Check a download against <a href="{sums_url}"><code>SHA256SUMS</code></a>, '
-            "unpack it (<code>tar -xzf</code>, or <code>Expand-Archive</code> on "
+            "Check a download against "
+            f'<a href="{sums_url}"><code>SHA256SUMS</code></a>, unpack it '
+            "(<code>tar -xzf</code>, or <code>Expand-Archive</code> on "
             "Windows) and put <code>writer</code> on your <code>PATH</code>."
         )
     notes.append(
-        "The binaries are not signed: on macOS, remove the quarantine mark of a "
-        "browser download with <code>xattr -d com.apple.quarantine writer</code>."
+        "The binaries are not signed: on macOS, remove the quarantine mark "
+        "of a browser download with "
+        "<code>xattr -d com.apple.quarantine writer</code>."
     )
     notes.append(
         "PDF, Word and the web page need nothing else. Compiling the LaTeX "
@@ -835,7 +951,9 @@ def download_section(release: dict | None, repo: str) -> str:
         '<ul class="notes">\n' + "\n".join(f"<li>{note}</li>" for note in notes)
         + "\n</ul>"
     )
-    parts.append(f'<p><a href="{releases}">All releases and their notes</a>.</p>')
+    parts.append(
+        f'<p><a href="{releases}">All releases and their notes</a>.</p>'
+    )
     return "\n".join(parts)
 
 
@@ -844,10 +962,9 @@ def landing_page(
             release: dict | None, version: str
         ) -> str:
     template = Template(page.source.read_text(encoding="utf-8"))
-    basic = next(
-        (example for example in examples if example.page.key == "example-basic"),
-        None
-    )
+    basic = next((
+        example for example in examples if example.page.key == "example-basic"
+    ), None)
     if basic is None:
         raise SiteError("the landing page needs the basic example")
     commit = html.escape(f"{mapper.repo}/commit/{mapper.sha}")
@@ -891,7 +1008,10 @@ def build(args) -> None:
     release = None
     if args.release_json is not None:
         release = json.loads(args.release_json.read_text(encoding="utf-8"))
-        if not isinstance(release, dict) or not isinstance(release.get("tag_name"), str):
+        if (
+            not isinstance(release, dict)
+            or not isinstance(release.get("tag_name"), str)
+        ):
             raise SiteError("release JSON must be a GitHub release document")
     gs = args.gs or shutil.which("gs")
     require_complete_guide(root)
@@ -907,13 +1027,20 @@ def build(args) -> None:
     ancestor = output.parent
     while not ancestor.exists():
         ancestor = ancestor.parent
-    with tempfile.TemporaryDirectory(prefix=".writer-site-", dir=ancestor) as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix=".writer-site-", dir=ancestor
+    ) as temporary:
         work = Path(temporary)
         artifact = work / "artifact"
         artifact.mkdir()
-        mapper = Mapper(root, artifact, all_pages, args.repo_url, args.revision, prefix)
+        mapper = Mapper(
+            root, artifact, all_pages, args.repo_url, args.revision, prefix
+        )
         config = work / "writer.toml"
-        config.write_text('[pdf]\nsystem_fonts = false\nallow_packages = false\n', encoding="utf-8")
+        config.write_text(
+            '[pdf]\nsystem_fonts = false\nallow_packages = false\n',
+            encoding="utf-8"
+        )
         home = None
         for index, page in enumerate(all_pages):
             if page.key == "home":
@@ -923,9 +1050,11 @@ def build(args) -> None:
             raw = work / f"page-{index}.html"
             command(
                 binary,
-                ["--config", str(config), "build", str(page.source),
-                 "--to", "html", "--standalone", "--theme", str(theme),
-                 "-o", str(raw)],
+                [
+                    "--config", str(config), "build", str(page.source),
+                    "--to", "html", "--standalone", "--theme", str(theme),
+                    "-o", str(raw)
+                ],
                 root, environment
             )
             write_page(artifact, mapper, page, raw.read_bytes().decode("utf-8"))
@@ -961,10 +1090,15 @@ def build(args) -> None:
                 for output in example.outputs if output.target != "html"
             ),
             "release": release["tag_name"] if release else None,
-            "notices": {"project": "licenses/LICENSE", "embedded_assets": "licenses/embedded.txt"},
+            "notices": {
+                "project": "licenses/LICENSE",
+                "embedded_assets": "licenses/embedded.txt"
+            },
         }
         (artifact / "site-manifest.json").write_text(
-            json.dumps(manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+            json.dumps(manifest, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8"
+        )
         validate_site(artifact, prefix, (root, work), legacy_rules)
         publish_fresh(artifact, output)
 

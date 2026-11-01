@@ -42,7 +42,8 @@ pub struct ResolveOptions<'a> {
 }
 
 /// Resolves labels, numbering, references, notes and the shared TOC model.
-/// Problems are recorded as diagnostics; invalid references become placeholders.
+/// Problems are recorded as diagnostics; invalid references become
+/// placeholders.
 pub fn resolve(
     document: &mut Document, opts: &ResolveOptions<'_>,
 ) -> Diagnostics {
@@ -213,13 +214,25 @@ impl<'a> Resolver<'a> {
         }
         resolver.pattern = match &opts.config.numbering.headings {
             HeadingNumbering::Off => None,
-            HeadingNumbering::Pattern(pattern) => NumberingPattern::parse(pattern).or_else(|| {
-                resolver.error("numbering-invalid", format!("invalid numbering pattern `{pattern}` (falls back to `1.1`)"), &context);
-                NumberingPattern::parse("1.1")
-            }),
+            HeadingNumbering::Pattern(pattern) => {
+                NumberingPattern::parse(pattern).or_else(|| {
+                    resolver.error(
+                        "numbering-invalid",
+                        format!(
+                            "invalid numbering pattern `{pattern}` (falls back to `1.1`)"
+                        ),
+                        &context
+                    );
+                    NumberingPattern::parse("1.1")
+                })
+            }
         };
         if resolver.section && resolver.pattern.is_none() {
-            resolver.warn("numbering-section-without-headings", "figures = \"section\" needs numbered headings; numbering per document", &context);
+            resolver.warn(
+                "numbering-section-without-headings",
+                "figures = \"section\" needs numbered headings; numbering per document",
+                &context
+            );
             resolver.section = false;
         }
         if let Toc::Depth(depth) = opts.config.document.toc
@@ -538,22 +551,47 @@ impl<'a> Resolver<'a> {
         context: &Context, explicit: bool,
     ) -> bool {
         if !typst_syntax::is_valid_label_literal_id(label) {
-            self.error("label-invalid", format!("label `{label}` is not valid (letters, digits, `_ - : .` only)"), context);
+            self.error(
+                "label-invalid",
+                format!(
+                    "label `{label}` is not valid (letters, digits, `_ - : .` only)"
+                ),
+                context
+            );
             return false;
         }
         self.taken.insert(label.into());
         if let Some(first) = self.labels.get(label) {
             let line =
                 first.info.span.as_ref().map_or(1, |span| span.start_line);
-            self.error("duplicate-label", format!("label `<{label}>` occurs multiple times in the document (first defined at {}:{line})", first.path.display()), context);
+            self.error(
+                "duplicate-label",
+                format!(
+                    "label `<{label}>` occurs multiple times in the document (first defined at {}:{line})",
+                    first.path.display()
+                ),
+                context
+            );
             return true;
         }
         if explicit && reserved(label) {
-            self.warn("label-reserved", format!("label `<{label}>` is reserved for generated anchors (rename it)"), context);
+            self.warn(
+                "label-reserved",
+                format!(
+                    "label `<{label}>` is reserved for generated anchors (rename it)"
+                ),
+                context
+            );
         }
         let anchor = anchor(label);
         if let Some(first) = self.anchors.get(&anchor) {
-            self.error("anchor-collision", format!("labels `<{first}>` and `<{label}>` map to the same anchor `{anchor}` (rename one)"), context);
+            self.error(
+                "anchor-collision",
+                format!(
+                    "labels `<{first}>` and `<{label}>` map to the same anchor `{anchor}` (rename one)"
+                ),
+                context
+            );
         } else {
             self.anchors.insert(anchor, label.into());
         }
@@ -660,7 +698,8 @@ impl<'a> Resolver<'a> {
                     });
                 }
             }
-            // Bibliography entries are appended by T70's phase 4 before assembly.
+            // Bibliography entries are appended by T70's phase 4 before
+            // assembly.
             Block::Bibliography { .. } if self.has_bibliography => {
                 self.toc.push(TocEntry {
                     level: 1,
@@ -769,7 +808,8 @@ impl<'a> Resolver<'a> {
                     );
                 }
             }
-            // Alt text is flattened at Finish without diagnostics or counter changes.
+            // Alt text is flattened at Finish without diagnostics or counter
+            // changes.
             Inline::Image { .. }
             | Inline::Text { .. }
             | Inline::Code { .. }
@@ -802,7 +842,13 @@ impl<'a> Resolver<'a> {
             self.keys.contains(&target),
         ) {
             (Some(_), true) => {
-                self.error("ambiguous-label", format!("label `<{target}>` occurs both in the document and a bibliography (rename the label or bibliography key)"), context);
+                self.error(
+                    "ambiguous-label",
+                    format!(
+                        "label `<{target}>` occurs both in the document and a bibliography (rename the label or bibliography key)"
+                    ),
+                    context
+                );
                 vec![placeholder(&[target])]
             }
             (Some(LabelKind::Footnote), false) => {
@@ -870,7 +916,14 @@ impl<'a> Resolver<'a> {
                 self.keys.contains(&item.key),
             ) {
                 (true, true) => {
-                    self.error("ambiguous-label", format!("label `<{}>` occurs both in the document and a bibliography", item.key), context);
+                    self.error(
+                        "ambiguous-label",
+                        format!(
+                            "label `<{}>` occurs both in the document and a bibliography",
+                            item.key
+                        ),
+                        context
+                    );
                     failed = true;
                 }
                 (true, false) => labels = true,
@@ -1145,7 +1198,15 @@ impl<'a> Resolver<'a> {
                         supplement.as_deref(),
                     ));
                     if warning {
-                        self.warn("unnumbered-target", format!("cannot reference {:?} without numbering; it renders as its text (enable `[numbering]`)", info.kind).to_ascii_lowercase(), context);
+                        self.warn(
+                            "unnumbered-target",
+                            format!(
+                                "cannot reference {:?} without numbering; it renders as its text (enable `[numbering]`)",
+                                info.kind
+                            )
+                            .to_ascii_lowercase(),
+                            context
+                        );
                     }
                 } else {
                     self.unresolved(target, context);
@@ -1326,7 +1387,11 @@ fn special_alt(inlines: &[Inline]) -> bool {
 
 fn citation_space(inline: &Inline) -> bool {
     matches!(inline, Inline::SoftBreak)
-        || matches!(inline, Inline::Text { text } if text.chars().all(|c| matches!(c, ' ' | '\t')))
+        || matches!(
+            inline,
+            Inline::Text { text }
+                if text.chars().all(|c| matches!(c, ' ' | '\t'))
+        )
 }
 
 fn merge_adjacent_citations(inlines: Inlines) -> Inlines {
@@ -1341,8 +1406,11 @@ fn merge_adjacent_citations(inlines: Inlines) -> Inlines {
                         spaces.push(space);
                     }
                 }
-                if matches!(iter.peek(), Some(Inline::Cite { mode: next_mode, .. }) if next_mode == mode)
-                {
+                if matches!(
+                    iter.peek(),
+                    Some(Inline::Cite { mode: next_mode, .. })
+                        if next_mode == mode
+                ) {
                     if let Some(Inline::Cite { items: next, .. }) = iter.next()
                     {
                         items.extend(next);
@@ -1413,8 +1481,13 @@ mod tests {
             cite(&["b"], CiteMode::Normal),
             cite(&["c"], CiteMode::Normal),
         ]);
-        assert!(matches!(merged.as_slice(), [Inline::Cite { items, span, .. }]
-            if items.iter().map(|i| i.key.as_str()).collect::<Vec<_>>() == ["a", "b", "c"] && span.as_ref() == Some(&first_span)));
+        assert!(matches!(
+            merged.as_slice(),
+            [Inline::Cite { items, span, .. }]
+                if items.iter().map(|i| i.key.as_str()).collect::<Vec<_>>()
+                    == ["a", "b", "c"]
+                    && span.as_ref() == Some(&first_span)
+        ));
         for separator in
             [text_inline(", "), text_inline("\n"), Inline::LineBreak]
         {
@@ -1634,10 +1707,11 @@ mod tests {
         let Inline::Ref { resolved: Some(resolved), .. } = &inlines[1] else {
             panic!("resolved ref expected")
         };
-        assert!(
-            matches!(&resolved.text[0], Inline::Ref { resolved: Some(nested), .. }
-            if crate::ir::plain_text(&nested.text) == "Section\u{a0}1")
-        );
+        assert!(matches!(
+            &resolved.text[0],
+            Inline::Ref { resolved: Some(nested), .. }
+                if crate::ir::plain_text(&nested.text) == "Section\u{a0}1"
+        ));
         assert!(matches!(
             &resolved.text[2],
             Inline::FootnoteRef { number: Some(1), .. }

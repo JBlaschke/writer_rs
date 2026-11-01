@@ -36,7 +36,9 @@ class PureTests(unittest.TestCase):
     def test_rust_and_toml_strings_preserve_unicode_controls_and_slashes(self):
         self.assertEqual(GEN.rust_string(r"α\\\"\u{03B2}"), 'α\\"β')
         value = 'α\\"\0\n\r\t\x7f'
-        self.assertEqual(tomllib.loads("value = " + GEN.quote(value))["value"], value)
+        self.assertEqual(
+            tomllib.loads("value = " + GEN.quote(value))["value"], value
+        )
         with self.assertRaises(ValueError):
             GEN.rust_string(r"\q")
 
@@ -58,8 +60,10 @@ class PureTests(unittest.TestCase):
             GEN.codex_value(r"x\vs{17}")
 
     def test_overrides_reject_non_strings_bad_scalars_and_package_words(self):
-        for data in [{"names": {"a": 3}}, {"unknown": {}},
-                     {"packages": {r"\foo-bar": "test"}}]:
+        for data in [
+            {"names": {"a": 3}}, {"unknown": {}},
+            {"packages": {r"\foo-bar": "test"}},
+        ]:
             with self.assertRaises(ValueError):
                 GEN.override_tables(data)
         for key in ["U+xyz", "U+D800", "U+110000"]:
@@ -76,7 +80,9 @@ class PureTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 GEN.write_output(output, "drift\n", True)
             self.assertEqual(output.read_text(encoding="utf-8"), "first\n")
-            with patch.object(GEN.os, "replace", side_effect=OSError("refused")):
+            with patch.object(
+                GEN.os, "replace", side_effect=OSError("refused")
+            ):
                 with self.assertRaises(OSError):
                     GEN.write_output(output, "replacement\n", False)
             self.assertEqual(output.read_text(encoding="utf-8"), "first\n")
@@ -102,8 +108,12 @@ class PureTests(unittest.TestCase):
             (root / "tiny-1.crate").write_bytes(data)
             pins = {"tiny": ("1", hashlib.sha256(data).hexdigest())}
             with patch.dict(GEN.PINS, pins, clear=True):
-                with patch.dict(GEN.MEMBERS, {"tiny": ["src/data.txt"]}, clear=True):
-                    with self.assertRaisesRegex(ValueError, "invalid archive member"):
+                with patch.dict(
+                    GEN.MEMBERS, {"tiny": ["src/data.txt"]}, clear=True
+                ):
+                    with self.assertRaisesRegex(
+                        ValueError, "invalid archive member"
+                    ):
                         GEN.read_sources(root, directory)
             self.assertFalse((root.parent / "outside").exists())
 
@@ -120,15 +130,21 @@ class SourceTests(unittest.TestCase):
             for name, (version, _) in GEN.PINS.items()
         )), None)
         if root is None:
-            raise unittest.SkipTest("skipping pinned source tests: archives unavailable")
+            raise unittest.SkipTest(
+                "skipping pinned source tests: archives unavailable"
+            )
         with temporary() as directory:
             cls.sources = GEN.read_sources(root, directory)
 
     def test_empty_override_counts_and_merge_provenance_match_the_frozen_baseline(self):
-        names, chars, report = GEN.generate(self.sources, GEN.override_tables({}))
+        names, chars, report = GEN.generate(
+            self.sources, GEN.override_tables({})
+        )
         self.assertEqual((len(names), len(chars)), (532, 1292))
         self.assertEqual((report["base_chars"], report["alnum"]), (405, 887))
-        self.assertEqual((len(report["conflicts"]), len(report["unresolved"])), (17, 87))
+        self.assertEqual(
+            (len(report["conflicts"]), len(report["unresolved"])), (17, 87)
+        )
         self.assertEqual(chars["𝐀"]["from"], "alnum")
         self.assertEqual(chars["α"]["from"], "chars")
 
@@ -157,12 +173,16 @@ class SourceTests(unittest.TestCase):
 
     def test_committed_output_round_trips_and_matches_regeneration(self):
         overrides = GEN.override_tables(tomllib.loads(
-            (ROOT / "scripts/unicode-latex-overrides.toml").read_text(encoding="utf-8")
+            (ROOT / "scripts/unicode-latex-overrides.toml").read_text(
+                encoding="utf-8"
+            )
         ))
         names, chars, report = GEN.generate(self.sources, overrides)
         self.assertEqual((len(names), len(chars)), (527, 1296))
         self.assertEqual((report["base_chars"], report["alnum"]), (404, 892))
-        self.assertEqual((len(report["conflicts"]), len(report["unresolved"])), (18, 86))
+        self.assertEqual(
+            (len(report["conflicts"]), len(report["unresolved"])), (18, 86)
+        )
         shorthands = GEN.parse_shorthands(
             self.sources[("typst-syntax", "src/ast.rs")]
         )
@@ -170,12 +190,16 @@ class SourceTests(unittest.TestCase):
         output = GEN.serialize(names, chars)
         self.assertEqual(
             output,
-            (ROOT / "assets/math/unicode-latex.toml").read_text(encoding="utf-8")
+            (ROOT / "assets/math/unicode-latex.toml").read_text(
+                encoding="utf-8"
+            )
         )
         data = tomllib.loads(output)
         self.assertEqual(data["names"], names)
         self.assertEqual(len(data["chars"]), len(chars))
-        self.assertFalse(any(line.rstrip() != line for line in output.splitlines()))
+        self.assertFalse(any(
+            line.rstrip() != line for line in output.splitlines()
+        ))
         self.assertNotIn("\r", output)
 
 
@@ -185,7 +209,9 @@ class LatexTests(unittest.TestCase):
         if tool is None:
             self.skipTest("skipping table compilation: pdflatex unavailable")
         table = tomllib.loads(
-            (ROOT / "assets/math/unicode-latex.toml").read_text(encoding="utf-8")
+            (ROOT / "assets/math/unicode-latex.toml").read_text(
+                encoding="utf-8"
+            )
         )
         grouped = {}
         for row in [*table["names"].values(), *table["chars"].values()]:
@@ -193,7 +219,9 @@ class LatexTests(unittest.TestCase):
         for package, values in grouped.items():
             with self.subTest(package=package), temporary() as directory:
                 values = sorted(values)
-                lines = [r"\documentclass{article}", r"\usepackage{amsmath,amssymb}"]
+                lines = [
+                    r"\documentclass{article}", r"\usepackage{amsmath,amssymb}"
+                ]
                 if package:
                     lines.append(r"\usepackage{" + package + "}")
                 lines.append(r"\begin{document}")
@@ -205,7 +233,10 @@ class LatexTests(unittest.TestCase):
                 lines.append(r"\end{document}")
                 Path(directory, "table.tex").write_text("\n".join(lines) + "\n")
                 run = subprocess.run(
-                    [tool, "-interaction=nonstopmode", "-no-shell-escape", "table.tex"],
+                    [
+                        tool, "-interaction=nonstopmode", "-no-shell-escape",
+                        "table.tex"
+                    ],
                     cwd=directory, capture_output=True, timeout=60,
                 )
                 log = (run.stdout + run.stderr).decode("utf-8", "replace")
@@ -216,7 +247,10 @@ class LatexTests(unittest.TestCase):
                         if match := re.match(r"WRITER-ROW:(\d+)", line):
                             current = int(match[1])
                         if line.startswith("!"):
-                            value = values[current] if current is not None else "preamble"
+                            value = (
+                                values[current] if current is not None
+                                else "preamble"
+                            )
                             failures.append(f"{value}: {line}")
                     self.fail("\n".join(failures) or log[-4000:])
 

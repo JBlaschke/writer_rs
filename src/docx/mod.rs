@@ -1004,7 +1004,11 @@ pub mod xml {
 
     /// Whether XML 1.0 can hold `c` (its `Char` production).
     pub fn is_xml_char(c: char) -> bool {
-        matches!(c, '\t' | '\n' | '\r' | '\u{20}'..='\u{D7FF}' | '\u{E000}'..='\u{FFFD}' | '\u{10000}'..)
+        matches!(
+            c,
+            '\t' | '\n' | '\r' | '\u{20}'..='\u{D7FF}'
+                | '\u{E000}'..='\u{FFFD}' | '\u{10000}'..
+        )
     }
 
     /// Collapses whitespace to single spaces and trims the result.

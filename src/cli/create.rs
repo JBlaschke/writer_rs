@@ -142,7 +142,7 @@ fn directory_target(dir: &Path) -> anyhow::Result<(PathBuf, bool)> {
                 };
                 if metadata.file_type().is_symlink() {
                     resolved = fs::canonicalize(&resolved).map_err(|error| {
-                        if error.kind() == std::io::ErrorKind::PermissionDenied {
+                        if error.kind() == io::ErrorKind::PermissionDenied {
                             anyhow::Error::from(error)
                         } else {
                             UsageError(format!(
@@ -182,7 +182,7 @@ fn preflight_files(
                 match fs::symlink_metadata(&parent) {
                     Ok(metadata) if metadata.file_type().is_symlink() => {
                         let target = fs::canonicalize(&parent).map_err(|error| {
-                            if error.kind() == std::io::ErrorKind::PermissionDenied {
+                            if error.kind() == io::ErrorKind::PermissionDenied {
                                 anyhow::Error::from(error)
                             } else {
                                 UsageError(format!(

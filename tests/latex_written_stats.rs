@@ -69,7 +69,7 @@ fn repeated_image_counts_one_written_file_and_ignores_stale_sidecars() {
         assert_eq!(images.len(), 1, "{images:?}");
         assert_eq!(fs::read(&images[0]).unwrap(), PNG);
         assert_eq!(fs::read(sidecar.join("stale.bin")).unwrap(), stale);
-        assert_eq!(fs::read(sidecar.join("nested/stale.bin")).unwrap(), nested,);
+        assert_eq!(fs::read(sidecar.join("nested/stale.bin")).unwrap(), nested);
         assert!(root.join("out/document.tex").is_file());
     }
 }

@@ -2,16 +2,18 @@
 //! Owner: T01. Stub created by T00.
 //! Crate-wide error type, `Result` alias and non-fatal diagnostics.
 //!
-//! Contract: `docs/spec/ir.md` §4–§5. [`Error`] is for failures that stop an operation;
-//! [`Diagnostic`]s are notes, warnings and non-fatal errors that frontends collect in
-//! [`Diagnostics`] and hand to the pipeline and `check` through `ir::Parsed`.
+//! Contract: `docs/spec/ir.md` §4–§5. [`Error`] is for failures that stop an
+//! operation; [`Diagnostic`]s are notes, warnings and non-fatal errors that
+//! frontends collect in [`Diagnostics`] and hand to the pipeline and `check`
+//! through `ir::Parsed`.
 //!
-//! Where an error is located (T44): [`Error::path`], [`Error::span`] and [`Error::column`]
-//! read the location an error carries, in its fields or in the message conventions of the
-//! frontends (a notebook cell's `cell N, line M: …`, YAML's `at line L column C`);
-//! [`Error::excerpt`] cuts the offending source line out of the file for display, and
-//! [`Error::quoted_line`] finds it in a message that a library already rendered with an
-//! excerpt (minijinja's debug info, `toml`, `grass`).
+//! Where an error is located (T44): [`Error::path`], [`Error::span`] and
+//! [`Error::column`] read the location an error carries, in its fields or in
+//! the message conventions of the frontends (a notebook cell's
+//! `cell N, line M: …`, YAML's `at line L column C`); [`Error::excerpt`] cuts
+//! the offending source line out of the file for display, and
+//! [`Error::quoted_line`] finds it in a message that a library already rendered
+//! with an excerpt (minijinja's debug info, `toml`, `grass`).
 
 use std::borrow::Cow;
 use std::fmt;
@@ -25,7 +27,10 @@ use crate::ir::SourceSpan;
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     /// A source file could not be parsed.
-    #[error("{}:{} {message}", .path.display(), .line.map(|l| l.to_string()).unwrap_or_default())]
+    #[error(
+        "{}:{} {message}",
+        .path.display(), .line.map(|l| l.to_string()).unwrap_or_default()
+    )]
     Parse {
         /// The file that failed to parse.
         path: PathBuf,
@@ -49,7 +54,10 @@ pub enum Error {
         message: String,
     },
     /// A template failed to load or render.
-    #[error("template '{template}'{}: {message}", .line.map(|l| format!(" line {l}")).unwrap_or_default())]
+    #[error(
+        "template '{template}'{}: {message}",
+        .line.map(|l| format!(" line {l}")).unwrap_or_default()
+    )]
     Template {
         /// Template name, e.g. `layouts/title.html`.
         template: String,
@@ -75,7 +83,10 @@ pub enum Error {
         span: Option<SourceSpan>,
     },
     /// A typst compile error, mapped to the user's source where possible.
-    #[error("{}:{} {message}", .path.display(), .line.map(|l| l.to_string()).unwrap_or_default())]
+    #[error(
+        "{}:{} {message}",
+        .path.display(), .line.map(|l| l.to_string()).unwrap_or_default()
+    )]
     Compile {
         /// Source file where compilation failed.
         path: PathBuf,
@@ -110,15 +121,16 @@ pub enum Error {
 /// Result alias used throughout the library.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Where an error is located and what it says apart from that (T44: terminal reports in
-/// `cli::report`, the browser overlay's payload in `serve::events`).
+/// Where an error is located and what it says apart from that (T44: terminal
+/// reports in `cli::report`, the browser overlay's payload in `serve::events`).
 impl Error {
-    /// The file this error's [`span`](Self::span) is in, when the error names it: the source
-    /// file of [`Error::Parse`] or [`Error::Compile`] (`None` when empty). Every
-    /// other variant gives `None`: the path of [`Error::MissingAsset`] is the missing file,
-    /// while its span is in the document source, which only the caller knows (the CLI adds it
-    /// as context, `cli::locate`), or in the included file the span's `file` names (T48); a
-    /// template's name is not a file path.
+    /// The file this error's [`span`](Self::span) is in, when the error names
+    /// it: the source file of [`Error::Parse`] or [`Error::Compile`] (`None`
+    /// when empty). Every other variant gives `None`: the path of
+    /// [`Error::MissingAsset`] is the missing file, while its span is in the
+    /// document source, which only the caller knows (the CLI adds it as
+    /// context, `cli::locate`), or in the included file the span's `file` names
+    /// (T48); a template's name is not a file path.
     pub fn path(&self) -> Option<&Path> {
         match self {
             Error::Parse { path, .. } | Error::Compile { path, .. }
@@ -130,8 +142,8 @@ impl Error {
         }
     }
 
-    /// Where the error is located, as far as it says (one line; `cell` set for a line of a
-    /// notebook cell's source):
+    /// Where the error is located, as far as it says (one line; `cell` set for
+    /// a line of a notebook cell's source):
     ///
     /// | variant | span |
     /// |---|---|
@@ -167,12 +179,13 @@ impl Error {
         }
     }
 
-    /// The 1-based column on the [`span`](Self::span)'s line, when the message gives one:
-    /// `at line L column C` of a front matter (YAML) or notebook JSON parse error, counted
-    /// as the parser counts it: in characters for YAML, in bytes for JSON (`serde_json`;
-    /// [`Error::excerpt`] converts it to a character). A message with two positions (YAML's
-    /// `… at line 4 column 7, while parsing a flow sequence at line 3 column 7`) is located
-    /// at the first, the problem; the second is its context.
+    /// The 1-based column on the [`span`](Self::span)'s line, when the message
+    /// gives one: `at line L column C` of a front matter (YAML) or notebook
+    /// JSON parse error, counted as the parser counts it: in characters for
+    /// YAML, in bytes for JSON (`serde_json`; [`Error::excerpt`] converts it to
+    /// a character). A message with two positions (YAML's `… at line 4 column
+    /// 7, while parsing a flow sequence at line 3 column 7`) is located at the
+    /// first, the problem; the second is its context.
     pub fn column(&self) -> Option<usize> {
         let message = match self {
             Error::Parse { message, .. } | Error::FrontMatter(message) => {
@@ -185,11 +198,12 @@ impl Error {
     }
 
     /// What went wrong without the location that [`path`](Self::path) and
-    /// [`span`](Self::span) give: a parse error's message without its file, line or
-    /// `cell N, line M: ` prefix; a compile error's message without its file and line;
-    /// a front matter error located in a notebook cell without its `cell N: ` prefix
-    /// (`front matter: …`). Every other error's `Display` form (a
-    /// template error keeps its name and line, a missing asset names the missing file).
+    /// [`span`](Self::span) give: a parse error's message without its file,
+    /// line or `cell N, line M: ` prefix; a compile error's message without its
+    /// file and line; a front matter error located in a notebook cell without
+    /// its `cell N: ` prefix (`front matter: …`). Every other error's `Display`
+    /// form (a template error keeps its name and line, a missing asset names
+    /// the missing file).
     pub fn message(&self) -> Cow<'_, str> {
         match self {
             Error::Compile { message, .. } => Cow::Borrowed(message),
@@ -211,23 +225,26 @@ impl Error {
     }
 
     /// The offending line of the source `file`, cut for display: the line of
-    /// [`span`](Self::span) (of the cell's source when the span names a cell: `file` is
-    /// then the notebook), read through `source_cache`, with the part to underline: the
-    /// character at the [`column`](Self::column) (a notebook JSON error's byte column is
-    /// converted), the reference to the missing file of a [`Error::MissingAsset`] when the
-    /// line contains it, else the line's text. A missing asset located in a notebook code
-    /// cell whose line does not mention the file has no excerpt: a code cell's source names
-    /// no files the build reads, so it is a file an output of the cell names, and the cell's
-    /// source line would be unrelated (audit F38). In a Markdown or raw cell the line is
-    /// where the author wrote the reference (maybe encoded, `my%20pic.png`) and is quoted.
+    /// [`span`](Self::span) (of the cell's source when the span names a cell:
+    /// `file` is then the notebook), read through `source_cache`, with the part
+    /// to underline: the character at the [`column`](Self::column) (a notebook
+    /// JSON error's byte column is converted), the reference to the missing
+    /// file of a [`Error::MissingAsset`] when the line contains it, else the
+    /// line's text. A missing asset located in a notebook code cell whose line
+    /// does not mention the file has no excerpt: a code cell's source names no
+    /// files the build reads, so it is a file an output of the cell names, and
+    /// the cell's source line would be unrelated (audit F38). In a Markdown or
+    /// raw cell the line is where the author wrote the reference (maybe
+    /// encoded, `my%20pic.png`) and is quoted.
     ///
-    /// `file` is the file the span is in: [`path`](Self::path), or the document source for a
-    /// missing asset or front matter error, which the caller knows (`cli::locate`,
-    /// `serve::events::ErrorPayload::for_input`). A template error's span is a line of the
-    /// template, whose file only a caller that resolves the theme chain can name; the CLI's
-    /// report and the overlay payload do not, and use [`quoted_line`](Self::quoted_line).
-    /// `None` without a span, when `source_cache` has no text for `file`, or when the line
-    /// does not exist (the file changed).
+    /// `file` is the file the span is in: [`path`](Self::path), or the document
+    /// source for a missing asset or front matter error, which the caller knows
+    /// (`cli::locate`, `serve::events::ErrorPayload::for_input`). A template
+    /// error's span is a line of the template, whose file only a caller that
+    /// resolves the theme chain can name; the CLI's report and the overlay
+    /// payload do not, and use [`quoted_line`](Self::quoted_line). `None`
+    /// without a span, when `source_cache` has no text for `file`, or when the
+    /// line does not exist (the file changed).
     pub fn excerpt(
         &self, file: &Path, source_cache: &dyn Fn(&Path) -> Option<String>,
     ) -> Option<Excerpt> {
@@ -243,9 +260,10 @@ impl Error {
             (Error::MissingAsset { path, .. }, None) => {
                 match reference_range(path, &line) {
                     Some(range) => Some(range),
-                    // In a notebook code cell, a missing file that its line does not mention is
-                    // named by an output of the cell (whose span is the whole cell): the cell's
-                    // source line is unrelated, so none is quoted (audit F38).
+                    // In a notebook code cell, a missing file that its line
+                    // does not mention is named by an output of the cell (whose
+                    // span is the whole cell): the cell's source line is
+                    // unrelated, so none is quoted (audit F38).
                     None if cell_type.as_deref() == Some("code") => {
                         return None;
                     }
@@ -257,11 +275,12 @@ impl Error {
         Some(Excerpt::cut(span.start_line, &line, target))
     }
 
-    /// The offending source line as a library already quoted it in the message (no file is
-    /// read): the `  12 > …` line of minijinja's debug info (template errors in serve mode,
-    /// syntax errors converted with `?`), else the only numbered line of a `toml` excerpt
-    /// (`3 | …`: `theme.toml`, `writer.toml`) or a `grass` one (`3 │ …`). `None` when
-    /// the message quotes no line, or a blank one.
+    /// The offending source line as a library already quoted it in the message
+    /// (no file is read): the ` 12 > …` line of minijinja's debug info
+    /// (template errors in serve mode, syntax errors converted with `?`), else
+    /// the only numbered line of a `toml` excerpt (`3 | …`: `theme.toml`,
+    /// `writer.toml`) or a `grass` one (`3 │ …`). `None` when the message
+    /// quotes no line, or a blank one.
     pub fn quoted_line(&self) -> Option<&str> {
         match self {
             Error::Parse { message, .. }
@@ -278,20 +297,23 @@ impl Error {
     }
 }
 
-/// The widest [`Excerpt`] line, in characters: a longer line (minified HTML, a notebook's
-/// JSON on one line) is cut around the error.
+/// The widest [`Excerpt`] line, in characters: a longer line (minified HTML, a
+/// notebook's JSON on one line) is cut around the error.
 pub const EXCERPT_WIDTH: usize = 120;
 
-/// The source line an error points at, as shown under the error ([`Error::excerpt`]).
+/// The source line an error points at, as shown under the error
+/// ([`Error::excerpt`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Excerpt {
-    /// The line's 1-based number: in the file, or in the cell's source for a notebook.
+    /// The line's 1-based number: in the file, or in the cell's source for a
+    /// notebook.
     pub line: usize,
-    /// The line as shown: tabs expanded to four spaces, trailing whitespace removed, cut to
-    /// [`EXCERPT_WIDTH`] characters around the error with `…` marking a cut end.
+    /// The line as shown: tabs expanded to four spaces, trailing whitespace
+    /// removed, cut to [`EXCERPT_WIDTH`] characters around the error with `…`
+    /// marking a cut end.
     pub text: String,
-    /// The part of `text` to underline: its start column (0-based, in characters) and its
-    /// width (at least 1). `None` for a blank line.
+    /// The part of `text` to underline: its start column (0-based, in
+    /// characters) and its width (at least 1). `None` for a blank line.
     pub marker: Option<(usize, usize)>,
 }
 
@@ -299,8 +321,9 @@ pub struct Excerpt {
 const TAB_WIDTH: usize = 4;
 
 impl Excerpt {
-    /// Line `number` (`line`) with the characters `target` (`start..end`, character indices
-    /// into `line`) to underline, cut and expanded as [`Excerpt::text`] says.
+    /// Line `number` (`line`) with the characters `target` (`start..end`,
+    /// character indices into `line`) to underline, cut and expanded as
+    /// [`Excerpt::text`] says.
     fn cut(
         number: usize, line: &str, target: Option<(usize, usize)>,
     ) -> Excerpt {
@@ -340,16 +363,17 @@ impl Excerpt {
     }
 }
 
-/// Line `span.start_line` (1-based) of the source `text`, without its line break: of the
-/// file, or, when `span.cell` is set, of that cell's `source` in the notebook JSON `text`
-/// (cell indices count every cell of the notebook, as in [`SourceSpan`]). `None` when the
-/// line (or the cell) does not exist.
+/// Line `span.start_line` (1-based) of the source `text`, without its line
+/// break: of the file, or, when `span.cell` is set, of that cell's `source` in
+/// the notebook JSON `text` (cell indices count every cell of the notebook, as
+/// in [`SourceSpan`]). `None` when the line (or the cell) does not exist.
 pub fn source_line(text: &str, span: &SourceSpan) -> Option<String> {
     located_line(text, span).map(|(line, _)| line)
 }
 
-/// [`source_line`], with the `cell_type` of the cell when `span.cell` is set (the notebook
-/// is parsed once: an excerpt is made for each missing file of a failed build).
+/// [`source_line`], with the `cell_type` of the cell when `span.cell` is set
+/// (the notebook is parsed once: an excerpt is made for each missing file of a
+/// failed build).
 fn located_line(
     text: &str, span: &SourceSpan,
 ) -> Option<(String, Option<String>)> {
@@ -371,7 +395,8 @@ fn located_line(
     Some((source.lines().nth(index)?.to_string(), cell_type))
 }
 
-/// `text` without one leading byte order mark, which the frontends ignore (audit F43).
+/// `text` without one leading byte order mark, which the frontends ignore
+/// (audit F43).
 fn without_bom(text: &str) -> &str {
     text.strip_prefix('\u{feff}').unwrap_or(text)
 }
@@ -387,12 +412,14 @@ fn notebook_cell(text: &str, cell: usize) -> Option<serde_json::Value> {
 
 #[cfg(test)]
 thread_local! {
-    /// How many notebooks [`notebook_cell`] parsed on this thread (tests count them).
-    static NOTEBOOK_PARSES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    /// How many notebooks [`notebook_cell`] parsed on this thread (tests count
+    /// them).
+    static NOTEBOOK_PARSES: std::cell::Cell<usize> =
+        const { std::cell::Cell::new(0) };
 }
 
-/// `cell N, line M: rest` or `cell N: rest` at the start of `message` (the notebook
-/// frontend's location prefix): `(N, Some(M) | None, rest)`.
+/// `cell N, line M: rest` or `cell N: rest` at the start of `message` (the
+/// notebook frontend's location prefix): `(N, Some(M) | None, rest)`.
 fn cell_location(message: &str) -> Option<(usize, Option<usize>, &str)> {
     let (cell, rest) = leading_number(message.strip_prefix("cell ")?)?;
     match rest.strip_prefix(", line ") {
@@ -404,12 +431,13 @@ fn cell_location(message: &str) -> Option<(usize, Option<usize>, &str)> {
     }
 }
 
-/// The position of the problem in `message`, as serde_norway and serde_json locate their
-/// errors (`at line L column C`, both counting from 1): the first such position that ends
-/// the message or a clause (followed by `,`, as libyaml's problem position is by
-/// `, while parsing … at line …`, its context; by ` (` and a frontend's hint; or by a line
-/// break), else the first one. (A quoted value that reads `at line 1 column 1` is followed
-/// by its closing quote and skipped.)
+/// The position of the problem in `message`, as serde_norway and serde_json
+/// locate their errors (`at line L column C`, both counting from 1): the first
+/// such position that ends the message or a clause (followed by `,`, as
+/// libyaml's problem position is by `, while parsing … at line …`, its context;
+/// by ` (` and a frontend's hint; or by a line break), else the first one. (A
+/// quoted value that reads `at line 1 column 1` is followed by its closing
+/// quote and skipped.)
 fn line_column(message: &str) -> Option<(usize, usize)> {
     const AT: &str = "at line ";
     let mut first = None;
@@ -434,8 +462,8 @@ fn line_column(message: &str) -> Option<(usize, usize)> {
     first
 }
 
-/// The index of the character of `line` that contains byte `offset`; the number of
-/// characters when `offset` is past the end.
+/// The index of the character of `line` that contains byte `offset`; the number
+/// of characters when `offset` is past the end.
 fn char_index(line: &str, offset: usize) -> usize {
     if offset >= line.len() {
         return line.chars().count();
@@ -474,9 +502,9 @@ fn quoted_line_in(message: &str) -> Option<&str> {
     }
 }
 
-/// The characters of `line` (as `start..end` character indices) that refer to the missing
-/// file `path`: the last occurrence of the longest trailing part of `path` (`plot.png`,
-/// `figures/plot.png`, …) that `line` contains.
+/// The characters of `line` (as `start..end` character indices) that refer to
+/// the missing file `path`: the last occurrence of the longest trailing part of
+/// `path` (`plot.png`, `figures/plot.png`, …) that `line` contains.
 fn reference_range(path: &Path, line: &str) -> Option<(usize, usize)> {
     let names: Vec<&str> = path
         .components()
@@ -493,28 +521,30 @@ fn reference_range(path: &Path, line: &str) -> Option<(usize, usize)> {
     })
 }
 
-/// The characters of `line` from its first to its last non-blank one; `None` when blank.
+/// The characters of `line` from its first to its last non-blank one; `None`
+/// when blank.
 fn text_range(line: &str) -> Option<(usize, usize)> {
     let start = line.chars().position(|c| !c.is_whitespace())?;
     let len = line.trim_end().chars().count();
     Some((start, len))
 }
 
-/// TOML errors become [`Error::Config`]. The message is the full `toml` rendering (which
-/// includes `line N, column M` and the offending line when the input is known), followed
-/// by a `did you mean '…'?` hint for a misspelled key or value (see
-/// [`crate::config::unknown_key_hint`]).
+/// TOML errors become [`Error::Config`]. The message is the full `toml`
+/// rendering (which includes `line N, column M` and the offending line when the
+/// input is known), followed by a `did you mean '…'?` hint for a misspelled key
+/// or value (see [`crate::config::unknown_key_hint`]).
 impl From<toml::de::Error> for Error {
     fn from(err: toml::de::Error) -> Self {
         Error::Config(crate::config::with_unknown_key_hint(err.to_string()))
     }
 }
 
-/// minijinja errors become [`Error::Template`] via [`template_error`]`(err, true)`: the
-/// message includes minijinja's debug info whenever it was captured. minijinja captures it
-/// for runtime errors only in a debug environment (`Environment::set_debug(true)`, serve
-/// mode), so `?` gives "debug info in debug mode"; syntax errors always carry their source
-/// excerpt, in build mode too. Call [`template_error`] with `false` to leave it out.
+/// minijinja errors become [`Error::Template`] via
+/// [`template_error`]`(err, true)`: the message includes minijinja's debug info
+/// whenever it was captured. minijinja captures it for runtime errors only in a
+/// debug environment (`Environment::set_debug(true)`, serve mode), so `?` gives
+/// "debug info in debug mode"; syntax errors always carry their source excerpt,
+/// in build mode too. Call [`template_error`] with `false` to leave it out.
 impl From<minijinja::Error> for Error {
     fn from(err: minijinja::Error) -> Self {
         template_error(err, true)
@@ -523,25 +553,28 @@ impl From<minijinja::Error> for Error {
 
 /// Converts a minijinja error to [`Error::Template`].
 ///
-/// minijinja reports an error raised inside an included template (or a `super()` block)
-/// as an error located at the include site whose source is the original error. The
-/// conversion walks that chain and reports the innermost located error: `template` and
-/// `line` are where the problem is (e.g. `layouts/title.html`, line 4). For a top-level
-/// "template not found" (`get_template` of a missing name) `template` is the missing name;
-/// `<unknown>` only when minijinja names no template at all. `message` is the error's kind
-/// and detail, any further causes (`: cause`), then the include sites from the inside out
-/// (`(via slide.html line 3, document.html line 12)`; repeated sites, as in a recursive
-/// include, are collapsed to `site ×N`, and a list longer than four entries is shortened
-/// to the first three, `… N more` and the last). minijinja's own `(in name:line)` suffix
-/// is left out since the location is in the other fields.
+/// minijinja reports an error raised inside an included template (or a
+/// `super()` block) as an error located at the include site whose source is the
+/// original error. The conversion walks that chain and reports the innermost
+/// located error: `template` and `line` are where the problem is (e.g.
+/// `layouts/title.html`, line 4). For a top-level "template not found"
+/// (`get_template` of a missing name) `template` is the missing name;
+/// `<unknown>` only when minijinja names no template at all. `message` is the
+/// error's kind and detail, any further causes (`: cause`), then the include
+/// sites from the inside out (`(via slide.html line 3, document.html line 12)`;
+/// repeated sites, as in a recursive include, are collapsed to `site ×N`, and a
+/// list longer than four entries is shortened to the first three, `… N more`
+/// and the last). minijinja's own `(in name:line)` suffix is left out since the
+/// location is in the other fields.
 ///
-/// With `debug`, the message also contains that error's `display_debug_info()`: the
-/// template source around the line and the referenced variables, when minijinja captured
-/// them (see `From<minijinja::Error>`).
+/// With `debug`, the message also contains that error's `display_debug_info()`:
+/// the template source around the line and the referenced variables, when
+/// minijinja captured them (see `From<minijinja::Error>`).
 pub fn template_error(err: minijinja::Error, debug: bool) -> Error {
     use std::fmt::Write as _;
 
-    // The chain of minijinja errors, outermost first, and the first other cause after it.
+    // The chain of minijinja errors, outermost first, and the first other cause
+    // after it.
     let mut frames: Vec<&minijinja::Error> = vec![&err];
     let mut cause = std::error::Error::source(&err);
     while let Some(inner) =
@@ -595,9 +628,10 @@ pub fn template_error(err: minijinja::Error, debug: bool) -> Error {
 /// The most include sites [`include_sites`] lists before shortening the list.
 const MAX_INCLUDE_SITES: usize = 4;
 
-/// Formats include sites (innermost first) for the `(via …)` suffix: consecutive repeats
-/// collapse to `site ×N`, and more than [`MAX_INCLUDE_SITES`] entries are shortened to the
-/// first three, `… N more`, and the last.
+/// Formats include sites (innermost first) for the `(via …)` suffix:
+/// consecutive repeats collapse to `site ×N`, and more than
+/// [`MAX_INCLUDE_SITES`] entries are shortened to the first three, `… N more`,
+/// and the last.
 fn include_sites(sites: &[String]) -> String {
     let mut runs: Vec<(&str, usize)> = Vec::new();
     for site in sites {
@@ -622,8 +656,9 @@ fn include_sites(sites: &[String]) -> String {
     shown.join(", ")
 }
 
-/// The name in minijinja's `template "<name>" does not exist`, for a "template not found"
-/// error that carries no template name of its own (a top-level `get_template`).
+/// The name in minijinja's `template "<name>" does not exist`, for a "template
+/// not found" error that carries no template name of its own (a top-level
+/// `get_template`).
 fn missing_template_name(err: &minijinja::Error) -> Option<String> {
     if err.kind() != minijinja::ErrorKind::TemplateNotFound {
         return None;
@@ -632,8 +667,9 @@ fn missing_template_name(err: &minijinja::Error) -> Option<String> {
         .detail()?
         .strip_prefix("template ")?
         .strip_suffix(" does not exist")?;
-    // minijinja formats the name with `{:?}`, which matches JSON string syntax for every
-    // name without unusual escapes; fall back to stripping the quotes.
+    // minijinja formats the name with `{:?}`, which matches JSON string syntax
+    // for every name without unusual escapes; fall back to stripping the
+    // quotes.
     serde_json::from_str::<String>(quoted).ok().or_else(|| {
         quoted.strip_prefix('"')?.strip_suffix('"').map(str::to_string)
     })
@@ -718,8 +754,8 @@ impl Diagnostic {
     }
 }
 
-/// The `docs/spec/cli.md` text format `path:line: level: message`, leaving out what is
-/// unknown:
+/// The `docs/spec/cli.md` text format `path:line: level: message`, leaving out
+/// what is unknown:
 ///
 /// | path | span | output |
 /// |---|---|---|
@@ -730,9 +766,10 @@ impl Diagnostic {
 /// | none | notebook | `cell 7, line 2: warning: msg` |
 /// | none | none | `warning: msg` |
 ///
-/// A span's line is `start_line`; for notebooks (`span.cell` set) it counts within the
-/// cell's source, so it is never printed as a line of the `.ipynb` file. The alternate form
-/// (`{:#}`) appends the code: `document.md:12: warning: msg [missing-asset]`.
+/// A span's line is `start_line`; for notebooks (`span.cell` set) it counts
+/// within the cell's source, so it is never printed as a line of the `.ipynb`
+/// file. The alternate form (`{:#}`) appends the code:
+/// `document.md:12: warning: msg [missing-asset]`.
 impl fmt::Display for Diagnostic {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match (&self.path, &self.span) {
@@ -796,7 +833,8 @@ impl Diagnostics {
         self.push_last(Diagnostic::warning(code, message))
     }
 
-    /// Appends an error-level diagnostic and returns it so the caller can set `path`/`span`.
+    /// Appends an error-level diagnostic and returns it so the caller can set
+    /// `path`/`span`.
     pub fn error(
         &mut self, code: &'static str, message: impl Into<String>,
     ) -> &mut Diagnostic {
@@ -813,7 +851,8 @@ impl Diagnostics {
         self.0.iter().any(|d| d.level == Level::Error)
     }
 
-    /// True if any diagnostic has [`Level::Warning`]; informational notes do not count.
+    /// True if any diagnostic has [`Level::Warning`]; informational notes do
+    /// not count.
     pub fn has_warnings(&self) -> bool {
         self.0.iter().any(|diagnostic| diagnostic.level == Level::Warning)
     }
@@ -1253,7 +1292,8 @@ mod tests {
         );
         let (column, _) = excerpt_of(&front, yaml).unwrap().marker.unwrap();
         assert_eq!(yaml.chars().nth(column), Some(':'));
-        // A byte inside a character marks that character; past the end, the end.
+        // A byte inside a character marks that character; past the end, the
+        // end.
         assert_eq!(char_index("aéb", 2), 1);
         assert_eq!(char_index("aéb", 3), 2);
         assert_eq!(char_index("aéb", 9), 3);
@@ -1282,7 +1322,8 @@ mod tests {
         assert_eq!(source_line(notebook, &cell_span(4, 1)), None);
         assert_eq!(source_line(notebook, &cell_span(1, 2)), None);
         assert_eq!(source_line("not json", &cell_span(1, 0)), None);
-        // A notebook with a byte order mark, which the frontend accepts (audit F43).
+        // A notebook with a byte order mark, which the frontend accepts (audit
+        // F43).
         let bom = format!("\u{feff}{notebook}");
         assert_eq!(
             source_line(&bom, &cell_span(3, 1)).as_deref(),
@@ -1299,7 +1340,8 @@ mod tests {
             path: PathBuf::from(path),
             span: Some(cell_span(line, cell)),
         };
-        // The cell's line does not mention the file: an output names it, nothing is quoted.
+        // The cell's line does not mention the file: an output names it,
+        // nothing is quoted.
         assert_eq!(
             excerpt_of(&missing("/nb/missing.png", 1, 0), notebook),
             None
@@ -1311,9 +1353,10 @@ mod tests {
         assert_eq!(excerpt.marker, Some((15, 8)));
     }
 
-    /// Wave-8 review of the A4 fixes: in a Markdown (or raw) cell the line is the author's
-    /// reference, quoted whole when it spells the file another way (`my%20pic.png`, as in a
-    /// Markdown document); only a code cell's line is unrelated to a missing file.
+    /// Wave-8 review of the A4 fixes: in a Markdown (or raw) cell the line is
+    /// the author's reference, quoted whole when it spells the file another way
+    /// (`my%20pic.png`, as in a Markdown document); only a code cell's line is
+    /// unrelated to a missing file.
     #[test]
     fn missing_files_of_markdown_cells_quote_their_line() {
         let notebook = r##"{"cells": [
@@ -1332,7 +1375,8 @@ mod tests {
         let excerpt =
             excerpt_of(&missing("/nb/a&b.png", 1, 1), notebook).unwrap();
         assert_eq!(excerpt.text, "<img src=\"a&amp;b.png\">");
-        // The notebook is parsed once for each excerpt (wave-8 review of W8FIX).
+        // The notebook is parsed once for each excerpt (wave-8 review of
+        // W8FIX).
         let before = NOTEBOOK_PARSES.get();
         assert_eq!(excerpt_of(&missing("/nb/out.png", 1, 2), notebook), None);
         assert_eq!(NOTEBOOK_PARSES.get() - before, 1);

@@ -1,4 +1,5 @@
-//! Literal values, lexical bindings and raw call arguments for the subset walker.
+//! Literal values, lexical bindings and raw call arguments for the subset
+//! walker.
 
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -157,8 +158,13 @@ impl<'a> Env<'a> {
             ast::Expr::FieldAccess(access)
                 if access.field().as_str() == "writer-doc" =>
             {
-                matches!(access.target(), ast::Expr::Ident(ident)
-                    if matches!(self.get(ident.as_str()), Some(Binding::Module(Module::Writer | Module::External))))
+                matches!(
+                    access.target(),
+                    ast::Expr::Ident(ident) if matches!(
+                        self.get(ident.as_str()),
+                        Some(Binding::Module(Module::Writer | Module::External))
+                    )
+                )
             }
             _ => false,
         }
@@ -445,10 +451,19 @@ fn decode_with<'a>(
                 match item {
                     ast::ArrayItem::Pos(expr) => {
                         items.push(decode_with(
-                            expr, env, kinds, fuel, depth + 1,
+                            expr,
+                            env,
+                            kinds,
+                            fuel,
+                            depth + 1,
                         )?);
                     }
-                    ast::ArrayItem::Spread(_) => return Err(LiteralError::Spread("spread arguments are outside the structured subset".into())),
+                    ast::ArrayItem::Spread(_) => {
+                        return Err(LiteralError::Spread(
+                            "spread arguments are outside the structured subset"
+                                .into()
+                        ));
+                    }
                 }
             }
             Literal::Array(items)
@@ -463,13 +478,27 @@ fn decode_with<'a>(
                     }
                     ast::DictItem::Keyed(keyed) => {
                         match decode_with(
-                            keyed.key(), env, kinds, fuel, depth + 1,
+                            keyed.key(),
+                            env,
+                            kinds,
+                            fuel,
+                            depth + 1,
                         )? {
                             Literal::Str(key) => (key, keyed.expr()),
-                            _ => return Err(LiteralError::Invalid("dictionary keys must be literal strings".into())),
+                            _ => {
+                                return Err(LiteralError::Invalid(
+                                    "dictionary keys must be literal strings"
+                                        .into(),
+                                ));
+                            }
                         }
                     }
-                    ast::DictItem::Spread(_) => return Err(LiteralError::Spread("spread arguments are outside the structured subset".into())),
+                    ast::DictItem::Spread(_) => {
+                        return Err(LiteralError::Spread(
+                            "spread arguments are outside the structured subset"
+                                .into()
+                        ));
+                    }
                 };
                 let value = decode_with(expr, env, kinds, fuel, depth + 1)?;
                 items.insert(key, value);
@@ -623,8 +652,16 @@ pub(super) fn record_let<'a>(
     }
     if emit {
         match decoded {
-            Some(Err(error @ (LiteralError::Invalid(_) | LiteralError::InvalidLabel(_) | LiteralError::Spread(_)))) => error.report(ctx, node.to_untyped(), "E-TYP-ARG-INVALID"),
-            _ => ctx.warning("W-TYP-LET-IGNORED", "only simple literal let bindings are part of the structured subset", node.to_untyped()),
+            Some(Err(
+                error @ (LiteralError::Invalid(_)
+                | LiteralError::InvalidLabel(_)
+                | LiteralError::Spread(_))
+            )) => error.report(ctx, node.to_untyped(), "E-TYP-ARG-INVALID"),
+            _ => ctx.warning(
+                "W-TYP-LET-IGNORED",
+                "only simple literal let bindings are part of the structured subset",
+                node.to_untyped()
+            ),
         }
     }
 }
@@ -657,7 +694,14 @@ pub(super) fn record_import<'a>(
                     _ => crate::typst::MITEX_VERSION,
                 };
                 if version != Some(expected) {
-                    ctx.warning("W-TYP-PACKAGE-VERSION", format!("imported {} differs from embedded version {expected}", source.as_deref().unwrap_or_default()), node.to_untyped());
+                    ctx.warning(
+                        "W-TYP-PACKAGE-VERSION",
+                        format!(
+                            "imported {} differs from embedded version {expected}",
+                            source.as_deref().unwrap_or_default()
+                        ),
+                        node.to_untyped()
+                    );
                 }
             }
             None => ctx.warning(
@@ -859,9 +903,10 @@ mod tests {
             panic!("content")
         };
         env.bind("name".into(), Binding::Literal(Literal::Str("after".into())));
-        assert!(
-            matches!(content.env.get("name"), Some(Binding::Literal(Literal::Str(value))) if value == "before")
-        );
+        assert!(matches!(
+            content.env.get("name"),
+            Some(Binding::Literal(Literal::Str(value))) if value == "before"
+        ));
         let copied = content.clone();
         assert!(Rc::ptr_eq(&content.env, &copied.env));
     }

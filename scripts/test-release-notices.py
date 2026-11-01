@@ -60,7 +60,9 @@ class ReleaseNoticeDataTests(unittest.TestCase):
                         source["sha256"]
                     )
                     checked.add(source["path"])
-        self.assertIn("docs/release/notice-sources/typst-0.15.1/NOTICE", checked)
+        self.assertIn(
+            "docs/release/notice-sources/typst-0.15.1/NOTICE", checked
+        )
 
 
 class NoticeTests(unittest.TestCase):
@@ -152,7 +154,9 @@ class NoticeTests(unittest.TestCase):
                 for _ in range(2 if member == "duplicate" else 1):
                     if member == "missing":
                         continue
-                    entry = tarfile.TarInfo(f"{name}-{version}/.cargo_vcs_info.json")
+                    entry = tarfile.TarInfo(
+                        f"{name}-{version}/.cargo_vcs_info.json"
+                    )
                     if member == "symlink":
                         entry.type = tarfile.SYMTYPE
                         entry.linkname = "../../outside"
@@ -175,7 +179,9 @@ class NoticeTests(unittest.TestCase):
         for source in group["files"]:
             raw = f"Pinned {source['name']} fixture\r\n".encode()
             notice_bytes[source["name"]] = raw
-            parent = self.assets if source["kind"] == "embedded" else source_root
+            parent = (
+                self.assets if source["kind"] == "embedded" else source_root
+            )
             write(parent / source["path"], raw)
             source["sha256"] = hashlib.sha256(raw).hexdigest()
         pin_patch = patch.dict(NOTICES.PINNED_PACKAGES, pins, clear=True)
@@ -191,7 +197,9 @@ class NoticeTests(unittest.TestCase):
         self.addCleanup(root_patch.stop)
         return packages, archives, notice_bytes
 
-    def mitex_fixture(self, names=("mitex",), vcs_change=None, member="regular"):
+    def mitex_fixture(
+                self, names=("mitex",), vcs_change=None, member="regular"
+            ):
         packages, archives, notices = self.pinned_fixture(
             "mitex", names, "0.2.4", vcs_change=vcs_change, member=member
         )
@@ -281,7 +289,9 @@ class NoticeTests(unittest.TestCase):
         ))
         self.assertFalse(any("unused" in path for path in payload))
         self.assertNotIn(str(self.root).encode(), payload["crates.txt"])
-        self.assertEqual(payload["crates/linked-1.2.3/NOTICE"], b"linked notice")
+        self.assertEqual(
+            payload["crates/linked-1.2.3/NOTICE"], b"linked notice"
+        )
 
     def test_actual_nested_cargo_prefixes_and_ascii_equivalents_keep_identities(self):
         # Literal forms from the preserved real aarch64-apple-darwin capture;
@@ -372,7 +382,9 @@ class NoticeTests(unittest.TestCase):
         write(root / "LICENSE.map", b"legal notice despite asset suffix\n")
         payload = self.payload()
         prefix = "crates/linked-1.2.3/"
-        self.assertEqual(payload[prefix + "legal/terms.txt"], b"custom terms\r\n ")
+        self.assertEqual(
+            payload[prefix + "legal/terms.txt"], b"custom terms\r\n "
+        )
         self.assertEqual(payload[prefix + "data/NOTICE-fonts"],
             b"font attribution\r\n")
         self.assertEqual(payload[prefix + "UNLICENSE"], b"public domain\n")
@@ -404,7 +416,8 @@ class NoticeTests(unittest.TestCase):
         for expression in (
             None, "", "MIT-0", "mit-0", "LicenseRef-MIT",
             "DocumentRef-X:LicenseRef-MIT", "LicenseRef-mit",
-            "MIT-advertising", "Apache-2.0 WITH MIT", "MIT WITH Custom-exception",
+            "MIT-advertising", "Apache-2.0 WITH MIT",
+            "MIT WITH Custom-exception",
             "MIT AND Apache-2.0", "(BSD-2-Clause AND MIT)",
             "Apache-2.0 OR MIT AND BSD-2-Clause",
             "(MIT OR Apache-2.0) AND BSD-2-Clause",
@@ -452,7 +465,9 @@ class NoticeTests(unittest.TestCase):
         ):
             package["license"] = expression
             with self.subTest(expression=expression):
-                with self.assertRaisesRegex(NOTICES.NoticeError, "no plain MIT-only"):
+                with self.assertRaisesRegex(
+                    NOTICES.NoticeError, "no plain MIT-only"
+                ):
                     self.payload()
 
     def test_six_pinned_sources_keep_six_attributions_and_exact_upstream_bytes(self):
@@ -486,7 +501,9 @@ class NoticeTests(unittest.TestCase):
         self.assertFalse(any(path.endswith("LICENSE-MIT") for path in payload))
 
     def test_selectors_source_notice_requires_the_exact_full_archive_attribution(self):
-        _, _, notices = self.pinned_fixture("selectors", ("selectors",), "0.41.0")
+        _, _, notices = self.pinned_fixture(
+            "selectors", ("selectors",), "0.41.0"
+        )
         payload = self.payload()
         for name, raw in notices.items():
             self.assertEqual(payload[f"crates/selectors-0.41.0/{name}"], raw)
@@ -499,7 +516,9 @@ class NoticeTests(unittest.TestCase):
         for changed in (None, "https://crates.io/crates/selectors/0.41.0"):
             pin["source_url"] = changed
             with self.subTest(source_url=changed):
-                with self.assertRaisesRegex(NOTICES.NoticeError, "complete source archive attribution"):
+                with self.assertRaisesRegex(
+                    NOTICES.NoticeError, "complete source archive attribution"
+                ):
                     self.payload()
 
     def test_all_thirteen_typst_attributions_require_both_license_and_notice(self):
@@ -520,7 +539,9 @@ class NoticeTests(unittest.TestCase):
             )
         source = NOTICES.PINNED_NOTICE_GROUPS["typst"]["files"][1]
         (NOTICES.RELEASE_NOTICE_ROOT / source["path"]).unlink()
-        with self.assertRaisesRegex(NOTICES.NoticeError, "release notice source is missing"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "release notice source is missing"
+        ):
             self.payload()
 
     def test_release_notice_hash_presence_and_canonical_confinement_are_required(self):
@@ -531,15 +552,21 @@ class NoticeTests(unittest.TestCase):
         path = NOTICES.RELEASE_NOTICE_ROOT / source["path"]
         raw = notices["LICENCE.rst"]
         path.write_bytes(raw + b"changed")
-        with self.assertRaisesRegex(NOTICES.NoticeError, "release notice checksum changed"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "release notice checksum changed"
+        ):
             NOTICES.pinned_crate_notices(packages[0], {}, self.workspace)
         path.unlink()
-        with self.assertRaisesRegex(NOTICES.NoticeError, "release notice source is missing"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "release notice source is missing"
+        ):
             NOTICES.pinned_crate_notices(packages[0], {}, self.workspace)
         path.write_bytes(raw)
         original = source["path"]
         source["path"] = "../outside-notice"
-        with self.assertRaisesRegex(NOTICES.NoticeError, "release notice path is not confined"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "release notice path is not confined"
+        ):
             NOTICES.pinned_crate_notices(packages[0], {}, self.workspace)
         source["path"] = original
         outside = self.root / "outside-release-source"
@@ -551,7 +578,9 @@ class NoticeTests(unittest.TestCase):
             path.parent.symlink_to(outside, target_is_directory=True)
         except (OSError, NotImplementedError):
             self.skipTest("symlink creation unavailable")
-        with self.assertRaisesRegex(NOTICES.NoticeError, "escapes helper checkout"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "escapes helper checkout"
+        ):
             NOTICES.pinned_crate_notices(packages[0], {}, self.workspace)
 
     def test_pinned_metadata_guards_reject_each_changed_declaration(self):
@@ -564,14 +593,18 @@ class NoticeTests(unittest.TestCase):
         ):
             changed = dict(package, **{field: value})
             with self.subTest(field=field):
-                with self.assertRaisesRegex(NOTICES.NoticeError, "pinned mitex notice guard"):
+                with self.assertRaisesRegex(
+                    NOTICES.NoticeError, "pinned mitex notice guard"
+                ):
                     NOTICES.pinned_crate_notices(
                         changed, {NOTICES.MITEX_NOTICE: notice}, self.workspace
                     )
         for changed in (
             dict(package, name="mitex-other"), dict(package, version="0.2.5"),
         ):
-            with self.assertRaisesRegex(NOTICES.NoticeError, "no plain MIT-only"):
+            with self.assertRaisesRegex(
+                NOTICES.NoticeError, "no plain MIT-only"
+            ):
                 NOTICES.crate_notices(changed, {}, self.workspace)
 
     def test_pinned_locked_checksum_and_cached_archive_are_independent_guards(self):
@@ -581,19 +614,25 @@ class NoticeTests(unittest.TestCase):
         original = lock.read_bytes()
         checksum = NOTICES.PINNED_PACKAGES[("mitex", "0.2.4")]["checksum"]
         lock.write_bytes(original.replace(checksum.encode(), b"0" * 64))
-        with self.assertRaisesRegex(NOTICES.NoticeError, "locked checksum changed"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "locked checksum changed"
+        ):
             NOTICES.pinned_crate_notices(
                 package, {NOTICES.MITEX_NOTICE: notice}, self.workspace
             )
         lock.write_bytes(original)
         archive = archives["mitex"]
         archive.write_bytes(archive.read_bytes() + b"changed")
-        with self.assertRaisesRegex(NOTICES.NoticeError, "cached crate checksum changed"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "cached crate checksum changed"
+        ):
             NOTICES.pinned_crate_notices(
                 package, {NOTICES.MITEX_NOTICE: notice}, self.workspace
             )
         archive.unlink()
-        with self.assertRaisesRegex(NOTICES.NoticeError, "cached crate archive is missing"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "cached crate archive is missing"
+        ):
             NOTICES.pinned_crate_notices(
                 package, {NOTICES.MITEX_NOTICE: notice}, self.workspace
             )
@@ -603,12 +642,16 @@ class NoticeTests(unittest.TestCase):
         package = packages[0]
         vcs = Path(package["manifest_path"]).parent / ".cargo_vcs_info.json"
         vcs.write_bytes(vcs.read_bytes() + b" ")
-        with self.assertRaisesRegex(NOTICES.NoticeError, "source VCS record differs"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "source VCS record differs"
+        ):
             NOTICES.pinned_crate_notices(
                 package, {NOTICES.MITEX_NOTICE: notice}, self.workspace
             )
         vcs.unlink()
-        with self.assertRaisesRegex(NOTICES.NoticeError, "source VCS record is missing"):
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "source VCS record is missing"
+        ):
             NOTICES.pinned_crate_notices(
                 package, {NOTICES.MITEX_NOTICE: notice}, self.workspace
             )
@@ -617,16 +660,24 @@ class NoticeTests(unittest.TestCase):
         packages, _, notice = self.mitex_fixture()
         lock = self.workspace / "Cargo.lock"
         original = lock.read_text()
-        duplicated = original + "\n[[package]]" + original.split("[[package]]", 1)[1]
+        duplicated = (
+            original + "\n[[package]]" + original.split("[[package]]", 1)[1]
+        )
         for changed in ("version = 4\n", duplicated):
             lock.write_text(changed)
-            with self.assertRaisesRegex(NOTICES.NoticeError, "identity missing or ambiguous"):
+            with self.assertRaisesRegex(
+                NOTICES.NoticeError, "identity missing or ambiguous"
+            ):
                 NOTICES.pinned_crate_notices(
                     packages[0], {NOTICES.MITEX_NOTICE: notice}, self.workspace
                 )
         lock.write_text(original)
-        changed = dict(packages[0], manifest_path=str(self.workspace / "Cargo.toml"))
-        with self.assertRaisesRegex(NOTICES.NoticeError, "unsupported registry source/cache layout"):
+        changed = dict(
+            packages[0], manifest_path=str(self.workspace / "Cargo.toml")
+        )
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "unsupported registry source/cache layout"
+        ):
             NOTICES.pinned_crate_notices(
                 changed, {NOTICES.MITEX_NOTICE: notice}, self.workspace
             )
@@ -642,27 +693,37 @@ class NoticeTests(unittest.TestCase):
                 packages, _, notice = self.mitex_fixture(vcs_change=change)
                 with self.assertRaisesRegex(NOTICES.NoticeError, message):
                     NOTICES.pinned_crate_notices(
-                        packages[0], {NOTICES.MITEX_NOTICE: notice}, self.workspace
+                        packages[0], {NOTICES.MITEX_NOTICE: notice},
+                        self.workspace
                     )
 
     def test_pinned_archive_vcs_member_is_exact_and_regular(self):
         for kind in ("missing", "duplicate", "symlink"):
             with self.subTest(kind=kind):
                 packages, _, notice = self.mitex_fixture(member=kind)
-                with self.assertRaisesRegex(NOTICES.NoticeError, "VCS record is missing, duplicate or non-regular"):
+                with self.assertRaisesRegex(
+                    NOTICES.NoticeError,
+                    "VCS record is missing, duplicate or non-regular"
+                ):
                     NOTICES.pinned_crate_notices(
-                        packages[0], {NOTICES.MITEX_NOTICE: notice}, self.workspace
+                        packages[0], {NOTICES.MITEX_NOTICE: notice},
+                        self.workspace
                     )
 
     def test_pinned_asset_notice_must_exist_and_match_its_verified_hash(self):
         packages, _, notice = self.mitex_fixture()
         for embedded, message in (
             ({}, "embedded notice is missing"),
-            ({NOTICES.MITEX_NOTICE: notice + b"changed"}, "notice checksum changed"),
+            (
+                {NOTICES.MITEX_NOTICE: notice + b"changed"},
+                "notice checksum changed"
+            ),
         ):
             with self.subTest(message=message):
                 with self.assertRaisesRegex(NOTICES.NoticeError, message):
-                    NOTICES.pinned_crate_notices(packages[0], embedded, self.workspace)
+                    NOTICES.pinned_crate_notices(
+                        packages[0], embedded, self.workspace
+                    )
 
     def test_unsupported_source_or_multiline_license_is_explicit_failure(self):
         package = self.dependency()
@@ -671,7 +732,9 @@ class NoticeTests(unittest.TestCase):
             "registry+https://example.test/index",
         ):
             package["source"] = source
-            with self.assertRaisesRegex(NOTICES.NoticeError, "unsupported package source"):
+            with self.assertRaisesRegex(
+                NOTICES.NoticeError, "unsupported package source"
+            ):
                 self.payload()
         package["source"] = next(iter(NOTICES.CRATES_IO))
         package["license"] = "MIT\nextra"
@@ -724,7 +787,9 @@ class NoticeTests(unittest.TestCase):
         out = self.root / "THIRD-PARTY-LICENSES"
         stdout = self.stdout()
         result = subprocess.CompletedProcess([], 0, stdout, b"")
-        with patch.object(NOTICES.subprocess, "run", return_value=result) as run:
+        with patch.object(
+            NOTICES.subprocess, "run", return_value=result
+        ) as run:
             NOTICES.assemble(
                 self.binary, "x86_64-unknown-linux-gnu", metadata, tree,
                 self.assets, out,

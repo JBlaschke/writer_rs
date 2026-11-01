@@ -622,7 +622,8 @@ pub fn build_targets(
     build_targets_with_count(opts, targets, worlds, count)
 }
 
-/// Retains original output-directory semantics during a selective watch rebuild.
+/// Retains original output-directory semantics during a selective watch
+/// rebuild.
 pub(crate) fn build_targets_with_count(
     opts: &BuildOptions, targets: &[Target], worlds: &mut WorldSlot,
     requested_count: usize,
@@ -630,7 +631,8 @@ pub(crate) fn build_targets_with_count(
     build_targets_observed(opts, targets, worlds, requested_count, &mut |_| {})
 }
 
-/// A successfully written LaTeX directory, measured from unique materialized bytes.
+/// A successfully written LaTeX directory, measured from unique materialized
+/// bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct WrittenDirectory {
     pub(crate) path: PathBuf,
@@ -844,8 +846,17 @@ fn build_target(
             )?;
             Ok((vec![out.to_path_buf()], diagnostics))
         }
-        Target::Latex => return latex::build_observed(prepared, opts, out, world, record),
-        Target::Typst if prepared.document.source.kind == SourceKind::Typst => Err(Error::Other("cannot export a .typ input to typst; use writer build part.md --to typst".into())),
+        Target::Latex => {
+            return latex::build_observed(prepared, opts, out, world, record);
+        }
+        Target::Typst
+            if prepared.document.source.kind == SourceKind::Typst =>
+        {
+            Err(Error::Other(
+                "cannot export a .typ input to typst; use writer build part.md --to typst"
+                    .into()
+            ))
+        }
         Target::Typst => typst::build(prepared, opts, out, world),
     }.map_err(Into::into)
 }
@@ -861,7 +872,8 @@ fn names_directory(path: &Path) -> bool {
     trailing || matches!(last, Some("." | ".."))
 }
 
-/// Applies CLI-wide or Typst-only strictness, without changing diagnostic codes.
+/// Applies CLI-wide or Typst-only strictness, without changing diagnostic
+/// codes.
 pub fn escalate_strict(
     diagnostics: Diagnostics, cli_strict: Option<bool>, config: &Config,
 ) -> Diagnostics {
@@ -893,7 +905,12 @@ pub fn not_implemented(what: &str, task: &str) -> Error {
 
 /// Whether an error is one of the explicit future-task stubs.
 pub fn is_not_implemented(error: &Error) -> bool {
-    matches!(error, Error::Other(message) if message.contains(": not implemented yet (") && message.ends_with(')'))
+    matches!(
+        error,
+        Error::Other(message)
+            if message.contains(": not implemented yet (")
+                && message.ends_with(')')
+    )
 }
 
 /// Retains one compiler world throughout a build or preview session.
@@ -921,7 +938,8 @@ impl WorldSlot {
         if prepared.is_some() || self.world.is_none() {
             self.refresh(prepared, opts)?;
         }
-        // Refresh creates a world or returns an error; the other branch retains one.
+        // Refresh creates a world or returns an error; the other branch retains
+        // one.
         Ok(self.world.as_mut().expect("world created or retained"))
     }
 
@@ -957,7 +975,8 @@ impl WorldSlot {
         if self.needs_recreation(config) {
             self.create(config, prepared, opts, timestamp)?;
         } else if prepared.is_some() {
-            // All paths reaching this branch retain the previously created world.
+            // All paths reaching this branch retain the previously created
+            // world.
             let world = self.world.as_mut().expect("kept world exists");
             world.set_inputs(world_inputs(config));
             world.set_include_provider(Box::new(MarkdownIncludes {
@@ -1018,17 +1037,18 @@ impl WorldSlot {
     }
 }
 
-/// An output file that is one of the build's inputs, so that writing it would destroy that
-/// input (audit F01). Found by [`find_clash`] and [`html::build`]; [`html::build`]
-/// refuses to write when there is one (its error carries the clash: [`refused_clash`]).
-/// Displayed as `refusing to write <output>: it is the input file <input>` (paths as
+/// An output file that is one of the build's inputs, so that writing it would
+/// destroy that input (audit F01). Found by [`find_clash`] and [`html::build`];
+/// [`html::build`] refuses to write when there is one (its error carries the
+/// clash: [`refused_clash`]). Displayed as
+/// `refusing to write <output>: it is the input file <input>` (paths as
 /// stored).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Clash {
     /// The output file, as it would be written.
     pub output: PathBuf,
-    /// The input file it is: the same file, possibly through a symbolic or hard link or
-    /// another spelling of its name on a case-insensitive file system.
+    /// The input file it is: the same file, possibly through a symbolic or hard
+    /// link or another spelling of its name on a case-insensitive file system.
     pub input: PathBuf,
     /// What `input` is to the build.
     pub role: InputRole,
@@ -1048,11 +1068,12 @@ impl fmt::Display for Clash {
 
 impl std::error::Error for Clash {}
 
-/// The first of `outputs` that is one of `inputs` (the same file, by [`same_file`]'s
-/// identity; the first matching input names it), if any. An output path that does not
-/// resolve yet is taken as the file it reaches once [`html::build`] has created its
-/// missing directories ([`path_after_creating_dirs`]: `sub/../slides.md` is `slides.md`).
-/// Relative paths are taken from the current directory.
+/// The first of `outputs` that is one of `inputs` (the same file, by
+/// [`same_file`]'s identity; the first matching input names it), if any. An
+/// output path that does not resolve yet is taken as the file it reaches once
+/// [`html::build`] has created its missing directories
+/// ([`path_after_creating_dirs`]: `sub/../slides.md` is `slides.md`). Relative
+/// paths are taken from the current directory.
 pub fn find_clash<'a>(
     outputs: impl IntoIterator<Item = &'a Path>,
     inputs: &[(PathBuf, InputRole)],
@@ -1077,10 +1098,11 @@ pub fn find_clash<'a>(
     })
 }
 
-/// Whether `a` and `b` name the same existing file. On Unix: the same device and inode,
-/// which sees through symbolic links, hard links and other spellings of a name on a
-/// case-insensitive file system. Elsewhere: the same canonical path (hard links are not
-/// detected there). `false` when either does not exist.
+/// Whether `a` and `b` name the same existing file. On Unix: the same device
+/// and inode, which sees through symbolic links, hard links and other spellings
+/// of a name on a case-insensitive file system. Elsewhere: the same canonical
+/// path (hard links are not detected there). `false` when either does not
+/// exist.
 pub fn same_file(a: &Path, b: &Path) -> bool {
     match (file_id(a), file_id(b)) {
         (Some(a), Some(b)) => a == b,
@@ -1088,26 +1110,30 @@ pub fn same_file(a: &Path, b: &Path) -> bool {
     }
 }
 
-/// The path a write to `path` reaches once its missing directories are created (as
-/// [`html::build`] does), with every symbolic link that the write follows resolved.
+/// The path a write to `path` reaches once its missing directories are created
+/// (as [`html::build`] does), with every symbolic link that the write follows
+/// resolved.
 ///
-/// The components are followed one at a time, as the operating system follows them. While
-/// every directory so far exists, the next name is looked up on disk: an existing file,
-/// directory or symbolic link is replaced by its canonical path, so a later `..` leaves
-/// the directory a link points to, not the link's own directory. A name that does not
-/// exist starts the directories the write creates; a `..` after it returns to the
-/// directory it was created in (where lookups on disk resume) and `.` is skipped. So
+/// The components are followed one at a time, as the operating system follows
+/// them. While every directory so far exists, the next name is looked up on
+/// disk: an existing file, directory or symbolic link is replaced by its
+/// canonical path, so a later `..` leaves the directory a link points to, not
+/// the link's own directory. A name that does not exist starts the directories
+/// the write creates; a `..` after it returns to the directory it was created
+/// in (where lookups on disk resume) and `.` is skipped. So
 /// `new/../link/../x.md` is `x.md` next to the directory that `link` points to.
 ///
-/// A relative `path` is taken from the current directory; `None` when that cannot be
-/// resolved. The result is absolute, and canonical as far as it exists.
+/// A relative `path` is taken from the current directory; `None` when that
+/// cannot be resolved. The result is absolute, and canonical as far as it
+/// exists.
 pub fn path_after_creating_dirs(path: &Path) -> Option<PathBuf> {
     let mut base = if path.has_root() {
         PathBuf::new()
     } else {
         std::fs::canonicalize(".").ok()?
     };
-    // Names below `base` that do not exist yet: the directories the write creates.
+    // Names below `base` that do not exist yet: the directories the write
+    // creates.
     let mut created: Vec<&std::ffi::OsStr> = Vec::new();
     for component in path.components() {
         match component {
@@ -1143,7 +1169,8 @@ type FileId = (u64, u64);
 #[cfg(not(unix))]
 type FileId = PathBuf;
 
-/// `path`'s device and inode (symbolic links followed), or `None` when it does not exist.
+/// `path`'s device and inode (symbolic links followed), or `None` when it does
+/// not exist.
 #[cfg(unix)]
 fn file_id(path: &Path) -> Option<FileId> {
     use std::os::unix::fs::MetadataExt as _;
@@ -1157,9 +1184,9 @@ fn file_id(path: &Path) -> Option<FileId> {
     std::fs::canonicalize(path).ok()
 }
 
-/// The [`Clash`] that made [`html::build`] refuse to write, when `error` is that refusal
-/// (for a caller that reports it in its own words, like `build --watch`); `None` for every
-/// other error.
+/// The [`Clash`] that made [`html::build`] refuse to write, when `error` is
+/// that refusal (for a caller that reports it in its own words, like
+/// `build --watch`); `None` for every other error.
 pub fn refused_clash(error: &Error) -> Option<&Clash> {
     match error {
         Error::Io(err) => err.get_ref()?.downcast_ref::<Clash>(),
@@ -1187,7 +1214,8 @@ fn read_source(input: &Path) -> Result<String> {
     })
 }
 
-/// [`SourceInfo`] for `input`: absolute, lexically normalized path; `base_dir` its parent.
+/// [`SourceInfo`] for `input`: absolute, lexically normalized path; `base_dir`
+/// its parent.
 fn source_info(input: &Path, kind: SourceKind) -> Result<SourceInfo> {
     let path = absolute(input)?;
     let base_dir = path.parent().unwrap_or(Path::new("/")).to_path_buf();
@@ -1209,10 +1237,10 @@ fn io_error(err: std::io::Error, what: &str, path: &Path) -> Error {
     ))
 }
 
-/// With `missing_assets_are_errors`, the first `missing-asset` diagnostic becomes a
-/// [`BuildFailure`] whose error is [`Error::MissingAsset`] and whose diagnostics are the
-/// others, with every other `missing-asset` raised to level error. Otherwise (or without
-/// one) `diagnostics` is returned unchanged.
+/// With `missing_assets_are_errors`, the first `missing-asset` diagnostic
+/// becomes a [`BuildFailure`] whose error is [`Error::MissingAsset`] and whose
+/// diagnostics are the others, with every other `missing-asset` raised to level
+/// error. Otherwise (or without one) `diagnostics` is returned unchanged.
 fn escalate_missing_assets(
     diagnostics: Diagnostics, missing_assets_are_errors: bool,
 ) -> std::result::Result<Diagnostics, BuildFailure> {
@@ -1244,13 +1272,15 @@ fn missing_asset_error(diagnostics: &Diagnostics) -> Option<Error> {
     diagnostics.iter().find_map(missing_asset_as_error)
 }
 
-/// A `missing-asset` diagnostic as the [`Error::MissingAsset`] an escalated build fails
-/// with: the missing file from its message (else the diagnostic's path), the span from the
-/// diagnostic. `None` for any other diagnostic. The CLI uses it to report every missing
-/// asset of a failed build the same way (audit F37).
+/// A `missing-asset` diagnostic as the [`Error::MissingAsset`] an escalated
+/// build fails with: the missing file from its message (else the diagnostic's
+/// path), the span from the diagnostic. `None` for any other diagnostic. The
+/// CLI uses it to report every missing asset of a failed build the same way
+/// (audit F37).
 ///
 /// For a missing asset of an included file the span's `file` names that file
-/// (`SourceSpan.file`, T48): the CLI's report and the serve overlay locate and quote it there.
+/// (`SourceSpan.file`, T48): the CLI's report and the serve overlay locate and
+/// quote it there.
 pub fn missing_asset_as_error(diagnostic: &Diagnostic) -> Option<Error> {
     if diagnostic.code != "missing-asset" {
         return None;
@@ -1590,9 +1620,11 @@ mod tests {
         let Err(failure) = web_page(&prepared, &opts, world) else {
             panic!("subset error rendered");
         };
-        assert!(
-            matches!(*failure.error, Error::Parse { path, line: Some(3), .. } if path == Path::new("inner.typ"))
-        );
+        assert!(matches!(
+            *failure.error,
+            Error::Parse { path, line: Some(3), .. }
+                if path == Path::new("inner.typ")
+        ));
         assert!(failure.diagnostics.is_empty());
     }
 
@@ -1911,8 +1943,8 @@ mod tests {
         assert!(clash.to_string().contains(": it is the input file "));
         assert_eq!(InputRole::Asset.to_string(), "the document's asset");
         assert_eq!(find_clash([deck.as_path()], &[]), None);
-        // Through directories that do not exist yet: write_output creates `sub`, and
-        // `sub/..` is the deck's directory again.
+        // Through directories that do not exist yet: write_output creates
+        // `sub`, and `sub/..` is the deck's directory again.
         let around = dir.path().join("sub/new/../../deck.md");
         let clash = find_clash([around.as_path()], &inputs).unwrap();
         assert_eq!((clash.output, clash.role), (around, InputRole::Source));
@@ -1951,9 +1983,10 @@ mod tests {
                 path_after_creating_dirs(&dir.path().join("link/new/../x.md")),
                 Some(base.join("a/x.md"))
             );
-            // A link reached after a `..` out of a new directory is followed too, and a
-            // `..` after it leaves the directory it points to (review of A1: the lexical
-            // rest went to `<dir>/x.md`, while the OS wrote `a/../x.md`).
+            // A link reached after a `..` out of a new directory is followed
+            // too, and a `..` after it leaves the directory it points to
+            // (review of A1: the lexical rest went to `<dir>/x.md`, while the
+            // OS wrote `a/../x.md`).
             std::fs::create_dir_all(base.join("other/sub")).unwrap();
             std::os::unix::fs::symlink(
                 base.join("other/sub"),
@@ -1979,8 +2012,8 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn find_clash_follows_a_link_after_a_dot_dot_out_of_a_new_directory() {
-        // work/link -> ../other/sub; `nonexist/../link/../deck.md` from work/ is
-        // other/deck.md, the input.
+        // work/link -> ../other/sub; `nonexist/../link/../deck.md` from work/
+        // is other/deck.md, the input.
         let dir =
             project(&[("other/deck.md", "# Precious\n"), ("work/x.md", "")]);
         std::fs::create_dir(dir.path().join("other/sub")).unwrap();

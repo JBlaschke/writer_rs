@@ -201,10 +201,19 @@ fn json_math_locations_keep_included_files_and_zero_based_notebook_cells() {
         assert!(row["cell"].is_null());
         assert!(row["file"].as_str().unwrap().ends_with("child.md"));
     }
-    let notebook = json!({"nbformat":4,"nbformat_minor":5,"metadata":{},"cells":[
-        {"cell_type":"markdown","metadata":{},"source":"First.\n"},
-        {"cell_type":"markdown","metadata":{},"source":"Cell.\n\n$\\foo{x}$\n"}
-    ]});
+    let notebook = json!({
+        "nbformat": 4, "nbformat_minor": 5, "metadata": {},
+        "cells": [
+            {
+                "cell_type": "markdown", "metadata": {},
+                "source": "First.\n"
+            },
+            {
+                "cell_type": "markdown", "metadata": {},
+                "source": "Cell.\n\n$\\foo{x}$\n"
+            }
+        ]
+    });
     std::fs::write(directory.path().join("cells.ipynb"), notebook.to_string())
         .unwrap();
     let mut notebook_check = command(directory.path(), "cells.ipynb", false);

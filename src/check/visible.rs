@@ -236,7 +236,10 @@ impl<'a> Walker<'a, '_, '_> {
                     } else {
                         matches!(self.target, Target::Pdf | Target::Typst)
                             && !url.starts_with('#')
-                            && matches!(inlines.as_slice(), [Inline::Text { text }] if text == url)
+                            && matches!(
+                                inlines.as_slice(),
+                                [Inline::Text { text }] if text == url
+                            )
                     };
                     if !bare {
                         self.inlines(inlines, &location, latex_group);

@@ -24,11 +24,14 @@ use writer::serve::server::{
 };
 use writer::serve::watch::ChangeKind;
 
-const WAIT: Duration = Duration::from_secs(10);
+/// How long the server may take to start, answer or close a connection. It
+/// only has to beat a hang; a loaded parallel runner has taken seconds.
+const WAIT: Duration = Duration::from_secs(60);
 const NO_STORE: &str = "no-store";
 const IMMUTABLE: &str = "public, max-age=31536000, immutable";
 
-/// A dedicated runtime, bounded requests, and shutdown cleanup even on assertion failure.
+/// A dedicated runtime, bounded requests, and shutdown cleanup even on
+/// assertion failure.
 struct TestServer {
     addr: SocketAddr,
     state: Shared,
@@ -355,7 +358,9 @@ fn serves_the_exact_morphdom_wrapper_and_pages_client() {
     let client = server.get("/__writer/live-reload.js");
     assert_eq!(client.status, 200);
     client.assert_headers("text/javascript; charset=utf-8", NO_STORE);
-    let mut expected = b"/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */\n(function (define, module, exports) {\n".to_vec();
+    let mut expected =
+        b"/* morphdom 2.7.8 (MIT), vendored; see THIRD-PARTY-LICENSES */\n(function (define, module, exports) {\n"
+            .to_vec();
     expected.extend_from_slice(include_bytes!(
         "../assets/vendor/morphdom/morphdom-umd.min.js"
     ));
@@ -698,7 +703,8 @@ fn page_resources_use_current_or_previous_content_hash_and_security_headers() {
         &server.state,
         outcome(ViewOutcome::Skipped, ViewOutcome::Built(next)),
     );
-    // Old versions expire after the next successful set rotates the previous slot.
+    // Old versions expire after the next successful set rotates the previous
+    // slot.
     let expired =
         server.get(&format!("/__writer/pages/1.svg?v={}", old.pages[0].hash));
     assert_eq!(expired.header("cache-control"), Some(NO_STORE));

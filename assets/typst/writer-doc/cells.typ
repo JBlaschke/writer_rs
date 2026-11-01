@@ -7,13 +7,16 @@
     }
 }
 
-// The provider supplies saved content; this helper never executes notebook code.
+// The provider supplies saved content; this helper never executes notebook
+// code.
 #let include-notebook(
             file, cells: auto, tags: none,
             hide-input: auto, hide-output: auto
         ) = {
     if type(file) != path {
-        panic("include-notebook: pass path(\"x.ipynb\") instead of " + repr(file))
+        panic(
+            "include-notebook: pass path(\"x.ipynb\") instead of " + repr(file)
+        )
     }
     let refs = if cells == auto {
         none
@@ -26,7 +29,10 @@
         for reference in refs {
             if not ((type(reference) == int and reference >= 0)
                 or type(reference) == str) {
-                panic("include-notebook: invalid cell reference " + repr(reference))
+                panic(
+                    "include-notebook: invalid cell reference "
+                    + repr(reference)
+                )
             }
         }
     }
@@ -65,7 +71,10 @@
                 c.id == reference
             })
             if found == none {
-                panic("include-notebook: cell " + repr(reference) + " was not found or is removed")
+                panic(
+                    "include-notebook: cell " + repr(reference)
+                    + " was not found or is removed"
+                )
             }
             selected.push(found.index)
         }

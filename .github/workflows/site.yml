@@ -90,6 +90,9 @@ jobs:
                   fi
             - name: Build the site
               run: |
+                  # The restored cargo cache brings back the target/site of
+                  # the run that saved it, and site.py refuses to overwrite.
+                  rm -rf target/site
                   args=(
                       --binary target/release/writer --source . --out target/site
                       --repo-url "https://github.com/$GITHUB_REPOSITORY"

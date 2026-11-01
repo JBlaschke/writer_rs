@@ -24,13 +24,15 @@ use writer::config::Target;
 use writer::pdf::devtools::{Page, find_chrome, readable_temp_dir};
 use writer::pipeline::{BuildOptions, WorldSlot, build_targets};
 
-/// A loaded machine gets time to start Chrome; each later call has its own bound.
+/// A loaded machine gets time to start Chrome; each later call has its own
+/// bound.
 const STARTUP_TIMEOUT: Duration = Duration::from_secs(60);
 const CALL_TIMEOUT: Duration = Duration::from_secs(30);
 const NAVIGATION_TIMEOUT: Duration = Duration::from_secs(8);
 
-/// Wait for fonts, images and KaTeX, then let two frames complete. Every awaited
-/// promise shares the same deadline, including document.fonts.ready and frames.
+/// Wait for fonts, images and KaTeX, then let two frames complete. Every
+/// awaited promise shares the same deadline, including document.fonts.ready and
+/// frames.
 const DOCUMENT_READY: &str = r#"(async () => {
     const deadline = performance.now() + 20000;
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -114,7 +116,8 @@ fn scratch(chrome: &Path) -> tempfile::TempDir {
         .unwrap_or_else(|error| panic!("{}: {error}", base.display()))
 }
 
-/// Copy source fixtures without carrying an earlier example build into the test.
+/// Copy source fixtures without carrying an earlier example build into the
+/// test.
 fn copy_example(chrome: &Path, name: &str) -> tempfile::TempDir {
     let dir = scratch(chrome);
     copy_dir(&root().join("examples").join(name), dir.path());
@@ -177,7 +180,8 @@ fn assert_no_page_errors(page: &mut Page) {
 }
 
 /// Full build-mode rendering of the copied example, without a second process to
-/// supervise. Output is explicitly standalone and stays in the browser's scratch.
+/// supervise. Output is explicitly standalone and stays in the browser's
+/// scratch.
 fn build_standalone(dir: &Path) -> PathBuf {
     let output = dir.join("dist/document.html");
     let mut options = BuildOptions::new(dir.join("document.md"));
@@ -234,7 +238,8 @@ fn the_standalone_basic_example_renders_without_page_errors() {
 }
 
 /// Error collection, same-document navigation and return-by-value semantics are
-/// prerequisites for every later browser test. Expected fixture errors stay local.
+/// prerequisites for every later browser test. Expected fixture errors stay
+/// local.
 #[test]
 fn the_devtools_page_reports_errors_fragments_values_and_refusals() {
     let _turn = serial();

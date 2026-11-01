@@ -129,7 +129,9 @@ async function anchorEdits() {
     window.scrollTo(0, document.getElementById('p30').offsetTop - 120);
     const first = qa.firstVisible();
     const before = first.getBoundingClientRect().top;
-    await qa.edit((html) => html.replace('Paragraph 31:', 'Edited paragraph 31:'));
+    await qa.edit(
+        (html) => html.replace('Paragraph 31:', 'Edited paragraph 31:')
+    );
     const visibleDelta = first.getBoundingClientRect().top - before;
     await qa.edit((html) => '<nav style="height:300px">New TOC</nav>' + html);
     const tocDelta = first.getBoundingClientRect().top - before;
@@ -146,7 +148,9 @@ async function anchorEdits() {
     return {
         item: '2,4 visible edit, TOC insertion, and deleted anchor retain ±1px',
         pass: window.__qaMarker === 'anchor'
-            && [visibleDelta, tocDelta, deleteDelta].every((d) => Math.abs(d) <= 1),
+            && [visibleDelta, tocDelta, deleteDelta].every(
+                (d) => Math.abs(d) <= 1
+            ),
         visibleDelta, tocDelta, deleteDelta,
     };
 }
@@ -189,7 +193,8 @@ async function mathAndDetails() {
     return {
         item: '6 unchanged KaTeX identity, edited rendering, reader details state',
         pass: kept && details && updated.dataset.rendered === '1'
-            && updated.innerHTML !== original && !!updated.querySelector('.katex'),
+            && updated.innerHTML !== original
+            && !!updated.querySelector('.katex'),
         kept, details,
     };
 }
@@ -210,7 +215,8 @@ async function imageEdit() {
     await qa.until(() => document.getElementById('image1').complete);
     return {
         item: '7 changed image version loads; unchanged image keeps identity',
-        pass: window.__qaMarker === 'images' && second === document.getElementById('image2')
+        pass: window.__qaMarker === 'images'
+            && second === document.getElementById('image2')
             && second.__qa === 2 && second.alt === 'Updated second'
             && log.some((line) => line.includes('000000000001?v=2'))
             && !log.some((line) => line.includes('000000000002'))
@@ -225,7 +231,8 @@ async function titleEdit() {
     await qa.build();
     return {
         item: '8 document title updates in place',
-        pass: document.title === 'Changed title' && window.__qaMarker === 'title',
+        pass: document.title === 'Changed title'
+            && window.__qaMarker === 'title',
     };
 }
 
@@ -253,14 +260,18 @@ async function errorsAndWarnings() {
     await qa.wait(300);
     const kept = !qa.overlay().shown && qa.state().errorId === errorId;
     await qa.build('kind=content&web=ok&pages=error&error_kind=compile');
-    const pagesError = qa.overlay().text.includes('[pages] build error (compile)')
+    const pagesError = qa.overlay().text
+        .includes('[pages] build error (compile)')
         && qa.overlay().shown && qa.state().views.web.status === 'ok'
-        && document.getElementById('writer-view-toggle').dataset.status === 'error'
-        && document.getElementById('writer-view-toggle').textContent.includes('●');
+        && document.getElementById('writer-view-toggle')
+            .dataset.status === 'error'
+        && document.getElementById('writer-view-toggle')
+            .textContent.includes('●');
     const css = await qa.build('kind=css');
     const cssKeepsError = qa.state().views.pages.status === 'error'
         && qa.overlay().text.includes('[pages] build error (compile)')
-        && document.getElementById('writer-theme').href.endsWith('?v=' + css.build_id);
+        && document.getElementById('writer-theme').href
+            .endsWith('?v=' + css.build_id);
     await qa.build('kind=content&warning=1');
     const warnings = document.getElementById('writer-warnings');
     const counts = warnings.textContent.includes('1 warning(s)')
@@ -273,12 +284,14 @@ async function errorsAndWarnings() {
         && warningText.includes('book.ipynb cell 3:2')
         && !warnings.querySelector('nope');
     await qa.build('kind=content&warning=1');
-    const persistent = !!document.getElementById('writer-warnings').querySelector('ol')
+    const persistent = !!document.getElementById('writer-warnings')
+        .querySelector('ol')
         && sessionStorage.getItem('writer:warnings-open') !== null;
     await qa.build('kind=content&warning=0');
     const cleared = !qa.overlay().shown
         && (document.getElementById('writer-warnings').hidden
-            || getComputedStyle(document.getElementById('writer-warnings')).display === 'none');
+            || getComputedStyle(document.getElementById('writer-warnings'))
+                .display === 'none');
     return {
         item: '10–12 errors, dismissal/reconnect, skipped view error, warning details',
         pass: error && dismissed && kept && pagesError && cssKeepsError
@@ -304,7 +317,8 @@ async function staleFetch() {
     return {
         item: 'failed content fetch defers storage and retries content on CSS build',
         pass: stale && held && window.__qaMarker === 'stale'
-            && document.getElementById('p2').textContent.includes('Recovered stale'),
+            && document.getElementById('p2').textContent
+                .includes('Recovered stale'),
         stale, held,
     };
 }
@@ -325,7 +339,8 @@ async function reconnect() {
     await qa.get('/__mock/restart');
     const restarted = await qa.until(() => qa.state().connected
         && qa.state().buildId === 1
-        && document.getElementById('p1').textContent.includes('Restarted at same id:'));
+        && document.getElementById('p1').textContent
+            .includes('Restarted at same id:'));
     return {
         item: '13 reconnect applies missed builds and restart ID in place',
         pass: down && back && restarted && window.__qaMarker === 'reconnect',
@@ -350,13 +365,16 @@ async function backoff() {
     clearInterval(recorder);
     const expected = [1000, 2000, 4000, 5000];
     const attempts = [start, ...window.__qaConnections.slice(connectionIndex)];
-    const elapsed = attempts.slice(1).map((time, index) => time - attempts[index]);
+    const elapsed = attempts.slice(1).map(
+        (time, index) => time - attempts[index]
+    );
     const timing = [500, 1000, 2000, 4000, 5000].every((delay, index) =>
         elapsed[index] >= delay * 0.7
         && elapsed[index] <= delay * 1.4 + 150);
     return {
         item: '13 outage retries at 0.5/1/2/4 seconds then caps at 5 seconds',
-        pass: lost && eventually && timing && expected.every((n) => delays.includes(n))
+        pass: lost && eventually && timing
+            && expected.every((n) => delays.includes(n))
             && window.__qaMarker === 'backoff',
         delays, elapsed,
     };
@@ -414,13 +432,17 @@ async function startMock() {
     const env = { ...process.env };
     if (option('--assets', null)) env.WRITER_ASSETS = option('--assets');
     if (option('--client', null)) env.WRITER_CLIENT = option('--client');
-    if (option('--pages-client', null)) env.WRITER_PAGES_CLIENT = option('--pages-client');
+    if (option('--pages-client', null)) {
+        env.WRITER_PAGES_CLIENT = option('--pages-client');
+    }
     const processHandle = spawn('python3', [
         '-B', join(HERE, 'mock-server.py'), '--port', '0',
     ], { env, stdio: ['ignore', 'pipe', 'inherit'] });
     const base = await new Promise((resolve, reject) => {
         let output = '';
-        const timeout = setTimeout(() => reject(new Error('mock startup timed out')), 10000);
+        const timeout = setTimeout(
+            () => reject(new Error('mock startup timed out')), 10000
+        );
         processHandle.stdout.on('data', (data) => {
             output += data;
             const match = output.match(/http:\/\/127\.0\.0\.1:\d+/);
@@ -430,7 +452,9 @@ async function startMock() {
             }
         });
         processHandle.once('error', reject);
-        processHandle.once('exit', (code) => reject(new Error('mock exited: ' + code)));
+        processHandle.once(
+            'exit', (code) => reject(new Error('mock exited: ' + code))
+        );
     });
     return {
         base,
@@ -455,7 +479,9 @@ async function launchChrome() {
     ], { stdio: ['ignore', 'ignore', 'pipe'] });
     const port = await new Promise((resolve, reject) => {
         let output = '';
-        const timeout = setTimeout(() => reject(new Error('Chrome startup timed out')), 15000);
+        const timeout = setTimeout(
+            () => reject(new Error('Chrome startup timed out')), 15000
+        );
         processHandle.stderr.on('data', (data) => {
             output += data;
             const match = output.match(/DevTools listening on ws:\/\/[^:]+:(\d+)\//);
@@ -465,11 +491,13 @@ async function launchChrome() {
             }
         });
         processHandle.once('error', reject);
-        processHandle.once('exit', (code) => reject(new Error('Chrome exited: ' + code)));
+        processHandle.once(
+            'exit', (code) => reject(new Error('Chrome exited: ' + code))
+        );
     });
-    const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, {
-        method: 'PUT',
-    })).json();
+    const target = await (await fetch(
+        `http://127.0.0.1:${port}/json/new?about:blank`, { method: 'PUT' }
+    )).json();
     const socket = new WebSocket(target.webSocketDebuggerUrl);
     await new Promise((resolve, reject) => {
         socket.onopen = resolve;
@@ -485,16 +513,24 @@ async function launchChrome() {
             const request = pending.get(message.id);
             pending.delete(message.id);
             clearTimeout(request.timeout);
-            if (message.error) request.reject(new Error(JSON.stringify(message.error)));
-            else request.resolve(message.result);
+            if (message.error) {
+                request.reject(new Error(JSON.stringify(message.error)));
+            } else {
+                request.resolve(message.result);
+            }
         } else if (message.method === 'Page.loadEventFired') {
             loads++;
         } else if (message.method === 'Runtime.consoleAPICalled') {
-            logs.push('console.' + message.params.type + ': ' + message.params.args
-                .map((arg) => arg.value ?? arg.description ?? arg.type).join(' '));
+            logs.push(
+                'console.' + message.params.type + ': ' + message.params.args
+                    .map((arg) => arg.value ?? arg.description ?? arg.type)
+                    .join(' ')
+            );
         } else if (message.method === 'Runtime.exceptionThrown') {
             const detail = message.params.exceptionDetails;
-            logs.push('EXCEPTION: ' + (detail.exception?.description || detail.text));
+            logs.push(
+                'EXCEPTION: ' + (detail.exception?.description || detail.text)
+            );
         }
     };
     const send = (method, params = {}) => new Promise((resolve, reject) => {
@@ -539,7 +575,9 @@ async function launchChrome() {
         async loaded(minimum) {
             const end = Date.now() + 10000;
             while (loads < minimum && Date.now() < end) await sleep(25);
-            if (loads < minimum) throw new Error('expected page load did not occur');
+            if (loads < minimum) {
+                throw new Error('expected page load did not occur');
+            }
             await page.ready();
         },
         async ready() {
@@ -569,14 +607,17 @@ async function launchChrome() {
             try {
                 await page.run(fn);
             } catch (error) {
-                if (!/context|navigat|Cannot find|Inspected target/i.test(error.message)) {
+                if (!/context|navigat|Cannot find|Inspected target/i
+                    .test(error.message)) {
                     throw error;
                 }
             }
             await page.loaded(old + 1);
         },
         async screenshot(path) {
-            const output = await send('Page.captureScreenshot', { format: 'png' });
+            const output = await send(
+                'Page.captureScreenshot', { format: 'png' }
+            );
             writeFileSync(path, Buffer.from(output.data, 'base64'));
         },
         async close() {
@@ -603,7 +644,9 @@ async function navigationScenarios(page, mock) {
     const old = page.loads;
     await page.navigating(async () => {
         window.__qaMarker = 'outside';
-        await qa.post('/__mock/head', '<style>body { background: #fef; }</style>');
+        await qa.post(
+            '/__mock/head', '<style>body { background: #fef; }</style>'
+        );
         await qa.get('/__mock/emit?kind=content');
     });
     await sleep(300);
@@ -616,7 +659,8 @@ async function navigationScenarios(page, mock) {
     await page.navigating(async () => {
         await qa.post('/__mock/document', (await qa.document())
             + '<script>sessionStorage.setItem("qa:script", '
-            + 'String(+(sessionStorage.getItem("qa:script") || 0) + 1))</script>');
+            + 'String(+(sessionStorage.getItem("qa:script") || 0) + 1))'
+            + '</script>');
         await qa.get('/__mock/emit?kind=content');
     });
     await page.navigating(async () => {
@@ -640,7 +684,9 @@ async function navigationScenarios(page, mock) {
 }
 
 async function fallbackScenarios(page, mock) {
-    await fetch(mock.base + '/__mock/emit?kind=content&web=error&pages=error&nodoc=1');
+    await fetch(
+        mock.base + '/__mock/emit?kind=content&web=error&pages=error&nodoc=1'
+    );
     await page.goto(mock.base + '/?view=web');
     const fallback = await page.run(async () => {
         const initial = qa.overlay();
@@ -651,7 +697,8 @@ async function fallbackScenarios(page, mock) {
         await qa.wait(250);
         return initial.shown && initial.count === 1
             && initial.text.includes('[web, pages] build error (parse)')
-            && !qa.overlay().shown && !document.querySelector('[data-writer-document]');
+            && !qa.overlay().shown
+            && !document.querySelector('[data-writer-document]');
     });
     await page.navigating(async () => {
         window.__qaMarker = 'fallback';
@@ -673,9 +720,12 @@ async function viewScenarios(page, mock) {
         && qa.state().view === 'pages'
         && sessionStorage.getItem('writer:view') === 'pages');
     await record(page, pagesDelegation);
-    await page.navigating(() => document.getElementById('writer-view-toggle').click());
+    await page.navigating(
+        () => document.getElementById('writer-view-toggle').click()
+    );
     const web = await page.run(() => location.search === '?view=web'
-        && document.getElementById('writer-view-toggle').textContent === 'Pages');
+        && document.getElementById('writer-view-toggle')
+            .textContent === 'Pages');
     await page.goto(mock.base + '/?view=pages');
     await page.goto(mock.base + '/');
     const remembered = await page.run(() => location.search === '?view=pages');
@@ -691,20 +741,27 @@ async function viewScenarios(page, mock) {
 
 async function headLoadedClient(page, mock) {
     const web = await page.run(async () => {
-        const head = !!document.head.querySelector('script[src="/__writer/live-reload.js"]');
+        const head = !!document.head.querySelector(
+            'script[src="/__writer/live-reload.js"]'
+        );
         window.__qaMarker = 'head-loaded';
-        await qa.edit((html) => html.replace('Paragraph 1:', 'Head-loaded edit:'));
+        await qa.edit(
+            (html) => html.replace('Paragraph 1:', 'Head-loaded edit:')
+        );
         return head && qa.state().view === 'web'
-            && document.getElementById('writer-view-toggle').textContent === 'Pages'
+            && document.getElementById('writer-view-toggle')
+                .textContent === 'Pages'
             && window.__qaMarker === 'head-loaded'
-            && document.getElementById('p1').textContent.includes('Head-loaded edit:');
+            && document.getElementById('p1').textContent
+                .includes('Head-loaded edit:');
     });
     await page.goto(mock.base + '/?view=pages');
     const pages = await page.run(async () => {
         const before = window.__qaPages.length;
         const event = await qa.build('kind=pages');
         return qa.state().view === 'pages'
-            && document.getElementById('writer-view-toggle').textContent === 'Web'
+            && document.getElementById('writer-view-toggle')
+                .textContent === 'Web'
             && window.__qaPages.length === before + 1
             && window.__qaPages.at(-1).id === event.build_id;
     });
@@ -719,12 +776,16 @@ async function installPagesHelpers() {
         .then((response) => response.json());
     window.qp = {
         current: JSON.parse(JSON.stringify(data.pages)),
-        nodes: () => [...document.querySelectorAll('#writer-pages > .writer-page')],
+        nodes: () => [
+            ...document.querySelectorAll('#writer-pages > .writer-page')
+        ],
         hash: (number) => number.toString(16).padStart(16, '0'),
         payload(count, seed = 0x1000) {
             return {
                 status: 'ok', count,
-                hashes: Array.from({ length: count }, (_, i) => qp.hash(seed + i)),
+                hashes: Array.from(
+                    { length: count }, (_, i) => qp.hash(seed + i)
+                ),
                 size_pt: Array.from({ length: count }, () => [450, 600]),
             };
         },
@@ -776,7 +837,8 @@ async function installPagesHelpers() {
         },
         isolated(source, fetcher, blockedStorage = false) {
             const frame = document.createElement('iframe');
-            frame.style.cssText = 'position:fixed;right:0;top:0;width:400px;height:240px';
+            frame.style.cssText =
+                'position:fixed;right:0;top:0;width:400px;height:240px';
             frame.title = 'Isolated pages client contract';
             document.body.append(frame);
             const win = frame.contentWindow;
@@ -795,7 +857,9 @@ async function installPagesHelpers() {
             win.fetch = fetcher;
             if (blockedStorage) {
                 Object.defineProperty(win, 'sessionStorage', { get() {
-                    throw new DOMException('deliberately blocked', 'SecurityError');
+                    throw new DOMException(
+                        'deliberately blocked', 'SecurityError'
+                    );
                 }});
             }
             win.eval(source);
@@ -842,7 +906,8 @@ async function pagesLayoutAndAnchor() {
     const preserved = after?.index === anchor?.index
         && Math.abs(after.top - anchor.top) <= 1
         && qp.nodes()[6] === page && page.querySelector('img') === image
-        && document.getElementById('writer-pages-counter').textContent === 'Page 7 / 24';
+        && document.getElementById('writer-pages-counter')
+            .textContent === 'Page 7 / 24';
     // Page 5 can be outside native lazy lookahead while reading page 7. Keep
     // the revision-only request check above, then reveal it deliberately.
     // That navigation may also request previously unseen, unchanged pages.
@@ -861,7 +926,9 @@ async function pagesLayoutAndAnchor() {
         pass: geometry && farUnrequested && ready && nodes.length === 24
             && first.complete && window.__qaConnections.length === 1
             && preserved && changedLoaded && changedRequests.length === 1
-            && pageRequests.every((entry) => qp.requested(entry, changed.hashes[4])),
+            && pageRequests.every(
+                (entry) => qp.requested(entry, changed.hashes[4])
+            ),
         geometry, farUnrequested, anchor, after, preserved,
         pageRequests, changedLoaded, changedRequests,
     };
@@ -888,16 +955,22 @@ async function pagesStatusAndEmpty() {
         pass: retained && cleared && qp.nodes().length === 0
             && empty?.textContent === 'No pages yet.'
             && document.querySelectorAll('.writer-pages-empty').length === 1
-            && document.getElementById('writer-pages-counter').textContent === 'Page 0 / 0'
-            && document.getElementById('writer-pages-zoom').textContent === 'Fit'
-            && !status.hidden && status.textContent === 'pages: build error, no pages yet',
+            && document.getElementById('writer-pages-counter')
+                .textContent === 'Page 0 / 0'
+            && document.getElementById('writer-pages-zoom')
+                .textContent === 'Fit'
+            && !status.hidden
+            && status.textContent === 'pages: build error, no pages yet',
         retained, cleared,
     };
 }
 
 async function pagesZoomAndKeys() {
-    const label = () => document.getElementById('writer-pages-zoom').textContent;
-    const button = (action) => document.querySelector(`[data-zoom="${action}"]`).click();
+    const label = () => document.getElementById('writer-pages-zoom')
+        .textContent;
+    const button = (action) => {
+        document.querySelector(`[data-zoom="${action}"]`).click();
+    };
     const key = (value, target = document.body, options = {}) => {
         target.dispatchEvent(new KeyboardEvent('keydown', {
             key: value, bubbles: true, cancelable: true, ...options,
@@ -909,7 +982,9 @@ async function pagesZoomAndKeys() {
     grid.style.width = '620px';
     dispatchEvent(new Event('resize'));
     const fit = (grid.clientWidth - 32) / 600;
-    const actual = parseFloat(qp.nodes()[0].querySelector('img').style.width) / 600;
+    const actual = parseFloat(
+        qp.nodes()[0].querySelector('img').style.width
+    ) / 600;
     const fitCorrect = label() === 'Fit' && Math.abs(fit - actual) < 1e-6;
     const delta = qp.anchor().top - anchor.top * (actual / 2);
     key('+');
@@ -970,7 +1045,9 @@ async function pagesZoomAndKeys() {
 async function pagesStartupAndStorage() {
     const source = await qa.get('/__writer/pages.js');
     let release;
-    const frame = qp.isolated(source, () => new Promise((resolve) => { release = resolve; }));
+    const frame = qp.isolated(source, () => new Promise((resolve) => {
+        release = resolve;
+    }));
     let restart = false;
     let startup = false;
     try {
@@ -981,11 +1058,16 @@ async function pagesStartupAndStorage() {
         win.__writerPages.apply(first, 18);
         win.__writerPages.apply(restarted, 1);
         restart = win.document.querySelectorAll('.writer-page').length === 2
-            && win.document.querySelector('.writer-page').dataset.hash === restarted.hashes[0];
-        release({ ok: true, json: () => Promise.resolve({ pages: older, build_id: 99 }) });
+            && win.document.querySelector('.writer-page')
+                .dataset.hash === restarted.hashes[0];
+        release({
+            ok: true,
+            json: () => Promise.resolve({ pages: older, build_id: 99 })
+        });
         await qa.wait(0);
         startup = win.document.querySelectorAll('.writer-page').length === 2
-            && win.document.querySelector('.writer-page').dataset.hash === restarted.hashes[0];
+            && win.document.querySelector('.writer-page')
+                .dataset.hash === restarted.hashes[0];
     } finally {
         frame.remove();
     }
@@ -999,7 +1081,8 @@ async function pagesStartupAndStorage() {
         win.__writerPages.apply(payload, 2);
         win.document.querySelector('[data-zoom="in"]').click();
         storage = win.document.querySelectorAll('.writer-page').length === 1
-            && win.document.getElementById('writer-pages-zoom').textContent !== 'Fit';
+            && win.document.getElementById('writer-pages-zoom')
+                .textContent !== 'Fit';
     } finally {
         blocked.remove();
     }
@@ -1031,14 +1114,15 @@ async function pagesOldImageAndLazyRevision() {
             && node.querySelectorAll('img').length === 2;
         await qp.scroll(index, 0);
         const request = await qp.requestsUntil(hash);
-        const pending = node.contains(old) && node.querySelectorAll('img').length === 2
+        const pending = node.contains(old)
+            && node.querySelectorAll('img').length === 2
             && getComputedStyle(old).opacity === '1';
         await qa.get('/__mock/pages/release?hash=' + hash);
         const replaced = await qa.until(() => qp.loaded(index, hash));
         return {
             item: '21 changed far decoded page stays lazy and keeps old pixels until load/decode',
-            pass: decoded && lazy && kept && request.found && pending && replaced
-                && !node.contains(old),
+            pass: decoded && lazy && kept && request.found
+                && pending && replaced && !node.contains(old),
             decoded, lazy, kept, pending, replaced, requests: request.entries,
         };
     } finally {
@@ -1056,9 +1140,11 @@ async function pagesStaleDecodeAndRevert() {
     let releaseDecode = null;
     HTMLImageElement.prototype.decode = function () {
         const decoded = originalDecode.call(this);
-        return this.src.endsWith('?v=' + a) ? decoded.then(() => new Promise((resolve) => {
-            releaseDecode = resolve;
-        })) : decoded;
+        return this.src.endsWith('?v=' + a)
+            ? decoded.then(() => new Promise((resolve) => {
+                releaseDecode = resolve;
+            }))
+            : decoded;
     };
     let stale = false;
     let reverted = false;
@@ -1066,7 +1152,9 @@ async function pagesStaleDecodeAndRevert() {
         let spec = JSON.parse(JSON.stringify(qp.current));
         spec.hashes[index] = a;
         await qp.stage(spec);
-        const waiting = await qa.until(() => typeof releaseDecode === 'function');
+        const waiting = await qa.until(
+            () => typeof releaseDecode === 'function'
+        );
         spec = JSON.parse(JSON.stringify(qp.current));
         spec.hashes[index] = b;
         await qp.stage(spec);
@@ -1087,7 +1175,8 @@ async function pagesStaleDecodeAndRevert() {
             spec.hashes[index] = b;
             await qp.stage(spec);
             const log = await qa.log();
-            reverted = requested.found && node.querySelectorAll('img').length === 1
+            reverted = requested.found
+                && node.querySelectorAll('img').length === 1
                 && node.querySelector('img') === visible && qp.loaded(index, b)
                 && !log.some((entry) => qp.requested(entry, b));
         } finally {
@@ -1107,13 +1196,18 @@ async function openCompilerPages(page, mock) {
     const count = 24;
     await fetch(mock.base + '/__mock/pages', {
         method: 'POST', body: JSON.stringify({
-            hashes: Array.from({ length: count }, (_, i) => (0x1000 + i).toString(16).padStart(16, '0')),
+            hashes: Array.from(
+                { length: count },
+                (_, i) => (0x1000 + i).toString(16).padStart(16, '0')
+            ),
             size_pt: Array.from({ length: count }, () => [450, 600]),
         }),
     });
     await fetch(mock.base + '/__mock/emit?kind=pages');
     await page.goto(mock.base + '/?view=pages&client=1');
-    if (!await page.run(installPagesHelpers)) throw new Error('pages layout did not become ready');
+    if (!await page.run(installPagesHelpers)) {
+        throw new Error('pages layout did not become ready');
+    }
 }
 
 async function pagesGeometryScenarios(page, mock) {
@@ -1127,8 +1221,12 @@ async function pagesControlsScenarios(page, mock) {
     await record(page, pagesZoomAndKeys);
     const expected = await page.run(() => window.__qaStoredZoom);
     await page.goto(mock.base + '/?view=pages&client=1');
-    if (!await page.run(installPagesHelpers)) throw new Error('stored zoom layout did not become ready');
-    const stored = await page.run(() => document.getElementById('writer-pages-zoom').textContent);
+    if (!await page.run(installPagesHelpers)) {
+        throw new Error('stored zoom layout did not become ready');
+    }
+    const stored = await page.run(
+        () => document.getElementById('writer-pages-zoom').textContent
+    );
     results.push({
         item: '19 pages zoom choice survives navigation in the same tab',
         pass: stored === expected, expected, stored,
@@ -1172,7 +1270,9 @@ async function main() {
             const firstResult = results.length;
             try {
                 await page.goto(mock.base + '/?view=web');
-                for (const step of session.steps || []) await record(page, step);
+                for (const step of session.steps || []) {
+                    await record(page, step);
+                }
                 if (session.node) await session.node(page, mock);
                 if (OUT) await page.screenshot(join(OUT, session.id + '.png'));
             } catch (error) {
@@ -1182,9 +1282,12 @@ async function main() {
                 });
             } finally {
                 logs.push(...page.logs);
-                if (OUT) writeFileSync(join(OUT, session.id + '.log'),
-                    results.slice(firstResult).map((r) => JSON.stringify(r)).join('\n')
-                    + '\n' + page.logs.join('\n') + '\n');
+                if (OUT) writeFileSync(
+                    join(OUT, session.id + '.log'),
+                    results.slice(firstResult)
+                        .map((r) => JSON.stringify(r)).join('\n')
+                    + '\n' + page.logs.join('\n') + '\n'
+                );
                 await page.close();
             }
         }

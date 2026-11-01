@@ -61,8 +61,11 @@ fn prepare_inner<'a>(
                 let recognized = rule.selector().is_none()
                     && match call {
                         Some(call) => {
-                            matches!(call.callee(), ast::Expr::FieldAccess(access) if access.field().as_str() == "with")
-                                && ctx.env.writer_doc(call.callee())
+                            matches!(
+                                call.callee(),
+                                ast::Expr::FieldAccess(access)
+                                    if access.field().as_str() == "with"
+                            ) && ctx.env.writer_doc(call.callee())
                         }
                         None => ctx.env.writer_doc(transform),
                     };
@@ -166,7 +169,11 @@ impl<'a> Pending<'a> {
             warn_path_strings(ctx, &value, node);
         }
         if matches!(key.as_str(), "cite_style" | "csl")
-            && matches!(&value, Literal::Str(path) if path.to_ascii_lowercase().ends_with(".csl"))
+            && matches!(
+                &value,
+                Literal::Str(path)
+                    if path.to_ascii_lowercase().ends_with(".csl")
+            )
         {
             ctx.warning(
                 "W-TYP-PATH-STRING",
@@ -264,7 +271,11 @@ fn collect_set<'a>(
                     Literal::None => Literal::Bool(false),
                     Literal::Str(_) => value,
                     _ => {
-                        ctx.error("E-TYP-ARG-INVALID", "heading numbering must be a literal string or none", expr.to_untyped());
+                        ctx.error(
+                            "E-TYP-ARG-INVALID",
+                            "heading numbering must be a literal string or none",
+                            expr.to_untyped()
+                        );
                         continue;
                     }
                 };
@@ -281,7 +292,11 @@ fn collect_set<'a>(
                     Literal::None => Literal::Str("none".into()),
                     Literal::Str(_) => Literal::Str("all".into()),
                     _ => {
-                        ctx.error("E-TYP-ARG-INVALID", "equation numbering must be a literal string or none", expr.to_untyped());
+                        ctx.error(
+                            "E-TYP-ARG-INVALID",
+                            "equation numbering must be a literal string or none",
+                            expr.to_untyped()
+                        );
                         continue;
                     }
                 };
@@ -364,7 +379,13 @@ fn valid_field(name: &str, value: &Literal<'_>) -> bool {
         }
         "keywords" => {
             matches!(value, Literal::Str(_))
-                || matches!(value, Literal::Array(values) if values.iter().all(|value| matches!(value, Literal::Str(_))))
+                || matches!(
+                    value,
+                    Literal::Array(values)
+                        if values
+                            .iter()
+                            .all(|value| matches!(value, Literal::Str(_)))
+                )
         }
         "toc" => matches!(value, Literal::Bool(_) | Literal::Int(1..=6)),
         "numbering" => matches!(value, Literal::Bool(_) | Literal::Dict(_)),

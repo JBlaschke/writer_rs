@@ -395,7 +395,9 @@ mod tests {
             baseline_pt: 30.0,
         });
         emitter.equation_frame(&body, "x", MathDialect::Latex, None, "1");
-        assert!(emitter.body.contains("<w:gridCol w:w=\"100\"/><w:gridCol w:w=\"800\"/><w:gridCol w:w=\"100\"/>"));
+        assert!(emitter.body.contains(
+            "<w:gridCol w:w=\"100\"/><w:gridCol w:w=\"800\"/><w:gridCol w:w=\"100\"/>"
+        ));
         assert!(
             emitter.body.contains("<wp:extent cx=\"508000\" cy=\"254000\"/>")
         );

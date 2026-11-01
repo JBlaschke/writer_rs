@@ -427,8 +427,10 @@ impl Emitter<'_> {
             self.content.paragraph_prefix = format!(
                 "{marker}<w:r><w:t xml:space=\"preserve\"> </w:t></w:r>",
             );
-            if !matches!(note.blocks.first(), Some(Block::Paragraph { inlines, .. }) if !inlines.is_empty())
-            {
+            if !matches!(
+                note.blocks.first(),
+                Some(Block::Paragraph { inlines, .. }) if !inlines.is_empty()
+            ) {
                 let style =
                     self.styles.ensure("Footnote Text", StyleKind::Paragraph);
                 self.start_paragraph(xml::ParaProps {

@@ -1,5 +1,5 @@
-//! `writer serve`: bind after the first build, watch changes, and stop on Ctrl-C.
-//! The retained two-view session lives in the private child module.
+//! `writer serve`: bind after the first build, watch changes, and stop on
+//! Ctrl-C. The retained two-view session lives in the private child module.
 
 mod session;
 
@@ -88,9 +88,9 @@ fn serve_options(
     })
 }
 
-/// The `[serve]` settings with the command line applied. When `writer.toml` cannot be
-/// loaded, the defaults with the command line applied, and a warning saying so (the first
-/// build reports the error itself).
+/// The `[serve]` settings with the command line applied. When `writer.toml`
+/// cannot be loaded, the defaults with the command line applied, and a warning
+/// saying so (the first build reports the error itself).
 fn serve_config(opts: &BuildOptions, global: &GlobalArgs) -> ServeConfig {
     match pipeline::load_config(opts) {
         Ok((config, _)) => config.serve,
@@ -111,7 +111,8 @@ fn serve_config(opts: &BuildOptions, global: &GlobalArgs) -> ServeConfig {
     }
 }
 
-/// Bind and announce once, then serve while rebuilding sequentially off the async pool.
+/// Bind and announce once, then serve while rebuilding sequentially off the
+/// async pool.
 async fn serve(
     session: Session, batches: mpsc::Receiver<ChangeBatch>,
     config: &ServeConfig, shutdown: impl Future<Output = ()> + Send + 'static,
@@ -153,15 +154,18 @@ async fn serve(
 /// How long [`bind`] waits for a server that may already answer on the address.
 const PROBE_TIMEOUT: Duration = Duration::from_millis(300);
 
-/// Binds `host:port` (each address `host` resolves to, in order, until one binds).
+/// Binds `host:port` (each address `host` resolves to, in order, until one
+/// binds).
 ///
-/// A port that another server already answers on is in use (live-reload.md §4: an error
-/// with the hint to use `--port 0`), also when the bind itself succeeds: the listener
-/// sets `SO_REUSEADDR` (so that a restart is not refused while connections of the previous
-/// run linger in `TIME_WAIT`), and on macOS and the BSDs that lets it bind `127.0.0.1:P`
-/// although another server listens on `0.0.0.0:P` or a dual-stack `[::]:P`. So, unless the
-/// port is 0, each address is first probed with a connection (an unspecified address at
-/// its loopback address). Errors name the address and hint at the fix ([`bind_error`]).
+/// A port that another server already answers on is in use (live-reload.md §4:
+/// an error with the hint to use `--port 0`), also when the bind itself
+/// succeeds: the listener sets `SO_REUSEADDR` (so that a restart is not refused
+/// while connections of the previous run linger in `TIME_WAIT`), and on macOS
+/// and the BSDs that lets it bind `127.0.0.1:P` although another server listens
+/// on `0.0.0.0:P` or a dual-stack `[::]:P`. So, unless the port is 0, each
+/// address is first probed with a connection (an unspecified address at its
+/// loopback address). Errors name the address and hint at the fix
+/// ([`bind_error`]).
 async fn bind(host: &str, port: u16) -> anyhow::Result<TcpListener> {
     let addrs: Vec<SocketAddr> = tokio::net::lookup_host((host, port))
         .await
@@ -193,8 +197,8 @@ async fn bind(host: &str, port: u16) -> anyhow::Result<TcpListener> {
     }
 }
 
-/// The first of `addrs` (an unspecified address at its loopback address) where a server
-/// accepts a connection within [`PROBE_TIMEOUT`].
+/// The first of `addrs` (an unspecified address at its loopback address) where
+/// a server accepts a connection within [`PROBE_TIMEOUT`].
 async fn answering(addrs: &[SocketAddr]) -> Option<SocketAddr> {
     for addr in addrs.iter().map(|addr| browser_addr(*addr)) {
         let connect = tokio::net::TcpStream::connect(addr);
@@ -205,9 +209,10 @@ async fn answering(addrs: &[SocketAddr]) -> Option<SocketAddr> {
     None
 }
 
-/// The error for a failed bind of `host:port`: names the address, then a hint by the
-/// kind of `err`: `--port 0` for a port in use (or one that needs privileges), the host
-/// settings for an address that cannot be used here (or resolved).
+/// The error for a failed bind of `host:port`: names the address, then a hint
+/// by the kind of `err`: `--port 0` for a port in use (or one that needs
+/// privileges), the host settings for an address that cannot be used here (or
+/// resolved).
 fn bind_error(host: &str, port: u16, err: &io::Error) -> anyhow::Error {
     let address = display_address(host, port);
     let hint = match err.kind() {
@@ -236,8 +241,8 @@ fn display_address(host: &str, port: u16) -> String {
     }
 }
 
-/// A future that completes on Ctrl-C (SIGINT). The handler is installed by this call, not
-/// when the future is first polled, so no Ctrl-C after it is missed.
+/// A future that completes on Ctrl-C (SIGINT). The handler is installed by this
+/// call, not when the future is first polled, so no Ctrl-C after it is missed.
 #[cfg(unix)]
 fn interrupt() -> std::io::Result<impl Future<Output = ()> + Send + 'static> {
     use tokio::signal::unix::{SignalKind, signal};
@@ -261,8 +266,8 @@ fn url_for(addr: SocketAddr) -> String {
     format!("http://{addr}/")
 }
 
-/// The address a browser on this machine reaches `addr` at: `addr`, or the loopback
-/// address of its family when it is unspecified (`0.0.0.0`, `::`).
+/// The address a browser on this machine reaches `addr` at: `addr`, or the
+/// loopback address of its family when it is unspecified (`0.0.0.0`, `::`).
 fn browser_addr(addr: SocketAddr) -> SocketAddr {
     match addr.ip() {
         IpAddr::V4(ip) if ip.is_unspecified() => {
@@ -276,8 +281,8 @@ fn browser_addr(addr: SocketAddr) -> SocketAddr {
     }
 }
 
-/// Opens `url` in the default browser, off the async threads (launchers can block). A
-/// failure is a warning.
+/// Opens `url` in the default browser, off the async threads (launchers can
+/// block). A failure is a warning.
 fn open_browser(url: String) {
     tokio::task::spawn_blocking(move || {
         if let Err(err) = open::that(&url) {
@@ -371,9 +376,10 @@ mod tests {
         assert_ne!(free.local_addr().unwrap().port(), 0);
     }
 
-    /// With `SO_REUSEADDR` (which the listener sets), macOS lets `127.0.0.1:P` be bound
-    /// while another server listens on `0.0.0.0:P` or a dual-stack `[::]:P`; the probe in
-    /// `bind` reports the port as in use anyway (on Linux the bind itself fails).
+    /// With `SO_REUSEADDR` (which the listener sets), macOS lets `127.0.0.1:P`
+    /// be bound while another server listens on `0.0.0.0:P` or a dual-stack
+    /// `[::]:P`; the probe in `bind` reports the port as in use anyway (on
+    /// Linux the bind itself fails).
     #[tokio::test]
     async fn a_port_held_on_a_wildcard_address_is_in_use() {
         let v4 = std::net::TcpListener::bind("0.0.0.0:0").unwrap();
@@ -385,7 +391,8 @@ mod tests {
         );
         assert!(err.ends_with("(use --port 0 to pick a free port)"), "{err}");
         drop(v4);
-        // A dual-stack [::] listener, where the system has IPv6 and makes it dual-stack.
+        // A dual-stack [::] listener, where the system has IPv6 and makes it
+        // dual-stack.
         let Ok(v6) = std::net::TcpListener::bind("[::]:0") else {
             return;
         };
@@ -396,15 +403,17 @@ mod tests {
         }
     }
 
-    /// The probe does not mistake a port whose previous server is gone, with connections
-    /// left in `TIME_WAIT` on the server side, for one in use (a restart on the same port).
+    /// The probe does not mistake a port whose previous server is gone, with
+    /// connections left in `TIME_WAIT` on the server side, for one in use (a
+    /// restart on the same port).
     #[tokio::test]
     async fn a_port_left_in_time_wait_can_be_bound_again() {
         let first = bind("127.0.0.1", 0).await.unwrap();
         let addr = first.local_addr().unwrap();
         let client = tokio::net::TcpStream::connect(addr).await.unwrap();
         let (accepted, _) = first.accept().await.unwrap();
-        // The server side closes first, so its end of the connection enters TIME_WAIT.
+        // The server side closes first, so its end of the connection enters
+        // TIME_WAIT.
         drop(accepted);
         drop(first);
         drop(client);
@@ -414,7 +423,8 @@ mod tests {
 
     #[tokio::test]
     async fn an_address_of_another_machine_is_a_host_error() {
-        // TEST-NET-1 (RFC 5737) is no address of this machine; port 0 skips the probe.
+        // TEST-NET-1 (RFC 5737) is no address of this machine; port 0 skips the
+        // probe.
         let err = bind("192.0.2.1", 0).await.unwrap_err().to_string();
         assert!(err.starts_with("cannot listen on 192.0.2.1:0: "), "{err}");
         assert!(!err.contains("--port 0"), "{err}");

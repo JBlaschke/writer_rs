@@ -2,7 +2,8 @@
 //! Owner: T11. Stub created by T00.
 
 //! Recovery rewrites rejected element attributes into comrak's native grammar.
-//! Re-parsing preserves line numbers and verifies every proposed attribute block.
+//! Re-parsing preserves line numbers and verifies every proposed attribute
+//! block.
 
 use std::borrow::Cow;
 use std::ops::Range;
@@ -14,8 +15,8 @@ use crate::error::{Diagnostic, Diagnostics};
 use crate::ir::SourceSpan;
 use crate::markdown::attrs::{ElementAttrs, read_element_attrs};
 
-/// Diagnostic code of an attribute block that is left as text although it was meant as
-/// attributes (warning).
+/// Diagnostic code of an attribute block that is left as text although it was
+/// meant as attributes (warning).
 pub const UNPARSED_ATTR_BLOCK: &str = "unparsed-attr-block";
 
 /// The nodes whose attribute blocks are recovered from the source text.
@@ -61,47 +62,56 @@ struct Found<'s> {
     reading: ElementAttrs,
 }
 
-/// A block to rewrite in comrak's own form, and the node that must then have its attributes.
+/// A block to rewrite in comrak's own form, and the node that must then have
+/// its attributes.
 struct Fix<'t> {
     kind: Kind,
     /// The node's first line and column (byte, 1-based).
     start: (usize, usize),
     /// Byte range of the block in the whole text.
     range: Range<usize>,
-    /// The block as written and its line, for the warning when it cannot be applied.
+    /// The block as written and its line, for the warning when it cannot be
+    /// applied.
     block: &'t str,
     line: usize,
-    /// The attributes it reads as, and the block comrak reads as them ([`native_block`]).
+    /// The attributes it reads as, and the block comrak reads as them
+    /// ([`native_block`]).
     attrs: Attributes,
     native: String,
 }
 
-/// Where a fix's node must be in the rewritten text and the attributes it must have.
+/// Where a fix's node must be in the rewritten text and the attributes it must
+/// have.
 struct Target<'f> {
     kind: Kind,
     start: (usize, usize),
     attrs: &'f Attributes,
 }
 
-/// How many times [`recover_attr_blocks`] parses a rewritten text before it gives up.
+/// How many times [`recover_attr_blocks`] parses a rewritten text before it
+/// gives up.
 const MAX_ROUNDS: usize = 3;
 
-/// Why a block is not recovered when comrak does not read its rewritten form either.
+/// Why a block is not recovered when comrak does not read its rewritten form
+/// either.
 const NOT_READ_THERE: &str = "comrak does not read it in this place, even with every value \
      in double quotes";
 
-/// Recovers the attribute blocks comrak left as text after headings, links, images and
-/// inline code of `root`, the document comrak parsed from `text` with `opts` (module docs).
+/// Recovers the attribute blocks comrak left as text after headings, links,
+/// images and inline code of `root`, the document comrak parsed from `text`
+/// with `opts` (module docs).
 ///
-/// Returns `root` and `text` unchanged when there is nothing to recover. Otherwise each
-/// block that reads as attributes is rewritten in comrak's own syntax, every value
-/// double-quoted (`{."dark" background="#222"}`), the result is parsed again (into `arena`,
-/// with `opts`) and the new root and text are returned; the caller must use both from then
-/// on (later passes read source lines from the text). Each node must then carry exactly the
-/// block's attributes; a block for which that is not so is put back as written and
+/// Returns `root` and `text` unchanged when there is nothing to recover.
+/// Otherwise each block that reads as attributes is rewritten in comrak's own
+/// syntax, every value double-quoted (`{."dark" background="#222"}`), the
+/// result is parsed again (into `arena`, with `opts`) and the new root and text
+/// are returned; the caller must use both from then on (later passes read
+/// source lines from the text). Each node must then carry exactly the block's
+/// attributes; a block for which that is not so is put back as written and
 /// reported, and the text is parsed again without it (at most three times, then
-/// nothing is recovered). Blocks that were meant as attributes but are not read are reported
-/// in `diagnostics` (`unparsed-attr-block`, span on the block's line, no path).
+/// nothing is recovered). Blocks that were meant as attributes but are not read
+/// are reported in `diagnostics` (`unparsed-attr-block`, span on the block's
+/// line, no path).
 pub fn recover_attr_blocks<'a, 't>(
     arena: &'a Arena<'a>, root: &'a AstNode<'a>, text: &'t str, opts: &Options,
     diagnostics: &mut Diagnostics,
@@ -127,9 +137,9 @@ pub fn recover_attr_blocks<'a, 't>(
     (root, Cow::Borrowed(text))
 }
 
-/// The blocks after `root`'s headings, links, images and inline code that read as
-/// attributes, without overlaps, ordered by position; blocks meant as attributes that are
-/// not valid are reported in `diagnostics`.
+/// The blocks after `root`'s headings, links, images and inline code that read
+/// as attributes, without overlaps, ordered by position; blocks meant as
+/// attributes that are not valid are reported in `diagnostics`.
 fn find_fixes<'a, 't>(
     root: &'a AstNode<'a>, starts: &[usize], lines: &[&'t str],
     diagnostics: &mut Diagnostics,
@@ -196,9 +206,10 @@ fn find_fixes<'a, 't>(
     kept
 }
 
-/// `attrs` as an attribute block comrak reads itself: `#id`, `.class` and `key=value` items
-/// separated by spaces, every value double-quoted with `\` and `"` escaped (comrak takes any
-/// character there; keys are valid attribute names, which is comrak's key grammar).
+/// `attrs` as an attribute block comrak reads itself: `#id`, `.class` and
+/// `key=value` items separated by spaces, every value double-quoted with `\`
+/// and `"` escaped (comrak takes any character there; keys are valid attribute
+/// names, which is comrak's key grammar).
 fn native_block(attrs: &Attributes) -> String {
     let mut out = String::from("{");
     let mut item = |prefix: &str, value: &str| {
@@ -228,7 +239,8 @@ fn native_block(attrs: &Attributes) -> String {
     out
 }
 
-/// The `unparsed-attr-block` warning for `block` after a node of `kind`, on `line`.
+/// The `unparsed-attr-block` warning for `block` after a node of `kind`, on
+/// `line`.
 fn unparsed_at(
     kind: Kind, block: &str, reason: &str, line: usize,
 ) -> Diagnostic {
@@ -256,11 +268,12 @@ fn report_missed<'t>(
     }
 }
 
-/// The attribute block at the end of a heading's content: the last `{` in one of the
-/// heading's own `Text` children on its last content line, preceded by whitespace (or
-/// starting the content), whose block ends where the content does. The rightmost candidate
-/// that reads as attributes wins (so `}` inside a quoted value is fine); without one, the
-/// first that reads as [`ElementAttrs::Invalid`] is returned for the warning.
+/// The attribute block at the end of a heading's content: the last `{` in one
+/// of the heading's own `Text` children on its last content line, preceded by
+/// whitespace (or starting the content), whose block ends where the content
+/// does. The rightmost candidate that reads as attributes wins (so `}` inside a
+/// quoted value is fine); without one, the first that reads as
+/// [`ElementAttrs::Invalid`] is returned for the warning.
 fn heading_block<'a, 's>(
     heading: &'a AstNode<'a>, lines: &[&'s str],
 ) -> Option<Found<'s>> {
@@ -289,8 +302,9 @@ fn heading_block<'a, 's>(
     let content = &line[..=close];
     let mut invalid = None;
     for (at, _) in content.match_indices('{').rev() {
-        // as comrak: the block starts the content or follows whitespace (the first child of
-        // `# \{…}` starts at the escaped `{`, which is not the content's start)
+        // as comrak: the block starts the content or follows whitespace (the
+        // first child of `# \{…}` starts at the escaped `{`, which is not the
+        // content's start)
         let before = at.checked_sub(1).map(|before| line.as_bytes()[before]);
         let separated = matches!(before, None | Some(b' ' | b'\t'))
             || (Some(at) == content_start && before != Some(b'\\'));
@@ -321,12 +335,13 @@ fn heading_block<'a, 's>(
     invalid
 }
 
-/// The attribute block right after a link's or image's `)`/`]` or inline code's closing
-/// backtick, on the same line: a `{` that starts the next `Text` sibling, up to the first
-/// `}` outside quotes. Without such a `}` (an unbalanced quote) the block runs to the first
-/// `}` and is returned only when it reads as [`ElementAttrs::Invalid`]. A block that runs
-/// past the end of the node's parent (a table cell ended by a `|` in the block, an emphasis
-/// closed inside it) is [`ElementAttrs::Invalid`] too.
+/// The attribute block right after a link's or image's `)`/`]` or inline code's
+/// closing backtick, on the same line: a `{` that starts the next `Text`
+/// sibling, up to the first `}` outside quotes. Without such a `}` (an
+/// unbalanced quote) the block runs to the first `}` and is returned only when
+/// it reads as [`ElementAttrs::Invalid`]. A block that runs past the end of the
+/// node's parent (a table cell ended by a `|` in the block, an emphasis closed
+/// inside it) is [`ElementAttrs::Invalid`] too.
 fn inline_block<'a, 's>(
     node: &'a AstNode<'a>, kind: Kind, lines: &[&'s str],
 ) -> Option<Found<'s>> {
@@ -363,8 +378,8 @@ fn inline_block<'a, 's>(
             }
         }
     };
-    // the block must end inside the node's parent (a `|` in it may end a table cell, a `*`
-    // an emphasis), or the element would not be where the block is
+    // the block must end inside the node's parent (a `|` in it may end a table
+    // cell, a `*` an emphasis), or the element would not be where the block is
     let parent_end = node.parent().map(|parent| parent.data().sourcepos.end);
     let crosses = parent_end.is_some_and(|parent| {
         parent.line == end.line && at + len > parent.column
@@ -383,9 +398,10 @@ fn inline_block<'a, 's>(
     })
 }
 
-/// The byte length of the `{…}` block that `text` starts with: up to the first `}` outside
-/// single or double quotes (a backslash inside quotes escapes the next character). `None`
-/// when the text ends first or a `{` comes first outside quotes.
+/// The byte length of the `{…}` block that `text` starts with: up to the first
+/// `}` outside single or double quotes (a backslash inside quotes escapes the
+/// next character). `None` when the text ends first or a `{` comes first
+/// outside quotes.
 fn block_len(text: &str) -> Option<usize> {
     let mut quote = None;
     let mut chars = text.char_indices().skip(1);
@@ -405,9 +421,10 @@ fn block_len(text: &str) -> Option<usize> {
     None
 }
 
-/// The text with each fix's block replaced by its [`native_block`] (the fixes are ordered and
-/// do not overlap), and where each fix's node must start in it: moved along its line by
-/// what the rewritten blocks before it on that line added or removed.
+/// The text with each fix's block replaced by its [`native_block`] (the fixes
+/// are ordered and do not overlap), and where each fix's node must start in it:
+/// moved along its line by what the rewritten blocks before it on that line
+/// added or removed.
 fn rewrite_blocks<'f>(
     text: &str, fixes: &'f [Fix<'_>], starts: &[usize],
 ) -> (String, Vec<Target<'f>>) {
@@ -443,8 +460,8 @@ fn rewrite_blocks<'f>(
     (edited, targets)
 }
 
-/// For each target, whether `root` has a node of its kind that starts where it says and
-/// carries exactly its attributes (comrak read the rewritten block).
+/// For each target, whether `root` has a node of its kind that starts where it
+/// says and carries exactly its attributes (comrak read the rewritten block).
 fn read_by_comrak<'a>(
     root: &'a AstNode<'a>, targets: &[Target<'_>],
 ) -> Vec<bool> {
@@ -466,10 +483,11 @@ fn read_by_comrak<'a>(
     read
 }
 
-/// The lines of `text` as comrak numbers lines and columns: `\n`, `\r\n` and a lone `\r`
-/// end a line, and a leading byte-order mark stays in line 1, since comrak counts its bytes
-/// in that line's columns (ordinary source line splitting drops it). Returns
-/// each line's start offset in `text` and its text.
+/// The lines of `text` as comrak numbers lines and columns: `\n`, `\r\n` and a
+/// lone `\r` end a line, and a leading byte-order mark stays in line 1, since
+/// comrak counts its bytes in that line's columns (ordinary source line
+/// splitting drops it). Returns each line's start offset in `text` and its
+/// text.
 pub(crate) fn split_lines(text: &str) -> (Vec<usize>, Vec<&str>) {
     let starts = line_starts(text);
     let lines = starts
@@ -511,13 +529,14 @@ pub(crate) fn unparsed(what: &str, block: &str, reason: &str) -> Diagnostic {
     Diagnostic::warning(UNPARSED_ATTR_BLOCK, message)
 }
 
-/// The attribute block at the end of a fenced code block's info string, which comrak leaves
-/// there when it rejects it (module docs): the info without the block (trimmed) and the
-/// block read with [`read_element_attrs`]. The block is the last `{` that starts the info or
-/// follows whitespace and reads as attributes, up to the end; without one, the first that
-/// reads as [`ElementAttrs::Invalid`]. `None` when the info does not end with `}` or no
-/// candidate is attributes or invalid (R Markdown's `{r}` stays the language). Call it only
-/// for a fence without comrak attributes.
+/// The attribute block at the end of a fenced code block's info string, which
+/// comrak leaves there when it rejects it (module docs): the info without the
+/// block (trimmed) and the block read with [`read_element_attrs`]. The block is
+/// the last `{` that starts the info or follows whitespace and reads as
+/// attributes, up to the end; without one, the first that reads as
+/// [`ElementAttrs::Invalid`]. `None` when the info does not end with `}` or no
+/// candidate is attributes or invalid (R Markdown's `{r}` stays the language).
+/// Call it only for a fence without comrak attributes.
 pub fn fence_attrs(info: &str) -> Option<(&str, &str, ElementAttrs)> {
     let info = info.trim_end();
     if !info.ends_with('}') {
@@ -567,8 +586,8 @@ mod tests {
         lines
     }
 
-    /// What [`recover`] returns: every node with attributes as `(kind, attrs)`, the edited
-    /// text and the diagnostics as `(code, line)`.
+    /// What [`recover`] returns: every node with attributes as `(kind, attrs)`,
+    /// the edited text and the diagnostics as `(code, line)`.
     type Recovered =
         (Vec<(Kind, Attributes)>, String, Vec<(&'static str, usize)>);
 
@@ -621,13 +640,15 @@ mod tests {
                 "# T3 {.\"dark\" background=\"#222\"}\n",
                 attrs(None, &["dark"], &[("background", "#222")]),
             ),
-            // autolinked by comrak: the block is found in the source, not in the inlines
+            // autolinked by comrak: the block is found in the source, not in
+            // the inlines
             (
                 "# W {background=https://ex.com/a.png}\n",
                 "# W {background=\"https://ex.com/a.png\"}\n",
                 attrs(None, &[], &[("background", "https://ex.com/a.png")]),
             ),
-            // single quotes, a closing sequence, a block quote, a setext heading
+            // single quotes, a closing sequence, a block quote, a setext
+            // heading
             (
                 "# Q {#q .x data-k='a b'} ##\n",
                 "# Q {#\"q\" .\"x\" data-k=\"a b\"} ##\n",
@@ -705,12 +726,13 @@ mod tests {
         assert!(codes.is_empty(), "{codes:?}");
     }
 
-    /// A3 fix round: the result is what comrak gives for the block with double-quoted
-    /// values, also where the text around the block matters.
+    /// A3 fix round: the result is what comrak gives for the block with
+    /// double-quoted values, also where the text around the block matters.
     #[test]
     fn recovered_blocks_read_as_their_double_quoted_form() {
         let cases = [
-            // two blocks on a heading: comrak reads the last one, the first stays text
+            // two blocks on a heading: comrak reads the last one, the first
+            // stays text
             "# H {.a} {k='v'}\n",
             "![a](x.png){width='5'}{.b}\n",
             // adjacent code spans stay two code spans
@@ -773,7 +795,8 @@ mod tests {
         out
     }
 
-    /// A block that would end a table cell or an emphasis early is reported, not read.
+    /// A block that would end a table cell or an emphasis early is reported,
+    /// not read.
     #[test]
     fn blocks_crossing_their_parent_are_reported() {
         for (text, line) in [
@@ -852,9 +875,10 @@ mod tests {
         );
     }
 
-    /// Wave-8 review of the A3 fixes: two blocks written without a space, or a stray `}`,
-    /// were read as one block whose items kept the braces (`class="dark}{background=#222"`)
-    /// and the text vanished. They stay text, with a warning; quoted braces still work.
+    /// Wave-8 review of the A3 fixes: two blocks written without a space, or a
+    /// stray `}`, were read as one block whose items kept the braces
+    /// (`class="dark}{background=#222"`) and the text vanished. They stay text,
+    /// with a warning; quoted braces still work.
     #[test]
     fn unquoted_braces_inside_a_block_keep_it_text() {
         for text in [
@@ -944,18 +968,21 @@ mod tests {
             read("js {data-x='a b'}  "),
             Some(("js".into(), pairs(&[("data-x", "a b")], &[])))
         );
-        // R Markdown / Quarto chunk headers and plain info strings stay as they are
+        // R Markdown / Quarto chunk headers and plain info strings stay as they
+        // are
         for info in ["{r}", "{python}", "python", "python{lines=1|3}", ""] {
             assert_eq!(read(info), None, "{info}");
         }
         assert!(matches!(
             read("python {numbered lines=1|3}"),
-            Some((rest, ElementAttrs::Invalid(_))) if rest == "python {numbered lines=1|3}"
+            Some((rest, ElementAttrs::Invalid(_)))
+                if rest == "python {numbered lines=1|3}"
         ));
     }
 
-    /// Random texts around attribute blocks: recovery never panics and keeps every line; a
-    /// block comrak does not read even rewritten is reported on a line of the text.
+    /// Random texts around attribute blocks: recovery never panics and keeps
+    /// every line; a block comrak does not read even rewritten is reported on a
+    /// line of the text.
     #[test]
     fn random_texts_keep_their_lines() {
         struct Lcg(u64);

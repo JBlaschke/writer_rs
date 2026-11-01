@@ -284,7 +284,8 @@ const LINKED_OUTSIDE: &str = "is a symbolic link (or below one) to a file outsid
 thread_local! {
     /// The files of disk themes read on this thread while [`recording_reads`]
     /// runs (`None`: nothing is recording).
-    static READS: RefCell<Option<BTreeSet<PathBuf>>> = const { RefCell::new(None) };
+    static READS: RefCell<Option<BTreeSet<PathBuf>>> =
+        const { RefCell::new(None) };
 }
 
 /// Runs `f` and returns with its result every file of a disk theme that it read
@@ -718,14 +719,15 @@ impl Theme {
         };
         for dir in dirs {
             if let Some(bytes) = dir.read(&file)? {
-                let source = String::from_utf8(bytes).map_err(|e| Error::Template {
-                    template: name.to_string(),
-                    line: None,
-                    message: format!(
-                        "template '{name}' is not valid UTF-8 (theme '{}'): {e}",
-                        dir.name
-                    ),
-                })?;
+                let source = String::from_utf8(bytes)
+                    .map_err(|e| Error::Template {
+                        template: name.to_string(),
+                        line: None,
+                        message: format!(
+                            "template '{name}' is not valid UTF-8 (theme '{}'): {e}",
+                            dir.name
+                        ),
+                    })?;
                 return Ok(Some((dir.name.clone(), source)));
             }
         }
@@ -1083,7 +1085,8 @@ mod tests {
             source: ThemeSource::Disk { dir: root.clone() },
             manifest: ThemeManifest::default(),
         };
-        // Not recording: nothing is kept. Exact-case checks list the directories.
+        // Not recording: nothing is kept. Exact-case checks list the
+        // directories.
         let before = directory_listings();
         dir.read("a.css").unwrap();
         assert!(directory_listings() > before);
@@ -1125,7 +1128,9 @@ mod tests {
         );
         assert_eq!(
             Value::Object(base),
-            json!({"a": 1, "b": 2, "nested": {"x": 1, "y": 3, "z": 4}, "list": [3]})
+            json!({
+                "a": 1, "b": 2, "nested": {"x": 1, "y": 3, "z": 4}, "list": [3]
+            })
         );
         let mut base = object(json!({"a": {"x": 1}}));
         deep_merge(&mut base, &object(json!({"a": "flat"})));

@@ -404,7 +404,8 @@ fn mapped_unicode_shorthands_and_bounded_compositions_stay_deterministic() {
     assert_eq!(actual, expected);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     // amssymb has no double-struck digits: the frozen generator intentionally
-    // maps DOUBLE-STRUCK only for ASCII capitals, so retain this with a warning.
+    // maps DOUBLE-STRUCK only for ASCII capitals, so retain this with a
+    // warning.
     let (unmapped, diagnostics) = convert("𝟘");
     assert_eq!(unmapped, "𝟘");
     assert_eq!(codes(&diagnostics), ["W-TYP-MATH-SYM-UNKNOWN"]);

@@ -1,4 +1,5 @@
-//! Exact resource ejection, safe destinations and usable configuration snippets.
+//! Exact resource ejection, safe destinations and usable configuration
+//! snippets.
 
 use std::collections::BTreeMap;
 use std::fs;

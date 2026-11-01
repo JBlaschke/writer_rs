@@ -241,7 +241,12 @@ fn selected_cells(
             if let Some(index) = index {
                 selected.insert(index);
             } else {
-                diagnostics.error("notebook-cell-not-found", format!("notebook cell {reference:?} was not found or is removed"));
+                diagnostics.error(
+                    "notebook-cell-not-found",
+                    format!(
+                        "notebook cell {reference:?} was not found or is removed"
+                    )
+                );
             }
         }
     } else {
@@ -545,7 +550,15 @@ fn definitions(
                     .join("\n");
                 definitions.push(Definition { key, label, text, span });
             } else {
-                diagnostics.push(Diagnostic::warning("footnote-duplicate", format!("duplicate footnote {label:?}; the first definition wins")).with_span(span));
+                diagnostics.push(
+                    Diagnostic::warning(
+                        "footnote-duplicate",
+                        format!(
+                            "duplicate footnote {label:?}; the first definition wins"
+                        )
+                    )
+                    .with_span(span)
+                );
                 texts[index] = blank_range(&texts[index], start, end);
             }
         }
@@ -583,9 +596,16 @@ fn scan(text: &str, config: &Config) -> (ScannedDefinitions, bool) {
 }
 
 fn open_block<'a>(root: &'a AstNode<'a>, text: &str) -> bool {
-    let mut last = root.children().filter(|node| {
-        !matches!(&node.data().value, NodeValue::FootnoteDefinition(definition) if definition.name.starts_with("__inline_"))
-    }).last();
+    let mut last = root
+        .children()
+        .filter(|node| {
+            !matches!(
+                &node.data().value,
+                NodeValue::FootnoteDefinition(definition)
+                    if definition.name.starts_with("__inline_")
+            )
+        })
+        .last();
     while let Some(node) = last {
         let data = node.data();
         match &data.value {
@@ -1795,8 +1815,15 @@ fn cell_includes(text: &str, config: &Config) -> Vec<CellInclude> {
         }
         if node.ancestors().skip(1).any(|ancestor| {
             let data = ancestor.data();
-            matches!(&data.value, NodeValue::BlockDirective(d) if markdown::directives::parse_directive_info(&d.info).name == "include")
-        }) { continue; }
+            matches!(
+                &data.value,
+                NodeValue::BlockDirective(d)
+                    if markdown::directives::parse_directive_info(&d.info).name
+                        == "include"
+            )
+        }) {
+            continue;
+        }
         let start = data.sourcepos.start.line;
         let end = data.sourcepos.end.line;
         let closed = closing_directive(text, data.sourcepos, directive);

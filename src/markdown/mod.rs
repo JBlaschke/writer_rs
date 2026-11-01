@@ -332,7 +332,8 @@ fn mark_empty_front_matter<'a>(root: &'a AstNode<'a>) {
     }
 }
 
-/// Missing paths use the document path; stable ordering preserves same-line order.
+/// Missing paths use the document path; stable ordering preserves same-line
+/// order.
 fn finish_diagnostics(diagnostics: Diagnostics, path: &Path) -> Diagnostics {
     let mut diagnostics = diagnostics.into_vec();
     for diagnostic in &mut diagnostics {

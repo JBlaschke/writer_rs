@@ -1,4 +1,5 @@
-//! Lenient nbformat contract tests, lifted from presenter_rs without slide behavior.
+//! Lenient nbformat contract tests, lifted from presenter_rs without slide
+//! behavior.
 
 use std::path::{Path, PathBuf};
 
@@ -13,9 +14,10 @@ fn parse(value: Value) -> (Notebook, Diagnostics) {
     parse_notebook(Path::new("test.ipynb"), &value.to_string()).unwrap()
 }
 
-/// (cell index from the span, code, message) of every warning, after checking the parts
-/// every warning shares: warning level, the path given to `parse_notebook`, and a
-/// whole-cell span (lines 1..=source lines) when the warning is about a cell.
+/// (cell index from the span, code, message) of every warning, after checking
+/// the parts every warning shares: warning level, the path given to
+/// `parse_notebook`, and a whole-cell span (lines 1..=source lines) when the
+/// warning is about a cell.
 fn summary(
     notebook: &Notebook, warnings: &Diagnostics,
 ) -> Vec<(Option<usize>, &'static str, String)> {
@@ -45,7 +47,10 @@ fn summary(
 
 /// A valid nbformat 4.5 notebook around `cells`.
 fn notebook_with(cells: Value) -> Value {
-    json!({ "cells": cells, "metadata": {}, "nbformat": 4, "nbformat_minor": 5 })
+    json!({
+        "cells": cells, "metadata": {},
+        "nbformat": 4, "nbformat_minor": 5
+    })
 }
 
 fn parse_error(json: &str) -> (PathBuf, Option<usize>, String) {
@@ -57,7 +62,11 @@ fn parse_error(json: &str) -> (PathBuf, Option<usize>, String) {
 
 #[test]
 fn source_as_list_and_as_string_are_identical() {
-    let cell = |source: Value| json!({ "cell_type": "markdown", "metadata": {}, "source": source });
+    let cell = |source: Value| {
+        json!({
+            "cell_type": "markdown", "metadata": {}, "source": source
+        })
+    };
     let (from_list, _) =
         parse(notebook_with(json!([cell(json!(["# T\n", "\n", "body"]))])));
     let (from_string, _) =
@@ -71,13 +80,16 @@ fn unknown_output_type_is_skipped_with_a_warning_and_the_cell_survives() {
     let (notebook, warnings) = parse(notebook_with(json!([
         { "cell_type": "markdown", "metadata": {}, "source": "intro" },
         {
-            "cell_type": "code", "id": "c1", "execution_count": 3, "metadata": { "tags": ["t"] },
+            "cell_type": "code", "id": "c1", "execution_count": 3,
+            "metadata": { "tags": ["t"] },
             "source": ["x = 1\n", "x"],
             "outputs": [
                 { "output_type": "stream", "name": "stdout", "text": "before\n" },
                 { "output_type": "weird", "data": { "text/plain": "?" } },
-                { "output_type": "execute_result", "execution_count": 3, "metadata": {},
-                  "data": { "text/plain": "1" } }
+                {
+                    "output_type": "execute_result", "execution_count": 3,
+                    "metadata": {}, "data": { "text/plain": "1" }
+                }
             ]
         }
     ])));
@@ -132,7 +144,10 @@ fn malformed_known_outputs_and_odd_shapes_are_warnings_too() {
                 { "output_type": "error", "ename": "E", "evalue": "v", "traceback": ["t"] }
             ]
         },
-        { "cell_type": "code", "metadata": {}, "source": "", "outputs": { "not": "a list" } },
+        {
+            "cell_type": "code", "metadata": {}, "source": "",
+            "outputs": { "not": "a list" }
+        },
         {
             "cell_type": "markdown", "metadata": {}, "source": "![a](attachment:a.png)",
             "attachments": {
@@ -143,14 +158,20 @@ fn malformed_known_outputs_and_odd_shapes_are_warnings_too() {
         { "cell_type": "raw", "metadata": {}, "source": "", "attachments": [] }
     ])));
     let expected = [
-        (0, codes::OUTPUT_SKIPPED, "output 0 (stream) skipped: missing field `text`"),
+        (
+            0, codes::OUTPUT_SKIPPED,
+            "output 0 (stream) skipped: missing field `text`"
+        ),
         (1, codes::OUTPUT_SKIPPED, "`outputs` is not a list, ignored"),
         (
             2,
             codes::ATTACHMENT_SKIPPED,
             "attachment 'bad.json' skipped: invalid type: map, expected a string or a list of strings",
         ),
-        (3, codes::ATTACHMENT_SKIPPED, "`attachments` is not an object, ignored"),
+        (
+            3, codes::ATTACHMENT_SKIPPED,
+            "`attachments` is not an object, ignored"
+        ),
     ]
     .map(|(cell, code, message)| (Some(cell), code, message.to_owned()));
     assert_eq!(summary(&notebook, &warnings), expected);
@@ -228,14 +249,17 @@ fn other_unusable_documents_are_parse_errors() {
 
 #[test]
 fn unknown_cell_type_is_kept_as_unknown_with_a_warning() {
-    // nbformat 5.11.1 validates and reads this (an "unrecognized cell" from 4.6).
+    // nbformat 5.11.1 validates and reads this (an "unrecognized cell" from
+    // 4.6).
     let (notebook, warnings) = parse(json!({
         "cells": [
             { "cell_type": "markdown", "id": "a", "metadata": {}, "source": "# A" },
             { "cell_type": "chart", "id": "b", "metadata": {}, "source": ["x\n", "y"] },
             { "cell_type": "heading", "metadata": {}, "source": "", "level": 1 },
-            { "cell_type": "code", "id": "c", "metadata": {}, "source": "1", "outputs": [],
-              "execution_count": null }
+            {
+                "cell_type": "code", "id": "c", "metadata": {}, "source": "1",
+                "outputs": [], "execution_count": null
+            }
         ],
         "metadata": {},
         "nbformat": 4,
@@ -281,13 +305,23 @@ fn unknown_keys_anywhere_are_ignored() {
     let (notebook, warnings) = parse(json!({
         "cells": [
             {
-                "cell_type": "code", "id": "x", "source": "1", "execution_count": 1,
-                "future_cell_key": [1, 2],
-                "metadata": { "custom": { "deep": true }, "collapsed": false, "scrolled": "auto" },
+                "cell_type": "code", "id": "x", "source": "1",
+                "execution_count": 1, "future_cell_key": [1, 2],
+                "metadata": {
+                    "custom": { "deep": true }, "collapsed": false,
+                    "scrolled": "auto"
+                },
                 "outputs": [
-                    { "output_type": "display_data", "data": { "text/plain": "1" },
-                      "metadata": {}, "transient": { "display_id": "d" }, "future_output_key": 1 },
-                    { "output_type": "stream", "name": "stdout", "text": "s", "extra": null }
+                    {
+                        "output_type": "display_data",
+                        "data": { "text/plain": "1" }, "metadata": {},
+                        "transient": { "display_id": "d" },
+                        "future_output_key": 1
+                    },
+                    {
+                        "output_type": "stream", "name": "stdout",
+                        "text": "s", "extra": null
+                    }
                 ]
             },
             { "cell_type": "markdown", "source": "no metadata, no outputs" }
@@ -355,12 +389,20 @@ fn language_precedence() {
 
 #[test]
 fn jupyterlab_4_metadata_parses_without_warnings() {
-    // The cell metadata JupyterLab 4's property inspector writes when "-" is selected.
-    let metadata = json!({ "editable": true, "slideshow": { "slide_type": "" }, "tags": [] });
+    // The cell metadata JupyterLab 4's property inspector writes when "-" is
+    // selected.
+    let metadata = json!({
+        "editable": true, "slideshow": { "slide_type": "" }, "tags": []
+    });
     let (notebook, warnings) = parse(notebook_with(json!([
-        { "cell_type": "markdown", "id": "m", "metadata": metadata, "source": "# Title" },
-        { "cell_type": "code", "id": "c", "metadata": metadata, "source": "1",
-          "outputs": [], "execution_count": null }
+        {
+            "cell_type": "markdown", "id": "m", "metadata": metadata,
+            "source": "# Title"
+        },
+        {
+            "cell_type": "code", "id": "c", "metadata": metadata, "source": "1",
+            "outputs": [], "execution_count": null
+        }
     ])));
     assert!(warnings.is_empty(), "{warnings:?}");
     for cell in &notebook.cells {
@@ -371,7 +413,12 @@ fn jupyterlab_4_metadata_parses_without_warnings() {
 #[test]
 fn non_object_writer_metadata_is_ignored_with_a_warning() {
     let (notebook, warnings) = parse(json!({
-        "cells": [ { "cell_type": "markdown", "source": "", "metadata": { "writer": "two-column" } } ],
+        "cells": [
+            {
+                "cell_type": "markdown", "source": "",
+                "metadata": { "writer": "two-column" }
+            }
+        ],
         "metadata": { "writer": ["x"], "title": 7 },
         "nbformat": 4
     }));
@@ -391,7 +438,12 @@ fn non_object_writer_metadata_is_ignored_with_a_warning() {
 #[test]
 fn null_writer_metadata_is_absent_without_a_warning() {
     let (notebook, warnings) = parse(json!({
-        "cells": [ { "cell_type": "markdown", "source": "", "metadata": { "writer": null } } ],
+        "cells": [
+            {
+                "cell_type": "markdown", "source": "",
+                "metadata": { "writer": null }
+            }
+        ],
         "metadata": { "writer": null, "title": null },
         "nbformat": 4
     }));
@@ -403,7 +455,11 @@ fn null_writer_metadata_is_absent_without_a_warning() {
 
 #[test]
 fn raw_mimetype_falls_back_to_format() {
-    let raw = |metadata: Value| json!({ "cell_type": "raw", "source": "<b>x</b>", "metadata": metadata });
+    let raw = |metadata: Value| {
+        json!({
+            "cell_type": "raw", "source": "<b>x</b>", "metadata": metadata
+        })
+    };
     let (notebook, _) = parse(notebook_with(json!([
         raw(json!({ "raw_mimetype": "text/html", "format": "text/latex" })),
         raw(json!({ "format": "text/html" })),

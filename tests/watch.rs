@@ -1,8 +1,10 @@
-//! T20: the watcher against the real notify backend in isolated temp directories.
+//! T20: the watcher against the real notify backend in isolated temp
+//! directories.
 //!
-//! Ported from presenter's backend regressions. Startup events are drained before
-//! edits, and every receive or drain has a deadline. Platform-specific structural
-//! events may arrive in separate batches, so those checks collect a quiet window.
+//! Ported from presenter's backend regressions. Startup events are drained
+//! before edits, and every receive or drain has a deadline. Platform-specific
+//! structural events may arrive in separate batches, so those checks collect a
+//! quiet window.
 
 use std::fs::OpenOptions;
 use std::io::Write as _;
@@ -14,8 +16,11 @@ use writer::serve::watch::{
     ChangeBatch, ChangeKind, DEBOUNCE, Debounce, WatchSet, Watcher, canonical,
 };
 
-/// How long a batch may take to arrive.
-const BATCH_TIMEOUT: Duration = Duration::from_secs(10);
+/// How long a batch may take to arrive. It only has to beat a hang: under a
+/// parallel runner every watcher start waits for fseventsd, which serialises
+/// FSEvents stream setup across every process on a Mac, and a loaded one has
+/// taken over ten seconds.
+const BATCH_TIMEOUT: Duration = Duration::from_secs(60);
 /// How long to wait to be sure that no (further) batch comes.
 const QUIET: Duration = Duration::from_millis(1200);
 

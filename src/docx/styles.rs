@@ -213,7 +213,8 @@ struct Builtin {
 }
 
 static BUILTIN: LazyLock<Builtin> = LazyLock::new(|| {
-    // The embedded definitions and their closure are checked by the tests below.
+    // The embedded definitions and their closure are checked by the tests
+    // below.
     let source = crate::vendor::get_str("docx/styles.xml")
         .expect("built-in styles asset is present and UTF-8");
     let root = style_root(&source).expect("built-in styles are valid XML");
@@ -307,7 +308,8 @@ impl StyleTable {
                 let kind = definition.kind.expect("built-in style has a kind");
                 if table.id_for(&definition.name, kind).is_some() {
                     // A localized name may already have another id. The raw
-                    // reference still names this id, so retain both definitions.
+                    // reference still names this id, so retain both
+                    // definitions.
                     table.append_builtin(index, &definition.name, false);
                 } else {
                     table.ensure(&definition.name, kind);

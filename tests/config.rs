@@ -1,4 +1,5 @@
-//! Configuration contract: defaults, discovery, serde forms, and atomic overlays.
+//! Configuration contract: defaults, discovery, serde forms, and atomic
+//! overlays.
 
 use std::path::{Path, PathBuf};
 
@@ -49,38 +50,52 @@ fn defaults_match_spec_section_2() {
         serde_json::to_value(Config::default()).unwrap(),
         json!({
             "document": {"lang": "en", "toc": false},
-            "build": {"out_dir": "dist", "targets": ["html"], "typst_targets": ["pdf"]},
+            "build": {
+                "out_dir": "dist", "targets": ["html"], "typst_targets": ["pdf"]
+            },
             "markdown": {
                 "smart_punctuation": false, "sourcepos": false,
                 "references": true, "superscript": false, "subscript": false
             },
-            "numbering": {"headings": false, "figures": "document", "equations": "labelled"},
+            "numbering": {
+                "headings": false, "figures": "document",
+                "equations": "labelled"
+            },
             "references": {"bibliography": [], "style": "ieee", "locale": ""},
-            "math": {"html": "katex", "mathml_font": "embed", "katex_options": {}},
+            "math": {
+                "html": "katex", "mathml_font": "embed", "katex_options": {}
+            },
             "html": {"theme": "default", "standalone": true},
             "pdf": {
-                "template": "", "paper": "a4", "engine": "typst", "allow_packages": false,
-                "system_fonts": true, "font_paths": [], "timestamp": ""
+                "template": "", "paper": "a4", "engine": "typst",
+                "allow_packages": false, "system_fonts": true,
+                "font_paths": [], "timestamp": ""
             },
-            "docx": {"reference_doc": "", "math": "omml", "update_fields": true},
+            "docx": {
+                "reference_doc": "", "math": "omml", "update_fields": true
+            },
             "latex": {
                 "template": "", "top_level": "section", "cite": "biblatex",
-                "emit_bibliography": false, "code": "verbatim", "tables": "longtable",
-                "booktabs": true, "cleveref": false, "figure_placement": "htbp",
-                "engine": "pdflatex", "unicode": "auto", "cell_prompts": false, "wrap": 0
+                "emit_bibliography": false, "code": "verbatim",
+                "tables": "longtable", "booktabs": true, "cleveref": false,
+                "figure_placement": "htbp", "engine": "pdflatex",
+                "unicode": "auto", "cell_prompts": false, "wrap": 0
             },
             "typst": {"strict": false, "package_paths": []},
             "notebook": {
                 "mime_priority": [
-                    "text/html", "image/svg+xml", "image/png", "image/jpeg", "image/gif",
-                    "image/webp", "text/markdown", "text/latex", "application/json", "text/plain"
+                    "text/html", "image/svg+xml", "image/png", "image/jpeg",
+                    "image/gif", "image/webp", "text/markdown", "text/latex",
+                    "application/json", "text/plain"
                 ],
                 "hide_input_tags": ["hide-input", "remove-input"],
                 "hide_output_tags": ["hide-output", "remove-output"],
                 "remove_cell_tags": ["remove-cell", "hide-cell", "skip"],
                 "cell_options": true, "show_prompts": true
             },
-            "serve": {"host": "127.0.0.1", "port": 3000, "open": false, "view": ""}
+            "serve": {
+                "host": "127.0.0.1", "port": 3000, "open": false, "view": ""
+            }
         })
     );
 }
@@ -394,8 +409,13 @@ fn front_matter_keys_map_to_tables() {
     let meta = meta_with(json!({
         "toc": true,
         "markdown": {"sourcepos": true, "references": false},
-        "math": {"html": "image", "mathml_font": "system", "katex_options": {"throwOnError": false}},
-        "numbering": {"headings": "1.1.a", "figures": "section", "equations": "none"},
+        "math": {
+            "html": "image", "mathml_font": "system",
+            "katex_options": {"throwOnError": false}
+        },
+        "numbering": {
+            "headings": "1.1.a", "figures": "section", "equations": "none"
+        },
         "references": {"style": "apa", "locale": "de"},
         "html": {"standalone": false},
         "pdf": {"allow_packages": true, "system_fonts": false},
@@ -403,7 +423,8 @@ fn front_matter_keys_map_to_tables() {
         "latex": {"engine": "lualatex", "unicode": "map"},
         "typst": {"strict": true, "package_paths": ["packages"]},
         "notebook": {"show_prompts": false, "remove_cell_tags": ["gone"]},
-        "bibliography": ["refs.bib", "more.yaml"], "cite_style": "chicago", "cite_locale": "fr",
+        "bibliography": ["refs.bib", "more.yaml"],
+        "cite_style": "chicago", "cite_locale": "fr",
         "theme": "front-theme", "template": "front.typ", "paper": "us-letter",
         "reference_doc": "front.docx", "latex_template": "front.tex",
         "venue": "PyData", "serve": {"port": 1}, "build": {"out_dir": "ignored"}
@@ -581,7 +602,10 @@ fn front_matter_invalid_values_and_alias_conflicts_roll_back() {
         json!({"bibliography": ["refs.bib", 2]}),
         json!({"cite_style": "apa", "csl": "ieee"}),
         json!({"markdown": {"sourcepos": false}, "latex_template": 2}),
-        json!({"markdown": {"sourcepos": false}, "notebook": {"cell_options": "yes"}}),
+        json!({
+            "markdown": {"sourcepos": false},
+            "notebook": {"cell_options": "yes"}
+        }),
         json!({"references": {"style": false}}),
         json!({"theme": null}),
     ] {
@@ -628,7 +652,8 @@ fn cli_overrides_map_every_field() {
     config.apply_cli(&CliOverrides {
         targets: Some(vec![Target::Pdf, Target::Docx]),
         out: Some("ignored.html".into()), theme: Some("cli".into()),
-        template: Some("cli.typ".into()), latex_template: Some("cli.tex".into()),
+        template: Some("cli.typ".into()),
+        latex_template: Some("cli.tex".into()),
         reference_doc: Some("cli.docx".into()),
         standalone: Some(true),
         port: Some(0), host: Some("localhost".into()), open: Some(false),

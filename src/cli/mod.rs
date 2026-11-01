@@ -169,10 +169,12 @@ impl From<View> for ServeView {
 pub struct BuildArgs {
     /// The document: a .md, .ipynb or .typ file.
     pub input: PathBuf,
-    /// Comma-separated output targets [default: the input's configured targets].
+    /// Comma-separated output targets [default: the input's configured
+    /// targets].
     #[arg(long, value_enum, value_delimiter = ',', value_name = "LIST")]
     pub to: Option<Vec<OutputTarget>>,
-    /// Output file or site directory; with several targets, the output directory.
+    /// Output file or site directory; with several targets, the output
+    /// directory.
     #[arg(short = 'o', long = "out", value_name = "PATH")]
     pub out: Option<PathBuf>,
     /// Rebuild whenever the document's inputs change.
@@ -310,7 +312,12 @@ pub struct DumpArgs {
     #[arg(long)]
     pub no_resolve: bool,
     /// Print the built-in default writer.toml (takes no INPUT).
-    #[arg(long, conflicts_with_all = ["input", "ir", "typst", "latex", "context", "no_resolve"])]
+    #[arg(
+        long,
+        conflicts_with_all = [
+            "input", "ir", "typst", "latex", "context", "no_resolve"
+        ]
+    )]
     pub default_config: bool,
 }
 
@@ -378,8 +385,8 @@ pub struct EjectPackageArgs {
     pub install: bool,
 }
 
-/// A usage error found after argument parsing (e.g. an input whose format cannot be told
-/// from its name). [`exit_code_for`] maps it to [`EXIT_USAGE`].
+/// A usage error found after argument parsing (e.g. an input whose format
+/// cannot be told from its name). [`exit_code_for`] maps it to [`EXIT_USAGE`].
 #[derive(Debug)]
 pub struct UsageError(pub String);
 
@@ -391,16 +398,17 @@ impl fmt::Display for UsageError {
 
 impl std::error::Error for UsageError {}
 
-/// Runs the command line of this process and returns its exit code (`main` calls this).
-/// Installs the panic hook first ([`report::install_panic_hook`]).
+/// Runs the command line of this process and returns its exit code (`main`
+/// calls this). Installs the panic hook first ([`report::install_panic_hook`]).
 pub fn run() -> ExitCode {
     report::install_panic_hook();
     run_from(std::env::args_os())
 }
 
-/// What `writer --version` prints after the program name: the crate version, followed by
-/// ` (<build>)` when `WRITER_GIT_SHA` is set at compile time (by T00's build script, e.g.
-/// `writer 0.1.0 (abc1234)`); `tests/cli_version.rs` accepts both forms.
+/// What `writer --version` prints after the program name: the crate version,
+/// followed by ` (<build>)` when `WRITER_GIT_SHA` is set at compile time (by
+/// T00's build script, e.g. `writer 0.1.0 (abc1234)`); `tests/cli_version.rs`
+/// accepts both forms.
 pub fn version() -> &'static str {
     static VERSION: OnceLock<String> = OnceLock::new();
     VERSION.get_or_init(|| {
@@ -416,8 +424,8 @@ fn version_text(version: &str, sha: Option<&str>) -> String {
     }
 }
 
-/// Runs the command line `args` (the first item is the program name). Help and version
-/// exit 0; argument errors print clap's message and exit 2.
+/// Runs the command line `args` (the first item is the program name). Help and
+/// version exit 0; argument errors print clap's message and exit 2.
 pub fn run_from<I, T>(args: I) -> ExitCode
 where
     I: IntoIterator<Item = T>,
@@ -469,8 +477,8 @@ fn dispatch(cli: &Cli) -> anyhow::Result<ExitCode> {
     }
 }
 
-/// The exit code for a failed command: [`EXIT_USAGE`] for a [`UsageError`] or an
-/// [`Error::Config`] anywhere in the chain, else [`EXIT_BUILD_ERROR`].
+/// The exit code for a failed command: [`EXIT_USAGE`] for a [`UsageError`] or
+/// an [`Error::Config`] anywhere in the chain, else [`EXIT_BUILD_ERROR`].
 pub fn exit_code_for(err: &anyhow::Error) -> u8 {
     let usage = err.chain().any(|cause| {
         cause.is::<UsageError>()
@@ -483,8 +491,8 @@ pub fn exit_code_for(err: &anyhow::Error) -> u8 {
     if usage { EXIT_USAGE } else { EXIT_BUILD_ERROR }
 }
 
-/// The input format for a command with `--format md|ipynb|typ` (`build`): the flag when given,
-/// else [`input_kind`], whose error then suggests the flag.
+/// The input format for a command with `--format md|ipynb|typ` (`build`): the
+/// flag when given, else [`input_kind`], whose error then suggests the flag.
 pub fn input_format(
     path: &Path, format: Option<InputFormat>,
 ) -> anyhow::Result<SourceKind> {
@@ -496,19 +504,22 @@ pub fn input_format(
     }
 }
 
-/// The input format by extension, for commands without `--format` (`dump`, `serve`,
-/// `export`): an unknown extension is a [`UsageError`] (exit 2) without a flag hint.
-/// `check` instead reports an unknown extension as an error diagnostic (exit 1).
+/// The input format by extension, for commands without `--format` (`dump`,
+/// `serve`, `export`): an unknown extension is a [`UsageError`] (exit 2)
+/// without a flag hint. `check` instead reports an unknown extension as an
+/// error diagnostic (exit 1).
 pub fn input_kind(path: &Path) -> anyhow::Result<SourceKind> {
     crate::ir::detect_kind(path)
         .map_err(|err| UsageError(err.to_string()).into())
 }
 
-/// Adds the input's location to an error that does not name it itself: a missing asset
-/// (`slides.md:12: asset not found: …`, or `talk.ipynb: cell 5, line 2: …` for a notebook,
-/// like [`crate::error::Diagnostic`]'s Display) and front matter errors (`slides.md: front matter: …`).
-/// A missing asset of a file the deck includes is located in that file, which its span names
-/// (`SourceSpan.file`, T48). Other errors are passed through.
+/// Adds the input's location to an error that does not name it itself: a
+/// missing asset (`slides.md:12: asset not found: …`, or
+/// `talk.ipynb: cell 5, line 2: …` for a notebook, like
+/// [`crate::error::Diagnostic`]'s Display) and front matter errors
+/// (`slides.md: front matter: …`). A missing asset of a file the deck includes
+/// is located in that file, which its span names (`SourceSpan.file`, T48).
+/// Other errors are passed through.
 pub fn locate(err: Error, input: &Path) -> anyhow::Error {
     let location = match &err {
         Error::MissingAsset { span: Some(span), .. } => {
@@ -530,21 +541,23 @@ pub fn locate(err: Error, input: &Path) -> anyhow::Error {
     anyhow::Error::new(err).context(location)
 }
 
-/// `path` for messages (the module docs' "Paths in messages"): relative to the current
-/// directory, with `..` when that is no longer than the absolute path, else as given.
+/// `path` for messages (the module docs' "Paths in messages"): relative to the
+/// current directory, with `..` when that is no longer than the absolute path,
+/// else as given.
 pub fn display_path(path: &Path) -> PathBuf {
     let cwd = std::env::current_dir().ok();
     relative_to(path, cwd.as_deref())
 }
 
-/// [`display_path`] with the current directory `cwd` (`None`: unknown; `path` is returned
-/// as given). A relative `path` is taken from `cwd`. A path with a `..` is first resolved
-/// up to its last `..` as the file system resolves it ([`resolve_directories`]): after a
-/// symbolic link, `..` leaves the directory the link points to, so `link/../x` is not
-/// `x`. The names after the last `..` are always kept as typed. A path below `cwd` as
-/// spelled is shown relative to it; otherwise the canonical forms ([`canonical_form`]) are
-/// compared too and the shorter relative form wins (a symbolic link in the prefix of
-/// either), else `path`.
+/// [`display_path`] with the current directory `cwd` (`None`: unknown; `path`
+/// is returned as given). A relative `path` is taken from `cwd`. A path with a
+/// `..` is first resolved up to its last `..` as the file system resolves it
+/// ([`resolve_directories`]): after a symbolic link, `..` leaves the directory
+/// the link points to, so `link/../x` is not `x`. The names after the last `..`
+/// are always kept as typed. A path below `cwd` as spelled is shown relative to
+/// it; otherwise the canonical forms ([`canonical_form`]) are compared too and
+/// the shorter relative form wins (a symbolic link in the prefix of either),
+/// else `path`.
 fn relative_to(path: &Path, cwd: Option<&Path>) -> PathBuf {
     let Some(cwd) = cwd else {
         return path.to_path_buf();
@@ -579,9 +592,10 @@ fn relative_to(path: &Path, cwd: Option<&Path>) -> PathBuf {
     }
 }
 
-/// A relative path for a message, `/`-separated on every platform: the separator of decks,
-/// URLs and the documentation, which Windows takes too. A path with a root or a drive
-/// prefix is returned as it is (the module docs' "Paths in messages").
+/// A relative path for a message, `/`-separated on every platform: the
+/// separator of decks, URLs and the documentation, which Windows takes too. A
+/// path with a root or a drive prefix is returned as it is (the module docs'
+/// "Paths in messages").
 pub(crate) fn slashed(path: &Path) -> PathBuf {
     if path.has_root()
         || path
@@ -598,10 +612,10 @@ pub(crate) fn slashed(path: &Path) -> PathBuf {
     PathBuf::from(text)
 }
 
-/// `path` relative to `base` (both absolute and normalized), with `..` for the components
-/// of `base` that `path` does not share, or `None` when they share no more than the root,
-/// when the relative form has more components than `path` has names (`../../../x` for
-/// `/a/x`), or when `path` is `base`.
+/// `path` relative to `base` (both absolute and normalized), with `..` for the
+/// components of `base` that `path` does not share, or `None` when they share
+/// no more than the root, when the relative form has more components than
+/// `path` has names (`../../../x` for `/a/x`), or when `path` is `base`.
 fn relative_path(path: &Path, base: &Path) -> Option<PathBuf> {
     let path: Vec<Component<'_>> = path.components().collect();
     let base: Vec<Component<'_>> = base.components().collect();
@@ -624,14 +638,16 @@ fn relative_path(path: &Path, base: &Path) -> Option<PathBuf> {
     Some(relative)
 }
 
-/// The absolute path `path` with its part up to and including its last `..` resolved as
-/// the file system resolves it ([`pipeline::path_after_creating_dirs`]: after a symbolic
-/// link, `..` leaves the directory the link points to) and the names after it kept as
-/// typed: a symbolic link among them, the file or a directory, is not replaced by its
-/// target, and on a case-insensitive file system they keep the letter case typed (reviews
-/// of the A1 fixes and of W8FIX: `-o ../w/alias.html` was shown as the file `alias.html`
-/// links to, and `build ../decks-link/talk.md` as `../decks/talk.md` while `check` showed
-/// it as typed). A path without a `..` is only normalized.
+/// The absolute path `path` with its part up to and including its last `..`
+/// resolved as the file system resolves it
+/// ([`pipeline::path_after_creating_dirs`]: after a symbolic link, `..` leaves
+/// the directory the link points to) and the names after it kept as typed: a
+/// symbolic link among them, the file or a directory, is not replaced by its
+/// target, and on a case-insensitive file system they keep the letter case
+/// typed (reviews of the A1 fixes and of W8FIX: `-o ../w/alias.html` was shown
+/// as the file `alias.html` links to, and `build ../decks-link/talk.md` as
+/// `../decks/talk.md` while `check` showed it as typed). A path without a `..`
+/// is only normalized.
 fn resolve_directories(path: &Path) -> PathBuf {
     let components: Vec<Component<'_>> = path.components().collect();
     let Some(last_up) =
@@ -641,16 +657,17 @@ fn resolve_directories(path: &Path) -> PathBuf {
     };
     let (up_to, names) = components.split_at(last_up + 1);
     let prefix: PathBuf = up_to.iter().collect();
-    // `path` is absolute, so it always resolves; the lexical form is a fallback only.
+    // `path` is absolute, so it always resolves; the lexical form is a fallback
+    // only.
     pipeline::path_after_creating_dirs(&prefix)
         .map(|dir| names.iter().fold(dir, |dir, name| dir.join(name)))
         .unwrap_or_else(|| normalize_lexically(path))
 }
 
-/// `path` (absolute, normalized) with the symbolic links of its directories resolved: its
-/// parent's canonical form joined with its name, which is kept as given (a final symbolic
-/// link is not followed), or the canonical form of a path without a name (`/`). `None`
-/// when the parent does not exist.
+/// `path` (absolute, normalized) with the symbolic links of its directories
+/// resolved: its parent's canonical form joined with its name, which is kept as
+/// given (a final symbolic link is not followed), or the canonical form of a
+/// path without a name (`/`). `None` when the parent does not exist.
 fn canonical_form(path: &Path) -> Option<PathBuf> {
     match (path.parent(), path.file_name()) {
         (Some(parent), Some(name)) => {
@@ -660,10 +677,10 @@ fn canonical_form(path: &Path) -> Option<PathBuf> {
     }
 }
 
-/// The usage error for an output that would overwrite one of the build's inputs (audit
-/// F01): the [`pipeline::Clash`] message with paths as [`display_path`] shows them, then
-/// how to avoid it. `explicit`: the output path was given with `-o` (else it is the
-/// default output path, which `[build] out_dir` decides).
+/// The usage error for an output that would overwrite one of the build's inputs
+/// (audit F01): the [`pipeline::Clash`] message with paths as [`display_path`]
+/// shows them, then how to avoid it. `explicit`: the output path was given with
+/// `-o` (else it is the default output path, which `[build] out_dir` decides).
 pub fn clash_error(clash: &pipeline::Clash, explicit: bool) -> anyhow::Error {
     let shown = pipeline::Clash {
         output: display_path(&clash.output),
@@ -678,10 +695,11 @@ pub fn clash_error(clash: &pipeline::Clash, explicit: bool) -> anyhow::Error {
     UsageError(format!("{shown}; {hint}")).into()
 }
 
-/// A [`UsageError`] when the output file argument `out` (`-o` of a command that writes one
-/// file) names a directory: it ends with a path separator, its last component is `.` or
-/// `..` (`out/.`, `out/..`, whether `out` exists or not), or it is an existing directory
-/// (audit F41). `hint` says what to give instead.
+/// A [`UsageError`] when the output file argument `out` (`-o` of a command that
+/// writes one file) names a directory: it ends with a path separator, its last
+/// component is `.` or `..` (`out/.`, `out/..`, whether `out` exists or not),
+/// or it is an existing directory (audit F41). `hint` says what to give
+/// instead.
 pub fn reject_directory(out: &Path, hint: &str) -> anyhow::Result<()> {
     let text = out.as_os_str().to_string_lossy();
     // The last component as typed: `Path::components` drops a trailing `.`.
@@ -701,8 +719,8 @@ pub fn reject_directory(out: &Path, hint: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Writes `text` and a line break to stdout. A closed pipe (`writer dump x.md | head`)
-/// is not an error.
+/// Writes `text` and a line break to stdout. A closed pipe
+/// (`writer dump x.md | head`) is not an error.
 pub fn print_stdout(text: &str) -> anyhow::Result<()> {
     let mut out = std::io::stdout().lock();
     match writeln!(out, "{text}").and_then(|()| out.flush()) {
@@ -713,20 +731,22 @@ pub fn print_stdout(text: &str) -> anyhow::Result<()> {
     }
 }
 
-/// writer's own log target: the crate name, which every module's target starts with.
+/// writer's own log target: the crate name, which every module's target starts
+/// with.
 const LOG_TARGET: &str = "writer";
 
-/// The `EnvFilter` directives for `global` and the value of `RUST_LOG`: `warn`, the flags'
-/// `writer=<level>`, then `RUST_LOG`. A later directive for the same target replaces an
-/// earlier one, so a `RUST_LOG` directive naming writer wins (`RUST_LOG=writer=debug`
-/// with `-v` logs writer at debug). When a `RUST_LOG` directive without span or field
-/// filters covers writer without naming it (a bare level such as `debug`, which
-/// `writer=info` would otherwise shadow for writer's targets) and is more verbose
-/// than the flags, the flags' directive takes its level, so the flags never make
-/// writer's own logs less verbose than such a directive. Directives with span or field
-/// filters are not taken into account: with a field directive such as
-/// `[{diagnostics}]=debug`, the flags' more specific `writer=<level>` decides for
-/// writer's events. `-q` gives `error` and ignores `RUST_LOG`.
+/// The `EnvFilter` directives for `global` and the value of `RUST_LOG`: `warn`,
+/// the flags' `writer=<level>`, then `RUST_LOG`. A later directive for the same
+/// target replaces an earlier one, so a `RUST_LOG` directive naming writer wins
+/// (`RUST_LOG=writer=debug` with `-v` logs writer at debug). When a `RUST_LOG`
+/// directive without span or field filters covers writer without naming it (a
+/// bare level such as `debug`, which `writer=info` would otherwise shadow for
+/// writer's targets) and is more verbose than the flags, the flags' directive
+/// takes its level, so the flags never make writer's own logs less verbose than
+/// such a directive. Directives with span or field filters are not taken into
+/// account: with a field directive such as `[{diagnostics}]=debug`, the flags'
+/// more specific `writer=<level>` decides for writer's events. `-q` gives
+/// `error` and ignores `RUST_LOG`.
 pub fn log_directives(global: &GlobalArgs, rust_log: Option<&str>) -> String {
     use tracing_subscriber::filter::LevelFilter;
 
@@ -750,12 +770,12 @@ pub fn log_directives(global: &GlobalArgs, rust_log: Option<&str>) -> String {
     directives.join(",")
 }
 
-/// The level `rust_log` gives writer's targets through a directive that does not name
-/// writer: the most specific (last among equals) directive without span or field filters
-/// whose target is absent (a bare level) or a proper prefix of [`LOG_TARGET`] (`EnvFilter`
-/// matches targets by prefix). Directives are read as `EnvFilter` reads them: split at commas
-/// and not trimmed; a word that is not a level is a target at `trace`; invalid ones are
-/// skipped.
+/// The level `rust_log` gives writer's targets through a directive that does
+/// not name writer: the most specific (last among equals) directive without
+/// span or field filters whose target is absent (a bare level) or a proper
+/// prefix of [`LOG_TARGET`] (`EnvFilter` matches targets by prefix). Directives
+/// are read as `EnvFilter` reads them: split at commas and not trimmed; a word
+/// that is not a level is a target at `trace`; invalid ones are skipped.
 fn inherited_log_level(
     rust_log: &str,
 ) -> Option<tracing_subscriber::filter::LevelFilter> {
@@ -795,8 +815,8 @@ fn inherited_log_level(
     found.map(|(_, level)| level)
 }
 
-/// Installs the tracing subscriber (see the module docs). Does nothing when one is
-/// already installed.
+/// Installs the tracing subscriber (see the module docs). Does nothing when one
+/// is already installed.
 fn init_logging(global: &GlobalArgs) {
     use tracing_subscriber::EnvFilter;
 
@@ -971,7 +991,8 @@ mod tests {
         );
         assert_eq!(log_directives(&flags(0, true), Some("debug")), "error");
 
-        // EnvFilter keeps the last directive for a target: RUST_LOG wins over -v.
+        // EnvFilter keeps the last directive for a target: RUST_LOG wins over
+        // -v.
         let filter = tracing_subscriber::EnvFilter::builder().parse_lossy(
             log_directives(&flags(1, false), Some("writer=debug")),
         );
@@ -979,8 +1000,9 @@ mod tests {
         assert!(shown.contains("writer=debug"), "{shown}");
         assert!(!shown.contains("writer=info"), "{shown}");
 
-        // A bare RUST_LOG level more verbose than the flags raises their directive (it would
-        // otherwise shadow the bare level for writer's targets).
+        // A bare RUST_LOG level more verbose than the flags raises their
+        // directive (it would otherwise shadow the bare level for writer's
+        // targets).
         assert_eq!(
             log_directives(&flags(1, false), Some("debug")),
             "warn,writer=debug,debug"
@@ -997,15 +1019,17 @@ mod tests {
             log_directives(&flags(0, false), Some("debug")),
             "warn,debug"
         );
-        // Span and field directives are not read (documented): the flags' level stays.
+        // Span and field directives are not read (documented): the flags' level
+        // stays.
         assert_eq!(
             log_directives(&flags(1, false), Some("[{diagnostics}]=debug")),
             "warn,writer=info,[{diagnostics}]=debug"
         );
     }
 
-    /// The most verbose level that the filter for `-v`×`verbose` and `rust_log` enables for
-    /// `target` (`"off"` for none), asked through a real subscriber.
+    /// The most verbose level that the filter for `-v`×`verbose` and `rust_log`
+    /// enables for `target` (`"off"` for none), asked through a real
+    /// subscriber.
     fn enabled_level(
         verbose: u8, rust_log: Option<&str>, target: &str,
     ) -> &'static str {
@@ -1019,11 +1043,16 @@ mod tests {
         macro_rules! most_verbose {
             ($target:literal) => {
                 [
-                    tracing::enabled!(target: $target, Level::TRACE).then_some("trace"),
-                    tracing::enabled!(target: $target, Level::DEBUG).then_some("debug"),
-                    tracing::enabled!(target: $target, Level::INFO).then_some("info"),
-                    tracing::enabled!(target: $target, Level::WARN).then_some("warn"),
-                    tracing::enabled!(target: $target, Level::ERROR).then_some("error"),
+                    tracing::enabled!(target: $target, Level::TRACE)
+                        .then_some("trace"),
+                    tracing::enabled!(target: $target, Level::DEBUG)
+                        .then_some("debug"),
+                    tracing::enabled!(target: $target, Level::INFO)
+                        .then_some("info"),
+                    tracing::enabled!(target: $target, Level::WARN)
+                        .then_some("warn"),
+                    tracing::enabled!(target: $target, Level::ERROR)
+                        .then_some("error"),
                 ]
                 .into_iter()
                 .flatten()
@@ -1057,7 +1086,8 @@ mod tests {
             (Some("off"), 1, "info", "off"),
             // A shorter target covers writer like a bare level.
             (Some("writ=trace"), 1, "trace", "warn"),
-            // Target-qualified: RUST_LOG names writer and wins, also to lower it.
+            // Target-qualified: RUST_LOG names writer and wins, also to lower
+            // it.
             (Some("writer=debug"), 1, "debug", "warn"),
             (Some("writer=trace"), 2, "trace", "warn"),
             (Some("writer=info"), 2, "info", "warn"),
@@ -1111,8 +1141,9 @@ mod tests {
             relative_to(Path::new("/work/x"), None),
             PathBuf::from("/work/x")
         );
-        // Outside the current directory: `..` when it is no longer than the absolute path
-        // (audit F39), so `path:line:` lines match the paths typed on the command line.
+        // Outside the current directory: `..` when it is no longer than the
+        // absolute path (audit F39), so `path:line:` lines match the paths
+        // typed on the command line.
         let talk = Some(Path::new("/work/talk"));
         assert_eq!(
             relative_to(Path::new("/work/m2/setext.md"), talk),
@@ -1149,7 +1180,8 @@ mod tests {
         {
             let link = tmp.path().join("link");
             std::os::unix::fs::symlink(&real, &link).unwrap();
-            // The current directory is canonical (getcwd); the typed path is not.
+            // The current directory is canonical (getcwd); the typed path is
+            // not.
             assert_eq!(
                 relative_to(&link.join("talk/s.md"), Some(&real)),
                 PathBuf::from("talk/s.md")
@@ -1159,9 +1191,10 @@ mod tests {
                 relative_to(&link.join("talk/out.html"), Some(&real)),
                 PathBuf::from("talk/out.html")
             );
-            // A `..` after a symbolic link leaves the directory the link points to, as the
-            // file system resolves it (review of A1: `up/../out.html` was shown as
-            // `out.html`, but the file was written to `../out.html`).
+            // A `..` after a symbolic link leaves the directory the link points
+            // to, as the file system resolves it (review of A1:
+            // `up/../out.html` was shown as `out.html`, but the file was
+            // written to `../out.html`).
             let work = real.join("talk/work");
             std::fs::create_dir_all(work.join("sub")).unwrap();
             std::os::unix::fs::symlink(real.join("talk"), work.join("up"))
@@ -1183,8 +1216,9 @@ mod tests {
                 relative_to(Path::new("new/../out.html"), Some(&work)),
                 PathBuf::from("out.html")
             );
-            // The last name stays as typed (wave-8 review of the A1 fixes): a final
-            // symbolic link is not replaced by its target, with or without a `..`.
+            // The last name stays as typed (wave-8 review of the A1 fixes): a
+            // final symbolic link is not replaced by its target, with or
+            // without a `..`.
             std::os::unix::fs::symlink("s.md", real.join("talk/alias.html"))
                 .unwrap();
             let talk = real.join("talk");
@@ -1208,9 +1242,10 @@ mod tests {
                 relative_to(Path::new("../talk/alias.html"), Some(&sibling)),
                 PathBuf::from("../talk/alias.html")
             );
-            // So does a symbolic link to a directory after the last `..` (wave-8 review of
-            // W8FIX: `../decks-link/s.md` was shown as `../talk/s.md` by build only), for a
-            // file that exists or not; a `..` after it still leaves its target.
+            // So does a symbolic link to a directory after the last `..`
+            // (wave-8 review of W8FIX: `../decks-link/s.md` was shown as
+            // `../talk/s.md` by build only), for a file that exists or not; a
+            // `..` after it still leaves its target.
             std::os::unix::fs::symlink(
                 real.join("talk"),
                 real.join("decks-link"),
@@ -1239,7 +1274,8 @@ mod tests {
                 ),
                 PathBuf::from("../decks-link/s.md")
             );
-            // Unless its target's relative form is shorter (as for a link in the prefix).
+            // Unless its target's relative form is shorter (as for a link in
+            // the prefix).
             std::fs::create_dir_all(real.join("a/b")).unwrap();
             std::os::unix::fs::symlink(
                 real.join("talk"),
@@ -1250,7 +1286,8 @@ mod tests {
                 relative_to(Path::new("../a/b/deep-link/s.md"), Some(&sibling)),
                 PathBuf::from("../talk/s.md")
             );
-            // A link whose target has a shorter relative form keeps its own name too.
+            // A link whose target has a shorter relative form keeps its own
+            // name too.
             std::fs::create_dir_all(real.join("a/b")).unwrap();
             std::os::unix::fs::symlink(
                 real.join("talk/s.md"),
@@ -1262,7 +1299,8 @@ mod tests {
                 PathBuf::from("../a/b/far.md")
             );
         }
-        // On a case-insensitive file system the name keeps the letter case typed.
+        // On a case-insensitive file system the name keeps the letter case
+        // typed.
         if real.join("talk/S.MD").exists() {
             let talk = real.join("talk");
             for typed in ["S.MD", "../talk/S.MD"] {

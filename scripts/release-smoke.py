@@ -23,7 +23,9 @@ from release_common import (
 
 def safe_members(names, root):
     seen = set()
-    devices = re.compile(r"(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])", re.I)
+    devices = re.compile(
+        r"(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])", re.I
+    )
     for name in names:
         parts = name.split("/")
         if parts[-1:] == [""]:
@@ -32,9 +34,13 @@ def safe_members(names, root):
             raise ValueError(f"unexpected archive path: {name!r}")
         for part in parts:
             stem = part.split(".", 1)[0].rstrip(" ")
-            if (not part or part in {".", ".."} or part.endswith((".", " "))
-                    or any(char in '<>:"\\|?*' or ord(char) < 32 for char in part)
-                    or devices.fullmatch(stem)):
+            if (
+                not part or part in {".", ".."} or part.endswith((".", " "))
+                or any(
+                    char in '<>:"\\|?*' or ord(char) < 32 for char in part
+                )
+                or devices.fullmatch(stem)
+            ):
                 raise ValueError(f"nonportable archive path: {name!r}")
         canonical = unicodedata.normalize("NFC", "/".join(parts)).casefold()
         if canonical in seen:
@@ -78,7 +84,9 @@ def unpack(archive, destination, root):
                     path.parent.mkdir(parents=True, exist_ok=True)
                     stream = source.extractfile(entry)
                     if stream is None:
-                        raise ValueError(f"unreadable archive member: {entry.name}")
+                        raise ValueError(
+                            f"unreadable archive member: {entry.name}"
+                        )
                     path.write_bytes(stream.read())
                     path.chmod(entry.mode)
     return destination / root
@@ -102,9 +110,9 @@ def run(binary, arguments, cwd, epoch):
 
 
 def fixed_config(project, epoch):
-    timestamp = datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
-    )
+    timestamp = datetime.datetime.fromtimestamp(
+        epoch, datetime.timezone.utc
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
     (project / "writer.toml").write_text(
         "[build]\nout_dir='dist'\n[html]\ntheme='theme'\nstandalone=true\n"
         "[pdf]\nsystem_fonts=false\nallow_packages=false\n"
@@ -113,8 +121,10 @@ def fixed_config(project, epoch):
 
 
 def output_inventory(root):
-    return {path.relative_to(root).as_posix(): path.read_bytes()
-            for path in root.rglob("*") if path.is_file()}
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in root.rglob("*") if path.is_file()
+    }
 
 
 def outputs(binary, temporary, epoch):
@@ -152,7 +162,9 @@ def outputs(binary, temporary, epoch):
     first = output_inventory(result)
     run(binary, ["build", "document.md", "--to", target_list], project, epoch)
     if output_inventory(result) != first:
-        raise ValueError("identical fixed-input output bytes changed on rebuild")
+        raise ValueError(
+            "identical fixed-input output bytes changed on rebuild"
+        )
     run(binary, ["init", "native", "--typst", "--bib"], temporary, epoch)
     native = temporary / "native"
     fixed_config(native, epoch)
@@ -167,12 +179,17 @@ def verify_architecture(binary, target):
         header = stream.read(64)
         if "-linux-" in target:
             if len(header) < 20 or header[:6] != b"\x7fELF\x02\x01":
-                raise ValueError("release target requires a little-endian ELF64 binary")
+                raise ValueError(
+                    "release target requires a little-endian ELF64 binary"
+                )
             machine = int.from_bytes(header[18:20], "little")
             expected = 183 if expected_arm else 62
         elif target.endswith("-apple-darwin"):
             if len(header) < 8 or header[:4] != b"\xcf\xfa\xed\xfe":
-                raise ValueError("release target requires a thin little-endian Mach-O64 binary")
+                raise ValueError(
+                    "release target requires a thin little-endian "
+                    "Mach-O64 binary"
+                )
             machine = int.from_bytes(header[4:8], "little")
             expected = 0x0100000C if expected_arm else 0x01000007
         else:
@@ -204,7 +221,8 @@ def linux_runtime(binary):
     result["required_glibc_symbols"] = sorted(
         symbols, key=lambda symbol: tuple(map(int, symbol[6:].split(".")))
     )
-    # Measured symbols/libraries only: this is not a declared compatibility floor.
+    # Measured symbols/libraries only: this is not a declared compatibility
+    # floor.
     return result
 
 
@@ -213,13 +231,17 @@ def smoke(directory, version, target, build_id, epoch):
     checked_target(target)
     archive = Path(directory) / archive_name(version, target)
     root = root_name(version, target)
-    with tempfile.TemporaryDirectory(prefix="writer-release-smoke-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="writer-release-smoke-"
+    ) as temporary:
         temporary = Path(temporary)
         expanded = unpack(archive, temporary / "unpacked", root)
         if {path.name for path in expanded.iterdir()} != {
             binary_name(target), "LICENSE", "README.md", "THIRD-PARTY-LICENSES",
         }:
-            raise ValueError("archive top-level layout differs from the release contract")
+            raise ValueError(
+                "archive top-level layout differs from the release contract"
+            )
         binary = expanded / binary_name(target)
         if binary.stat().st_size > MAX_BINARY_BYTES:
             raise ValueError("unpacked binary exceeds the 64 MiB ceiling")
@@ -231,15 +253,23 @@ def smoke(directory, version, target, build_id, epoch):
             raise ValueError(f"unexpected artifact version: {version_output!r}")
         if b"Usage:" not in run(binary, ["--help"], temporary, epoch):
             raise ValueError("archived executable has no CLI help")
-        if run(binary, ["--licenses"], temporary, epoch) != notices.read_bytes():
-            raise ValueError("archived executable notices differ from EMBEDDED.txt")
+        if (
+            run(binary, ["--licenses"], temporary, epoch)
+            != notices.read_bytes()
+        ):
+            raise ValueError(
+                "archived executable notices differ from EMBEDDED.txt"
+            )
         outputs(binary, temporary, epoch)
         return {
             "version": version, "target": target, "build_id": build_id,
-            "binary_bytes": binary.stat().st_size, "binary_sha256": digest(binary),
-            "archive_sha256": digest(archive), "python": platform.python_version(),
+            "binary_bytes": binary.stat().st_size,
+            "binary_sha256": digest(binary), "archive_sha256": digest(archive),
+            "python": platform.python_version(),
             "runner_system": platform.platform(),
-            "linux_runtime": linux_runtime(binary) if "-linux-" in target else None,
+            "linux_runtime": (
+                linux_runtime(binary) if "-linux-" in target else None
+            ),
         }
 
 
@@ -261,8 +291,10 @@ def main():
             json.dumps(result, indent=2, sort_keys=True) + "\n",
             encoding="utf-8", newline="\n"
         )
-    except (KeyError, OSError, ValueError, subprocess.SubprocessError,
-            tarfile.TarError, zipfile.BadZipFile) as error:
+    except (
+        KeyError, OSError, ValueError, subprocess.SubprocessError,
+        tarfile.TarError, zipfile.BadZipFile
+    ) as error:
         parser.exit(1, f"error: {error}\n")
     print(json.dumps(result, sort_keys=True))
 

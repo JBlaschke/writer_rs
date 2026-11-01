@@ -46,7 +46,8 @@ static BUILTIN: LazyLock<Builtin> = LazyLock::new(|| {
 });
 
 impl Numbering {
-    /// Starts with writer's bullet and decimal definitions and no list instances.
+    /// Starts with writer's bullet and decimal definitions and no list
+    /// instances.
     pub fn builtin() -> Self {
         Self {
             root: BUILTIN.root.clone(),

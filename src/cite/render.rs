@@ -418,8 +418,10 @@ mod tests {
                 Inline::text(". Reading, MA: Addison-Wesley, 1984."),
             ]
         );
-        assert!(bibliography.entries[0].inlines.iter().any(|inline| matches!(inline,
-            Inline::Link { url, .. } if url == "https://doi.org/10.1000/xyz123"
+        assert!(bibliography.entries[0].inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Link { url, .. }
+                if url == "https://doi.org/10.1000/xyz123"
         )));
         assert_eq!(library.entries, before);
     }

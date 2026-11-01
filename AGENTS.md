@@ -146,6 +146,18 @@ def build_report(
 - In Rust, URLs, hash literals, and exact-output strings are explicit exceptions
   to the 80-character target. Keep them intact when splitting or rewriting them
   would make verification harder or risk changing their bytes.
+- Stable rustfmt is the authority for Rust layout, and CI runs
+  `cargo fmt --check`. In code that rustfmt formats, wrapped call arguments go
+  one per line, and assignments, fields, and named arguments are not column
+  aligned: rustfmt has no option for either. Reserve `#[rustfmt::skip]` for a
+  small group whose semantic grouping materially improves readability, and say
+  in a comment what it keeps together.
+- rustfmt leaves some code verbatim: a statement that holds a string literal
+  too long for its line, and a macro call it cannot parse as expressions, such
+  as `matches!` with a guard or `json!`. Lay that code out by hand in the style
+  above, with the long literal alone on its line, short related arguments
+  grouped, and a nested call kept with its parentheses
+  (`assert!(matches!(` ... `));`).
 
 ## Apply with judgment
 

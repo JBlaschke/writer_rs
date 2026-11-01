@@ -1,5 +1,6 @@
-//! T15 theme resolution contracts, lifted from presenter tests/theme_resolve.rs.
-//! Writer adds document templates and two-face code themes in place of slides.
+//! T15 theme resolution contracts, lifted from presenter
+//! tests/theme_resolve.rs. Writer adds document templates and two-face code
+//! themes in place of slides.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -225,7 +226,8 @@ fn disk_chain_merges_and_concatenates_parent_first() {
     assert_eq!(
         Value::Object(theme.vars()),
         json!({
-            "accent": "blue", "font": "serif", "nested": {"a": 1, "b": 3, "c": 4},
+            "accent": "blue", "font": "serif",
+            "nested": {"a": 1, "b": 3, "c": 4},
         })
     );
     let styles = theme.style_entries().unwrap();
@@ -424,7 +426,8 @@ fn unknown_theme_lists_the_search_roots() {
 
 #[test]
 fn coinciding_search_roots_are_tried_and_reported_once() {
-    // The pipeline passes config dir, source dir and CWD, which are often the same.
+    // The pipeline passes config dir, source dir and CWD, which are often the
+    // same.
     let tmp = tempfile::tempdir().unwrap();
     fs::create_dir(tmp.path().join("nope")).unwrap();
     let roots = [tmp.path(), tmp.path(), tmp.path()];
@@ -458,9 +461,10 @@ fn directory_without_manifest_is_reported() {
 
 #[test]
 fn wrong_case_manifest_is_not_a_manifest_on_any_platform() {
-    // A complete theme except that its manifest is `Theme.toml`: on macOS `is_file` finds
-    // it case-insensitively, but theme files are matched exactly (as on Linux), so this is
-    // the regular "no manifest" error with a hint, never a failed read.
+    // A complete theme except that its manifest is `Theme.toml`: on macOS
+    // `is_file` finds it case-insensitively, but theme files are matched
+    // exactly (as on Linux), so this is the regular "no manifest" error with a
+    // hint, never a failed read.
     let tmp = tempfile::tempdir().unwrap();
     let dir = tmp.path().join("t");
     write_root_theme(&dir, "name = \"t\"", &[]);
@@ -478,7 +482,8 @@ fn wrong_case_manifest_is_not_a_manifest_on_any_platform() {
     );
     assert!(!message.contains("disappeared"), "{message}");
 
-    // A wrong-case directory named like a built-in theme falls back to the built-in one.
+    // A wrong-case directory named like a built-in theme falls back to the
+    // built-in one.
     let shadow = tmp.path().join("default");
     write_root_theme(&shadow, "name = \"default\"", &[]);
     fs::rename(shadow.join("theme.toml"), shadow.join("THEME.TOML")).unwrap();
@@ -489,7 +494,7 @@ fn wrong_case_manifest_is_not_a_manifest_on_any_platform() {
     );
 }
 
-// ---------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // The child-theme fixture
 
 #[test]
@@ -565,7 +570,7 @@ fn chains_longer_than_eight_themes_are_rejected() {
     assert!(message.contains("longer than 8"), "{message}");
 }
 
-// ---------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Disk chains
 
 #[test]
@@ -636,8 +641,8 @@ fn entries_outside_the_theme_directory_are_reported_as_such() {
 
 #[test]
 fn disk_lookups_match_file_names_exactly() {
-    // On a case-insensitive file system (macOS) `is_file` would accept these; the embedded
-    // tree and Linux do not, so disk themes must not either.
+    // On a case-insensitive file system (macOS) `is_file` would accept these;
+    // the embedded tree and Linux do not, so disk themes must not either.
     let tmp = tempfile::tempdir().unwrap();
     let theme = disk_chain(tmp.path());
     assert!(theme.has_template("layouts/two-up.html"));
@@ -726,10 +731,11 @@ fn child_templates_can_extend_the_parent_version_by_theme_name() {
     assert_eq!(html, "<section>child: root content &lt;&amp;&gt;</section>");
 }
 
-// ---------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Audit fixes (A4): symbolic links, `Theme::problems`, "did you mean"
 
-/// A child theme `t` of `default` in `dir/t` with `manifest_extra` appended to its manifest.
+/// A child theme `t` of `default` in `dir/t` with `manifest_extra` appended to
+/// its manifest.
 fn child_of_default(
     dir: &Path, manifest_extra: &str, files: &[(&str, &str)],
 ) -> Theme {
@@ -740,8 +746,8 @@ fn child_of_default(
     resolve("t", &[dir]).unwrap()
 }
 
-/// F08: a symbolic link inside a disk theme whose target is outside it finds nothing (read,
-/// exists, list, assets); links that stay inside the theme work.
+/// F08: a symbolic link inside a disk theme whose target is outside it finds
+/// nothing (read, exists, list, assets); links that stay inside the theme work.
 #[cfg(unix)]
 #[test]
 fn symbolic_links_out_of_a_theme_are_not_followed() {
@@ -790,9 +796,9 @@ fn symbolic_links_out_of_a_theme_are_not_followed() {
     assert_eq!(linked.read_asset("real.png").unwrap(), Some(b"REAL".to_vec()));
 }
 
-/// F10 (b, review): in a helper's argument, `@<theme>/<path>` stays inside that theme:
-/// `..` cannot climb out of it into the chain's `assets/` (`@t/../x.css` named
-/// `assets/x.css`) or into another theme. Inside the theme, `..` works.
+/// F10 (b, review): in a helper's argument, `@<theme>/<path>` stays inside that
+/// theme: `..` cannot climb out of it into the chain's `assets/` (`@t/../x.css`
+/// named `assets/x.css`) or into another theme. Inside the theme, `..` works.
 #[test]
 fn theme_helper_paths_stay_inside_their_theme() {
     use writer::html::paths::{normalize_helper_path, resolve_helper_path};
@@ -826,9 +832,10 @@ fn theme_helper_paths_stay_inside_their_theme() {
     );
 }
 
-/// F08 (review): a file that a symbolic link takes out of its theme is reported as such:
-/// `theme-link-outside` warnings for each such link (not for links inside the theme), and
-/// the messages about an entry or a manifest name the link instead of saying "not found".
+/// F08 (review): a file that a symbolic link takes out of its theme is reported
+/// as such: `theme-link-outside` warnings for each such link (not for links
+/// inside the theme), and the messages about an entry or a manifest name the
+/// link instead of saying "not found".
 #[cfg(unix)]
 #[test]
 fn links_out_of_a_theme_are_named() {

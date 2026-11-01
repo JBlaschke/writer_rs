@@ -250,7 +250,11 @@ mod tests {
             "@book{z,title={First Z}}\n@book{a,title={First A}}\n",
         )
         .unwrap();
-        fs::write(&second, "z:\n  type: Book\n  title: Second Z\na:\n  type: Book\n  title: Second A\n").unwrap();
+        fs::write(
+            &second,
+            "z:\n  type: Book\n  title: Second Z\na:\n  type: Book\n  title: Second A\n"
+        )
+        .unwrap();
         fs::write(&third, "@book{z,title={Third Z}}\n").unwrap();
         let error = Library::load(&[first, second.clone(), third]).unwrap_err();
         assert_eq!(

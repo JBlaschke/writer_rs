@@ -1,16 +1,17 @@
-//! Helper paths (`docs/spec/html-output.md` §4.2): the strings `style()`, `script()` and
-//! `asset()` take, and the `{*path}` of the dev server's `/__writer/asset/{*path}` route.
+//! Helper paths (`docs/spec/html-output.md` §4.2): the strings `style()`,
+//! `script()` and `asset()` take, and the `{*path}` of the dev server's
+//! `/__writer/asset/{*path}` route.
 //!
-//! A helper path is normalized first (`/` and `\` separate segments, `.` and empty segments
-//! are dropped, `..` removes the previous segment; a path that climbs out finds nothing),
-//! then resolved by its first segment: `vendor/…` and `writer/…` in the embedded tree,
-//! `@<theme>/<path>` relative to that theme's root directory, anything else in the chain's
-//! `assets/` directories.
+//! A helper path is normalized first (`/` and `\` separate segments, `.` and
+//! empty segments are dropped, `..` removes the previous segment; a path that
+//! climbs out finds nothing), then resolved by its first segment: `vendor/…`
+//! and `writer/…` in the embedded tree, `@<theme>/<path>` relative to that
+//! theme's root directory, anything else in the chain's `assets/` directories.
 //!
-//! In serve mode, the URLs of theme-chain files that a page loads through `asset()` or
-//! that a stylesheet's `url()` names carry the file's content version
-//! (`versioned_serve_url`; live-reload.md §4, audit F03), remembered while the file's
-//! size and modification time stay the same.
+//! In serve mode, the URLs of theme-chain files that a page loads through
+//! `asset()` or that a stylesheet's `url()` names carry the file's content
+//! version (`versioned_serve_url`; live-reload.md §4, audit F03), remembered
+//! while the file's size and modification time stay the same.
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -24,22 +25,25 @@ use crate::assets::emit::content_version;
 use crate::error::{Error, Result};
 use crate::theme::{Theme, ThemeDir, ThemeSource, normalize_rel};
 
-/// Resolves a helper path (`style()`, `script()`, `asset()`, and the dev server's
-/// `/__writer/asset/{*path}` route) to its bytes and MIME type, or `Ok(None)` if nothing
-/// is there. The path is normalized first (`/` and `\` separate segments, `.` and empty
-/// segments are dropped, `..` removes the previous segment; a path that climbs out is
-/// `None`), then by its first segment (html-output.md §4.2):
+/// Resolves a helper path (`style()`, `script()`, `asset()`, and the dev
+/// server's `/__writer/asset/{*path}` route) to its bytes and MIME type, or
+/// `Ok(None)` if nothing is there. The path is normalized first (`/` and `\`
+/// separate segments, `.` and empty segments are dropped, `..` removes the
+/// previous segment; a path that climbs out is `None`), then by its first
+/// segment (html-output.md §4.2):
 ///
 /// - `vendor/…` → the embedded vendor tree ([`crate::vendor::get`]);
 /// - `writer/…` → our own scripts in `assets/writer/`;
-/// - `@<theme>/<path>` → `<path>` relative to the **root directory** of that theme of the
-///   chain (no `..` escapes; an unknown theme name finds nothing);
-/// - anything else → the chain's `assets/` directories, child first ([`Theme::read_asset`]).
+/// - `@<theme>/<path>` → `<path>` relative to the **root directory** of that
+///   theme of the chain (no `..` escapes; an unknown theme name finds nothing);
+/// - anything else → the chain's `assets/` directories, child first
+///   ([`Theme::read_asset`]).
 ///
-/// The MIME type is guessed from the extension (`application/octet-stream` otherwise).
-/// Errors only when an existing file cannot be read. The dev server percent-decodes the
-/// route's path before calling this (the renderer percent-encodes every byte other than
-/// ASCII letters, digits and `-._~/@` in the URLs it writes).
+/// The MIME type is guessed from the extension (`application/octet-stream`
+/// otherwise). Errors only when an existing file cannot be read. The dev server
+/// percent-decodes the route's path before calling this (the renderer
+/// percent-encodes every byte other than ASCII letters, digits and `-._~/@` in
+/// the URLs it writes).
 pub fn resolve_helper_path(
     theme: &Theme, path: &str,
 ) -> Result<Option<(Vec<u8>, String)>> {
@@ -57,9 +61,10 @@ pub fn resolve_helper_path(
     Ok(bytes.map(|bytes| (bytes, mime_of(&key))))
 }
 
-/// `path` normalized as in [`resolve_helper_path`]; `None` if it is empty or climbs out,
-/// and for `@<theme>/<path>` if `<path>` climbs out of that theme (`@t/../x.css` would
-/// otherwise name `x.css` in the chain's `assets/`; html-output.md §4.2, audit F10).
+/// `path` normalized as in [`resolve_helper_path`]; `None` if it is empty or
+/// climbs out, and for `@<theme>/<path>` if `<path>` climbs out of that theme
+/// (`@t/../x.css` would otherwise name `x.css` in the chain's `assets/`;
+/// html-output.md §4.2, audit F10).
 pub fn normalize_helper_path(path: &str) -> Option<String> {
     let key = normalize_rel(path).filter(|key| !key.is_empty())?;
     let mut segments = path
@@ -77,8 +82,9 @@ pub fn normalize_helper_path(path: &str) -> Option<String> {
     Some(key)
 }
 
-/// True if [`resolve_helper_path`] finds a file at the normalized helper path `key`, without
-/// reading it (release builds do not copy embedded files; disk files are only stat'ed).
+/// True if [`resolve_helper_path`] finds a file at the normalized helper path
+/// `key`, without reading it (release builds do not copy embedded files; disk
+/// files are only stat'ed).
 pub(super) fn helper_path_exists(theme: &Theme, key: &str) -> bool {
     match path_form(key) {
         PathForm::Builtin => crate::vendor::get(key).is_some(),
@@ -129,18 +135,21 @@ pub(super) fn mime_of(key: &str) -> String {
 }
 
 /// The helper path that the relative reference `rel` (a CSS `url()` without its
-/// `?query#fragment`) in the file at helper path `base` names: `rel` joined to `base`'s
-/// directory and normalized. This is exactly how a browser resolves `rel` against the
-/// file's dev-server URL `/__writer/asset/<base>`, so every output mode finds the same
-/// file. `None` when the result is empty or climbs above the helper-path root (in serve
-/// mode, such a URL leaves `/__writer/asset/`).
+/// `?query#fragment`) in the file at helper path `base` names: `rel` joined to
+/// `base`'s directory and normalized. This is exactly how a browser resolves
+/// `rel` against the file's dev-server URL `/__writer/asset/<base>`, so every
+/// output mode finds the same file. `None` when the result is empty or climbs
+/// above the helper-path root (in serve mode, such a URL leaves
+/// `/__writer/asset/`).
 pub(super) fn join_relative(base: &str, rel: &str) -> Option<String> {
     let dir = base.rsplit_once('/').map_or("", |(dir, _)| dir);
-    // Like a browser, so `..` may leave `@<theme>/` here (unlike in a helper's argument).
+    // Like a browser, so `..` may leave `@<theme>/` here (unlike in a helper's
+    // argument).
     normalize_rel(&format!("{dir}/{rel}")).filter(|key| !key.is_empty())
 }
 
-/// Why `path` (as given to a helper) resolves to nothing, for "unknown path" messages.
+/// Why `path` (as given to a helper) resolves to nothing, for "unknown path"
+/// messages.
 pub(super) fn unknown_reason(theme: &Theme, path: &str) -> String {
     let Some(key) = normalize_rel(path) else {
         return "it climbs out of its root directory with '..'".into();
@@ -175,17 +184,19 @@ pub(super) fn unknown_reason(theme: &Theme, path: &str) -> String {
     }
 }
 
-/// The dev server URL a page or stylesheet uses for the file at the normalized helper path
-/// `key`: [`serve_url`], plus `?v=<`[`content_version`]`>` for a file of the theme chain
-/// (`@<theme>/…` or the `assets/` form; the files of the embedded `vendor/…` and
-/// `writer/…` trees do not change while writer runs). `Ok(None)` when no file is
-/// there; errors only when an existing file cannot be read.
+/// The dev server URL a page or stylesheet uses for the file at the normalized
+/// helper path `key`: [`serve_url`], plus `?v=<`[`content_version`]`>` for a
+/// file of the theme chain (`@<theme>/…` or the `assets/` form; the files of
+/// the embedded `vendor/…` and `writer/…` trees do not change while writer
+/// runs). `Ok(None)` when no file is there; errors only when an existing file
+/// cannot be read.
 ///
-/// The version of a file on disk is remembered with the file's size and modification
-/// time, and computed again only when they change ([`VERSIONS`]): a rebuild stats the
-/// files it names instead of reading and hashing them, however often a template names one
-/// (a logo on every page). An edit that keeps both (within the file system's timestamp
-/// granularity) keeps the old version, as for document assets.
+/// The version of a file on disk is remembered with the file's size and
+/// modification time, and computed again only when they change ([`VERSIONS`]):
+/// a rebuild stats the files it names instead of reading and hashing them,
+/// however often a template names one (a logo on every page). An edit that
+/// keeps both (within the file system's timestamp granularity) keeps the old
+/// version, as for document assets.
 pub(super) fn versioned_serve_url(
     theme: &Theme, key: &str,
 ) -> Result<Option<String>> {
@@ -205,9 +216,9 @@ pub(super) fn versioned_serve_url(
     Ok(version.map(|version| format!("{}?v={version}", serve_url(key))))
 }
 
-/// The theme of the chain that has the file of the theme-chain helper path `key` (the
-/// `@<theme>/…` or the `assets/` form, [`resolve_helper_path`]), with the file's path
-/// relative to that theme's root, normalized.
+/// The theme of the chain that has the file of the theme-chain helper path
+/// `key` (the `@<theme>/…` or the `assets/` form, [`resolve_helper_path`]),
+/// with the file's path relative to that theme's root, normalized.
 fn theme_file<'t>(
     theme: &'t Theme, key: &str,
 ) -> Option<(&'t ThemeDir, String)> {
@@ -223,16 +234,18 @@ fn theme_file<'t>(
     dir.exists(&rel).then_some((dir, rel))
 }
 
-/// A file's size and modification time, with its [`content_version`] ([`VERSIONS`]).
+/// A file's size and modification time, with its [`content_version`]
+/// ([`VERSIONS`]).
 type Stamped = (u64, SystemTime, u64);
 
-/// The content versions of the theme files on disk that serve-mode URLs named, by path
-/// ([`versioned_serve_url`]).
+/// The content versions of the theme files on disk that serve-mode URLs named,
+/// by path ([`versioned_serve_url`]).
 static VERSIONS: Mutex<BTreeMap<PathBuf, Stamped>> =
     Mutex::new(BTreeMap::new());
 
-/// The [`content_version`] of the file at `path` of the theme `dir`: remembered while its
-/// size and modification time stay the same. `Ok(None)` if it is gone.
+/// The [`content_version`] of the file at `path` of the theme `dir`: remembered
+/// while its size and modification time stay the same. `Ok(None)` if it is
+/// gone.
 fn disk_version(dir: &ThemeDir, path: &Path) -> Result<Option<u64>> {
     let Ok(meta) = std::fs::metadata(path) else {
         return Ok(None);
@@ -267,8 +280,9 @@ fn disk_version(dir: &ThemeDir, path: &Path) -> Result<Option<u64>> {
     Ok(Some(version))
 }
 
-/// The dev server URL of helper path `key`: [`SERVE_HELPER_PREFIX`] + `key`, with every byte
-/// other than ASCII letters, digits and `-._~/@` percent-encoded.
+/// The dev server URL of helper path `key`: [`SERVE_HELPER_PREFIX`] + `key`,
+/// with every byte other than ASCII letters, digits and `-._~/@`
+/// percent-encoded.
 pub(super) fn serve_url(key: &str) -> String {
     let mut url = String::from(SERVE_HELPER_PREFIX);
     for byte in key.bytes() {
@@ -307,7 +321,8 @@ mod tests {
                 "fonts/a.woff2",
                 Some("vendor/katex/fonts/a.woff2"),
             ),
-            // `/__writer/asset/vendor/katex/x.css` + `../../a.png` → `/__writer/asset/a.png`
+            // `/__writer/asset/vendor/katex/x.css` + `../../a.png` →
+            // `/__writer/asset/a.png`
             ("vendor/katex/katex.min.css", "../../a.png", Some("a.png")),
             ("vendor/katex/katex.min.css", "../../../a.png", None),
             (
@@ -394,7 +409,8 @@ mod tests {
             handle.set_modified(time).unwrap();
         };
         let time = std::fs::metadata(&file).unwrap().modified().unwrap();
-        // Same size and time, other bytes: the remembered version (the file is not read).
+        // Same size and time, other bytes: the remembered version (the file is
+        // not read).
         std::fs::write(&file, b"bbbb").unwrap();
         set_time(time);
         assert_eq!(url("a.png"), Some(first));

@@ -1,4 +1,5 @@
-//! Per-view live-build events and located browser diagnostics (live-reload.md §2).
+//! Per-view live-build events and located browser diagnostics (live-reload.md
+//! §2).
 //!
 //! The payloads are shared by SSE and `/__writer/state`. Error conversion,
 //! source excerpts and relative paths are lifted from presenter_rs; Writer adds
@@ -96,7 +97,8 @@ pub struct BuildEvent {
     pub warnings: Vec<DiagnosticJson>,
 }
 
-/// Current state sent immediately to an SSE subscriber and by `/__writer/state`.
+/// Current state sent immediately to an SSE subscriber and by
+/// `/__writer/state`.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Hello {
     /// Latest attempt id, zero before the first build.
@@ -140,8 +142,9 @@ impl From<&Error> for ErrorPayload {
 }
 
 impl ErrorPayload {
-    /// Converts an error from `input`, showing paths below the current directory
-    /// relatively. Input supplies the source of missing assets and front matter.
+    /// Converts an error from `input`, showing paths below the current
+    /// directory relatively. Input supplies the source of missing assets and
+    /// front matter.
     pub fn for_input(err: &Error, input: &Path) -> Self {
         let cwd = std::env::current_dir().ok();
         Self::new(err, cwd.as_deref(), Some(input))
@@ -268,7 +271,8 @@ impl DiagnosticJson {
     }
 }
 
-/// The diagnostic's precise included-file origin takes precedence over its path.
+/// The diagnostic's precise included-file origin takes precedence over its
+/// path.
 fn diagnostic_path(diagnostic: &Diagnostic) -> Option<&Path> {
     diagnostic
         .span
@@ -378,7 +382,8 @@ fn toml_parse_error(text: &str) -> Option<(usize, String)> {
     Some((line, explanation.join("\n").trim().to_string()))
 }
 
-/// Shortens paths strictly below base, resolving symlink spelling as a fallback.
+/// Shortens paths strictly below base, resolving symlink spelling as a
+/// fallback.
 fn display_relative(path: &Path, base: Option<&Path>) -> String {
     let below = |path: &Path, base: &Path| -> Option<PathBuf> {
         let relative = path.strip_prefix(base).ok()?;
@@ -611,7 +616,11 @@ mod tests {
         assert_eq!(ErrorPayload::from(&parse).excerpt, None);
 
         let notebook = tmp.path().join("notebook.ipynb");
-        fs::write(&notebook, r##"{"cells":[{"cell_type":"markdown","source":["# T\n",":::bad x=\"a"]}]}"##).unwrap();
+        fs::write(
+            &notebook,
+            r##"{"cells":[{"cell_type":"markdown","source":["# T\n",":::bad x=\"a"]}]}"##
+        )
+        .unwrap();
         let in_cell = Error::Parse {
             path: notebook,
             line: None,
@@ -692,7 +701,11 @@ mod tests {
     fn notebook_front_matter_and_missing_assets_preserve_cell_locations() {
         let tmp = tempfile::tempdir().unwrap();
         let notebook = tmp.path().join("notebook.ipynb");
-        fs::write(&notebook, r##"{"cells":[{"cell_type":"markdown","source":["---\n","title: a: b\n","---\n","![x](x.png)\n"]}]}"##).unwrap();
+        fs::write(
+            &notebook,
+            r##"{"cells":[{"cell_type":"markdown","source":["---\n","title: a: b\n","---\n","![x](x.png)\n"]}]}"##
+        )
+        .unwrap();
         let front = Error::FrontMatter(
             "cell 0: mapping values are not allowed in this context at line 2 column 9".into(),
         );
@@ -767,7 +780,11 @@ mod tests {
     fn compile_failure_uses_the_first_error_diagnostic_and_its_cell() {
         let tmp = tempfile::tempdir().unwrap();
         let notebook = tmp.path().join("included.ipynb");
-        fs::write(&notebook, r##"{"cells":[{"cell_type":"markdown","source":["# T\n","#foo()\n"]}]}"##).unwrap();
+        fs::write(
+            &notebook,
+            r##"{"cells":[{"cell_type":"markdown","source":["# T\n","#foo()\n"]}]}"##
+        )
+        .unwrap();
         let diagnostics: Diagnostics = vec![
             Diagnostic::warning("warning", "ignore location")
                 .with_path("warning.typ"),

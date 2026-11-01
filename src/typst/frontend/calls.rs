@@ -321,7 +321,11 @@ fn figure<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
             Some(Literal::Auto) => {}
             Some(Literal::Str(name)) => {
                 kind = FigureKind::Other;
-                ctx.warning("W-TYP-FIGURE-KIND", format!("figure kind `{name}` uses the image counter outside native Typst"), expr.to_untyped());
+                ctx.warning(
+                    "W-TYP-FIGURE-KIND",
+                    format!("figure kind `{name}` uses the image counter outside native Typst"),
+                    expr.to_untyped()
+                );
             }
             Some(_) => wrong(
                 ctx,

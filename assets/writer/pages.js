@@ -64,7 +64,8 @@
         const counter = document.getElementById('writer-pages-counter');
         if (!counter) return;
         const anchor = captureAnchor();
-        const index = pages.length ? (anchor?.index ?? pages.length - 1) + 1 : 0;
+        const index = pages.length
+            ? (anchor?.index ?? pages.length - 1) + 1 : 0;
         counter.textContent = `Page ${index} / ${pages.length}`;
     }
 
@@ -186,7 +187,9 @@
             const decoded = candidate.decode
                 ? candidate.decode() : Promise.resolve();
             Promise.resolve(decoded).then(reveal, (error) => {
-                if (current()) log('page image failed to decode:', source, error);
+                if (current()) {
+                    log('page image failed to decode:', source, error);
+                }
             });
         });
         candidate.onerror = () => {
@@ -208,7 +211,9 @@
             const size = input.size_pt[index];
             if (typeof hash !== 'string' || !/^[0-9a-f]{16}$/.test(hash)
                 || !Array.isArray(size) || size.length !== 2
-                || !size.every((number) => Number.isFinite(number) && number > 0)) {
+                || !size.every(
+                    (number) => Number.isFinite(number) && number > 0
+                )) {
                 throw new Error(`invalid page ${index + 1}`);
             }
             result.push({ hash, width: size[0] * PT_TO_PX,
@@ -259,7 +264,9 @@
         state.sizePt = next.map((page) => page.size);
         layout();
         restoreAnchor(anchor);
-        next.forEach((page, index) => showRevision(pages[index], index, page.hash));
+        next.forEach(
+            (page, index) => showRevision(pages[index], index, page.hash)
+        );
         updateStatus();
         updateCounter();
         log('pages updated, build', buildId);
@@ -292,10 +299,13 @@
 
     function onKey(event) {
         const target = event.target;
-        if (event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented
+        if (event.ctrlKey || event.metaKey || event.altKey
+            || event.defaultPrevented
             || target?.isContentEditable
             || target?.closest?.('input,textarea,select')) return;
-        const action = { '+': 'in', '=': 'in', '-': 'out', '0': 'fit' }[event.key];
+        const action = {
+            '+': 'in', '=': 'in', '-': 'out', '0': 'fit'
+        }[event.key];
         if (!action) return;
         event.preventDefault();
         safely(() => changeZoom(action));

@@ -1,5 +1,5 @@
-//! Structured Typst frontend corpus and contract tests (typst-dialect.md §§2–3).
-//! No frontend internals or external Typst process are used.
+//! Structured Typst frontend corpus and contract tests (typst-dialect.md
+//! §§2–3). No frontend internals or external Typst process are used.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

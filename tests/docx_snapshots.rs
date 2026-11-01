@@ -507,7 +507,8 @@ fn footnote_labels_follow_the_nearest_source_scope() {
             })
         };
         doc.blocks = serde_json::from_value(json!([
-            {"type": "div", "attrs": {}, "span": outer.map(|file| span(Some(file))), "blocks": [
+            {"type": "div", "attrs": {},
+             "span": outer.map(|file| span(Some(file))), "blocks": [
                 {"type": "paragraph", "span": inner.map(span), "inlines": [
                     {"type": "footnote", "label": "source_note", "number": 1,
                      "blocks": [{"type": "paragraph", "inlines": [
@@ -617,8 +618,13 @@ fn page_reference_plans_only_the_emitted_supplement() {
                 "text": cached
             }
         }]},
-        {"type": "heading", "level": 1, "attrs": {"id": if target_present { "page_target" } else { "unrelated" }},
-         "inlines": [{"type": "text", "text": "Page target"}]},
+        {
+            "type": "heading", "level": 1,
+            "attrs": {
+                "id": if target_present { "page_target" } else { "unrelated" }
+            },
+            "inlines": [{"type": "text", "text": "Page target"}]
+        },
         {"type": "paragraph", "inlines": [
             {"type": "footnote", "number": 2, "blocks": [
                 {"type": "paragraph", "inlines": [
@@ -824,9 +830,18 @@ fn rich_content_prepass_matches_emission_across_parts_and_candidates() {
         json!({
             "type": "footnote", "number": number, "blocks": [{
                 "type": "paragraph", "inlines": [
-                    {"type": "span", "attrs": {"id": label}, "inlines": [text(label)]},
-                    {"type": "image", "url": "asset:32debefb8003", "attrs": {}, "alt": [text("Note plot")]},
-                    {"type": "link", "url": "https://note.example/", "attrs": {}, "inlines": [text("source")]}
+                    {
+                        "type": "span", "attrs": {"id": label},
+                        "inlines": [text(label)]
+                    },
+                    {
+                        "type": "image", "url": "asset:32debefb8003",
+                        "attrs": {}, "alt": [text("Note plot")]
+                    },
+                    {
+                        "type": "link", "url": "https://note.example/",
+                        "attrs": {}, "inlines": [text("source")]
+                    }
                 ]
             }]
         })
@@ -839,17 +854,34 @@ fn rich_content_prepass_matches_emission_across_parts_and_candidates() {
     };
     doc.blocks = serde_json::from_value(json!([
         {"type": "paragraph", "inlines": [
-            {"type": "link", "url": "#caption-note", "attrs": {}, "inlines": [text("Forward caption")]},
-            {"type": "link", "url": "#table-note", "attrs": {}, "inlines": [text("Forward table")]},
-            {"type": "link", "url": "#bibliography-note", "attrs": {}, "inlines": [text("Forward bibliography")]},
-            {"type": "link", "url": "#refs", "attrs": {}, "inlines": [text("References")]}
+            {
+                "type": "link", "url": "#caption-note", "attrs": {},
+                "inlines": [text("Forward caption")]
+            },
+            {
+                "type": "link", "url": "#table-note", "attrs": {},
+                "inlines": [text("Forward table")]
+            },
+            {
+                "type": "link", "url": "#bibliography-note", "attrs": {},
+                "inlines": [text("Forward bibliography")]
+            },
+            {
+                "type": "link", "url": "#refs", "attrs": {},
+                "inlines": [text("References")]
+            }
         ]},
         {"type": "toc", "depth": 2},
         {"type": "figure", "kind": "other", "attrs": {"id": "rich-figure"},
-            "body": [{"type": "paragraph", "inlines": [text("Figure body"), note(1, "body-note")]}],
+            "body": [{
+                "type": "paragraph",
+                "inlines": [text("Figure body"), note(1, "body-note")]
+            }],
             "caption": [text("Rich caption"), note(2, "caption-note")]},
         {"type": "table", "columns": [{}], "head": [], "foot": [], "attrs": {},
-            "body": [{"cells": [{"inlines": [text("Rich cell"), note(3, "table-note")]}]}]},
+            "body": [{"cells": [{
+                "inlines": [text("Rich cell"), note(3, "table-note")]
+            }]}]},
         {"type": "cell", "index": 0, "show_input": false, "show_output": true,
             "outputs": [{"kind": {"kind": "display"}, "candidates": [
                 {"mime": "text/html", "blocks": [
@@ -861,10 +893,20 @@ fn rich_content_prepass_matches_emission_across_parts_and_candidates() {
         {"type": "bibliography"}
     ])).unwrap();
     doc.resolved.toc = serde_json::from_value(json!([
-        {"level": 1, "number": null, "anchor": "visible-heading", "inlines": [text("Visible heading")]},
-        {"level": 1, "number": null, "anchor": "unpicked-heading", "inlines": [text("Hidden cache")]},
-        {"level": 1, "number": null, "anchor": "refs", "inlines": [text("References")]}
-    ])).unwrap();
+        {
+            "level": 1, "number": null, "anchor": "visible-heading",
+            "inlines": [text("Visible heading")]
+        },
+        {
+            "level": 1, "number": null, "anchor": "unpicked-heading",
+            "inlines": [text("Hidden cache")]
+        },
+        {
+            "level": 1, "number": null, "anchor": "refs",
+            "inlines": [text("References")]
+        }
+    ]))
+    .unwrap();
     doc.resolved.bibliography = Some(
         serde_json::from_value(json!({
             "style": "test", "hanging_indent": false,

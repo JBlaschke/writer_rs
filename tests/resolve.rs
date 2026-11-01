@@ -1,4 +1,5 @@
-//! T17 reference and numbering contracts on frontend-independent, unresolved IR.
+//! T17 reference and numbering contracts on frontend-independent, unresolved
+//! IR.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

@@ -494,9 +494,19 @@ fn global_labels_still_collide_across_files() {
 fn watcher_scans_notebook_cells_and_raw_markdown_but_not_code_or_outputs() {
     let json = json!({"nbformat": 4, "cells": [
         {"cell_type": "markdown", "source": ":::include part.md\n:::\n"},
-        {"cell_type": "raw", "metadata": {"format": "text/markdown"}, "source": ":::include raw.md\n:::\n"},
-        {"cell_type": "code", "source": ":::include code.md\n:::\n", "outputs": [{"output_type": "display_data", "data": {"text/markdown": ":::include output.md\n:::\n"}}]},
-    ]}).to_string();
+        {
+            "cell_type": "raw", "metadata": {"format": "text/markdown"},
+            "source": ":::include raw.md\n:::\n"
+        },
+        {
+            "cell_type": "code", "source": ":::include code.md\n:::\n",
+            "outputs": [{
+                "output_type": "display_data",
+                "data": {"text/markdown": ":::include output.md\n:::\n"}
+            }]
+        },
+    ]})
+    .to_string();
     let directory = project(&[
         (
             "main.txt",

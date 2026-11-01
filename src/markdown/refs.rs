@@ -200,7 +200,8 @@ impl Scanner<'_, '_, '_> {
             ).with_span(self.span.clone());
             diagnostic.path = self.ctx.file.map(std::path::Path::to_path_buf);
             self.ctx.diagnostics.push(diagnostic);
-            // Invalid attrs remain one literal run, including any @ inside them.
+            // Invalid attrs remain one literal run, including any @ inside
+            // them.
             ModeSuffix { mode: Mode::Default, consumed: length, literal: attrs }
         }
     }
@@ -321,7 +322,8 @@ fn attr_length(text: &str) -> Option<usize> {
             return Some(at + 1);
         }
     }
-    // A malformed quote still makes a complete brace block invalid, not invisible.
+    // A malformed quote still makes a complete brace block invalid, not
+    // invisible.
     text.find('}').map(|at| at + 1)
 }
 

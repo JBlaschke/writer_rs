@@ -108,7 +108,8 @@ pub fn map_char(c: char) -> Option<&'static str> {
         .map(|index| TEXT_MATH[index].1)
 }
 
-/// Whether ASCII or the exact §5.6 T1/inputenc/textcomp set accepts a character.
+/// Whether ASCII or the exact §5.6 T1/inputenc/textcomp set accepts a
+/// character.
 pub fn pdflatex_safe(c: char) -> bool {
     if c.is_ascii() {
         return true;
@@ -179,10 +180,10 @@ impl Replacement {
     }
 }
 
-fn replace(
-    s: &str,
-    mut replacement: impl FnMut(char, Option<char>, Option<char>) -> Replacement,
-) -> Cow<'_, str> {
+fn replace<R>(s: &str, mut replacement: R) -> Cow<'_, str>
+where
+    R: FnMut(char, Option<char>, Option<char>) -> Replacement,
+{
     let mut output: Option<String> = None;
     let mut chars = s.char_indices().peekable();
     let mut previous = None;
@@ -637,7 +638,7 @@ mod tests {
         assert_eq!(writercode(r"\{a}"), r"\textbackslash{}\{a\}");
         let untouched = "[]'`\" $%&_#~^|<> α — 😀\n\r\t";
         borrowed(writercode(untouched), untouched);
-        assert_eq!(writercode("α\\β{γ}\n"), "α\\textbackslash{}β\\{γ\\}\n",);
+        assert_eq!(writercode("α\\β{γ}\n"), "α\\textbackslash{}β\\{γ\\}\n");
     }
 
     #[test]

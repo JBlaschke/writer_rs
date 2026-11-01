@@ -38,9 +38,13 @@ def payload(binary, readme, license_file, notices, target):
         raise ValueError(f"notice directory is missing or linked: {notices}")
     for name in required:
         path = notices / name
-        correct_type = path.is_dir() if name in {"assets", "crates"} else path.is_file()
+        correct_type = (
+            path.is_dir() if name in {"assets", "crates"} else path.is_file()
+        )
         if not correct_type or path.is_symlink():
-            raise ValueError(f"missing or invalid required notice member: {name}")
+            raise ValueError(
+                f"missing or invalid required notice member: {name}"
+            )
     for path in sorted(notices.rglob("*"), key=lambda path: path.as_posix()):
         if path.is_symlink():
             raise ValueError(f"notice member is a symbolic link: {path}")
@@ -88,7 +92,10 @@ def write_tar(path, entries, epoch):
                     entry.gname = ""
                     entry.mtime = epoch
                     entry.mode = mode
-                    entry.type = tarfile.DIRTYPE if name.endswith("/") else tarfile.REGTYPE
+                    entry.type = (
+                        tarfile.DIRTYPE if name.endswith("/")
+                        else tarfile.REGTYPE
+                    )
                     entry.size = len(data)
                     archive.addfile(entry, io.BytesIO(data))
 
@@ -147,11 +154,14 @@ def pack(binary, readme, license_file, notices, version, target, epoch, out):
 def checksums(directory, version, verify=False):
     directory = Path(directory)
     expected = {archive_name(version, target) for target in TARGETS}
-    archives = {path.name for path in directory.iterdir()
-                if path.name.endswith((".tar.gz", ".zip"))}
+    archives = {
+        path.name for path in directory.iterdir()
+        if path.name.endswith((".tar.gz", ".zip"))
+    }
     if archives != expected:
         raise ValueError(
-            f"expected six target archives; missing={sorted(expected - archives)}, "
+            "expected six target archives; "
+            f"missing={sorted(expected - archives)}, "
             f"unexpected={sorted(archives - expected)}"
         )
     content = "".join(

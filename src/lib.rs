@@ -1,9 +1,10 @@
 //! Document publishing from Markdown, Jupyter notebooks, and Typst.
 //!
-//! The pipeline parses source files into a shared document IR and asset registry,
-//! resolves labels, numbering, references, footnotes, and citations, then emits
-//! HTML, PDF, DOCX, LaTeX, or Typst source. Build commands write the outputs, while
-//! the development server rebuilds them in memory as source files change.
+//! The pipeline parses source files into a shared document IR and asset
+//! registry, resolves labels, numbering, references, footnotes, and citations,
+//! then emits HTML, PDF, DOCX, LaTeX, or Typst source. Build commands write the
+//! outputs, while the development server rebuilds them in memory as source
+//! files change.
 //!
 //! Architecture: PLAN.md §3.1. Owner: T00.
 

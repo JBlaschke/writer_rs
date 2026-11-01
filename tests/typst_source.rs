@@ -516,7 +516,8 @@ fn a_disk_font_selected_in_the_retained_session_cannot_be_overwritten() {
     .unwrap();
     // Select the copied face through the public World API. Identical embedded
     // families take precedence during ordinary layout, so merely adding a copy
-    // to font_paths would not select the disk font or prove consumed-file safety.
+    // to font_paths would not select the disk font or prove consumed-file
+    // safety.
     let index = typst_kit::fonts::embedded().count();
     assert!(world.font(index).is_some());
     assert!(world.accessed().contains(&fs::canonicalize(&font).unwrap()));

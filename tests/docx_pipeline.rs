@@ -374,7 +374,8 @@ fn word_and_pdf_timestamps_agree_for_shared_inputs() {
             ),
         }
     }
-    // DOCX omits absent/invalid fallback values and requires four-digit UTC years.
+    // DOCX omits absent/invalid fallback values and requires four-digit UTC
+    // years.
     assert_eq!(core_timestamp("", None, None).unwrap(), None);
     assert_eq!(core_timestamp("", None, Some("invalid")).unwrap(), None);
     assert!(core_timestamp("0000-01-01T00:00:00+01:00", None, None).is_err());

@@ -1,5 +1,6 @@
-//! Notebook IR, diagnostics and HTML snapshots, plus the T18 frontend contracts.
-//! Stable asset labels follow presenter_rs's notebook snapshot harness.
+//! Notebook IR, diagnostics and HTML snapshots, plus the T18 frontend
+//! contracts. Stable asset labels follow presenter_rs's notebook snapshot
+//! harness.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Cursor, Read};
@@ -61,7 +62,10 @@ fn parse_fixture(name: &str) -> Parsed {
 }
 
 fn notebook_json(cells: Value, metadata: Value) -> String {
-    json!({"cells": cells, "metadata": metadata, "nbformat": 4, "nbformat_minor": 5}).to_string()
+    json!({
+        "cells": cells, "metadata": metadata, "nbformat": 4, "nbformat_minor": 5
+    })
+    .to_string()
 }
 
 fn python() -> Value {
@@ -237,18 +241,26 @@ fn codes(parsed: &Parsed) -> Vec<&'static str> {
 }
 
 fn figure(document: &Document, id: &str) -> Block {
-    all_blocks(document).into_iter().find(|block| {
-        matches!(block, Block::Figure { attrs, .. } if attrs.id.as_deref() == Some(id))
-    }).unwrap_or_else(|| panic!("missing figure {id}"))
+    all_blocks(document)
+        .into_iter()
+        .find(|block| {
+            matches!(
+                block,
+                Block::Figure { attrs, .. } if attrs.id.as_deref() == Some(id)
+            )
+        })
+        .unwrap_or_else(|| panic!("missing figure {id}"))
 }
 
 #[test]
 fn every_fixture_is_snapshotted() {
     for name in fixture_names() {
         let parsed = parse_fixture(&name);
-        insta::assert_json_snapshot!(name.clone(), stable_json(&parsed.document), {
-            ".source.path" => "[path]", ".source.base_dir" => "[path]",
-        });
+        insta::assert_json_snapshot!(
+            name.clone(), stable_json(&parsed.document), {
+                ".source.path" => "[path]", ".source.base_dir" => "[path]",
+            }
+        );
         let diagnostics: Vec<_> = parsed
             .diagnostics
             .iter()
@@ -293,9 +305,12 @@ fn every_fixture_is_snapshotted() {
             format!("{name}_diagnostics"),
             diagnostics
         );
-        insta::with_settings!({ filters => vec![(r"asset:[0-9a-f]{12}", "asset:[id]")] }, {
-            insta::assert_snapshot!(format!("{name}_html"), html(&parsed));
-        });
+        insta::with_settings!(
+            { filters => vec![(r"asset:[0-9a-f]{12}", "asset:[id]")] },
+            {
+                insta::assert_snapshot!(format!("{name}_html"), html(&parsed));
+            }
+        );
     }
 }
 
@@ -355,10 +370,26 @@ fn empty_front_matter_only_warns_for_keyless_heading_comments() {
 #[test]
 fn noncode_cells_honour_only_removal_tags() {
     let parsed = parse_inline(json!([
-        {"cell_type": "markdown", "source": "#| include: false\nMarkdown kept.", "metadata": {"writer": {"include": false}, "tags": ["hide-input"]}},
-        {"cell_type": "raw", "source": "Raw kept.", "metadata": {"raw_mimetype": "text/plain", "writer": {"include": false}, "tags": ["hide-output"]}},
-        {"cell_type": "markdown", "source": "Markdown removed.", "metadata": {"tags": ["remove_cell"]}},
-        {"cell_type": "raw", "source": "Raw removed.", "metadata": {"raw_mimetype": "text/plain", "tags": ["remove-cell"]}}
+        {
+            "cell_type": "markdown",
+            "source": "#| include: false\nMarkdown kept.",
+            "metadata": {"writer": {"include": false}, "tags": ["hide-input"]}
+        },
+        {
+            "cell_type": "raw", "source": "Raw kept.",
+            "metadata": {
+                "raw_mimetype": "text/plain", "writer": {"include": false},
+                "tags": ["hide-output"]
+            }
+        },
+        {
+            "cell_type": "markdown", "source": "Markdown removed.",
+            "metadata": {"tags": ["remove_cell"]}
+        },
+        {
+            "cell_type": "raw", "source": "Raw removed.",
+            "metadata": {"raw_mimetype": "text/plain", "tags": ["remove-cell"]}
+        }
     ]));
     let value = serde_json::to_string(&parsed.document.blocks).unwrap();
     assert!(value.contains("Markdown kept.") && value.contains("Raw kept."));
@@ -399,7 +430,11 @@ fn outputs_fixture() {
         assert!(codes(&parsed).contains(&expected), "missing {expected}");
     }
     assert!(all_blocks(&parsed.document).iter().any(|block| {
-        matches!(block, Block::Raw { format, text, .. } if format == "latex" && text == "$x$ and $y$")
+        matches!(
+            block,
+            Block::Raw { format, text, .. }
+                if format == "latex" && text == "$x$ and $y$"
+        )
     }));
     let numbered = cell(&parsed.document, "numbered");
     assert_eq!(numbered.outputs[0].candidates.len(), 1);
@@ -530,7 +565,11 @@ fn options_fixture_rows() {
         Block::Figure { kind: FigureKind::Table, .. }
     ));
     let blocks = all_blocks(&parsed.document);
-    assert!(blocks.iter().any(|block| matches!(block, Block::Figure { kind: FigureKind::Other, attrs, .. } if attrs.id.as_deref() == Some("tbl-both"))));
+    assert!(blocks.iter().any(|block| matches!(
+        block,
+        Block::Figure { kind: FigureKind::Other, attrs, .. }
+            if attrs.id.as_deref() == Some("tbl-both")
+    )));
     let listing_position = parsed
         .document
         .blocks
@@ -539,9 +578,11 @@ fn options_fixture_rows() {
             matches!(block, Block::Figure { kind: FigureKind::Listing, .. })
         })
         .unwrap();
-    assert!(
-        matches!(&parsed.document.blocks[listing_position + 1], Block::Cell(cell) if cell.id.as_deref() == Some("listing") && !cell.show_input)
-    );
+    assert!(matches!(
+        &parsed.document.blocks[listing_position + 1],
+        Block::Cell(cell)
+            if cell.id.as_deref() == Some("listing") && !cell.show_input
+    ));
     assert_eq!(
         cell(&parsed.document, "anchor").attrs.id.as_deref(),
         Some("cell-anchor")
@@ -560,7 +601,11 @@ fn options_fixture_rows() {
         1,
         "filtered stderr/errors do not break stream merging"
     );
-    assert!(all_blocks(&parsed.document).iter().any(|block| matches!(block, Block::Heading { inlines, .. } if ir::plain_text(inlines) == "Stream heading")));
+    assert!(all_blocks(&parsed.document).iter().any(|block| matches!(
+        block,
+        Block::Heading { inlines, .. }
+            if ir::plain_text(inlines) == "Stream heading"
+    )));
     assert!(codes(&parsed).contains(&"label-kind-mismatch"));
     assert!(codes(&parsed).contains(&"cell-options-invalid"));
     assert!(codes(&parsed).contains(&"cell-option-unsupported"));
@@ -659,7 +704,11 @@ fn frontmatter_fixture_layers() {
             "openxml".into()
         ])
     );
-    assert!(all_blocks(&parsed.document).iter().any(|block| matches!(block, Block::CodeBlock { attrs, .. } if attrs.classes.iter().any(|class| class == "raw-cell"))));
+    assert!(all_blocks(&parsed.document).iter().any(|block| matches!(
+        block,
+        Block::CodeBlock { attrs, .. }
+            if attrs.classes.iter().any(|class| class == "raw-cell")
+    )));
     assert_eq!(
         parsed
             .document
@@ -681,9 +730,21 @@ fn dataframe_fixture_tables() {
         .filter(|block| matches!(block, Block::Table { .. }))
         .collect();
     assert_eq!(tables.len(), 7);
-    assert!(tables.iter().any(|block| matches!(block, Block::Table { head, columns, .. } if head.len() == 3 && columns.len() == 5)));
-    assert!(blocks.iter().any(|block| matches!(block, Block::Paragraph { inlines, .. } if ir::plain_text(inlines) == "100 rows × 2 columns")));
-    assert!(blocks.iter().any(|block| matches!(block, Block::Figure { kind: FigureKind::Table, caption: Some(caption), .. } if ir::plain_text(caption) == "Styled values")));
+    assert!(tables.iter().any(|block| matches!(
+        block,
+        Block::Table { head, columns, .. }
+            if head.len() == 3 && columns.len() == 5
+    )));
+    assert!(blocks.iter().any(|block| matches!(
+        block,
+        Block::Paragraph { inlines, .. }
+            if ir::plain_text(inlines) == "100 rows × 2 columns"
+    )));
+    assert!(blocks.iter().any(|block| matches!(
+        block,
+        Block::Figure { kind: FigureKind::Table, caption: Some(caption), .. }
+            if ir::plain_text(caption) == "Styled values"
+    )));
     let unescaped = cell(&parsed.document, "unescaped");
     assert!(matches!(
         unescaped.outputs[0].candidates[0].blocks[0],
@@ -1014,8 +1075,12 @@ fn hidden_outputs_create_no_assets_or_output_diagnostics() {
     let source = source_in(&fixture_dir(), "hidden");
     let json = notebook_json(
         json!([{
-            "cell_type": "code", "source": "#| output: false\nx", "execution_count": 1,
-            "outputs": [{"output_type": "display_data", "data": {"image/png": "invalid!?"}, "metadata": {}}]
+            "cell_type": "code", "source": "#| output: false\nx",
+            "execution_count": 1,
+            "outputs": [{
+                "output_type": "display_data",
+                "data": {"image/png": "invalid!?"}, "metadata": {}
+            }]
         }]),
         python(),
     );
@@ -1028,9 +1093,16 @@ fn hidden_outputs_create_no_assets_or_output_diagnostics() {
 fn output_notes_are_namespaced_from_main_cell_notes() {
     let parsed = parse_inline(json!([
         md("Main[^1].\n\n[^1]: Main note."),
-        {"cell_type": "code", "source": "x", "execution_count": 1, "outputs": [{
-            "output_type": "display_data", "data": {"text/markdown": "Output[^1].\n\n[^1]: Output note."}, "metadata": {}
-        }]},
+        {
+            "cell_type": "code", "source": "x", "execution_count": 1,
+            "outputs": [{
+                "output_type": "display_data",
+                "data": {
+                    "text/markdown": "Output[^1].\n\n[^1]: Output note."
+                },
+                "metadata": {}
+            }]
+        },
     ]));
     let mut labels = Vec::new();
     ir::walk_inlines(&parsed.document, &mut |inline| {

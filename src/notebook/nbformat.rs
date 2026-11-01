@@ -1,17 +1,18 @@
 //! nbformat 4 data model with lenient deserialization.
 //!
-//! Contract: `docs/spec/notebook-mapping.md` §1. The entry point is [`parse_notebook`]: it
-//! rejects anything older than nbformat 4, deserializes every cell, and **drops** outputs
-//! and attachments that do not deserialize (an unknown `output_type`, a stream without
-//! `text`, …), reporting each as a warning [`Diagnostic`] instead of failing the document.
-//! Other recoverable oddities (an unknown `cell_type`, a
-//! `metadata.writer` that is not an object) are reported the same way; the codes are in
-//! [`codes`]. Unknown keys anywhere are ignored, and `null` counts as absent everywhere.
+//! Contract: `docs/spec/notebook-mapping.md` §1. The entry point
+//! is [`parse_notebook`]: it rejects anything older than nbformat 4,
+//! deserializes every cell, and **drops** outputs and attachments that do not
+//! deserialize (an unknown `output_type`, a stream without `text`, …),
+//! reporting each as a warning [`Diagnostic`] instead of failing the document.
+//! Other recoverable oddities (an unknown `cell_type`, a `metadata.writer` that
+//! is not an object) are reported the same way; the codes are in [`codes`].
+//! Unknown keys anywhere are ignored, and `null` counts as absent everywhere.
 //!
-//! The accessors on [`Cell`] and [`Notebook`] read the nbformat metadata only. Tags are
-//! returned as written; mapping them to effects (`hide-input`, …, configurable
-//! through `[notebook] hide_input_tags` and friends) is the converter's job
-//! (`notebook::convert`, spec §3).
+//! The accessors on [`Cell`] and [`Notebook`] read the nbformat metadata only.
+//! Tags are returned as written; mapping them to effects (`hide-input`, …,
+//! configurable through `[notebook] hide_input_tags` and friends) is the
+//! converter's job (`notebook::convert`, spec §3).
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -24,16 +25,18 @@ use serde_json::{Map, Value};
 use crate::error::{Diagnostic, Diagnostics, Error};
 use crate::ir::SourceSpan;
 
-/// The diagnostic codes of the warnings [`parse_notebook`] returns (all `Level::Warning`).
+/// The diagnostic codes of the warnings [`parse_notebook`] returns (all
+/// `Level::Warning`).
 pub mod codes {
-    /// `cell_type` is not `markdown`, `code` or `raw` (a cell from a newer nbformat minor
-    /// version); the cell is kept as `CellType::Unknown`, which the converter skips.
+    /// `cell_type` is not `markdown`, `code` or `raw` (a cell from a newer
+    /// nbformat minor version); the cell is kept as `CellType::Unknown`, which
+    /// the converter skips.
     pub const UNKNOWN_CELL_TYPE: &str = "unknown-cell-type";
-    /// An output that does not deserialize (unknown `output_type`, missing field, …) was
-    /// dropped, or `outputs` was not a list and was ignored.
+    /// An output that does not deserialize (unknown `output_type`, missing
+    /// field, …) was dropped, or `outputs` was not a list and was ignored.
     pub const OUTPUT_SKIPPED: &str = "notebook-output-skipped";
-    /// An attachment that does not deserialize was dropped, or `attachments` was not an
-    /// object and was ignored.
+    /// An attachment that does not deserialize was dropped, or `attachments`
+    /// was not an object and was ignored.
     pub const ATTACHMENT_SKIPPED: &str = "notebook-attachment-skipped";
     /// `metadata.writer` (notebook or cell) is not an object and was ignored.
     pub const WRITER_NOT_OBJECT: &str = "writer-not-object";
@@ -43,14 +46,16 @@ pub mod codes {
 
 /// A parsed notebook. Build one with [`parse_notebook`].
 ///
-/// `Deserialize` is derived for completeness, but deserializing a `Notebook` directly is
-/// *strict*: one malformed output fails the whole notebook and `nbformat` is not checked.
+/// `Deserialize` is derived for completeness, but deserializing a `Notebook`
+/// directly is *strict*: one malformed output fails the whole notebook and
+/// `nbformat` is not checked.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct Notebook {
-    /// The cells in document order. A cell's index in this list is the `cell` of its
-    /// `SourceSpan` and the number used in warning messages (0-based).
+    /// The cells in document order. A cell's index in this list is the `cell`
+    /// of its `SourceSpan` and the number used in warning messages (0-based).
     pub cells: Vec<Cell>,
-    /// Notebook metadata (`kernelspec`, `language_info`, `title`, `writer`, …) as JSON.
+    /// Notebook metadata (`kernelspec`, `language_info`, `title`, `writer`, …)
+    /// as JSON.
     #[serde(default)]
     pub metadata: Value,
     /// Major format version; at least 4 after [`parse_notebook`].
@@ -74,15 +79,15 @@ pub struct Cell {
     /// The cell source.
     #[serde(default)]
     pub source: MultilineString,
-    /// Outputs (code cells only; empty otherwise). [`parse_notebook`] keeps only the outputs
-    /// that deserialize.
+    /// Outputs (code cells only; empty otherwise). [`parse_notebook`] keeps
+    /// only the outputs that deserialize.
     #[serde(default)]
     pub outputs: Vec<Output>,
     /// Execution count of a code cell; `None` when never executed.
     #[serde(default)]
     pub execution_count: Option<i64>,
-    /// Markdown/raw cell attachments: file name → MIME type → base64 payload. Referenced from
-    /// the source as `attachment:<file name>`.
+    /// Markdown/raw cell attachments: file name → MIME type → base64 payload.
+    /// Referenced from the source as `attachment:<file name>`.
     #[serde(default)]
     pub attachments: BTreeMap<String, BTreeMap<String, MultilineString>>,
 }
@@ -95,11 +100,13 @@ pub enum CellType {
     Markdown,
     /// Source code, with outputs.
     Code,
-    /// Raw content passed through by `nbconvert` (HTML when `raw_mimetype` says so).
+    /// Raw content passed through by `nbconvert` (HTML when `raw_mimetype` says
+    /// so).
     Raw,
-    /// Any other `cell_type` string: nbformat's "unrecognized cell from a future
-    /// minor-revision". The cell is kept so indices stay aligned with `SourceSpan::cell`;
-    /// [`parse_notebook`] warns ([`codes::UNKNOWN_CELL_TYPE`]) and converters skip it.
+    /// Any other `cell_type` string: nbformat's "unrecognized cell from a
+    /// future minor-revision". The cell is kept so indices stay aligned with
+    /// `SourceSpan::cell`; [`parse_notebook`] warns
+    /// ([`codes::UNKNOWN_CELL_TYPE`]) and converters skip it.
     #[serde(other)]
     Unknown,
 }
@@ -108,8 +115,9 @@ pub enum CellType {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(tag = "output_type", rename_all = "snake_case")]
 pub enum Output {
-    /// Text written to `stdout` or `stderr`. Jupyter splits streams arbitrarily, so
-    /// consecutive streams with the same `name` belong together.
+    /// Text written to `stdout` or `stderr`. Jupyter splits streams
+    /// arbitrarily, so consecutive streams with the same `name` belong
+    /// together.
     Stream {
         /// `"stdout"` or `"stderr"`.
         name: String,
@@ -145,13 +153,14 @@ pub enum Output {
     },
 }
 
-/// MIME type → payload. A payload is a string or a list of strings (text, base64), or
-/// arbitrary JSON (`application/json`, `…+json`); keep it as [`Value`] and convert lazily,
-/// e.g. with [`mime_text`].
+/// MIME type → payload. A payload is a string or a list of strings (text,
+/// base64), or arbitrary JSON (`application/json`, `…+json`); keep it as
+/// [`Value`] and convert lazily, e.g. with [`mime_text`].
 pub type MimeBundle = BTreeMap<String, Value>;
 
-/// Text that nbformat stores either as `"text"` or as `["li", "ne", "s"]`; both become one
-/// `String` with the segments concatenated as-is (nothing inserted). `null` becomes `""`.
+/// Text that nbformat stores either as `"text"` or as `["li", "ne", "s"]`; both
+/// become one `String` with the segments concatenated as-is (nothing inserted).
+/// `null` becomes `""`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MultilineString(pub String);
 
@@ -215,8 +224,9 @@ impl<'de> Visitor<'de> for MultilineVisitor {
     }
 }
 
-/// The text of a MIME payload: a string as is, a list of strings concatenated (nothing
-/// inserted). `None` for anything else (objects, numbers, lists with non-strings).
+/// The text of a MIME payload: a string as is, a list of strings concatenated
+/// (nothing inserted). `None` for anything else (objects, numbers, lists with
+/// non-strings).
 pub fn mime_text(value: &Value) -> Option<String> {
     match value {
         Value::String(text) => Some(text.clone()),
@@ -231,7 +241,8 @@ fn non_null(value: Option<&Value>) -> Option<&Value> {
 }
 
 impl Cell {
-    /// `metadata.tags` in order; non-string entries are ignored. Empty when absent.
+    /// `metadata.tags` in order; non-string entries are ignored. Empty when
+    /// absent.
     pub fn tags(&self) -> Vec<String> {
         self.metadata
             .get("tags")
@@ -245,15 +256,15 @@ impl Cell {
             .unwrap_or_default()
     }
 
-    /// `metadata.jupyter.source_hidden == true` (the input was collapsed in JupyterLab).
-    /// Tags such as `hide-input` are not considered here.
+    /// `metadata.jupyter.source_hidden == true` (the input was collapsed in
+    /// JupyterLab). Tags such as `hide-input` are not considered here.
     pub fn is_hidden_source(&self) -> bool {
         self.metadata.pointer("/jupyter/source_hidden")
             == Some(&Value::Bool(true))
     }
 
-    /// `metadata.jupyter.outputs_hidden == true` (the outputs were collapsed in JupyterLab).
-    /// Tags such as `hide-output` are not considered here.
+    /// `metadata.jupyter.outputs_hidden == true` (the outputs were collapsed in
+    /// JupyterLab). Tags such as `hide-output` are not considered here.
     pub fn is_hidden_outputs(&self) -> bool {
         self.metadata.pointer("/jupyter/outputs_hidden")
             == Some(&Value::Bool(true))
@@ -274,10 +285,11 @@ impl Cell {
         self.metadata.get("writer").filter(|value| value.is_object())
     }
 
-    /// The span of this whole cell when it is cell `index` of its notebook: lines 1 to the
-    /// number of source lines (at least 1, so an empty cell is `1..=1`), `cell: Some(index)`.
-    /// This is the span of every cell-level warning from [`parse_notebook`] and the
-    /// code-cell block shape of spec §2.
+    /// The span of this whole cell when it is cell `index` of its notebook:
+    /// lines 1 to the number of source lines (at least 1, so an empty cell is
+    /// `1..=1`), `cell: Some(index)`. This is the span of every cell-level
+    /// warning from [`parse_notebook`] and the code-cell block shape of spec
+    /// §2.
     pub fn span(&self, index: usize) -> SourceSpan {
         SourceSpan {
             start_line: 1,
@@ -290,7 +302,8 @@ impl Cell {
 
 impl Notebook {
     /// The kernel language: `metadata.language_info.name`, else
-    /// `metadata.kernelspec.language`, else `"text"`. Empty strings count as absent.
+    /// `metadata.kernelspec.language`, else `"text"`. Empty strings count as
+    /// absent.
     pub fn language(&self) -> &str {
         let non_empty = |pointer: &str| {
             self.metadata
@@ -325,14 +338,15 @@ impl Notebook {
             .unwrap_or_default()
     }
 
-    /// Compatibility metadata shared with presenter; non-object values are ignored.
+    /// Compatibility metadata shared with presenter; non-object values are
+    /// ignored.
     pub fn presenter_meta(&self) -> Option<&Value> {
         self.metadata.get("presenter").filter(|value| value.is_object())
     }
 
     /// `metadata.writer` when it is an object: document metadata with the same
-    /// keys as Markdown front matter (spec §2.2). A non-object value is ignored ([`parse_notebook`]
-    /// warns unless it is `null`).
+    /// keys as Markdown front matter (spec §2.2). A non-object value is ignored
+    /// ([`parse_notebook`] warns unless it is `null`).
     pub fn writer_meta(&self) -> Option<&Value> {
         self.metadata.get("writer").filter(|value| value.is_object())
     }
@@ -340,12 +354,14 @@ impl Notebook {
 
 /// Parses an `.ipynb` document leniently.
 ///
-/// Returns the notebook and its warnings: [`Diagnostic`]s with `Level::Warning`, a code from
-/// [`codes`], `path` set to `path`, and a message without any location prefix. Cell-level
-/// warnings carry `span = cell.span(index)` (`cell: Some(index)`, 0-based, lines
-/// `1..=source lines`), so they print as `talk.ipynb: cell 3, line 1: warning: …`;
-/// notebook-level ones have no span. Callers append them unchanged to their
-/// `Diagnostics` (`diags.extend(warnings)`).
+/// Returns the notebook and its warnings: [`Diagnostic`]s with
+/// `Level::Warning`, a code from [`codes`], `path` set to `path`, and a message
+/// without any location prefix. Cell-level warnings carry
+/// `span = cell.span(index)` (`cell: Some(index)`, 0-based, lines
+/// `1..=source lines`), so they print as
+/// `talk.ipynb: cell 3, line 1: warning: …`; notebook-level ones have no span.
+/// Callers append them unchanged to their `Diagnostics`
+/// (`diags.extend(warnings)`).
 ///
 /// | Code | Cause | Effect |
 /// |---|---|---|
@@ -355,15 +371,17 @@ impl Notebook {
 /// | [`codes::WRITER_NOT_OBJECT`] | notebook or cell `metadata.writer` neither an object nor `null` | ignored |
 /// | [`codes::NBFORMAT_NEWER`] | `nbformat` > 4 | read as nbformat 4 |
 ///
-/// One leading UTF-8 byte order mark (U+FEFF) is ignored, as for Markdown files, CSS and
-/// TOML files (some Windows editors write one); JSON itself does not allow it.
+/// One leading UTF-8 byte order mark (U+FEFF) is ignored, as for Markdown
+/// files, CSS and TOML files (some Windows editors write one); JSON itself does
+/// not allow it.
 ///
 /// # Errors
-/// [`Error::Parse`] (with `path`) for invalid JSON (with its line), a document that is not
-/// an object, `nbformat` < 4 (message exactly `"nbformat 4 required"`, spec §1), `nbformat`
-/// missing or not an integer, `cells` missing or not a list, and a cell that does not
-/// deserialize (not an object, no `cell_type`, wrongly typed `source`, …; the message
-/// starts with `cell <index>: `).
+/// [`Error::Parse`] (with `path`) for invalid JSON (with its line), a document
+/// that is not an object, `nbformat` < 4 (message exactly
+/// `"nbformat 4 required"`, spec §1), `nbformat` missing or not an integer,
+/// `cells` missing or not a list, and a cell that does not deserialize (not an
+/// object, no `cell_type`, wrongly typed `source`, …; the message starts with
+/// `cell <index>: `).
 pub fn parse_notebook(
     path: &Path, json: &str,
 ) -> crate::error::Result<(Notebook, Diagnostics)> {
@@ -424,13 +442,15 @@ pub fn parse_notebook(
     Ok((notebook, warnings))
 }
 
-/// A cell-level warning before it gets a path and span: (code from [`codes`], message).
+/// A cell-level warning before it gets a path and span: (code from [`codes`],
+/// message).
 type Finding = (&'static str, String);
 
 const WRITER_NOT_OBJECT_MESSAGE: &str =
     "metadata.writer is not an object, ignored";
 
-/// Requires `nbformat` ≥ 4; returns a warning message for a newer major version.
+/// Requires `nbformat` ≥ 4; returns a warning message for a newer major
+/// version.
 fn check_nbformat(top: &Map<String, Value>) -> Result<Option<String>, String> {
     match top.get("nbformat").and_then(Value::as_u64) {
         Some(4) => Ok(None),
@@ -451,8 +471,8 @@ fn check_nbformat(top: &Map<String, Value>) -> Result<Option<String>, String> {
     }
 }
 
-/// Moves the raw `cells` out of the top-level object (leaving an empty list behind so the
-/// rest still deserializes as a [`Notebook`]).
+/// Moves the raw `cells` out of the top-level object (leaving an empty list
+/// behind so the rest still deserializes as a [`Notebook`]).
 fn take_cells(top: &mut Map<String, Value>) -> Result<Vec<Value>, String> {
     match top.insert("cells".to_owned(), Value::Array(Vec::new())) {
         Some(Value::Array(cells)) => Ok(cells),
@@ -461,7 +481,8 @@ fn take_cells(top: &mut Map<String, Value>) -> Result<Vec<Value>, String> {
     }
 }
 
-/// Deserializes one cell; outputs and attachments leniently (see [`parse_outputs`]).
+/// Deserializes one cell; outputs and attachments leniently (see
+/// [`parse_outputs`]).
 fn parse_cell(
     mut raw: Value,
 ) -> Result<(Cell, Vec<Finding>), serde_json::Error> {
@@ -487,9 +508,10 @@ fn parse_cell(
     Ok((cell, findings))
 }
 
-/// Deserializes each raw output on its own, keeping those that succeed in order and
-/// describing each failure (`"output <i> (<output_type>) skipped: <reason>"`, `i` 0-based
-/// within the list). One odd output never affects the others.
+/// Deserializes each raw output on its own, keeping those that succeed in order
+/// and describing each failure
+/// (`"output <i> (<output_type>) skipped: <reason>"`, `i` 0-based within the
+/// list). One odd output never affects the others.
 pub fn parse_outputs(raw: Vec<Value>) -> (Vec<Output>, Vec<String>) {
     let mut outputs = Vec::with_capacity(raw.len());
     let mut warnings = Vec::new();
@@ -534,7 +556,8 @@ fn lenient_outputs(
     }
 }
 
-/// `attachments` per file name; a file whose bundle does not deserialize is dropped.
+/// `attachments` per file name; a file whose bundle does not deserialize is
+/// dropped.
 fn lenient_attachments(
     raw: Option<Value>, findings: &mut Vec<Finding>,
 ) -> BTreeMap<String, BTreeMap<String, MultilineString>> {
@@ -562,7 +585,8 @@ fn lenient_attachments(
     attachments
 }
 
-/// Warns about metadata the accessors silently replace by a default (`null` is absent).
+/// Warns about metadata the accessors silently replace by a default (`null` is
+/// absent).
 fn check_cell_metadata(cell: &Cell, findings: &mut Vec<Finding>) {
     if non_null(cell.metadata.get("writer")).is_some()
         && cell.writer_options().is_none()
@@ -613,7 +637,9 @@ mod tests {
     }
 
     fn parse_cells(cells: Value) -> (Notebook, Diagnostics) {
-        let notebook = json!({ "cells": cells, "metadata": {}, "nbformat": 4, "nbformat_minor": 5 });
+        let notebook = json!({
+            "cells": cells, "metadata": {}, "nbformat": 4, "nbformat_minor": 5
+        });
         parse_notebook(Path::new("nb.ipynb"), &notebook.to_string()).unwrap()
     }
 
@@ -674,9 +700,10 @@ mod tests {
             stream,
             Output::Stream { name: "stdout".into(), text: "a\nb".into() }
         );
-        let result: Output = serde_json::from_value(
-            json!({"output_type": "execute_result", "data": {"text/plain": "1"}, "metadata": {}, "execution_count": null}),
-        )
+        let result: Output = serde_json::from_value(json!({
+            "output_type": "execute_result", "data": {"text/plain": "1"},
+            "metadata": {}, "execution_count": null
+        }))
         .unwrap();
         assert!(matches!(
             result,

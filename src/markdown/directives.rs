@@ -123,9 +123,9 @@ fn merge_attrs(out: &mut DirectiveInfo, parsed: ParsedAttrs) {
     }
 }
 
-/// Rewrites colon-bearing directive candidates in document/directive paragraphs.
-/// Returns rewritten 1-based lines in ascending order, preserving line endings
-/// and the number of lines. Unchanged inputs remain borrowed.
+/// Rewrites colon-bearing directive candidates in document/directive
+/// paragraphs. Returns rewritten 1-based lines in ascending order, preserving
+/// line endings and the number of lines. Unchanged inputs remain borrowed.
 pub fn colon_prepass<'t>(
     text: &'t str, opts: &Options,
 ) -> (Cow<'t, str>, Vec<usize>) {
@@ -135,10 +135,16 @@ pub fn colon_prepass<'t>(
     for node in root.descendants() {
         if !matches!(node.data().value, NodeValue::Paragraph)
             || !node.parent().is_some_and(|parent| {
-                matches!(parent.data().value, NodeValue::Document | NodeValue::BlockDirective(_))
+                matches!(
+                    parent.data().value,
+                    NodeValue::Document | NodeValue::BlockDirective(_)
+                )
             })
             || !node.first_child().is_some_and(|first| {
-                matches!(&first.data().value, NodeValue::Text(text) if text.starts_with(":::"))
+                matches!(
+                    &first.data().value,
+                    NodeValue::Text(text) if text.starts_with(":::")
+                )
             })
         {
             continue;
@@ -314,8 +320,9 @@ struct InfoToken {
     eq: Option<usize>,
 }
 
-/// Splits on whitespace outside `"…"` / `'…'` (backslash escapes the next character inside
-/// quotes). An unclosed quote runs to the end; its character is returned.
+/// Splits on whitespace outside `"…"` / `'…'` (backslash escapes the next
+/// character inside quotes). An unclosed quote runs to the end; its character
+/// is returned.
 fn split_info(info: &str) -> (Vec<InfoToken>, Option<char>) {
     let mut tokens = Vec::new();
     let mut current: Option<InfoToken> = None;
@@ -473,17 +480,19 @@ mod tests {
         let root = parse_document(&arena, &edited, &opts);
         let first = root.first_child().unwrap();
         let data = first.data();
-        assert!(
-            matches!(&data.value, NodeValue::BlockDirective(d) if d.info == "figure #fig:wrapped")
-        );
+        assert!(matches!(
+            &data.value,
+            NodeValue::BlockDirective(d) if d.info == "figure #fig:wrapped"
+        ));
         assert_eq!(
             (data.sourcepos.start.line, data.sourcepos.end.line),
             (1, 5)
         );
         let last = root.last_child().unwrap().first_child().unwrap();
-        assert!(
-            matches!(&last.data().value, NodeValue::Text(text) if text == "after")
-        );
+        assert!(matches!(
+            &last.data().value,
+            NodeValue::Text(text) if text == "after"
+        ));
     }
 
     #[test]

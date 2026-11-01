@@ -168,10 +168,11 @@ fn toml_to_json(value: toml::Value) -> std::result::Result<Value, String> {
     })
 }
 
-// ---------------------------------------------------------------------------------------
-// Lines of values in a `theme.toml` text, for located diagnostics. The same rules as
-// `presenter theme check` (src/cli/theme.rs `ManifestFile`), so that `check` and
-// `theme check` report a problem at the same line (audit F10 review).
+// -----------------------------------------------------------------------------
+// Lines of values in a `theme.toml` text, for located diagnostics. The same
+// rules as `presenter theme check` (src/cli/theme.rs `ManifestFile`), so that
+// `check` and `theme check` report a problem at the same line (audit F10
+// review).
 
 /// The 1-based line of `text` (a `theme.toml`) where `value` is written as a
 /// quoted TOML string in the value of `key` in `[table]` (an array may span
@@ -297,13 +298,15 @@ mod tests {
             line_of_value(text, "styles", "entries", "x#y.css"),
             Some(7)
         );
-        // In a comment only: not found in the table; no other line has it either.
+        // In a comment only: not found in the table; no other line has it
+        // either.
         assert_eq!(line_of_value(text, "styles", "entries", "b.css"), None);
         // Not in the table it is looked for in: the first line that has it.
         assert_eq!(line_of_value(text, "vars", "plugins", "a.css"), Some(3));
         assert_eq!(line_of_key(text, "vars", "plugins"), Some(11));
         assert_eq!(line_of_key(text, "styles", "plugins"), None);
-        // The pieces (moved here from `presenter theme check`'s own copy, wave 8).
+        // The pieces (moved here from `presenter theme check`'s own copy, wave
+        // 8).
         assert_eq!(toml_code("a = \"#\" # c"), "a = \"#\" ");
         assert_eq!(toml_code("a = 'x\\' # c"), "a = 'x\\' ");
         assert_eq!(toml_code("a = \"x\\\"#\" # c"), "a = \"x\\\"#\" ");

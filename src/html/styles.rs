@@ -3,9 +3,9 @@
 //! Theme entries resolve references next to their stylesheet, then in the
 //! chain's `assets/` directories, then among `vendor/` and `writer/` files.
 //! Helper stylesheets resolve next to their own helper path; only embedded
-//! helpers may retain missing references, such as KaTeX's legacy font fallbacks.
-//! The same lookup applies in every output mode: builds register placeholders,
-//! and serve mode writes versioned `/__writer/asset/` URLs.
+//! helpers may retain missing references, such as KaTeX's legacy font
+//! fallbacks. The same lookup applies in every output mode: builds register
+//! placeholders, and serve mode writes versioned `/__writer/asset/` URLs.
 //!
 //! Top-level remote imports are hoisted before all other rules. Local imports
 //! must instead be listed as separate `[styles] entries` (html-output.md §5).
@@ -70,10 +70,10 @@ impl Targets<'_> {
     }
 }
 
-/// Compiles entries parent-first and appends code CSS when the document uses it.
-/// Relative URLs become registered placeholders; the caller resolves those for
-/// its output mode. Invalid entry extensions are [`Error::Theme`]; local imports,
-/// invalid UTF-8 and missing URL targets are [`Error::Style`].
+/// Compiles entries parent-first and appends code CSS when the document uses
+/// it. Relative URLs become registered placeholders; the caller resolves those
+/// for its output mode. Invalid entry extensions are [`Error::Theme`]; local
+/// imports, invalid UTF-8 and missing URL targets are [`Error::Style`].
 pub fn compile_theme_css(
     theme: &Theme, features: &Features, registry: &mut AssetRegistry,
 ) -> Result<String> {
@@ -127,7 +127,8 @@ pub(super) fn compile(
     Ok(head + &css)
 }
 
-/// Writes the two code themes in disjoint colour-scheme queries when both exist.
+/// Writes the two code themes in disjoint colour-scheme queries when both
+/// exist.
 fn append_code_css(theme: &Theme, css: &mut String) -> Result<()> {
     let (light, dark) = theme.code_themes()?;
     if let Some(light) = light {
@@ -203,7 +204,8 @@ fn take_imports(
     Ok(out)
 }
 
-/// `bytes` as UTF-8 text without a leading byte order mark (see the module docs).
+/// `bytes` as UTF-8 text without a leading byte order mark (see the module
+/// docs).
 pub(super) fn decode_text(
     bytes: Vec<u8>,
 ) -> std::result::Result<String, FromUtf8Error> {
@@ -214,11 +216,11 @@ pub(super) fn decode_text(
     Ok(text)
 }
 
-/// Rewrites the relative `url()`s of the stylesheet `css` at helper path `key` following
-/// `rules` (see the module docs).
+/// Rewrites the relative `url()`s of the stylesheet `css` at helper path `key`
+/// following `rules` (see the module docs).
 ///
-/// Errors: [`Error::Style`] naming `key` for a reference that resolves to nothing (unless
-/// lenient); a read error of an existing file.
+/// Errors: [`Error::Style`] naming `key` for a reference that resolves to
+/// nothing (unless lenient); a read error of an existing file.
 pub(super) fn rewrite_urls(
     theme: &Theme, key: &str, css: &str, rules: UrlRules, targets: Targets<'_>,
 ) -> Result<String> {
@@ -250,9 +252,10 @@ pub(super) fn rewrite_urls(
             Ok(css)
         }
         Targets::ServeUrls => {
-            // A scratch registry is the id → URL table: each target is registered with its
-            // versioned URL as its "bytes" (ids are content hashes, so one URL is one id),
-            // and the placeholders are then replaced by the URLs.
+            // A scratch registry is the id → URL table: each target is
+            // registered with its versioned URL as its "bytes" (ids are content
+            // hashes, so one URL is one id), and the placeholders are then
+            // replaced by the URLs.
             let mut table = AssetRegistry::new();
             let mut fetch = |path: &str| {
                 Ok(versioned_serve_url(theme, path)?.map(String::into_bytes))
@@ -273,9 +276,9 @@ pub(super) fn rewrite_urls(
     }
 }
 
-/// `css` with every `placeholder` replaced by `url`. When `url` has a query and the
-/// reference its own (the suffix after the placeholder, `?x=1#y`), they are joined:
-/// `<url>&x=1#y`.
+/// `css` with every `placeholder` replaced by `url`. When `url` has a query and
+/// the reference its own (the suffix after the placeholder, `?x=1#y`), they are
+/// joined: `<url>&x=1#y`.
 fn replace_placeholder(css: &str, placeholder: &str, url: &str) -> String {
     let mut out = String::with_capacity(css.len() + url.len());
     let mut rest = css;
@@ -317,11 +320,12 @@ struct Lookup<'l> {
 }
 
 impl Lookup<'_> {
-    /// The helper paths the reference `rel` may name, in lookup order: `rel` joined to the
-    /// stylesheet's directory, then (with the `assets/` fallback) `@<theme>/assets/<rel>`
-    /// for each theme of the chain, child first, and last, for a `vendor/…` or
-    /// `writer/…` `rel`, that builtin helper path (html-output.md §5: such names come
-    /// from the embedded tree; a theme's own `assets/vendor/…` file comes first).
+    /// The helper paths the reference `rel` may name, in lookup order: `rel`
+    /// joined to the stylesheet's directory, then (with the `assets/` fallback)
+    /// `@<theme>/assets/<rel>` for each theme of the chain, child first, and
+    /// last, for a `vendor/…` or `writer/…` `rel`, that builtin helper path
+    /// (html-output.md §5: such names come from the embedded tree; a theme's
+    /// own `assets/vendor/…` file comes first).
     fn candidates(self, rel: &str) -> Vec<String> {
         let mut paths: Vec<String> =
             join_relative(self.key, rel).into_iter().collect();
@@ -343,7 +347,8 @@ impl Lookup<'_> {
         paths
     }
 
-    /// Where a reference `rel` that resolved to nothing was looked for, for the error.
+    /// Where a reference `rel` that resolved to nothing was looked for, for the
+    /// error.
     fn looked_in(self, rel: &str) -> &'static str {
         if !self.rules.assets_fallback {
             ""
@@ -356,8 +361,9 @@ impl Lookup<'_> {
     }
 }
 
-/// [`register_css_urls`] with a resolver that tries the candidate helper paths of each
-/// reference in order and registers what `fetch` returns for the first one it finds.
+/// [`register_css_urls`] with a resolver that tries the candidate helper paths
+/// of each reference in order and registers what `fetch` returns for the first
+/// one it finds.
 fn register_urls(
     lookup: Lookup<'_>, css: &str, registry: &mut AssetRegistry,
     fetch: &mut dyn FnMut(&str) -> Result<Option<Vec<u8>>>,
@@ -395,11 +401,13 @@ fn register_urls(
     })
 }
 
-/// Absolute targets of `@import` rules (`https://…`, `http://…` or `//…`, quoted or in
-/// `url()`), in order. Comments are not skipped (a commented-out import is reported too).
+/// Absolute targets of `@import` rules (`https://…`, `http://…` or `//…`,
+/// quoted or in `url()`), in order. Comments are not skipped (a commented-out
+/// import is reported too).
 pub(super) fn remote_imports(css: &str) -> Vec<String> {
     static REMOTE_IMPORT: LazyLock<Regex> = LazyLock::new(|| {
-        // A constant pattern covered by the unit tests: compiling it cannot fail.
+        // A constant pattern covered by the unit tests: compiling it cannot
+        // fail.
         Regex::new(
             r#"(?i)@import\s+(?:url\(\s*)?["']?\s*((?:https?:)?//[^"'\s);]+)"#,
         )
@@ -427,7 +435,8 @@ impl<'t> ImportRule<'t> {
         Some(ImportRule { text: whole.as_str(), url: url.trim() })
     }
 
-    /// True if the URL is relative (not empty, without a scheme, not `/…` or `//…`).
+    /// True if the URL is relative (not empty, without a scheme, not `/…` or
+    /// `//…`).
     fn is_local(&self) -> bool {
         !self.url.is_empty()
             && !self.url.starts_with(['/', '\\'])
@@ -441,12 +450,13 @@ static SCHEME: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^[A-Za-z][A-Za-z0-9+.\-]*:").expect("scheme regex is valid")
 });
 
-/// The CSS tokens [`take_imports`] cares about, tried in this order at each position: a
-/// comment (to the end of the text when unterminated) or a string literal, both matched to
-/// be skipped; an `@import` rule up to its `;` (or the end of the text) whose URL is in
-/// `url()` (`dq`/`sq` quoted, `uq` unquoted) or a string (`sdq`/`ssq`), followed by an
-/// optional condition (`cond`); an unquoted `url(…)`, skipped (its argument may contain
-/// braces); a `brace`, `{` or `}`, to tell top-level rules from nested ones.
+/// The CSS tokens [`take_imports`] cares about, tried in this order at each
+/// position: a comment (to the end of the text when unterminated) or a string
+/// literal, both matched to be skipped; an `@import` rule up to its `;` (or the
+/// end of the text) whose URL is in `url()` (`dq`/`sq` quoted, `uq` unquoted)
+/// or a string (`sdq`/`ssq`), followed by an optional condition (`cond`); an
+/// unquoted `url(…)`, skipped (its argument may contain braces); a `brace`, `{`
+/// or `}`, to tell top-level rules from nested ones.
 static CSS_IMPORT: LazyLock<Regex> = LazyLock::new(|| {
     // A constant pattern covered by the unit tests: compiling it cannot fail.
     Regex::new(concat!(
@@ -543,9 +553,10 @@ a::before { content: "@import url(string.css);" }
                 &mut Vec::new(),
             )
             .unwrap_err();
-            assert!(
-                matches!(err, Error::Style { ref file, .. } if file == "@t/styles/a.css")
-            );
+            assert!(matches!(
+                err,
+                Error::Style { ref file, .. } if file == "@t/styles/a.css"
+            ));
             assert!(err.to_string().contains("line 2:"), "{err}");
             assert!(
                 err.to_string().contains("list the file in [styles] entries"),
@@ -582,7 +593,8 @@ a { background: url(https://x.example/not-an-import.png) }"#;
             replace_placeholder(&css, placeholder, "/u.png?v=5"),
             "a { b: url(/u.png?v=5); c: url('/u.png?v=5&x=1#y'); d: url(/u.png?v=5#z) }"
         );
-        // A URL without a query (a builtin file) keeps the reference's query as it is.
+        // A URL without a query (a builtin file) keeps the reference's query as
+        // it is.
         assert_eq!(
             replace_placeholder(&css, placeholder, "/v.woff"),
             "a { b: url(/v.woff); c: url('/v.woff?x=1#y'); d: url(/v.woff#z) }"
@@ -623,8 +635,9 @@ a { background: url(https://x.example/not-an-import.png) }"#;
                 "@default/assets/logo.png"
             ]
         );
-        // Every `rel` falls back, named in the theme-root form whatever its first segment;
-        // a builtin-form `rel` then names the embedded file (§3).
+        // Every `rel` falls back, named in the theme-root form whatever its
+        // first segment; a builtin-form `rel` then names the embedded file
+        // (§3).
         assert_eq!(
             entry.candidates("vendor/x.png"),
             [
@@ -661,7 +674,8 @@ a { background: url(https://x.example/not-an-import.png) }"#;
                 "@default/assets/fonts/a/a.woff"
             ]
         );
-        // A `rel` that climbs out of its root has no fallback; duplicates are dropped.
+        // A `rel` that climbs out of its root has no fallback; duplicates are
+        // dropped.
         assert_eq!(entry.candidates("../x.png"), ["@t/x.png"]);
         assert_eq!(
             lookup("@t/assets/a.css", UrlRules::THEME_ENTRY)

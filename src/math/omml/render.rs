@@ -620,7 +620,14 @@ fn table(
             return Err(unsupported(row));
         }
         let values: Vec<_> = row.elements().collect();
-        if values.is_empty() || row.children.iter().any(|child| matches!(child, Node::Text(value) if !value.trim().is_empty())) {
+        if values.is_empty()
+            || row.children.iter().any(|child| {
+                matches!(
+                    child,
+                    Node::Text(value) if !value.trim().is_empty()
+                )
+            })
+        {
             return Err(unsupported(row));
         }
         for cell in &values {

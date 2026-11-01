@@ -86,7 +86,10 @@ PINNED_NOTICE_GROUPS = {
         "revision": "ec81337f99d8b557a6fce10f674c054050551444",
         "files": [{
             "name": "LICENCE.rst", "kind": "release",
-            "path": "docs/release/notice-sources/roman-numerals-rs-3.1.0/LICENCE.rst",
+            "path": (
+                "docs/release/notice-sources/roman-numerals-rs-3.1.0/"
+                "LICENCE.rst"
+            ),
             "sha256": "c744ffc7e120b22e6620b613298dc003a2613c0ae489ee414fb1d473f24f916f",
         }],
     },
@@ -115,17 +118,26 @@ PINNED_NOTICE_GROUPS = {
         "files": [
             {
                 "name": "LICENSE-MPL-2.0.txt", "kind": "release",
-                "path": "docs/release/notice-sources/selectors-0.41.0/LICENSE-MPL-2.0.txt",
+                "path": (
+                    "docs/release/notice-sources/selectors-0.41.0/"
+                    "LICENSE-MPL-2.0.txt"
+                ),
                 "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
             },
             {
                 "name": "SOURCE-HEADER.txt", "kind": "release",
-                "path": "docs/release/notice-sources/selectors-0.41.0/SOURCE-HEADER.txt",
+                "path": (
+                    "docs/release/notice-sources/selectors-0.41.0/"
+                    "SOURCE-HEADER.txt"
+                ),
                 "sha256": "766674381e88a468d55e07de3596987391cf0e8beebe51baf4fddf11078785b3",
             },
             {
                 "name": "PROVENANCE.json", "kind": "release",
-                "path": "docs/release/notice-sources/selectors-0.41.0/PROVENANCE.json",
+                "path": (
+                    "docs/release/notice-sources/selectors-0.41.0/"
+                    "PROVENANCE.json"
+                ),
                 "sha256": "49d2ecec5ead108ad3745ecaed6adf65f9054231d113d9f1bd04e8c9bb89cb8d",
             },
         ],
@@ -204,7 +216,9 @@ def files_beneath(root, embedded=False):
         )
         for name in directories:
             if (current / name).is_symlink():
-                raise NoticeError(f"symlinked source directory: {current / name}")
+                raise NoticeError(
+                    f"symlinked source directory: {current / name}"
+                )
         for name in sorted(files):
             if embedded and excluded(name):
                 continue
@@ -258,7 +272,8 @@ def verify_embedded(actual, version, notices):
         ) if left != right), min(len(actual), len(expected)))
         raise NoticeError(
             "archived binary --licenses differs from the source notice set "
-            f"at byte {first} (expected {len(expected)} bytes, got {len(actual)})"
+            f"at byte {first} (expected {len(expected)} bytes, "
+            f"got {len(actual)})"
         )
 
 
@@ -285,7 +300,9 @@ def checked_metadata(data):
             if package.get(field) is not None and not isinstance(
                 package[field], str
             ):
-                raise NoticeError(f"invalid metadata {field}: {package['name']}")
+                raise NoticeError(
+                    f"invalid metadata {field}: {package['name']}"
+                )
         by_id[package["id"]] = package
         key = (package["name"], package["version"])
         by_identity.setdefault(key, []).append(package)
@@ -326,12 +343,15 @@ def linked_packages(data, tree):
             if origin is None or Path(origin).resolve() != expected:
                 raise NoticeError(f"tree path does not match metadata: {name}")
         elif origin is not None:
-            raise NoticeError(f"unexpected registry origin in cargo tree: {line!r}")
+            raise NoticeError(
+                f"unexpected registry origin in cargo tree: {line!r}"
+            )
         linked[package["id"]] = package
     if root["id"] not in linked:
         raise NoticeError("target's linked tree omits the workspace writer")
     return root, sorted(
-        linked.values(), key=lambda package: (package["name"], package["version"])
+        linked.values(),
+        key=lambda package: (package["name"], package["version"])
     )
 
 
@@ -432,12 +452,18 @@ def pinned_crate_notices(package, embedded, workspace):
     def require(condition, detail):
         if not condition:
             raise NoticeError(
-                f"pinned {pin['group']} notice guard: {name} {version}: {detail}"
+                f"pinned {pin['group']} notice guard: "
+                f"{name} {version}: {detail}"
             )
 
     require(package.get("source") == group["source"], "registry source changed")
-    require(package.get("repository") == group["repository"], "repository changed")
-    require(package.get("license") == group["license"], "license declaration changed")
+    require(
+        package.get("repository") == group["repository"], "repository changed"
+    )
+    require(
+        package.get("license") == group["license"],
+        "license declaration changed"
+    )
     require(
         package.get("license_file") is None, "license_file declaration changed"
     )
@@ -471,7 +497,8 @@ def pinned_crate_notices(package, embedded, workspace):
     member_name = f"{name}-{version}/.cargo_vcs_info.json"
     with tarfile.open(archive, "r:gz") as source:
         members = [
-            member for member in source.getmembers() if member.name == member_name
+            member for member in source.getmembers()
+            if member.name == member_name
         ]
         require(
             len(members) == 1 and members[0].isfile(),
@@ -486,7 +513,8 @@ def pinned_crate_notices(package, embedded, workspace):
         "source VCS record is missing or linked"
     )
     require(
-        vcs_file.read_bytes() == vcs_bytes, "source VCS record differs from archive"
+        vcs_file.read_bytes() == vcs_bytes,
+        "source VCS record differs from archive"
     )
     vcs = json.loads(vcs_bytes)
     require(
@@ -495,17 +523,22 @@ def pinned_crate_notices(package, embedded, workspace):
     )
     require(vcs["git"].get("sha1") == group["revision"], "VCS revision changed")
     require(vcs["git"].get("dirty", False) is False, "VCS record is dirty")
-    require(vcs.get("path_in_vcs") == pin["vcs_path"], "VCS package path changed")
+    require(
+        vcs.get("path_in_vcs") == pin["vcs_path"], "VCS package path changed"
+    )
     notices = {}
     for source in group["files"]:
         output = source["name"]
         require(
-            output not in {"", ".", ".."} and "/" not in output and "\\" not in output,
+            output not in {"", ".", ".."} and "/" not in output
+            and "\\" not in output,
             "invalid archive notice name"
         )
         if source["kind"] == "embedded":
             raw = embedded.get(source["path"])
-            require(isinstance(raw, bytes), "existing embedded notice is missing")
+            require(
+                isinstance(raw, bytes), "existing embedded notice is missing"
+            )
         elif source["kind"] == "release":
             relative = Path(source["path"])
             require(
@@ -593,8 +626,14 @@ def package_location(package, workspace):
                     f"https://static.crates.io/crates/{package['name']}/"
                     f"{package['name']}-{package['version']}.crate"
                 )
-                if source != group["source"] or pin.get("source_url") != expected:
-                    raise NoticeError("pinned complete source archive attribution is missing or changed")
+                if (
+                    source != group["source"]
+                    or pin.get("source_url") != expected
+                ):
+                    raise NoticeError(
+                        "pinned complete source archive attribution "
+                        "is missing or changed"
+                    )
                 return pin["source_url"]
         return (
             f"https://crates.io/crates/{package['name']}/{package['version']}"
@@ -633,7 +672,9 @@ def write_fresh(out, payload):
     if os.path.lexists(out):
         raise NoticeError(f"output already exists: {out}")
     out.parent.mkdir(parents=True, exist_ok=True)
-    temporary = Path(tempfile.mkdtemp(prefix=".writer-notices-", dir=out.parent))
+    temporary = Path(tempfile.mkdtemp(
+        prefix=".writer-notices-", dir=out.parent
+    ))
     claimed = False
     try:
         for relative, raw in sorted(payload.items()):

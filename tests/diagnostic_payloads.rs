@@ -75,11 +75,19 @@ fn generated_included_notebook_error_quotes_the_original_cell_line() {
     let included = directory.path().join("included.ipynb");
     fs::write(&input, ":::include included.ipynb\n:::\n").unwrap();
     let offending = "Inline `#panic(\"original-cell-failure\")`{=typst}.";
-    let notebook = json!({"nbformat":4,"nbformat_minor":5,"metadata":{},"cells":[
-        {"cell_type":"markdown","id":"intro","metadata":{},"source":"Intro.\n"},
-        {"cell_type":"markdown","id":"failure","metadata":{},
-         "source":format!("Before.\n\n{offending}\n")}
-    ]});
+    let notebook = json!({
+        "nbformat": 4, "nbformat_minor": 5, "metadata": {},
+        "cells": [
+            {
+                "cell_type": "markdown", "id": "intro", "metadata": {},
+                "source": "Intro.\n"
+            },
+            {
+                "cell_type": "markdown", "id": "failure", "metadata": {},
+                "source": format!("Before.\n\n{offending}\n")
+            }
+        ]
+    });
     fs::write(&included, notebook.to_string()).unwrap();
     let mut config = Config::default();
     config.build.targets = vec![Target::Pdf];

@@ -16,7 +16,12 @@ use std::time::{Duration, Instant};
 use regex::Regex;
 use serde_json::{Value, json};
 
-const WAIT: Duration = Duration::from_secs(10);
+/// How long a server may take to start, build, exit or send an event. It only
+/// has to beat a hang: under a parallel runner every watcher start waits for
+/// fseventsd, which serialises FSEvents stream setup across every process on a
+/// Mac, and a loaded one has taken over ten seconds.
+const WAIT: Duration = Duration::from_secs(60);
+/// How long one HTTP exchange may take.
 const HTTP_WAIT: Duration = Duration::from_secs(2);
 
 fn serial() -> MutexGuard<'static, ()> {
@@ -219,7 +224,8 @@ impl Server {
 
     fn events(&mut self) -> Events {
         // HTTP/1.0 gives an EOF-delimited event body, avoiding a second chunk
-        // decoder. A cloned socket lets Drop wake this owned reader immediately.
+        // decoder. A cloned socket lets Drop wake this owned reader
+        // immediately.
         let mut stream =
             TcpStream::connect_timeout(&self.addr(), HTTP_WAIT).unwrap();
         stream.set_read_timeout(Some(WAIT)).unwrap();
@@ -884,7 +890,11 @@ fn interrupt_ends_an_active_sse_connection_and_exits_zero() {
 fn interrupt_during_the_first_build_exits_zero_without_binding() {
     let _turn = serial();
     let dir = project();
-    let large: String = (0..30000).map(|index| format!("Paragraph {index}: Text with *emphasis*, `code` and a reference.\n\n")).collect();
+    let large: String = (0..30000)
+        .map(|index| format!(
+            "Paragraph {index}: Text with *emphasis*, `code` and a reference.\n\n"
+        ))
+        .collect();
     write(&dir.path().join("big.md"), &large);
     let mut command = Command::new(env!("CARGO_BIN_EXE_writer"));
     command.args(["-v", "serve", "big.md", "--port", "0"]);
@@ -1213,10 +1223,15 @@ fn included_notebook_edits_and_late_cell_errors_keep_real_provenance() {
             }],
         })
     };
-    let mut notebook = json!({"nbformat":4,"nbformat_minor":5,
-        "metadata":{"language_info":{"name":"python"}}, "cells":[
-            {"cell_type":"markdown","id":"intro","source":"Notebook intro.\n","metadata":{}},
-            plot("#214d72"),
+    let mut notebook = json!({
+        "nbformat": 4, "nbformat_minor": 5,
+        "metadata": {"language_info": {"name": "python"}},
+        "cells": [
+            {
+                "cell_type": "markdown", "id": "intro",
+                "source": "Notebook intro.\n", "metadata": {}
+            },
+            plot("#214d72")
         ]
     });
     let path = dir.path().join("book.ipynb");
@@ -1234,9 +1249,11 @@ fn included_notebook_edits_and_late_cell_errors_keep_real_provenance() {
     });
     assert_ne!(updated["pages"]["hashes"], initial["pages"]["hashes"]);
     let good = assert_page_resource(&server, &updated, 0);
-    notebook["cells"][1] = json!({"cell_type":"raw","id":"plot",
-        "metadata":{"raw_mimetype":"text/typst"},
-        "source":"#t53_unknown_cell()\n"});
+    notebook["cells"][1] = json!({
+        "cell_type": "raw", "id": "plot",
+        "metadata": {"raw_mimetype": "text/typst"},
+        "source": "#t53_unknown_cell()\n"
+    });
     write(&path, &serde_json::to_string_pretty(&notebook).unwrap());
     let failed = events.build(&server, id(&updated), |event| {
         event["pages"]["status"] == "error"

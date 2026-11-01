@@ -1,6 +1,7 @@
 //! Document lints and presenter compatibility (markdown-dialect.md §9–10).
 //! Frontend and resolver findings are reused; target packages are discarded.
-//! Error conversion and position ordering are adapted from presenter_rs/check.rs.
+//! Error conversion and position ordering are adapted from
+//! presenter_rs/check.rs.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -552,7 +553,8 @@ fn validate_math(
     }
 }
 
-/// Converts a stopped check to a located error finding for text or JSON reports.
+/// Converts a stopped check to a located error finding for text or JSON
+/// reports.
 pub fn error_diagnostic(error: &Error, input: &Path) -> Diagnostic {
     let code = match error {
         Error::Parse { .. } | Error::FrontMatter(_) | Error::Json(_) => {
@@ -943,14 +945,41 @@ mod tests {
 
     #[test]
     fn notebook_compatibility_scans_source_cells_and_only_the_first_header() {
-        let source = json!({"nbformat": 4, "metadata": {"authors": ["Metadata"]}, "cells": [
-            {"cell_type": "code", "source": ":::include ignored.md\n:::\n", "execution_count": 1},
-            {"cell_type": "markdown", "source": "---\nauthors: [Ada]\n---\n"},
-            {"cell_type": "markdown", "source": "---\nauthors: [Ignored]\n---\n"},
-            {"cell_type": "markdown", "metadata": {"tags": ["remove-cell"]}, "source": "Before.\n\n:::include removed.md\n:::\n"},
-            {"cell_type": "raw", "metadata": {"raw_mimetype": "text/markdown; charset=utf-8"}, "source": "Before.\n\n:::include raw.md\n:::\n"},
-            {"cell_type": "raw", "metadata": {"raw_mimetype": "text/html"}, "source": "Before.\n\n:::include ignored.md\n:::\n"},
-        ]}).to_string();
+        let source = json!({
+            "nbformat": 4, "metadata": {"authors": ["Metadata"]}, "cells": [
+                {
+                    "cell_type": "code",
+                    "source": ":::include ignored.md\n:::\n",
+                    "execution_count": 1
+                },
+                {
+                    "cell_type": "markdown",
+                    "source": "---\nauthors: [Ada]\n---\n"
+                },
+                {
+                    "cell_type": "markdown",
+                    "source": "---\nauthors: [Ignored]\n---\n"
+                },
+                {
+                    "cell_type": "markdown",
+                    "metadata": {"tags": ["remove-cell"]},
+                    "source": "Before.\n\n:::include removed.md\n:::\n"
+                },
+                {
+                    "cell_type": "raw",
+                    "metadata": {
+                        "raw_mimetype": "text/markdown; charset=utf-8"
+                    },
+                    "source": "Before.\n\n:::include raw.md\n:::\n"
+                },
+                {
+                    "cell_type": "raw",
+                    "metadata": {"raw_mimetype": "text/html"},
+                    "source": "Before.\n\n:::include ignored.md\n:::\n"
+                }
+            ]
+        })
+        .to_string();
         let directory = project(&[("cells.ipynb", &source)]);
         let path = directory.path().join("cells.ipynb");
         let mut diagnostics = Vec::new();
@@ -1002,12 +1031,19 @@ mod tests {
         assert!(!diagnostics.iter().any(|d| d.code.starts_with("presenter-")));
 
         let unknown = header.replace("abstract:", "custom:");
-        let source = json!({"nbformat": 4, "cells": [
-            {"cell_type": "markdown", "source": "First."},
-            {"cell_type": "markdown", "source": header},
-            {"cell_type": "markdown", "source": unknown},
-            {"cell_type": "raw", "metadata": {"raw_mimetype": "text/markdown"}, "source": header},
-        ]}).to_string();
+        let source = json!({
+            "nbformat": 4, "cells": [
+                {"cell_type": "markdown", "source": "First."},
+                {"cell_type": "markdown", "source": header},
+                {"cell_type": "markdown", "source": unknown},
+                {
+                    "cell_type": "raw",
+                    "metadata": {"raw_mimetype": "text/markdown"},
+                    "source": header
+                }
+            ]
+        })
+        .to_string();
         std::fs::write(&path, source).unwrap();
         let mut diagnostics = Vec::new();
         source_compatibility(

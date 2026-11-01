@@ -230,7 +230,10 @@ fn expand(
     if !keys.is_empty() {
         parsed.diagnostics.push(Diagnostic::warning(
             "include-meta-ignored",
-            format!("`{written}` sets {}; an included file's document metadata is ignored", and_list(&keys)),
+            format!(
+                "`{written}` sets {}; an included file's document metadata is ignored",
+                and_list(&keys)
+            )
         ).with_path(&source.path).with_span(span.clone()));
     }
     Ok(parsed)
@@ -250,7 +253,10 @@ fn at_directive(
 
 fn read_included(path: &Path) -> std::result::Result<String, String> {
     let bytes = std::fs::read(path).map_err(|error| match error.kind() {
-        std::io::ErrorKind::NotFound => "file not found (a relative path starts at the directory of the file with the directive)".to_owned(),
+        std::io::ErrorKind::NotFound => {
+            "file not found (a relative path starts at the directory of the file with the directive)"
+                .to_owned()
+        }
         _ => format!("cannot read it: {error}"),
     })?;
     String::from_utf8(bytes)
@@ -399,7 +405,8 @@ const CONFIG_KEYS: &[&str] = &[
     "paper",
 ];
 
-/// Explicit fields, including empty lists, from source already loaded for parsing.
+/// Explicit fields, including empty lists, from source already loaded for
+/// parsing.
 pub(crate) fn explicit_keys(text: &str, kind: SourceKind) -> BTreeSet<String> {
     let mut keys = BTreeSet::new();
     if kind == SourceKind::Markdown {
@@ -527,9 +534,10 @@ fn canonical(path: &Path) -> PathBuf {
     })
 }
 
-/// Finds transitive includes for the watcher, even when a document fails to parse.
-/// Notebook Markdown/raw-Markdown cells are scanned; code and output are ignored.
-/// Markdown roots are scanned whatever their extension (`--format md`).
+/// Finds transitive includes for the watcher, even when a document fails to
+/// parse. Notebook Markdown/raw-Markdown cells are scanned; code and output are
+/// ignored. Markdown roots are scanned whatever their extension
+/// (`--format md`).
 pub fn scan_includes(path: &Path) -> Vec<PathBuf> {
     let Ok(path) = std::path::absolute(path) else {
         return Vec::new();
@@ -543,7 +551,8 @@ pub fn scan_includes(path: &Path) -> Vec<PathBuf> {
 fn watcher_path(path: &Path) -> (PathBuf, PathBuf) {
     let identity = canonical(path);
     let normalized = normalize_lexically(path);
-    // Removing `..` before following directory symlinks can select another file.
+    // Removing `..` before following directory symlinks can select another
+    // file.
     let target = if canonical(&normalized) == identity {
         normalized
     } else {
@@ -648,7 +657,8 @@ pub fn cell_includes(
     cell_includes_in(notebook, &[])
 }
 
-/// Creates a notebook include hook with canonical ancestors, excluding this notebook.
+/// Creates a notebook include hook with canonical ancestors, excluding this
+/// notebook.
 pub fn cell_includes_in(
     notebook: &SourceInfo, chain: &[PathBuf],
 ) -> Box<dyn crate::notebook::CellIncludes> {

@@ -576,7 +576,8 @@ impl Emitter<'_> {
                     lines.push(Vec::new());
                 }
                 if !text.is_empty() {
-                    // The initial line exists; subsequent lines are pushed above.
+                    // The initial line exists; subsequent lines are pushed
+                    // above.
                     lines
                         .last_mut()
                         .expect("output line exists")

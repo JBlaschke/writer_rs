@@ -226,7 +226,8 @@ impl Package {
         (id, name)
     }
 
-    /// Completes the metadata and relationships and writes the deterministic ZIP.
+    /// Completes the metadata and relationships and writes the deterministic
+    /// ZIP.
     pub(crate) fn finish(
         mut self, meta: &DocMeta, effective_lang: Option<&str>,
         timestamp: Option<&str>,
@@ -414,7 +415,8 @@ fn app_properties() -> String {
     )
 }
 
-/// Computes a reproducible UTC timestamp, omitting it when no valid source exists.
+/// Computes a reproducible UTC timestamp, omitting it when no valid source
+/// exists.
 ///
 /// An explicit `[pdf] timestamp` must be RFC 3339. Otherwise a valid document
 /// date wins over an unsigned `SOURCE_DATE_EPOCH`; malformed fallback values
@@ -559,8 +561,11 @@ mod tests {
                 "{explicit:?}, {date:?}, {epoch:?}"
             );
         }
-        assert!(matches!(core_timestamp("yesterday", None, None),
-            Err(Error::Config(message)) if message.starts_with("invalid [pdf] timestamp")));
+        assert!(matches!(
+            core_timestamp("yesterday", None, None),
+            Err(Error::Config(message))
+                if message.starts_with("invalid [pdf] timestamp")
+        ));
     }
 
     #[test]

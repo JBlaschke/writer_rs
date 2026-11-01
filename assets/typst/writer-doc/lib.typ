@@ -4,7 +4,10 @@
 
 #let language(tag) = {
     let parts = tag.replace("_", "-").split("-")
-    if parts.len() == 0 or not parts.first().contains(regex("^[A-Za-z]{2,3}$")) {
+    if (
+        parts.len() == 0
+        or not parts.first().contains(regex("^[A-Za-z]{2,3}$"))
+    ) {
         return (lang: "en", region: none)
     }
     let region = none
@@ -27,7 +30,10 @@
 #let document-date(date) = {
     if "writer-version" in sys.inputs { return auto }
     if type(date) == datetime { return date }
-    if type(date) == str and date.contains(regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
+    if (
+        type(date) == str
+        and date.contains(regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}$"))
+    ) {
         return datetime(
             year: int(date.slice(0, 4)), month: int(date.slice(5, 7)),
             day: int(date.slice(8, 10))
@@ -56,7 +62,9 @@
                 meta.subtitle
                 parbreak()
             }
-            #meta.authors.map(author => author.at("name", default: "")).join(", ")
+            #meta.authors.map(
+                author => author.at("name", default: "")
+            ).join(", ")
             #for author in meta.authors {
                 let affiliation = author.at("affiliation", default: none)
                 if affiliation != none {
@@ -102,11 +110,14 @@
 
 #let layout(meta, settings, body) = {
     set document(
-        title: meta.title, author: meta.authors.map(it => it.at("name", default: "")),
+        title: meta.title,
+        author: meta.authors.map(it => it.at("name", default: "")),
         date: document-date(meta.date), keywords: meta.keywords,
         description: meta.description
     )
-    set page(paper: settings.paper, margin: (x: 2.5cm, y: 2.5cm), numbering: "1")
+    set page(
+        paper: settings.paper, margin: (x: 2.5cm, y: 2.5cm), numbering: "1"
+    )
     set text(
         font: "Libertinus Serif", size: 11pt,
         lang: settings.lang.lang, region: settings.lang.region
@@ -118,7 +129,9 @@
     // Citation entries may use another locale, but their heading stays here.
     let bib-title = settings.reference-title
     if settings.cite-locale != none and bib-title == auto {
-        bib-title = bibliography-term(settings.lang.lang, region: settings.lang.region)
+        bib-title = bibliography-term(
+            settings.lang.lang, region: settings.lang.region
+        )
     }
     set std.bibliography(title: bib-title)
     if settings.cite-locale != none {
@@ -130,9 +143,9 @@
 
 #let writer-doc(
             title: none, subtitle: none, author: none, authors: (), date: none,
-            abstract: none, abstract-title: auto, keywords: (), description: none,
-            lang: auto, toc: auto, toc-title: auto, numbering: auto,
-            bibliography: none, reference-section-title: auto,
+            abstract: none, abstract-title: auto, keywords: (),
+            description: none, lang: auto, toc: auto, toc-title: auto,
+            numbering: auto, bibliography: none, reference-section-title: auto,
             cite-style: auto, csl: auto, cite-locale: auto, paper: auto,
             markdown: (:), math: (:), references: (:), html: (:), pdf: (:),
             docx: (:), latex: (:), typst: (:), notebook: (:), ..extra, body
@@ -161,17 +174,21 @@
     let locale = from-config(cite-locale, config, "cite_locale", "")
     let meta = (
         title: title, subtitle: subtitle, authors: author-list(author, authors),
-        date: date, abstract: abstract, keywords: keywords, description: description,
+        date: date, abstract: abstract, keywords: keywords,
+        description: description,
     )
     let settings = (
         lang: language(from-config(lang, config, "lang", "en")),
         toc: from-config(toc, config, "toc", false), toc-title: toc-title,
         numbering: numbers, bibliography: bibliography,
-        paper: from-config(paper, pdf, "paper", config.at("paper", default: "a4")),
+        paper: from-config(
+            paper, pdf, "paper", config.at("paper", default: "a4")
+        ),
         style: if cite-style != auto { cite-style }
             else if csl != auto { csl } else { "ieee" },
         cite-locale: if locale == "" { none } else { language(locale) },
-        abstract-title: abstract-title, reference-title: reference-section-title,
+        abstract-title: abstract-title,
+        reference-title: reference-section-title,
     )
     layout(meta, settings, body)
 }

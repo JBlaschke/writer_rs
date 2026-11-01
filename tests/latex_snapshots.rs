@@ -186,13 +186,18 @@ fn diagnostic_message(code: &str, message: &str, roots: &[String]) -> String {
 fn findings(diagnostics: &Diagnostics) -> Vec<Value> {
     let roots = fixture_roots();
     diagnostics.iter().map(|finding| json!({
-        "level":finding.level,"code":finding.code,
-        "message":diagnostic_message(finding.code,&finding.message,&roots),
-        "path":finding.path.as_deref().map(|path|stable_path_with_roots(path,&roots)),
-        "span":finding.span.as_ref().map(|span| json!({
-            "start_line":span.start_line,"end_line":span.end_line,"cell":span.cell,
-            "file":span.file.as_deref().map(|path|stable_path_with_roots(path,&roots)),
-        })),
+        "level": finding.level, "code": finding.code,
+        "message": diagnostic_message(finding.code, &finding.message, &roots),
+        "path": finding.path.as_deref().map(
+            |path| stable_path_with_roots(path, &roots)
+        ),
+        "span": finding.span.as_ref().map(|span| json!({
+            "start_line": span.start_line, "end_line": span.end_line,
+            "cell": span.cell,
+            "file": span.file.as_deref().map(
+                |path| stable_path_with_roots(path, &roots)
+            )
+        }))
     })).collect()
 }
 
@@ -291,15 +296,16 @@ fn typed_and_message_paths_accept_written_canonical_and_windows_extended_roots()
 
 fn snapshot(output: &Emitted, diagnostics: &Diagnostics) -> Value {
     json!({
-        "body":output.body,"abstract":output.abstract_,"toc":output.toc,
-        "usage":format!("{:#?}",output.usage),
-        "images":output.images.iter().enumerate().map(|(index,image)| json!({
-            "identity":format!("asset-{}",index+1),"name":image.name,"render":image.render,
+        "body": output.body, "abstract": output.abstract_, "toc": output.toc,
+        "usage": format!("{:#?}", output.usage),
+        "images": output.images.iter().enumerate().map(|(index, image)| json!({
+            "identity": format!("asset-{}", index + 1), "name": image.name,
+            "render": image.render
         })).collect::<Vec<_>>(),
-        "bibliography":output.bibliography.iter().map(|(path,name)| json!({
-            "source":stable_path(path),"name":name,
+        "bibliography": output.bibliography.iter().map(|(path, name)| json!({
+            "source": stable_path(path), "name": name
         })).collect::<Vec<_>>(),
-        "diagnostics":findings(diagnostics),
+        "diagnostics": findings(diagnostics)
     })
 }
 
@@ -1056,15 +1062,21 @@ fn headings_and_tocs_use_offsets_and_moving_argument_forms_without_ir_numbers()
         (LatexTopLevel::Chapter, "chapter", 5, "subparagraph"),
         (LatexTopLevel::Part, "part", 4, "paragraph"),
     ] {
-        let doc = document(vec![block(json!({"type":"heading","level":6,
-            "inlines":[{"type":"text","text":"Deep"}],"attrs":{},"number":"SECRET-99"}))]);
+        let doc = document(vec![block(json!({
+            "type": "heading", "level": 6,
+            "inlines": [{"type": "text", "text": "Deep"}],
+            "attrs": {}, "number": "SECRET-99"
+        }))]);
         let mut config = Config::default();
         config.latex.top_level = top;
         let output = emit_checked(&doc, &AssetRegistry::new(), &config);
         assert_eq!(output.body, format!("\\{last}{{Deep}}\n"));
         assert_eq!(output.usage.secnumdepth, Some(depth));
-        let doc = document(vec![block(json!({"type":"heading","level":1,
-            "inlines":[{"type":"text","text":"Top"}],"attrs":{},"number":"SECRET-99"}))]);
+        let doc = document(vec![block(json!({
+            "type": "heading", "level": 1,
+            "inlines": [{"type": "text", "text": "Top"}],
+            "attrs": {}, "number": "SECRET-99"
+        }))]);
         assert_eq!(
             emit_checked(&doc, &AssetRegistry::new(), &config).body,
             format!("\\{command}{{Top}}\n")
@@ -1162,19 +1174,48 @@ fn headings_and_tocs_use_offsets_and_moving_argument_forms_without_ir_numbers()
 }
 
 fn table() -> Block {
-    block(json!({"type":"table","columns":[
-        {"align":"left","width":0.25},{"align":"center","width":null},{"align":"right","width":0.25}],
-        "head":[{"cells":[
-            {"inlines":[{"type":"text","text":"HEAD-SPAN"}],"rowspan":3},
-            {"inlines":[{"type":"text","text":"HEAD-A"}],"colspan":2}]},
-            {"cells":[{"inlines":[{"type":"text","text":"HEAD-B"}]},{"inlines":[{"type":"text","text":"HEAD-C"}]}]}],
-        "body":[{"cells":[
-            {"inlines":[{"type":"text","text":"BODY-SPAN"}],"rowspan":3,"colspan":2,"align":"right"},
-            {"inlines":[{"type":"text","text":"BODY-A"}]}]},
-            {"cells":[{"inlines":[{"type":"text","text":"BODY-B"}]}]}],
-        "foot":[{"cells":[{"inlines":[{"type":"text","text":"*FOOT"}]}]},
-            {"cells":[{"inlines":[{"type":"raw","format":"latex","text":"[FOOT"}]}]}],"attrs":{},
-        "span":{"start_line":7,"end_line":12,"cell":2,"file":"/source/table.ipynb"}}))
+    block(json!({
+        "type": "table",
+        "columns": [
+            {"align": "left", "width": 0.25},
+            {"align": "center", "width": null},
+            {"align": "right", "width": 0.25}
+        ],
+        "head": [
+            {"cells": [
+                {
+                    "inlines": [{"type": "text", "text": "HEAD-SPAN"}],
+                    "rowspan": 3
+                },
+                {"inlines": [{"type": "text", "text": "HEAD-A"}], "colspan": 2}
+            ]},
+            {"cells": [
+                {"inlines": [{"type": "text", "text": "HEAD-B"}]},
+                {"inlines": [{"type": "text", "text": "HEAD-C"}]}
+            ]}
+        ],
+        "body": [
+            {"cells": [
+                {
+                    "inlines": [{"type": "text", "text": "BODY-SPAN"}],
+                    "rowspan": 3, "colspan": 2, "align": "right"
+                },
+                {"inlines": [{"type": "text", "text": "BODY-A"}]}
+            ]},
+            {"cells": [{"inlines": [{"type": "text", "text": "BODY-B"}]}]}
+        ],
+        "foot": [
+            {"cells": [{"inlines": [{"type": "text", "text": "*FOOT"}]}]},
+            {"cells": [{
+                "inlines": [{"type": "raw", "format": "latex", "text": "[FOOT"}]
+            }]}
+        ],
+        "attrs": {},
+        "span": {
+            "start_line": 7, "end_line": 12, "cell": 2,
+            "file": "/source/table.ipynb"
+        }
+    }))
 }
 
 #[test]
@@ -1193,10 +1234,17 @@ fn table_grid_sections_widths_alignment_and_longtable_counter_policy_are_explici
     for (align, width) in
         [("raggedright", "0.25"), ("centering", "0.5"), ("raggedleft", "0.25")]
     {
-        assert!(output.body.contains(&format!(">{{\\{align}\\arraybackslash}}p{{\\dimexpr {width}\\linewidth-2\\tabcolsep\\relax}}")), "{}", output.body);
+        assert!(
+            output.body.contains(&format!(
+                ">{{\\{align}\\arraybackslash}}p{{\\dimexpr {width}\\linewidth-2\\tabcolsep\\relax}}"
+            )),
+            "{}", output.body
+        );
     }
     assert!(output.body.contains("0.75\\linewidth-2\\tabcolsep\\relax"));
-    assert!(output.body.contains("\\multicolumn{2}{>{\\raggedleft\\arraybackslash}p{\\dimexpr 0.75\\linewidth-2\\tabcolsep\\relax}}{BODY-SPAN}"));
+    assert!(output.body.contains(
+        "\\multicolumn{2}{>{\\raggedleft\\arraybackslash}p{\\dimexpr 0.75\\linewidth-2\\tabcolsep\\relax}}{BODY-SPAN}"
+    ));
     assert!(output.body.contains(" &  & BODY-B"), "{}", output.body);
     assert!(output.body.contains("BODY-A"));
     assert!(output.body.contains("{}*FOOT"));
@@ -1544,14 +1592,16 @@ fn prose_wrap_does_not_split_code_math_raw_or_url_bytes() {
 #[test]
 fn package_and_macro_bookkeeping_is_ordered_scoped_and_not_a_math_preflight() {
     let doc = document(vec![
-        block(
-            json!({"type":"math","source":"cancel(x)","dialect":"typst","attrs":{},"number":null,
-        "span":{"start_line":7,"end_line":7,"file":"/source/math.md"}}),
-        ),
-        block(
-            json!({"type":"math","source":"cancel(y)","dialect":"typst","attrs":{},"number":null,
-        "span":{"start_line":9,"end_line":9,"file":"/source/math.md"}}),
-        ),
+        block(json!({
+            "type": "math", "source": "cancel(x)", "dialect": "typst",
+            "attrs": {}, "number": null,
+            "span": {"start_line": 7, "end_line": 7, "file": "/source/math.md"}
+        })),
+        block(json!({
+            "type": "math", "source": "cancel(y)", "dialect": "typst",
+            "attrs": {}, "number": null,
+            "span": {"start_line": 9, "end_line": 9, "file": "/source/math.md"}
+        })),
     ]);
     let output = emit_checked(&doc, &AssetRegistry::new(), &Config::default());
     assert_eq!(output.usage.math_packages, vec!["cancel"]);
@@ -1564,9 +1614,13 @@ fn package_and_macro_bookkeeping_is_ordered_scoped_and_not_a_math_preflight() {
     assert_eq!(info[0].level, Level::Info);
     assert_eq!(info[0].span.as_ref().unwrap().start_line, 7);
     let mut config = Config::default();
-    config.math.katex_options.insert("macros".into(),json!({
-        "bad":"x","\\bad_name":"x","\\Good":"\\frac{#1}{#2}","\\R":"\\mathbb{R}"
-    }));
+    config.math.katex_options.insert(
+        "macros".into(),
+        json!({
+            "bad": "x", "\\bad_name": "x", "\\Good": "\\frac{#1}{#2}",
+            "\\R": "\\mathbb{R}"
+        }),
+    );
     let no_math = emit_checked(
         &document(vec![paragraph(vec![text("Only text")])]),
         &AssetRegistry::new(),
@@ -1819,7 +1873,9 @@ fn generic_subfigure_labels_share_container_counter_and_restore_outer_float_cont
             let unnumbered = format!("\\phantomsection{label}");
             assert_eq!(output.body.contains(&unnumbered), !numbered);
         }
-        assert!(output.body.contains("\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]"));
+        assert!(output.body.contains(
+            "\\includegraphics[width=\\linewidth,height=\\textheight,keepaspectratio]"
+        ));
         assert!(output.usage.graphics && output.usage.caption);
         assert_eq!(output.images.len(), 1);
         assert!(output.diagnostics.is_empty());

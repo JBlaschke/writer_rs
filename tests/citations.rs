@@ -199,10 +199,17 @@ fn public_driver_matches_verified_ieee_strings_and_formatted_bibliography() {
         "D. E. Knuth, The TeXbook. Reading, MA: Addison-Wesley, 1984.",
     );
     assert!(bibliography.entries[1].inlines.iter().any(|inline| {
-        matches!(inline, Inline::Emph { inlines } if plain_text(inlines) == "The TeXbook")
+        matches!(
+            inline,
+            Inline::Emph { inlines } if plain_text(inlines) == "The TeXbook"
+        )
     }));
     assert!(bibliography.entries[0].inlines.iter().any(|inline| {
-        matches!(inline, Inline::Link { url, title: None, .. } if url == "https://doi.org/10.1000/xyz123")
+        matches!(
+            inline,
+            Inline::Link { url, title: None, .. }
+                if url == "https://doi.org/10.1000/xyz123"
+        )
     }));
 }
 
@@ -555,9 +562,10 @@ fn abstract_notes_precede_body_and_note_styles_preserve_source_spans() {
     let cites = citations(&document);
     assert_eq!(generated_notes(citation(&cites[0])), [1]);
     assert_eq!(generated_notes(citation(&cites[1])), [3]);
-    assert!(
-        matches!(&cites[1], Inline::Cite { span: Some(span), .. } if span == &expected_span)
-    );
+    assert!(matches!(
+        &cites[1],
+        Inline::Cite { span: Some(span), .. } if span == &expected_span
+    ));
     assert_eq!(document.resolved.footnotes, 3);
 }
 

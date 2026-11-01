@@ -1,16 +1,18 @@
-//! File responses of the dev server: whole files, single byte ranges (RFC 9110 §14) and
-//! file-backed bodies streamed from disk.
+//! File responses of the dev server: whole files, single byte ranges (RFC 9110
+//! §14) and file-backed bodies streamed from disk.
 //!
-//! Browsers fetch media with `Range` requests, and Safari plays no `<video>` from a server
-//! without them, so every asset route answers `Range: bytes=…` (`a-b`, `a-` or `-n`) with
-//! `206 Partial Content`, sends `Accept-Ranges: bytes` with the whole file and answers a
-//! range past the end with `416 Range Not Satisfiable`. Several ranges in one request, an
-//! unknown unit, an invalid range or an `If-Range` (the server sends no validators to
+//! Browsers fetch media with `Range` requests, and Safari plays no `<video>`
+//! from a server without them, so every asset route answers `Range: bytes=…`
+//! (`a-b`, `a-` or `-n`) with `206 Partial Content`, sends
+//! `Accept-Ranges: bytes` with the whole file and answers a range past the end
+//! with `416 Range Not Satisfiable`. Several ranges in one request, an unknown
+//! unit, an invalid range or an `If-Range` (the server sends no validators to
 //! match) get the whole file, as RFC 9110 allows.
 //!
-//! A file-backed document asset is never loaded into memory as a whole: `file_response`
-//! streams the requested bytes in chunks, so that a long video costs one chunk per
-//! connection at a time and nothing once the browser has closed it.
+//! A file-backed document asset is never loaded into memory as a whole:
+//! `file_response` streams the requested bytes in chunks, so that a long video
+//! costs one chunk per connection at a time and nothing once the browser has
+//! closed it.
 
 use std::fs::File;
 use std::io::{self, Seek, SeekFrom};
@@ -27,16 +29,18 @@ use tokio_stream::Stream;
 /// Size of the chunks a streamed file is read in.
 const CHUNK: usize = 64 * 1024;
 
-/// A `200 OK` with all of `bytes`, `Content-Type: mime` (`; charset=utf-8` for text) and
-/// `Cache-Control: cache`; no range support (for documents and stylesheets).
+/// A `200 OK` with all of `bytes`, `Content-Type: mime` (`; charset=utf-8` for
+/// text) and `Cache-Control: cache`; no range support (for documents and
+/// stylesheets).
 pub(crate) fn whole_response(
     bytes: Vec<u8>, mime: &str, cache: &'static str,
 ) -> Response {
     (headers(mime, cache), bytes).into_response()
 }
 
-/// `bytes` as the response to a request with `request` headers: the requested byte range
-/// (`206`), `416` for a range past the end, else all of it (`200`, `Accept-Ranges: bytes`).
+/// `bytes` as the response to a request with `request` headers: the requested
+/// byte range (`206`), `416` for a range past the end, else all of it (`200`,
+/// `Accept-Ranges: bytes`).
 pub(crate) fn bytes_response(
     bytes: Vec<u8>, mime: &str, cache: &'static str, request: &HeaderMap,
 ) -> Response {
@@ -46,7 +50,8 @@ pub(crate) fn bytes_response(
             ranged(mime, cache, Span::Whole(len), Body::from(bytes))
         }
         ByteRange::Partial { start, end } => {
-            // `start <= end < len`, which came from a `usize`: the conversions are exact.
+            // `start <= end < len`, which came from a `usize`: the conversions
+            // are exact.
             let slice = bytes
                 .get(start as usize..=end as usize)
                 .unwrap_or_default()
@@ -58,8 +63,8 @@ pub(crate) fn bytes_response(
 }
 
 /// The file at `path` as the response to a request with `request` headers, like
-/// [`bytes_response`], with the body streamed from disk. Errors: opening or seeking the
-/// file; a directory is [`io::ErrorKind::NotFound`].
+/// [`bytes_response`], with the body streamed from disk. Errors: opening or
+/// seeking the file; a directory is [`io::ErrorKind::NotFound`].
 pub(crate) async fn file_response(
     path: PathBuf, mime: &str, cache: &'static str, request: &HeaderMap,
 ) -> io::Result<Response> {
@@ -83,15 +88,17 @@ pub(crate) async fn file_response(
     Ok(response)
 }
 
-/// Opens `path`, resolves `spec` against its length and seeks to the range's start.
+/// Opens `path`, resolves `spec` against its length and seeks to the range's
+/// start.
 fn open_range(
     path: &Path, spec: Option<RangeSpec>,
 ) -> io::Result<(File, u64, ByteRange)> {
     let not_a_file = || io::Error::new(io::ErrorKind::NotFound, "not a file");
     let mut file = match File::open(path) {
         Ok(file) => file,
-        // Windows refuses to open a directory (permission denied); Unix opens it, and the
-        // metadata below says what it is. The same answer on both: not found.
+        // Windows refuses to open a directory (permission denied); Unix opens
+        // it, and the metadata below says what it is. The same answer on both:
+        // not found.
         Err(_)
             if std::fs::metadata(path)
                 .is_ok_and(|metadata| metadata.is_dir()) =>
@@ -121,7 +128,8 @@ enum Span {
     Part(u64, u64, u64),
 }
 
-/// A `200` or `206` response with `body`, which holds exactly the bytes of `span`.
+/// A `200` or `206` response with `body`, which holds exactly the bytes of
+/// `span`.
 fn ranged(mime: &str, cache: &'static str, span: Span, body: Body) -> Response {
     let mut headers = headers(mime, cache);
     headers.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
@@ -163,8 +171,8 @@ fn headers(mime: &str, cache: &'static str) -> HeaderMap {
     headers
 }
 
-/// `value` as a header value; a value that is not one (never the case for MIME types and
-/// ranges) becomes `application/octet-stream`.
+/// `value` as a header value; a value that is not one (never the case for MIME
+/// types and ranges) becomes `application/octet-stream`.
 fn header_value(value: String) -> HeaderValue {
     HeaderValue::try_from(value).unwrap_or_else(|_| {
         HeaderValue::from_static("application/octet-stream")
@@ -185,8 +193,9 @@ enum RangeSpec {
     Suffix(u64),
 }
 
-/// The single byte range `request` asks for; `None` for the whole file: no `Range`, an
-/// `If-Range`, a unit other than `bytes`, several ranges or an invalid one.
+/// The single byte range `request` asks for; `None` for the whole file: no
+/// `Range`, an `If-Range`, a unit other than `bytes`, several ranges or an
+/// invalid one.
 fn range_spec(request: &HeaderMap) -> Option<RangeSpec> {
     if request.contains_key(header::IF_RANGE) {
         return None;
@@ -230,9 +239,10 @@ enum ByteRange {
 }
 
 impl ByteRange {
-    /// `spec` against a representation of `len` bytes (RFC 9110 §14.1.1): a range that
-    /// starts at or after the end, or an empty suffix, is unsatisfiable; an end past the
-    /// end and a suffix longer than the representation are cut to it.
+    /// `spec` against a representation of `len` bytes (RFC 9110 §14.1.1): a
+    /// range that starts at or after the end, or an empty suffix, is
+    /// unsatisfiable; an end past the end and a suffix longer than the
+    /// representation are cut to it.
     fn resolve(spec: Option<RangeSpec>, len: u64) -> ByteRange {
         match spec {
             None => ByteRange::Full,
@@ -254,7 +264,8 @@ impl ByteRange {
     }
 }
 
-/// The next `remaining` bytes of a file, read in [`CHUNK`]s on tokio's blocking pool.
+/// The next `remaining` bytes of a file, read in [`CHUNK`]s on tokio's blocking
+/// pool.
 struct FileStream {
     file: tokio::fs::File,
     remaining: u64,

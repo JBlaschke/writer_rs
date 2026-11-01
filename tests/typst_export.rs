@@ -282,14 +282,39 @@ fn notebook_scanning_honors_markdown_raw_markdown_removed_cells_and_non_source_t
     let source = project("unused\n");
     write(source.path(), "parts/a.md", "MD-INCLUDE-ONLY\n");
     write(source.path(), "parts/raw.md", "RAW-INCLUDE-ONLY\n");
-    let notebook = json!({"nbformat":4,"nbformat_minor":5,"metadata":{},"cells":[
-        {"cell_type":"markdown","metadata":{},"source":"Notebook root.\n\n:::include parts/a.md\n:::\n"},
-        {"cell_type":"raw","metadata":{"raw_mimetype":"text/markdown"},"source":"Raw root.\n\n:::include parts/raw.md\n:::\n"},
-        {"cell_type":"markdown","metadata":{"tags":["remove-cell"]},"source":":::include missing-removed.md\n:::\n"},
-        {"cell_type":"raw","metadata":{"raw_mimetype":"text/html"},"source":":::include missing-html.md\n:::\n"},
-        {"cell_type":"code","metadata":{},"source":":::include missing-code.md\n:::\n","execution_count":1,
-         "outputs":[{"output_type":"display_data","metadata":{},"data":{"text/plain":":::include missing-output.md\n:::\n"}}]}
-    ]});
+    let notebook = json!({
+        "nbformat": 4, "nbformat_minor": 5, "metadata": {},
+        "cells": [
+            {
+                "cell_type": "markdown", "metadata": {},
+                "source": "Notebook root.\n\n:::include parts/a.md\n:::\n"
+            },
+            {
+                "cell_type": "raw",
+                "metadata": {"raw_mimetype": "text/markdown"},
+                "source": "Raw root.\n\n:::include parts/raw.md\n:::\n"
+            },
+            {
+                "cell_type": "markdown", "metadata": {"tags": ["remove-cell"]},
+                "source": ":::include missing-removed.md\n:::\n"
+            },
+            {
+                "cell_type": "raw", "metadata": {"raw_mimetype": "text/html"},
+                "source": ":::include missing-html.md\n:::\n"
+            },
+            {
+                "cell_type": "code", "metadata": {},
+                "source": ":::include missing-code.md\n:::\n",
+                "execution_count": 1,
+                "outputs": [{
+                    "output_type": "display_data", "metadata": {},
+                    "data": {
+                        "text/plain": ":::include missing-output.md\n:::\n"
+                    }
+                }]
+            }
+        ]
+    });
     write(source.path(), "analysis.ipynb", notebook.to_string());
     let destination = tempfile::tempdir().unwrap();
     let output = destination.path().join("analysis.typ");

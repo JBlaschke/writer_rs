@@ -35,7 +35,8 @@ pub(crate) struct Reference {
 
 impl Reference {
     /// Reads a complete, well-formed reference package, mapping every failure
-    /// to the source document rather than leaking ZIP or XML implementation errors.
+    /// to the source document rather than leaking ZIP or XML implementation
+    /// errors.
     pub(crate) fn load(path: &Path) -> Result<Self> {
         Self::read(path).map_err(|message| Error::Resource {
             what: "reference document",
@@ -508,7 +509,10 @@ mod tests {
             ("word/document.xml", format!(r#"{XML_HEAD}<w:document xmlns:w="{NS_W}" xmlns:r="{NS_R}"><w:body>{body}</w:body></w:document>"#)),
             ("word/styles.xml", format!(r#"{XML_HEAD}<w:styles xmlns:w="{NS_W}"/>"#)),
             ("word/_rels/document.xml.rels", format!(r#"{XML_HEAD}<Relationships xmlns="{NS_RELS}"/>"#)),
-        ].into_iter().map(|(path, xml)| (path.into(), xml.into_bytes())).collect()
+        ]
+        .into_iter()
+        .map(|(path, xml)| (path.into(), xml.into_bytes()))
+        .collect()
     }
 
     fn load(parts: BTreeMap<String, Vec<u8>>) -> Result<Reference> {
@@ -557,7 +561,10 @@ mod tests {
                 r#"<w:footerReference w:type="default" r:id="rId9"/>"#
             ));
         }
-        let reference = load(parts(r#"<w:sectPr><w:pgSz w:w="10000"/><w:pgMar w:top="-1000" w:bottom="-2000" w:left="100" w:right="200" w:gutter="300"/></w:sectPr>"#)).unwrap();
+        let reference = load(parts(
+            r#"<w:sectPr><w:pgSz w:w="10000"/><w:pgMar w:top="-1000" w:bottom="-2000" w:left="100" w:right="200" w:gutter="300"/></w:sectPr>"#
+        ))
+        .unwrap();
         let layout = page_layout(Some(&reference), "us-letter", None);
         assert_eq!(layout.text_width_twips, 9400);
         assert_eq!(layout.text_height_twips, 12840);
@@ -565,7 +572,10 @@ mod tests {
 
     #[test]
     fn paragraph_level_sect_pr_is_ignored() {
-        let reference = load(parts(r#"<w:p><w:pPr><w:sectPr><w:pgSz w:w="10" w:h="20"/></w:sectPr></w:pPr></w:p>"#)).unwrap();
+        let reference = load(parts(
+            r#"<w:p><w:pPr><w:sectPr><w:pgSz w:w="10" w:h="20"/></w:sectPr></w:pPr></w:p>"#
+        ))
+        .unwrap();
         assert!(reference.sect_pr.is_none());
         assert_eq!(
             page_layout(Some(&reference), "a4", Some("rId4")).text_width_twips,
@@ -650,7 +660,10 @@ mod tests {
                 r#"<Relationship Id="rId100" Type="{REL_HEADER}" Target="header1.xml"/>"#
             ),
         );
-        parts.insert("word/header1.xml".into(), format!(r#"<w:hdr xmlns:w="{NS_W}" xmlns:wp="{NS_WP}"><w:p><w:bookmarkStart w:id="17" w:name="header"/><wp:docPr id="9"/><w:bookmarkEnd w:id="17"/></w:p></w:hdr>"#).into_bytes());
+        parts.insert(
+            "word/header1.xml".into(),
+            format!(r#"<w:hdr xmlns:w="{NS_W}" xmlns:wp="{NS_WP}"><w:p><w:bookmarkStart w:id="17" w:name="header"/><wp:docPr id="9"/><w:bookmarkEnd w:id="17"/></w:p></w:hdr>"#).into_bytes()
+        );
         let reference = load(parts).unwrap();
         assert_eq!(reference.ids.bookmark, 18);
         assert_eq!(reference.ids.doc_pr, 10);
@@ -693,8 +706,12 @@ mod tests {
             format!(r#"<Relationships xmlns="{NS_RELS}"><Relationship Id="rId1" Type="image" Target="../media/x%20space.png#picture"/><Relationship Id="rId2" Type="font" Target="../fonts/x.odttf"/></Relationships>"#).into_bytes());
         parts.insert("word/media/x space.png".into(), b"\x89PNG".to_vec());
         parts.insert("word/fonts/x.odttf".into(), vec![42]);
-        let types = String::from_utf8(parts["[Content_Types].xml"].clone()).unwrap()
-            .replace("</Types>", r#"<Default Extension="png" ContentType="image/png"/><Default Extension="odttf" ContentType="font/type"/></Types>"#);
+        let types = String::from_utf8(parts["[Content_Types].xml"].clone())
+            .unwrap()
+            .replace(
+                "</Types>",
+                r#"<Default Extension="png" ContentType="image/png"/><Default Extension="odttf" ContentType="font/type"/></Types>"#
+            );
         parts.insert("[Content_Types].xml".into(), types.into_bytes());
         let reference = load(parts).unwrap();
         assert_eq!(reference.copied_parts.len(), 4);
@@ -719,8 +736,12 @@ mod tests {
             "word/header one.xml".into(),
             format!(r#"<w:hdr xmlns:w="{NS_W}"/>"#).into_bytes(),
         );
-        let types = String::from_utf8(parts["[Content_Types].xml"].clone()).unwrap()
-            .replace("</Types>", r#"<Override PartName="/word/header%20one.xml" ContentType="header/reference"/></Types>"#);
+        let types = String::from_utf8(parts["[Content_Types].xml"].clone())
+            .unwrap()
+            .replace(
+                "</Types>",
+                r#"<Override PartName="/word/header%20one.xml" ContentType="header/reference"/></Types>"#
+            );
         parts.insert("[Content_Types].xml".into(), types.into_bytes());
         let reference = load(parts).unwrap();
         assert_eq!(

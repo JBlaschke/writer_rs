@@ -18,7 +18,8 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant, SystemTime};
 
 use notify::{
-    Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _,
+    Event, EventKind, PathOp, RecommendedWatcher, RecursiveMode,
+    UpdatePathsError, WatchPathConfig, Watcher as _,
 };
 use typst_kit::packages::FsPackages;
 
@@ -108,8 +109,9 @@ impl WatchSet {
     }
 }
 
-/// Converts build input roles and already package-filtered World reads to watches.
-/// `None` selects serve inputs; build sessions include target-specific resources.
+/// Converts build input roles and already package-filtered World reads to
+/// watches. `None` selects serve inputs; build sessions include target-specific
+/// resources.
 pub fn watch_set(
     inputs: &[(PathBuf, InputRole)], accessed: &[PathBuf],
     targets: Option<&[Target]>,
@@ -152,7 +154,8 @@ pub fn watch_set(
     set
 }
 
-/// Watches known inputs before parsing, including invalid project configuration.
+/// Watches known inputs before parsing, including invalid project
+/// configuration.
 pub fn watch_set_before_build(opts: &BuildOptions) -> WatchSet {
     let path = std::path::absolute(&opts.input)
         .map(|path| normalize_lexically(&path))
@@ -215,7 +218,8 @@ pub struct ChangeBatch {
     pub kind: ChangeKind,
 }
 
-/// Classifies a nonempty uniform batch as CSS or pages; all other batches are content.
+/// Classifies a nonempty uniform batch as CSS or pages; all other batches are
+/// content.
 pub fn classify(paths: &[PathBuf], set: &WatchSet) -> ChangeKind {
     classify_paths(paths, &set.theme_dirs, &set.pages_paths)
 }
@@ -248,14 +252,16 @@ fn is_style_path(path: &Path, themes: &[PathBuf]) -> bool {
     })
 }
 
-/// Directory names whose contents never count below a recursively watched directory.
-/// (`dist` and `target` are not among them: a theme may keep inputs there, audit F18.)
+/// Directory names whose contents never count below a recursively watched
+/// directory. (`dist` and `target` are not among them: a theme may keep inputs
+/// there, audit F18.)
 const IGNORED_DIRS: [&str; 1] = [".git"];
 
-/// Whether `rel` (a path relative to a recursively watched directory) is on the ignore
-/// list: anything inside `.git/`, and editor files: backups (`*~`), Emacs lock and
-/// auto-save files (`.#*`, `#*#`), vim swap files (`*.swp`, `*.swx`, and `.*.swa` …
-/// `.*.swo` for further sessions) and vim's `4913` probe, and `.DS_Store`.
+/// Whether `rel` (a path relative to a recursively watched directory) is on the
+/// ignore list: anything inside `.git/`, and editor files: backups (`*~`),
+/// Emacs lock and auto-save files (`.#*`, `#*#`), vim swap files (`*.swp`,
+/// `*.swx`, and `.*.swa` … `.*.swo` for further sessions) and vim's `4913`
+/// probe, and `.DS_Store`.
 pub fn is_ignored(rel: &Path) -> bool {
     let in_ignored_dir = rel.components().any(|component| match component {
         Component::Normal(name) => IGNORED_DIRS.iter().any(|dir| name == *dir),
@@ -275,8 +281,8 @@ pub fn is_ignored(rel: &Path) -> bool {
         || name == ".DS_Store"
 }
 
-/// Whether `name` is a vim swap file of a later session: `.<file>.sw<a…p>` (vim counts
-/// down from `.swp`).
+/// Whether `name` is a vim swap file of a later session: `.<file>.sw<a…p>` (vim
+/// counts down from `.swp`).
 fn is_vim_swap(name: &str) -> bool {
     let Some(stem) = name.strip_prefix('.') else {
         return false;
@@ -293,8 +299,9 @@ fn is_vim_swap(name: &str) -> bool {
     }
 }
 
-/// `path` with symlinks resolved, like the paths the OS reports: canonicalized when it
-/// exists, else its parent canonicalized (recursively) joined with its name.
+/// `path` with symlinks resolved, like the paths the OS reports: canonicalized
+/// when it exists, else its parent canonicalized (recursively) joined with its
+/// name.
 pub fn canonical(path: &Path) -> PathBuf {
     if let Ok(canonical) = std::fs::canonicalize(path) {
         return canonical;
@@ -326,9 +333,10 @@ struct Filter {
 }
 
 impl Filter {
-    /// The filter for `set`: recursive targets are `dirs_recursive` and `theme_dirs`
-    /// (without directories inside another one), flat targets are `dirs_flat` and the
-    /// parents of `files` that no recursive target already covers.
+    /// The filter for `set`: recursive targets are `dirs_recursive` and
+    /// `theme_dirs` (without directories inside another one), flat targets are
+    /// `dirs_flat` and the parents of `files` that no recursive target already
+    /// covers.
     fn new(set: &WatchSet) -> Filter {
         let files = canonical_set(set.files.iter().cloned());
         let theme_dirs = canonical_set(set.theme_dirs.iter().cloned());
@@ -366,8 +374,8 @@ impl Filter {
         }
     }
 
-    /// Whether a change of `path` (canonical) counts: one of the files, or below a
-    /// recursively watched directory and not on the ignore list.
+    /// Whether a change of `path` (canonical) counts: one of the files, or
+    /// below a recursively watched directory and not on the ignore list.
     fn matches(&self, path: &Path) -> bool {
         self.files.contains(path)
             || self.recursive.iter().any(|root| {
@@ -376,9 +384,10 @@ impl Filter {
     }
 }
 
-/// The directories to watch for `targets` and the targets that do not exist: each target
-/// that exists, as it asks; for each missing one its nearest existing ancestor,
-/// non-recursively, unless a directory already watched reports changes there.
+/// The directories to watch for `targets` and the targets that do not exist:
+/// each target that exists, as it asks; for each missing one its nearest
+/// existing ancestor, non-recursively, unless a directory already watched
+/// reports changes there.
 fn plan_watches(
     targets: &BTreeMap<PathBuf, RecursiveMode>,
 ) -> (BTreeMap<PathBuf, RecursiveMode>, BTreeSet<PathBuf>) {
@@ -396,9 +405,10 @@ fn plan_watches(
     (wanted, missing.into_keys().collect())
 }
 
-/// Directories that appeared below the planned watches while they were being installed.
-/// A flat ancestor cannot report creations that happened before it was watched. Send the
-/// newly reachable directory as a normal catch-up change so the next update can retarget.
+/// Directories that appeared below the planned watches while they were being
+/// installed. A flat ancestor cannot report creations that happened before it
+/// was watched. Send the newly reachable directory as a normal catch-up change
+/// so the next update can retarget.
 fn appeared_directories(
     missing: &BTreeSet<PathBuf>, planned: &BTreeMap<PathBuf, RecursiveMode>,
 ) -> BTreeSet<PathBuf> {
@@ -410,8 +420,8 @@ fn appeared_directories(
         .collect()
 }
 
-/// Whether changes of the entries of `dir` reach a watch in `watched`: `dir` itself is
-/// watched, or it lies below a recursively watched directory.
+/// Whether changes of the entries of `dir` reach a watch in `watched`: `dir`
+/// itself is watched, or it lies below a recursively watched directory.
 fn covers(watched: &BTreeMap<PathBuf, RecursiveMode>, dir: &Path) -> bool {
     watched.contains_key(dir)
         || watched.iter().any(|(root, mode)| {
@@ -419,11 +429,11 @@ fn covers(watched: &BTreeMap<PathBuf, RecursiveMode>, dir: &Path) -> bool {
         })
 }
 
-/// The parents to watch next to `wanted` on Windows, non-recursively: there, a watched
-/// directory's own removal (and its creation again) is reported only by its parent's
-/// watch, the directory's own handle dies with it. Parents that `wanted` covers already
-/// are left out. Empty elsewhere: inotify and FSEvents report the removal of a watched
-/// directory themselves.
+/// The parents to watch next to `wanted` on Windows, non-recursively: there, a
+/// watched directory's own removal (and its creation again) is reported only by
+/// its parent's watch, the directory's own handle dies with it. Parents that
+/// `wanted` covers already are left out. Empty elsewhere: inotify and FSEvents
+/// report the removal of a watched directory themselves.
 fn guard_watches(
     wanted: &BTreeMap<PathBuf, RecursiveMode>,
 ) -> BTreeSet<PathBuf> {
@@ -484,8 +494,8 @@ struct Shared {
     filter: Filter,
     /// Targets of the filter that do not exist (watched through an ancestor).
     missing: BTreeSet<PathBuf>,
-    /// Watched directories, and directories on the way to a missing target, that were
-    /// created or removed since the last update.
+    /// Watched directories, and directories on the way to a missing target,
+    /// that were created or removed since the last update.
     recreated: BTreeSet<PathBuf>,
     /// When the last batch was sent (at first: when the watcher started).
     since: SystemTime,
@@ -495,33 +505,36 @@ struct Shared {
 }
 
 impl Shared {
-    /// Whether a creation, removal or rename of `path` changes what can be watched: it is
-    /// a target, a directory above one (removed or renamed, it takes the target away; on
-    /// Windows the parent's watch is the one that reliably reports this, the target's own
-    /// handle dies with it), or a directory on the way to a missing one.
+    /// Whether a creation, removal or rename of `path` changes what can be
+    /// watched: it is a target, a directory above one (removed or renamed, it
+    /// takes the target away; on Windows the parent's watch is the one that
+    /// reliably reports this, the target's own handle dies with it), or a
+    /// directory on the way to a missing one.
     fn is_structural(&self, path: &Path) -> bool {
         self.filter.targets.keys().any(|target| target.starts_with(path))
             || self.missing.iter().any(|missing| missing.starts_with(path))
     }
 }
 
-/// Locks `shared`; a panic while it was held cannot leave it inconsistent (every update
-/// replaces whole fields), so a poisoned lock is used as is.
+/// Locks `shared`; a panic while it was held cannot leave it inconsistent
+/// (every update replaces whole fields), so a poisoned lock is used as is.
 fn lock(shared: &Mutex<Shared>) -> MutexGuard<'_, Shared> {
     shared.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// Watches the inputs of a build and sends one [`ChangeBatch`] per burst of changes
-/// (module docs: what is watched, debouncing, threads).
+/// Watches the inputs of a build and sends one [`ChangeBatch`] per burst of
+/// changes (module docs: what is watched, debouncing, threads).
 pub struct Watcher {
-    /// The backend watcher; dropping it stops its thread, and then the coalescing thread.
+    /// The backend watcher; dropping it stops its thread, and then the
+    /// coalescing thread.
     backend: RecommendedWatcher,
     /// Filter and recreated directories, shared with the coalescing thread.
     shared: Arc<Mutex<Shared>>,
     /// The directories currently watched, and how.
     watched: BTreeMap<PathBuf, RecursiveMode>,
-    /// Of `watched`, the parents watched only to see a watched directory removed or
-    /// created again ([`guard_watches`]; Windows); [`Watcher::watched_dirs`] leaves them out.
+    /// Of `watched`, the parents watched only to see a watched directory
+    /// removed or created again ([`guard_watches`]; Windows);
+    /// [`Watcher::watched_dirs`] leaves them out.
     guards: BTreeSet<PathBuf>,
     /// Where [`Watcher::update`] sends its catch-up batches.
     tx: Sender<ChangeBatch>,
@@ -536,18 +549,19 @@ impl std::fmt::Debug for Watcher {
 }
 
 impl Watcher {
-    /// Starts watching `set`; batches go to `tx` until the watcher is dropped. Changes are
-    /// coalesced with [`Debounce::default`] (the contract: [`DEBOUNCE`],
-    /// [`MAX_BATCH_WAIT`]).
+    /// Starts watching `set`; batches go to `tx` until the watcher is dropped.
+    /// Changes are coalesced with [`Debounce::default`] (the contract:
+    /// [`DEBOUNCE`], [`MAX_BATCH_WAIT`]).
     ///
-    /// Errors: the backend cannot be started, or a directory that exists cannot be watched
-    /// (e.g. the inotify watch limit). A directory that does not exist is watched through
-    /// its nearest existing ancestor (module docs).
+    /// Errors: the backend cannot be started, or a directory that exists cannot
+    /// be watched (e.g. the inotify watch limit). A directory that does not
+    /// exist is watched through its nearest existing ancestor (module docs).
     pub fn start(set: &WatchSet, tx: Sender<ChangeBatch>) -> Result<Watcher> {
         Watcher::start_with(set, tx, Debounce::default())
     }
 
-    /// [`Watcher::start`] coalescing changes with `debounce` instead of the default.
+    /// [`Watcher::start`] coalescing changes with `debounce` instead of the
+    /// default.
     pub fn start_with(
         set: &WatchSet, tx: Sender<ChangeBatch>, debounce: Debounce,
     ) -> Result<Watcher> {
@@ -578,11 +592,12 @@ impl Watcher {
         Ok(watcher)
     }
 
-    /// Watches `set` instead of the current set (call it after every build): directories
-    /// no longer needed are unwatched, new ones watched, ones that were recreated since
-    /// the last update (or could not be watched before) are watched again; a missing one
-    /// is watched through its nearest existing ancestor. Then the inputs modified since the
-    /// last batch that may have been missed are sent as a batch (module docs).
+    /// Watches `set` instead of the current set (call it after every build):
+    /// directories no longer needed are unwatched, new ones watched, ones that
+    /// were recreated since the last update (or could not be watched before)
+    /// are watched again; a missing one is watched through its nearest existing
+    /// ancestor. Then the inputs modified since the last batch that may have
+    /// been missed are sent as a batch (module docs).
     ///
     /// Errors: as [`Watcher::start`]; the other directories are still updated.
     pub fn update(&mut self, set: &WatchSet) -> Result<()> {
@@ -606,7 +621,8 @@ impl Watcher {
         let known_dirs = directory_identities(&wanted);
         let (files, recursive) =
             (filter.files.clone(), filter.recursive.clone());
-        // Swap the filter first, so that events of newly watched directories count.
+        // Swap the filter first, so that events of newly watched directories
+        // count.
         let (recreated, since, old_files) = {
             let mut shared = lock(&self.shared);
             let old = std::mem::replace(&mut shared.filter, filter);
@@ -626,15 +642,13 @@ impl Watcher {
             .map(|(dir, _)| dir.clone())
             .collect();
         let unwatched = !stale.is_empty();
-        for dir in stale {
-            self.watched.remove(&dir);
-            if let Err(err) = self.backend.unwatch(&dir) {
-                tracing::debug!("unwatch {}: {err}", dir.display());
-            }
+        for dir in &stale {
+            self.watched.remove(dir);
         }
-        let (watched, result) = self.watch_all(wanted);
-        // Compare planned coverage, not successful watches: an existing directory
-        // that cannot be watched must not cause an endless catch-up/retry loop.
+        let (watched, result) = self.apply(stale, wanted);
+        // Compare planned coverage, not successful watches: an existing
+        // directory that cannot be watched must not cause an endless
+        // catch-up/retry loop.
         let appeared = appeared_directories(&missing, &planned);
         if unwatched || watched {
             self.catch_up(files.iter(), &recursive, since, &appeared);
@@ -644,43 +658,92 @@ impl Watcher {
         result
     }
 
-    /// Watches every directory of `wanted` that is not watched yet. A directory that has
-    /// disappeared in the meantime is watched through its nearest existing ancestor.
-    /// Returns whether a directory was newly watched, and the first error.
-    fn watch_all(
-        &mut self, wanted: BTreeMap<PathBuf, RecursiveMode>,
+    /// Unwatches `stale`, then watches every directory of `wanted` that is not
+    /// watched yet, in one backend update: FSEvents then rebuilds its stream
+    /// once rather than once per directory, and fseventsd serialises those
+    /// rebuilds across every process on the machine. A directory that has
+    /// disappeared in the meantime is watched through its nearest existing
+    /// ancestor, in a further update. Returns whether a directory was newly
+    /// watched, and the first error.
+    fn apply(
+        &mut self, stale: Vec<PathBuf>,
+        wanted: BTreeMap<PathBuf, RecursiveMode>,
     ) -> (bool, Result<()>) {
-        let mut queue: Vec<(PathBuf, RecursiveMode)> = wanted
-            .into_iter()
-            .filter(|(dir, _)| !self.watched.contains_key(dir))
-            .collect();
+        let mut ops: Vec<PathOp> =
+            stale.into_iter().map(PathOp::unwatch).collect();
+        ops.extend(
+            wanted
+                .into_iter()
+                .filter(|(dir, _)| !self.watched.contains_key(dir))
+                .map(|(dir, mode)| {
+                    PathOp::Watch(dir, WatchPathConfig::new(mode))
+                }),
+        );
         let mut added = false;
         let mut first_error = None;
-        while let Some((dir, mode)) = queue.pop() {
-            // An ancestor queued for a directory that vanished may be wanted itself: watch
-            // it once, recursively when either asks for that.
-            let done = self.watched.get(&dir).is_some_and(|watched| {
-                *watched == mode || *watched == RecursiveMode::Recursive
-            });
-            if done {
-                continue;
-            }
-            match self.backend.watch(&dir, mode) {
-                Ok(()) => {
+        while !ops.is_empty() {
+            // The backend takes the operations and names only the failed one
+            // and those after it: keep what each one watches, to record the
+            // applied.
+            let modes: Vec<(PathBuf, Option<RecursiveMode>)> = ops
+                .iter()
+                .map(|op| match op {
+                    PathOp::Watch(dir, config) => {
+                        (dir.clone(), Some(config.recursive_mode()))
+                    }
+                    PathOp::Unwatch(dir) => (dir.clone(), None),
+                })
+                .collect();
+            let (applied, failed, rest) = match self.backend.update_paths(ops) {
+                Ok(()) => (modes.len(), None, Vec::new()),
+                Err(UpdatePathsError {
+                    source,
+                    origin: Some(op),
+                    remaining,
+                }) => {
+                    let applied =
+                        modes.len().saturating_sub(remaining.len() + 1);
+                    (applied, Some((op, source)), remaining)
+                }
+                Err(UpdatePathsError { source, origin: None, remaining }) => {
+                    // The backend took every path but could not start watching
+                    // them; the next update asks for them again.
+                    first_error
+                        .get_or_insert(watch_error("watch", None, source));
+                    (0, None, remaining)
+                }
+            };
+            for (dir, mode) in modes.into_iter().take(applied) {
+                if let Some(mode) = mode {
                     tracing::debug!("watching {} ({mode:?})", dir.display());
                     self.watched.insert(dir, mode);
                     added = true;
                 }
-                Err(err) if is_not_found(&err) => {
+            }
+            ops = rest;
+            match failed {
+                None => {}
+                Some((PathOp::Unwatch(dir), err)) => {
+                    tracing::debug!("unwatch {}: {err}", dir.display());
+                }
+                Some((PathOp::Watch(dir, _), err)) if is_not_found(&err) => {
                     tracing::debug!("not watching {} (missing)", dir.display());
                     lock(&self.shared).missing.insert(dir.clone());
+                    // An ancestor this update still watches itself is watched
+                    // once, as that asks (recursively when either does).
                     if let Some(ancestor) = existing_ancestor(&dir)
                         && !covers(&self.watched, &ancestor)
+                        && !ops.iter().any(|op| {
+                            matches!(
+                                op,
+                                PathOp::Watch(path, _) if *path == ancestor
+                            )
+                        })
                     {
-                        queue.push((ancestor, RecursiveMode::NonRecursive));
+                        ops.push(PathOp::watch_non_recursive(ancestor));
                     }
                 }
-                Err(err) => {
+                Some((PathOp::Watch(dir, _), err)) => {
                     first_error.get_or_insert(watch_error(
                         "watch",
                         Some(&dir),
@@ -692,17 +755,18 @@ impl Watcher {
         (added, first_error.map_or(Ok(()), Err))
     }
 
-    /// Sends a batch for the inputs modified at or after `since`: of `files`, and the files
-    /// below the `recursive` directories that are not on the ignore list, plus directories
-    /// that appeared below the planned watches. Their changes may have been missed while
-    /// the watch set changed (module docs). A batch sent counts as
-    /// the last batch ([`Shared::since`]), so later updates do not report the same changes
-    /// again.
+    /// Sends a batch for the inputs modified at or after `since`: of `files`,
+    /// and the files below the `recursive` directories that are not on the
+    /// ignore list, plus directories that appeared below the planned watches.
+    /// Their changes may have been missed while the watch set changed (module
+    /// docs). A batch sent counts as the last batch ([`Shared::since`]), so
+    /// later updates do not report the same changes again.
     fn catch_up<'a>(
         &self, files: impl Iterator<Item = &'a PathBuf>, recursive: &[PathBuf],
         since: SystemTime, appeared: &BTreeSet<PathBuf>,
     ) {
-        // Whatever changes from now on is reported by the watches (or the next update).
+        // Whatever changes from now on is reported by the watches (or the next
+        // update).
         let scanned = SystemTime::now();
         let mut paths = appeared.clone();
         paths.extend(files.filter(|file| modified_since(file, since)).cloned());
@@ -725,9 +789,10 @@ impl Watcher {
         let _ = self.tx.send(ChangeBatch { paths, kind });
     }
 
-    /// The directories currently watched (canonical), recursive ones flagged `true`. This
-    /// includes the ancestors watched for missing directories, not the parents watched on
-    /// Windows for a watched directory's removal (`guard_watches`).
+    /// The directories currently watched (canonical), recursive ones flagged
+    /// `true`. This includes the ancestors watched for missing directories, not
+    /// the parents watched on Windows for a watched directory's removal
+    /// (`guard_watches`).
     pub fn watched_dirs(&self) -> Vec<(PathBuf, bool)> {
         self.watched
             .iter()
@@ -744,17 +809,18 @@ fn modified_since(path: &Path, since: SystemTime) -> bool {
         .is_ok_and(|modified| modified >= since)
 }
 
-/// Whether `path` exists and was last changed before `since`, by its inode change time
-/// (set by every write, rename, `touch` and permission change, and not by user code).
-/// Only a sub-second change time counts: a file system with whole-second times cannot
-/// tell a change in the same second as `since` from an earlier one, so nothing there is
-/// ever "before".
+/// Whether `path` exists and was last changed before `since`, by its inode
+/// change time (set by every write, rename, `touch` and permission change, and
+/// not by user code). Only a sub-second change time counts: a file system with
+/// whole-second times cannot tell a change in the same second as `since` from
+/// an earlier one, so nothing there is ever "before".
 ///
-/// macOS only, the one platform whose backend reports changes from before a watch
-/// (FSEvents, module docs), and one that stamps files from the system clock. Linux stamps
-/// them from a coarse clock that runs up to a tick (1-10 ms) behind it, so a change made
-/// right after a batch can look older than the batch; inotify and Windows report nothing
-/// from before a watch anyway, so there nothing is "before".
+/// macOS only, the one platform whose backend reports changes from before a
+/// watch (FSEvents, module docs), and one that stamps files from the system
+/// clock. Linux stamps them from a coarse clock that runs up to a tick (1-10
+/// ms) behind it, so a change made right after a batch can look older than the
+/// batch; inotify and Windows report nothing from before a watch anyway, so
+/// there nothing is "before".
 #[cfg(target_os = "macos")]
 fn changed_before(path: &Path, since: SystemTime) -> bool {
     use std::os::unix::fs::MetadataExt;
@@ -775,8 +841,9 @@ fn changed_before(_path: &Path, _since: SystemTime) -> bool {
     false
 }
 
-/// Adds the files below `dir` (inside the recursively watched `root`) that were modified at
-/// or after `since` to `found`, skipping the ignore list. Symbolic links are not followed.
+/// Adds the files below `dir` (inside the recursively watched `root`) that were
+/// modified at or after `since` to `found`, skipping the ignore list. Symbolic
+/// links are not followed.
 fn modified_below(
     root: &Path, dir: &Path, since: SystemTime, found: &mut BTreeSet<PathBuf>,
 ) {
@@ -809,21 +876,23 @@ fn is_not_found(err: &notify::Error) -> bool {
     }
 }
 
-/// A notify error as an [`Error::Other`]: `file watcher: cannot <what> [<dir>]: <err>`.
+/// A notify error as an [`Error::Other`]:
+/// `file watcher: cannot <what> [<dir>]: <err>`.
 fn watch_error(what: &str, dir: Option<&Path>, err: notify::Error) -> Error {
     let dir = dir.map(|dir| format!(" {}", dir.display())).unwrap_or_default();
     Error::Other(format!("file watcher: cannot {what}{dir}: {err}"))
 }
 
-/// The coalescing thread: gathers the backend's events into batches (module docs; the
-/// window is `debounce`) and sends them on `tx`. Returns when the backend is gone or
-/// nobody receives.
+/// The coalescing thread: gathers the backend's events into batches (module
+/// docs; the window is `debounce`) and sends them on `tx`. Returns when the
+/// backend is gone or nobody receives.
 fn coalesce(
     raw: &Receiver<notify::Result<Event>>, tx: &Sender<ChangeBatch>,
     shared: &Mutex<Shared>, debounce: Debounce,
 ) {
     let mut pending = BTreeSet::new();
-    // When the batch being gathered got its first and its latest relevant change.
+    // When the batch being gathered got its first and its latest relevant
+    // change.
     let mut window: Option<(Instant, Instant)> = None;
     loop {
         let next = match window {
@@ -843,7 +912,8 @@ fn coalesce(
                         window.map_or((now, now), |(first, _)| (first, now)),
                     );
                 }
-                // Irrelevant events keep coming without a timeout: check the clock too.
+                // Irrelevant events keep coming without a timeout: check the
+                // clock too.
                 let due = window.is_some_and(|(first, last)| {
                     last.elapsed() >= debounce.quiet
                         || first.elapsed() >= debounce.max_wait
@@ -865,10 +935,10 @@ fn coalesce(
     }
 }
 
-/// Adds the relevant paths of one backend event to `pending` and returns whether there
-/// were any; records created or removed directories that change what can be watched
-/// ([`Shared::is_structural`]) in [`Shared::recreated`] (they are changes too); logs
-/// errors.
+/// Adds the relevant paths of one backend event to `pending` and returns
+/// whether there were any; records created or removed directories that change
+/// what can be watched ([`Shared::is_structural`]) in [`Shared::recreated`]
+/// (they are changes too); logs errors.
 fn collect(
     result: notify::Result<Event>, shared: &Mutex<Shared>,
     pending: &mut BTreeSet<PathBuf>,
@@ -915,16 +985,18 @@ fn collect(
         if !recreated
             && ((!structural && path.is_dir()) || !shared.filter.matches(&path))
         {
-            // A directory reported as modified (Windows does that when an entry in it is
-            // written, renamed or removed) is no change by itself: the entry has its own
-            // event. A created, removed or renamed directory still counts.
+            // A directory reported as modified (Windows does that when an entry
+            // in it is written, renamed or removed) is no change by itself: the
+            // entry has its own event. A created, removed or renamed directory
+            // still counts.
             continue;
         }
         if changed_before(&path, shared.since) {
-            // FSEvents reports changes made shortly before its stream was created, and it
-            // creates a stream on every watch (module docs): the build that the last batch
-            // started (or the first build) read the path after this change, and a
-            // directory that existed before it was not recreated since.
+            // FSEvents reports changes made shortly before its stream was
+            // created, and it creates a stream on every watch (module docs):
+            // the build that the last batch started (or the first build) read
+            // the path after this change, and a directory that existed before
+            // it was not recreated since.
             tracing::debug!(
                 "file watcher: {} last changed before the last batch; skipped",
                 path.display()
@@ -943,8 +1015,8 @@ fn collect(
 }
 
 /// Sends `pending` (emptied) as one batch, classified with the current theme
-/// directories, and records the time in [`Shared::since`]. Returns false when nobody
-/// receives any more. Nothing is sent for no paths.
+/// directories, and records the time in [`Shared::since`]. Returns false when
+/// nobody receives any more. Nothing is sent for no paths.
 fn send_batch(
     tx: &Sender<ChangeBatch>, shared: &Mutex<Shared>,
     pending: &mut BTreeSet<PathBuf>,
@@ -964,7 +1036,8 @@ fn send_batch(
     tx.send(ChangeBatch { paths, kind }).is_ok()
 }
 
-/// Status callbacks begin with Built and Watching, then Changed and Built per rebuild.
+/// Status callbacks begin with Built and Watching, then Changed and Built per
+/// rebuild.
 #[derive(Debug)]
 pub enum WatchStatus<'a> {
     /// All preparation, target and diagnostic results of one completed build.
@@ -975,8 +1048,9 @@ pub enum WatchStatus<'a> {
     Changed(&'a ChangeBatch),
 }
 
-/// Builds once, then selectively rebuilds until the callback breaks or watching stops.
-/// Content failures are reported through Built; only starting the watcher returns an error.
+/// Builds once, then selectively rebuilds until the callback breaks or watching
+/// stops. Content failures are reported through Built; only starting the
+/// watcher returns an error.
 pub fn run_build_watch_with(
     opts: &BuildOptions, targets: &[Target],
     mut report: impl FnMut(WatchStatus<'_>) -> ControlFlow<()>,
@@ -984,7 +1058,8 @@ pub fn run_build_watch_with(
     run_build_watch_recording(opts, targets, |status, _| report(status))
 }
 
-/// Supplies per-build successful directory statistics without changing statuses.
+/// Supplies per-build successful directory statistics without changing
+/// statuses.
 pub(crate) fn run_build_watch_recording(
     opts: &BuildOptions, targets: &[Target],
     mut report: impl FnMut(

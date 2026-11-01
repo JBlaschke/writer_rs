@@ -16,10 +16,12 @@ use crate::ir::{
 
 use super::{DocxOptions, Picture, Renderer};
 
-/// Builds a resolved style showcase without reading files or running a frontend.
+/// Builds a resolved style showcase without reading files or running a
+/// frontend.
 ///
 /// The single asset is a built-in grayscale PNG. Numbers, labels, contents and
-/// bibliography are fixed here so ejection needs neither resolution nor a World.
+/// bibliography are fixed here so ejection needs neither resolution nor a
+/// World.
 pub fn showcase_document() -> (Document, AssetRegistry) {
     let mut assets = AssetRegistry::new();
     let image = assets.register_bytes(

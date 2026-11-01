@@ -64,7 +64,9 @@ pub fn resolve(spec: &str, search_roots: &[&Path]) -> Result<Theme> {
         chain.push(dir);
     }
     check_root_templates(spec, &chain)?;
-    tracing::debug!(theme = spec, chain = %chain_text(&chain), "resolved theme");
+    tracing::debug!(
+        theme = spec, chain = %chain_text(&chain), "resolved theme"
+    );
     Ok(Theme { chain })
 }
 
@@ -163,7 +165,8 @@ fn candidate_dirs(spec: &str, roots: &[&Path]) -> Vec<PathBuf> {
     };
     let mut candidates: Vec<PathBuf> = Vec::new();
     for path in joined {
-        // `absolute` only fails for an empty path or an unavailable CWD; keep it as is then.
+        // `absolute` only fails for an empty path or an unavailable CWD; keep
+        // it as is then.
         let path = std::path::absolute(&path).unwrap_or(path);
         if !candidates.contains(&path) {
             candidates.push(path);
@@ -192,7 +195,8 @@ fn not_found_message(candidates: &[PathBuf], builtins: &[String]) -> String {
     );
     for candidate in candidates.iter().filter(|c| c.is_dir()) {
         if linked_outside(candidate, MANIFEST_FILE) {
-            // Audit F08: the manifest is there, but a link takes it out of the theme.
+            // Audit F08: the manifest is there, but a link takes it out of the
+            // theme.
             message.push_str(&format!(
                 " ({} has a {MANIFEST_FILE} that {LINKED_OUTSIDE})",
                 candidate.display()
@@ -363,8 +367,9 @@ mod tests {
 
     #[test]
     fn locate_requires_the_exact_manifest_name() {
-        // `is_file` accepts `theme.toml` for `Theme.toml` on macOS; the exact-name rule
-        // makes this "no manifest" everywhere, with a hint naming the near miss.
+        // `is_file` accepts `theme.toml` for `Theme.toml` on macOS; the
+        // exact-name rule makes this "no manifest" everywhere, with a hint
+        // naming the near miss.
         let tmp = tempfile::tempdir().unwrap();
         std::fs::create_dir(tmp.path().join("t")).unwrap();
         std::fs::write(tmp.path().join("t").join("Theme.toml"), "name = \"t\"")

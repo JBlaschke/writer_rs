@@ -86,10 +86,12 @@ mover[accent="true" i] > :not(:first-child) {
   math-shift: inherit;
 }"#;
 
-/// Compiles one Typst equation to MathML while preserving the world's main file.
+/// Compiles one Typst equation to MathML while preserving the world's main
+/// file.
 ///
 /// Returns an error for unsupported constructs reported as warnings, allowing
-/// callers to use an image fallback without silently losing part of an equation.
+/// callers to use an image fallback without silently losing part of an
+/// equation.
 pub fn equation_mathml(
     world: &mut WriterWorld, source: &str, display: bool,
 ) -> Result<String> {

@@ -7,7 +7,11 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-const TIMEOUT: Duration = Duration::from_secs(10);
+/// How long a watching build may take to report, write or exit. It only has to
+/// beat a hang: under a parallel runner every watcher start waits for
+/// fseventsd, which serialises FSEvents stream setup across every process on a
+/// Mac, and a loaded one has taken over ten seconds.
+const TIMEOUT: Duration = Duration::from_secs(60);
 const PNG: &[u8] = include_bytes!("fixtures/md/images/plot.png");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

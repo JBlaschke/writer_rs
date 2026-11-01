@@ -244,7 +244,11 @@ fn custom_template_resolves_relative_imports_and_retained_world_replacement() {
             format!("#let marker = \"{name}\"\n"),
         )
         .unwrap();
-        fs::write(root.join("template.typ"), "#import \"helper.typ\": marker\n#import \"@writer/doc:0.1.0\": writer-doc as base\n#let writer-doc(..args) = base(..args)\n").unwrap();
+        fs::write(
+            root.join("template.typ"),
+            "#import \"helper.typ\": marker\n#import \"@writer/doc:0.1.0\": writer-doc as base\n#let writer-doc(..args) = base(..args)\n"
+        )
+        .unwrap();
     }
     let mut worlds = WorldSlot::new();
     for name in ["first", "second"] {
@@ -302,9 +306,17 @@ fn bibliography_mounts_keep_identical_basenames_separate() {
     for (name, key) in [("first", "alpha"), ("second", "beta")] {
         let root = dir.path().join(name);
         fs::create_dir(&root).unwrap();
-        fs::write(root.join("refs.bib"), format!("@book{{{key}, author={{Writer, A.}}, title={{{name}}}, year={{2026}}}}\n")).unwrap();
+        fs::write(
+            root.join("refs.bib"),
+            format!("@book{{{key}, author={{Writer, A.}}, title={{{name}}}, year={{2026}}}}\n")
+        )
+        .unwrap();
     }
-    fs::write(dir.path().join("writer.toml"), format!("{CONFIG}[references]\nbibliography=['first/refs.bib','second/refs.bib']\nstyle='ieee'\n")).unwrap();
+    fs::write(
+        dir.path().join("writer.toml"),
+        format!("{CONFIG}[references]\nbibliography=['first/refs.bib','second/refs.bib']\nstyle='ieee'\n")
+    )
+    .unwrap();
     let mut worlds = WorldSlot::new();
     let (opts, prepared) = bibliography_pdf(dir.path(), &mut worlds);
     let world = worlds.get(Some(&prepared), &opts).unwrap();
@@ -418,11 +430,19 @@ fn csl_path_mount_is_distinct_from_a_named_style_and_is_watched() {
     let dir = project(
         "# CSL resource\n\n@alpha.\n\n```{=typst}\n#cite(<alpha>)\n```\n",
     );
-    fs::write(dir.path().join("refs.bib"), "@book{alpha, author={Writer, A.}, title={CSL resource}, year={2026}}\n").unwrap();
+    fs::write(
+        dir.path().join("refs.bib"),
+        "@book{alpha, author={Writer, A.}, title={CSL resource}, year={2026}}\n"
+    )
+    .unwrap();
     fs::create_dir(dir.path().join("styles")).unwrap();
     let csl = dir.path().join("styles/local.csl");
     fs::write(&csl, CSL).unwrap();
-    fs::write(dir.path().join("writer.toml"), format!("{CONFIG}[references]\nbibliography=['refs.bib']\nstyle='styles/local.csl'\n")).unwrap();
+    fs::write(
+        dir.path().join("writer.toml"),
+        format!("{CONFIG}[references]\nbibliography=['refs.bib']\nstyle='styles/local.csl'\n")
+    )
+    .unwrap();
     let mut worlds = WorldSlot::new();
     let (opts, prepared) = bibliography_pdf(dir.path(), &mut worlds);
     let (source, _) = pdf::dump(&prepared, &opts).unwrap();

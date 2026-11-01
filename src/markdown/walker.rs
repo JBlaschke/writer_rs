@@ -418,8 +418,18 @@ impl<'a> Walker<'a, '_, '_, '_> {
     fn misplaced_equation_label(
         &mut self, node: &'a AstNode<'a>, span: &SourceSpan,
     ) {
-        let math = node.children().any(|n| matches!(&n.data().value, NodeValue::Math(math) if math.display_math));
-        let label = node.children().any(|n| matches!(&n.data().value, NodeValue::Text(text) if text.contains("{#")));
+        let math = node.children().any(|n| {
+            matches!(
+                &n.data().value,
+                NodeValue::Math(math) if math.display_math
+            )
+        });
+        let label = node.children().any(|n| {
+            matches!(
+                &n.data().value,
+                NodeValue::Text(text) if text.contains("{#")
+            )
+        });
         if math && label {
             self.warn(
                 "equation-label-misplaced",
@@ -478,9 +488,16 @@ impl<'a> Walker<'a, '_, '_, '_> {
             rows.push(Row { cells });
         }
         if body.last().and_then(|row| row.cells.first()).is_some_and(|cell| {
-            matches!(cell.inlines.first(), Some(Inline::Text { text }) if text.starts_with(": "))
+            matches!(
+                cell.inlines.first(),
+                Some(Inline::Text { text }) if text.starts_with(": ")
+            )
         }) {
-            self.warn("table-caption-pandoc-colon", "use a separate `Table:` paragraph for a table caption", span);
+            self.warn(
+                "table-caption-pandoc-colon",
+                "use a separate `Table:` paragraph for a table caption",
+                span,
+            );
         }
         Ok(Block::Table {
             columns,
@@ -505,7 +522,9 @@ impl<'a> Walker<'a, '_, '_, '_> {
                 text.strip_prefix("Table:").unwrap_or(text).trim_start().into();
         }
         let parsed = self.caption_attrs(&mut caption, &caption_span);
-        caption.retain(|inline| !matches!(inline, Inline::Text { text } if text.is_empty()));
+        caption.retain(|inline| {
+            !matches!(inline, Inline::Text { text } if text.is_empty())
+        });
         let caption = (!caption.is_empty()).then_some(caption);
         let attrs = self.attrs(parsed, &caption_span);
         let table = self.table(table, &self.span(table))?;
@@ -888,7 +907,11 @@ impl<'a> Walker<'a, '_, '_, '_> {
             Some("listing") => FigureKind::Listing,
             Some("other") => FigureKind::Other,
             Some(value) => {
-                self.warn("invalid-directive-arg", format!("unknown figure kind `{value}`; use image, table, listing or other"), &span);
+                self.warn(
+                    "invalid-directive-arg",
+                    format!("unknown figure kind `{value}`; use image, table, listing or other"),
+                    &span
+                );
                 FigureKind::Other
             }
         };
@@ -1149,7 +1172,11 @@ impl<'a> Walker<'a, '_, '_, '_> {
             if let Some(value) = attrs.pairs.get(key)
                 && !valid_dimension(value)
             {
-                self.warn("invalid-dimension", format!("invalid image {key} `{value}`; use a number with %, px, pt, cm, mm, in or em"), span);
+                self.warn(
+                    "invalid-dimension",
+                    format!("invalid image {key} `{value}`; use a number with %, px, pt, cm, mm, in or em"),
+                    span
+                );
                 attrs.pairs.remove(key);
             }
         }
@@ -1188,7 +1215,12 @@ impl<'a> Walker<'a, '_, '_, '_> {
 
 fn is_table_caption(node: &AstNode<'_>) -> bool {
     matches!(node.data().value, NodeValue::Paragraph)
-        && node.first_child().is_some_and(|first| matches!(&first.data().value, NodeValue::Text(text) if text.starts_with("Table:")))
+        && node.first_child().is_some_and(|first| {
+            matches!(
+                &first.data().value,
+                NodeValue::Text(text) if text.starts_with("Table:")
+            )
+        })
 }
 
 fn presenter_separator(line: &str) -> bool {
@@ -1326,15 +1358,16 @@ const ASSET_CASE_MISMATCH: &str = "asset-case-mismatch";
 /// Separates the URL from the resolved path in a `missing-asset` message.
 const LOOKED_FOR: &str = " (looked for ";
 
-/// The missing file a `missing-asset` diagnostic of this module is about (resolved, normally
-/// absolute), or `None` for any other diagnostic.
+/// The missing file a `missing-asset` diagnostic of this module is about
+/// (resolved, normally absolute), or `None` for any other diagnostic.
 ///
-/// Such a diagnostic's `path` is the *source* file (the document or notebook, set by the
-/// frontend) and its span the referencing lines; the missing file is only in the message,
-/// whose format is frozen for this function: ``<what> `<url as written>` not found (looked
-/// for <resolved path>)``, optionally followed by Typst's `` (col N)``.
-/// The pipeline escalates with
-/// `Error::MissingAsset { path: missing_asset_path(d)?, span: d.span.clone() }`.
+/// Such a diagnostic's `path` is the *source* file (the document or notebook,
+/// set by the frontend) and its span the referencing lines; the missing file is
+/// only in the message, whose format is frozen for this function: ``<what>
+/// `<url as written>` not found (looked for <resolved path>)``, optionally
+/// followed by Typst's `` (col N)``. The pipeline escalates with
+/// `Error::MissingAsset { path: missing_asset_path(d)?, span: d.span.clone()
+/// }`.
 pub fn missing_asset_path(diagnostic: &Diagnostic) -> Option<PathBuf> {
     if diagnostic.code != MISSING_ASSET {
         return None;
@@ -1354,8 +1387,9 @@ pub fn missing_asset_path(diagnostic: &Diagnostic) -> Option<PathBuf> {
     Some(PathBuf::from(path))
 }
 
-/// Rewrites relative `src` and `poster` URLs in raw HTML scanned in document order:
-/// `scan` carries an open comment or raw-text element from one node to the next.
+/// Rewrites relative `src` and `poster` URLs in raw HTML scanned in document
+/// order: `scan` carries an open comment or raw-text element from one node to
+/// the next.
 pub(crate) fn rewrite_html_snippet(
     html: &mut String, span: Option<&SourceSpan>, ctx: &mut super::Fragment,
     scan: &mut crate::assets::HtmlScan,
@@ -1386,8 +1420,9 @@ pub(crate) fn rewrite_html_snippet(
     Ok(())
 }
 
-/// Resolves one URL (dialect §6). `Some("asset:<id>…")` when it names an existing local
-/// file; `None` when it is not relative or the file is missing (then reported).
+/// Resolves one URL (dialect §6). `Some("asset:<id>…")` when it names an
+/// existing local file; `None` when it is not relative or the file is missing
+/// (then reported).
 pub(crate) fn local_asset(
     url: &str, what: &str, span: Option<&SourceSpan>, ctx: &mut super::Fragment,
 ) -> Result<Option<String>> {
@@ -1430,14 +1465,15 @@ pub(crate) fn local_asset(
     Ok(None)
 }
 
-/// The spelling on disk of `relative` (a path under `base` that exists) when some segment
-/// of it matches the file system's entry only by letter case, which a case-insensitive file
-/// system (macOS, Windows) accepts and a case-sensitive one (Linux) does not: each segment
-/// is compared exactly with the names `read_dir` lists, as theme files are (A3). `.` is
-/// skipped and `..` goes up unchecked. `None` when every segment matches exactly (or a
-/// directory cannot be listed). A directory that finds a name by its exact spelling only
-/// (case-sensitive) is not listed ([`exact_lookup`]). Listings are cached while a
-/// [`DirListings`] guard is open.
+/// The spelling on disk of `relative` (a path under `base` that exists) when
+/// some segment of it matches the file system's entry only by letter case,
+/// which a case-insensitive file system (macOS, Windows) accepts and a
+/// case-sensitive one (Linux) does not: each segment is compared exactly with
+/// the names `read_dir` lists, as theme files are (A3). `.` is skipped and `..`
+/// goes up unchecked. `None` when every segment matches exactly (or a directory
+/// cannot be listed). A directory that finds a name by its exact spelling only
+/// (case-sensitive) is not listed ([`exact_lookup`]). Listings are cached while
+/// a [`DirListings`] guard is open.
 fn case_mismatch(base: &Path, relative: &str) -> Option<String> {
     let mut dir = base.to_path_buf();
     let mut on_disk: Vec<String> = Vec::new();
@@ -1464,24 +1500,26 @@ fn folded(name: &OsStr) -> String {
     name.to_string_lossy().to_lowercase()
 }
 
-/// What a lookup of `name` in `dir` tells without listing `dir` ([`case_mismatch`]).
+/// What a lookup of `name` in `dir` tells without listing `dir`
+/// ([`case_mismatch`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Lookup {
-    /// `name` has no letter case (`2024`): a name it matches only by letter case would be
-    /// itself, so it is spelled as on disk.
+    /// `name` has no letter case (`2024`): a name it matches only by letter
+    /// case would be itself, so it is spelled as on disk.
     Uncased,
-    /// `dir` has `name`, and not `name` with its ASCII letters in the other case: `dir`
-    /// finds names by their exact spelling (a case-sensitive file system, Linux), so every
-    /// name it has is spelled as on disk.
+    /// `dir` has `name`, and not `name` with its ASCII letters in the other
+    /// case: `dir` finds names by their exact spelling (a case-sensitive file
+    /// system, Linux), so every name it has is spelled as on disk.
     ExactOnly,
-    /// Only a listing tells (a case-insensitive file system, macOS; or `dir` has both
-    /// spellings, or `name` is not there).
+    /// Only a listing tells (a case-insensitive file system, macOS; or `dir`
+    /// has both spellings, or `name` is not there).
     Unknown,
 }
 
-/// [`Lookup`] of `name` in `dir`, with at most two `lstat` calls: on a case-sensitive file
-/// system the check of a reference needs no listing (wave-8 review of the A3 fixes: a
-/// `figures/` folder of thousands of files was listed for each build).
+/// [`Lookup`] of `name` in `dir`, with at most two `lstat` calls: on a
+/// case-sensitive file system the check of a reference needs no listing (wave-8
+/// review of the A3 fixes: a `figures/` folder of thousands of files was listed
+/// for each build).
 fn exact_lookup(dir: &Path, name: &OsStr) -> Lookup {
     let Some(text) = name.to_str() else {
         return Lookup::Unknown;
@@ -1492,8 +1530,8 @@ fn exact_lookup(dir: &Path, name: &OsStr) -> Lookup {
     if !text.bytes().any(|byte| byte.is_ascii_alphabetic()) {
         return Lookup::Unknown;
     }
-    // Swapping ASCII letters gives a name every case-insensitive file system takes for
-    // `name`: there a lookup of it always succeeds.
+    // Swapping ASCII letters gives a name every case-insensitive file system
+    // takes for `name`: there a lookup of it always succeeds.
     let swapped: String = text
         .chars()
         .map(|c| match c.is_ascii_uppercase() {
@@ -1512,9 +1550,9 @@ fn exact_lookup(dir: &Path, name: &OsStr) -> Lookup {
 struct Listing {
     /// Every name as listed.
     exact: HashSet<OsString>,
-    /// Lowercased name → the smallest listed name with that lowercase form: built when the
-    /// first name misses `exact`, so a document whose names all match exactly never lowercases
-    /// a listing.
+    /// Lowercased name → the smallest listed name with that lowercase form:
+    /// built when the first name misses `exact`, so a document whose names all
+    /// match exactly never lowercases a listing.
     folded: OnceCell<HashMap<String, OsString>>,
 }
 
@@ -1528,8 +1566,8 @@ impl Listing {
         })
     }
 
-    /// The listed name that `name` names: itself when listed, else the smallest listed name
-    /// that differs only by letter case; `None` when there is none.
+    /// The listed name that `name` names: itself when listed, else the smallest
+    /// listed name that differs only by letter case; `None` when there is none.
     fn spelling(&self, name: &OsStr) -> Option<OsString> {
         if self.exact.contains(name) {
             return Some(name.to_os_string());
@@ -1552,9 +1590,9 @@ impl Listing {
         folded_names.get(&folded(name)).cloned()
     }
 
-    /// [`Listing::spelling`] of `name` in `dir` without keeping a listing (no guard is
-    /// open): the scan stops at an exact match, and only a name that misses compares the
-    /// entries in lowercase.
+    /// [`Listing::spelling`] of `name` in `dir` without keeping a listing (no
+    /// guard is open): the scan stops at an exact match, and only a name that
+    /// misses compares the entries in lowercase.
     fn scan(dir: &Path, name: &OsStr) -> Option<OsString> {
         count_directory_read();
         let mut listed: Vec<OsString> = Vec::new();
@@ -1573,16 +1611,19 @@ impl Listing {
 #[cfg(test)]
 thread_local! {
     /// How many directories [`Listing`] read on this thread (tests count them).
-    static DIRECTORY_READS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static DIRECTORY_READS: std::cell::Cell<usize> =
+        const { std::cell::Cell::new(0) };
 }
 
-/// Counts one directory listing read (`directory_reads`, in tests); nothing outside tests.
+/// Counts one directory listing read (`directory_reads`, in tests); nothing
+/// outside tests.
 fn count_directory_read() {
     #[cfg(test)]
     DIRECTORY_READS.set(DIRECTORY_READS.get() + 1);
 }
 
-/// How many directories the `asset-case-mismatch` check listed on this thread so far.
+/// How many directories the `asset-case-mismatch` check listed on this thread
+/// so far.
 #[cfg(test)]
 pub(crate) fn directory_reads() -> usize {
     DIRECTORY_READS.get()
@@ -1591,13 +1632,15 @@ pub(crate) fn directory_reads() -> usize {
 /// What the open [`DirListings`] guards keep of a directory.
 #[derive(Clone)]
 enum Known {
-    /// It finds names by their exact spelling ([`Lookup::ExactOnly`]): not listed.
+    /// It finds names by their exact spelling ([`Lookup::ExactOnly`]): not
+    /// listed.
     ExactOnly,
     /// Its listing (`None`: it cannot be listed).
     Listed(Option<Rc<Listing>>),
 }
 
-/// The open [`DirListings`] guards on a thread and what they know of each directory.
+/// The open [`DirListings`] guards on a thread and what they know of each
+/// directory.
 type ListingCache = (usize, HashMap<PathBuf, Known>);
 
 thread_local! {
@@ -1605,14 +1648,15 @@ thread_local! {
     static LISTINGS: RefCell<ListingCache> = RefCell::new((0, HashMap::new()));
 }
 
-/// While a guard is alive, [`case_mismatch`] lists each directory once on this thread
-/// instead of once per reference and path segment (a document next to a large `figures/`
-/// folder would otherwise list it for every image), and a directory that finds names by
-/// their exact spelling ([`exact_lookup`]) is probed once and never listed. The outermost
-/// guard forgets what it learnt when dropped, so a rebuild sees the files as they are then.
-/// A document parse and a notebook parse hold one for the whole document,
-/// and each fragment holds one of its own. Without a guard, each lookup probes
-/// the directory and, when that does not tell, scans it up to an exact match.
+/// While a guard is alive, [`case_mismatch`] lists each directory once on this
+/// thread instead of once per reference and path segment (a document next to a
+/// large `figures/` folder would otherwise list it for every image), and a
+/// directory that finds names by their exact spelling ([`exact_lookup`]) is
+/// probed once and never listed. The outermost guard forgets what it learnt
+/// when dropped, so a rebuild sees the files as they are then. A document parse
+/// and a notebook parse hold one for the whole document, and each fragment
+/// holds one of its own. Without a guard, each lookup probes the directory and,
+/// when that does not tell, scans it up to an exact match.
 pub(crate) struct DirListings(());
 
 impl DirListings {
@@ -1622,10 +1666,11 @@ impl DirListings {
         DirListings(())
     }
 
-    /// The name in `dir` that `name` names ([`Listing::spelling`]): `name` itself when a
-    /// lookup tells ([`exact_lookup`]), else from the listing cached while a guard is open
-    /// (read now if it is not yet), else from a scan of `dir`. `None` when there is none or
-    /// the directory cannot be listed.
+    /// The name in `dir` that `name` names ([`Listing::spelling`]): `name`
+    /// itself when a lookup tells ([`exact_lookup`]), else from the listing
+    /// cached while a guard is open (read now if it is not yet), else from a
+    /// scan of `dir`. `None` when there is none or the directory cannot be
+    /// listed.
     fn spelling(dir: &Path, name: &OsStr) -> Option<OsString> {
         let (open, cached) = LISTINGS.with_borrow(|(open, listings)| {
             (*open > 0, listings.get(dir).cloned())
@@ -1671,8 +1716,9 @@ impl Drop for DirListings {
     }
 }
 
-/// A local reference: not empty, no URL scheme (`https:`, `data:`, `asset:`, …), not
-/// root-absolute or protocol-relative (`/…`, `//…`) and not just a `#fragment` or `?query`.
+/// A local reference: not empty, no URL scheme (`https:`, `data:`, `asset:`,
+/// …), not root-absolute or protocol-relative (`/…`, `//…`) and not just a
+/// `#fragment` or `?query`.
 pub(crate) fn is_relative_url(url: &str) -> bool {
     let scheme = url.find(':').is_some_and(|at| {
         let mut chars = url[..at].chars();
@@ -1684,8 +1730,9 @@ pub(crate) fn is_relative_url(url: &str) -> bool {
     !(url.is_empty() || scheme || url.starts_with(['/', '\\', '#', '?']))
 }
 
-/// Decodes `%XX` escapes (exactly two hex digits: `%+F` stays as written); the input
-/// unchanged when the result is not UTF-8. Also used for notebook attachment names.
+/// Decodes `%XX` escapes (exactly two hex digits: `%+F` stays as written); the
+/// input unchanged when the result is not UTF-8. Also used for notebook
+/// attachment names.
 pub(crate) fn percent_decode(path: &str) -> String {
     let bytes = path.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -1723,17 +1770,19 @@ mod asset_tests {
         dir
     }
 
-    /// A3 fix round: directory listings for `asset-case-mismatch` are read once while a
-    /// guard is open, and read again after the outermost guard is dropped (a rebuild). A
-    /// case-sensitive file system lists nothing ([`exact_lookups_need_no_listing`]).
+    /// A3 fix round: directory listings for `asset-case-mismatch` are read once
+    /// while a guard is open, and read again after the outermost guard is
+    /// dropped (a rebuild). A case-sensitive file system lists nothing
+    /// ([`exact_lookups_need_no_listing`]).
     #[test]
     fn case_listings_are_cached_while_a_guard_is_open() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir(dir.path().join("Figs")).unwrap();
         std::fs::write(dir.path().join("Figs/a.png"), b"x").unwrap();
         if !dir.path().join("FIGS/A.PNG").exists() {
-            // Case-sensitive: names are found by their exact spelling (`figs/a.png` is not
-            // there), so the check of a file that exists needs no listing.
+            // Case-sensitive: names are found by their exact spelling
+            // (`figs/a.png` is not there), so the check of a file that exists
+            // needs no listing.
             let _document = DirListings::enter();
             let before = directory_reads();
             assert_eq!(case_mismatch(dir.path(), "Figs/./a.png"), None);
@@ -1775,10 +1824,11 @@ mod asset_tests {
         assert_eq!(case_mismatch(dir.path(), "Figs/../Figs/B.png"), None);
     }
 
-    /// Wave-8 review of the A3 fixes: a name without letter case, and every name of a
-    /// directory that finds names by their exact spelling (a case-sensitive file system),
-    /// is checked without listing the directory; on a case-insensitive file system each
-    /// directory is listed once (per guard).
+    /// Wave-8 review of the A3 fixes: a name without letter case, and every
+    /// name of a directory that finds names by their exact spelling (a
+    /// case-sensitive file system), is checked without listing the directory;
+    /// on a case-insensitive file system each directory is listed once (per
+    /// guard).
     #[test]
     fn exact_lookups_need_no_listing() {
         let dir = tempfile::tempdir().unwrap();
@@ -1797,7 +1847,8 @@ mod asset_tests {
             false => Lookup::ExactOnly,
         };
         assert_eq!(exact_lookup(&year, OsStr::new("Figs")), expected);
-        // A name that is not there is never taken for exact; nor one without ASCII letters.
+        // A name that is not there is never taken for exact; nor one without
+        // ASCII letters.
         assert_eq!(exact_lookup(&year, OsStr::new("gone")), Lookup::Unknown);
         assert_eq!(exact_lookup(&year, OsStr::new("é")), Lookup::Unknown);
         {
@@ -1823,7 +1874,8 @@ mod asset_tests {
             );
         }
         if !insensitive {
-            // Both spellings in one directory: only its listing tells them apart.
+            // Both spellings in one directory: only its listing tells them
+            // apart.
             std::fs::write(year.join("Figs/A.PNG"), b"x").unwrap();
             let figs = year.join("Figs");
             assert_eq!(
@@ -2006,11 +2058,18 @@ mod implicit_image_note_tests {
         let (caption, alt) = image(
             "![Caption *note[^a]* again[^a]](images/plot.png)\n\n[^a]: A named note.\n",
         );
-        assert!(matches!(&caption[1], Inline::Emph { inlines }
-            if matches!(&inlines[1], Inline::Footnote { label: Some(label), .. } if label == "a")));
-        assert!(
-            matches!(caption.last(), Some(Inline::FootnoteRef { label, .. }) if label == "a")
-        );
+        assert!(matches!(
+            &caption[1],
+            Inline::Emph { inlines }
+                if matches!(
+                    &inlines[1],
+                    Inline::Footnote { label: Some(label), .. } if label == "a"
+                )
+        ));
+        assert!(matches!(
+            caption.last(),
+            Some(Inline::FootnoteRef { label, .. }) if label == "a"
+        ));
         assert!(matches!(&alt[1], Inline::Emph { inlines }
             if inlines == &[Inline::Text { text: "note".into() }]));
         let mut stripped = caption;
@@ -2049,8 +2108,14 @@ mod implicit_image_note_tests {
         remove_alt_footnotes(&mut alt);
         assert!(matches!(&alt[1], Inline::Strong { inlines }
             if inlines == &[Inline::Text { text: "note".into() }]));
-        assert!(matches!(&caption[1], Inline::Strong { inlines }
-            if matches!(inlines.get(1), Some(Inline::Footnote { label: None, .. }))));
+        assert!(matches!(
+            &caption[1],
+            Inline::Strong { inlines }
+                if matches!(
+                    inlines.get(1),
+                    Some(Inline::Footnote { label: None, .. })
+                )
+        ));
         assert_eq!(
             crate::ir::plain_text(&alt),
             crate::ir::plain_text(&caption)
@@ -2422,7 +2487,12 @@ mod tests {
             Block::Math { .. }
         ));
         let result = parsed("Before $$x$$ after {#eq-misplaced}\n");
-        assert!(paragraph(&result.document.blocks[0]).iter().any(|inline| matches!(inline, Inline::Math { source, .. } if source == "x")));
+        assert!(paragraph(&result.document.blocks[0]).iter().any(
+            |inline| matches!(
+                inline,
+                Inline::Math { source, .. } if source == "x"
+            )
+        ));
         assert!(codes(&result).contains(&"equation-label-misplaced"));
         let result = parsed("- $$x$$\n\n> $$y$$\n");
         let mut math = 0;
@@ -2527,8 +2597,14 @@ mod tests {
         assert!(text.contains("asset:") && !text.contains("images/plot.png"));
         assert_eq!(result.document.assets.len(), 1);
         let inlines = paragraph(&result.document.blocks[1]);
-        assert!(!inlines.iter().any(|inline| matches!(inline, Inline::Raw { text, .. } if text.starts_with("<!--"))));
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Raw { format, text } if format == "html" && text == "<b>")));
+        assert!(!inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Raw { text, .. } if text.starts_with("<!--")
+        )));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Raw { format, text } if format == "html" && text == "<b>"
+        )));
     }
 
     #[test]
@@ -2667,10 +2743,10 @@ mod tests {
             ("callout custom", "custom"),
             ("callout kind=special", "special"),
         ] {
-            assert!(
-                matches!(&parsed(&format!(":::{info}\nBody\n:::\n")).document.blocks[0],
-                Block::Callout { kind, .. } if kind == expected)
-            );
+            assert!(matches!(
+                &parsed(&format!(":::{info}\nBody\n:::\n")).document.blocks[0],
+                Block::Callout { kind, .. } if kind == expected
+            ));
         }
         for (info, class) in [
             ("columns widths='1fr 2fr'", "columns"),
@@ -2708,20 +2784,23 @@ mod tests {
             let result = parsed(&format!(
                 ":::{info}\n\\section{{Raw}}\n\n  untouched\n:::\n"
             ));
-            assert!(
-                matches!(&result.document.blocks[0], Block::Raw { format, text, .. }
-                if format == "latex" && text == "\\section{Raw}\n\n  untouched\n")
-            );
+            assert!(matches!(
+                &result.document.blocks[0],
+                Block::Raw { format, text, .. }
+                    if format == "latex"
+                        && text == "\\section{Raw}\n\n  untouched\n"
+            ));
         }
         let result =
             parsed(":::notes\nHidden\n:::\n\n:::comment\nAlso hidden\n:::\n");
         assert!(result.document.blocks.is_empty());
         assert!(result.diagnostics.iter().next().is_none());
         let result = parsed("::: {.note title='Pandoc'}\nBody\n:::\n");
-        assert!(
-            matches!(&result.document.blocks[0], Block::Callout { kind, title: Some(title), .. }
-            if kind == "note" && plain_text(title) == "Pandoc")
-        );
+        assert!(matches!(
+            &result.document.blocks[0],
+            Block::Callout { kind, title: Some(title), .. }
+                if kind == "note" && plain_text(title) == "Pandoc"
+        ));
         let mut config = Config::default();
         config.document.toc = Toc::Depth(5);
         let result = parse(&source(), ":::toc\n:::\n", &config).unwrap();
@@ -2927,9 +3006,10 @@ mod tests {
         let result = parsed("\\@key and \\@@other\n");
         let inlines = paragraph(&result.document.blocks[0]);
         assert_eq!(inlines[0], Inline::text("@"));
-        assert!(
-            matches!(&inlines[1], Inline::Text { text } if text.starts_with("key and "))
-        );
+        assert!(matches!(
+            &inlines[1],
+            Inline::Text { text } if text.starts_with("key and ")
+        ));
         assert!(
             inlines
                 .iter()
@@ -2940,7 +3020,12 @@ mod tests {
         let mut config = Config::default();
         config.markdown.superscript = true;
         config.markdown.subscript = true;
-        let result = parse(&source(), "*em* **strong** ~~strike~~ x^2^ H~2~O `code`{.plain}\nsoft  \nhard\n", &config).unwrap();
+        let result = parse(
+            &source(),
+            "*em* **strong** ~~strike~~ x^2^ H~2~O `code`{.plain}\nsoft  \nhard\n",
+            &config
+        )
+        .unwrap();
         let inlines = paragraph(&result.document.blocks[0]);
         for expected in [
             "emph", "strong", "strikeout", "superscript", "subscript", "code",
@@ -2975,8 +3060,15 @@ mod tests {
         let result =
             parsed("[link](url){title=Attribute} `<b>x</b>`{=html} trailing\n");
         let inlines = paragraph(&result.document.blocks[0]);
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Link { title, .. } if title.as_deref() == Some("Attribute"))));
-        assert!(inlines.iter().any(|inline| matches!(inline, Inline::Raw { format, text } if format == "html" && text == "<b>x</b>")));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Link { title, .. } if title.as_deref() == Some("Attribute")
+        )));
+        assert!(inlines.iter().any(|inline| matches!(
+            inline,
+            Inline::Raw { format, text }
+                if format == "html" && text == "<b>x</b>"
+        )));
         assert!(plain_text(inlines).ends_with(" trailing"));
     }
 
@@ -3012,9 +3104,10 @@ mod tests {
             .expect("invalid label reported");
         assert_eq!(diagnostic.level, Level::Error);
         let result = parsed("# No automatic label\n");
-        assert!(
-            matches!(&result.document.blocks[0], Block::Heading { attrs, .. } if attrs.id.is_none())
-        );
+        assert!(matches!(
+            &result.document.blocks[0],
+            Block::Heading { attrs, .. } if attrs.id.is_none()
+        ));
     }
 
     #[test]
@@ -3062,7 +3155,12 @@ mod tests {
     fn front_matter_and_toc() {
         let config = Config::default();
         let before = serde_json::to_value(&config).unwrap();
-        let result = parse(&source(), "---\ntitle: Title\nauthor: [A, B]\ntoc: 2\nmarkdown: {superscript: true}\nabstract: |\n  Abstract $x$ and note^[A note].\n---\n\n# Heading\n\nx^2^\n", &config).unwrap();
+        let result = parse(
+            &source(),
+            "---\ntitle: Title\nauthor: [A, B]\ntoc: 2\nmarkdown: {superscript: true}\nabstract: |\n  Abstract $x$ and note^[A note].\n---\n\n# Heading\n\nx^2^\n",
+            &config
+        )
+        .unwrap();
         assert_eq!(serde_json::to_value(&config).unwrap(), before);
         assert_eq!(result.document.meta.title.as_deref(), Some("Title"));
         assert_eq!(result.document.meta.authors.len(), 2);
@@ -3228,7 +3326,11 @@ mod tests {
             parse_blocks("---\ntitle: Ordinary text\n---\n", &config, &mut ctx)
                 .unwrap();
         assert!(matches!(blocks[0], Block::ThematicBreak { .. }));
-        assert!(blocks.iter().any(|block| matches!(block, Block::Heading { inlines, .. } if plain_text(inlines) == "title: Ordinary text")));
+        assert!(blocks.iter().any(|block| matches!(
+            block,
+            Block::Heading { inlines, .. }
+                if plain_text(inlines) == "title: Ordinary text"
+        )));
         let _ = parse_blocks(
             ":::callout title='A: title'\nBody\n:::\n\n# Bad {#bad!}\n",
             &config,
@@ -3287,9 +3389,10 @@ mod tests {
         let result = parsed(
             "__u__\n\n==h==\n\n++i++\n\n||s||\n\n>>> quoted\n\n-# x\n\n%%c%%\n\n[[w]]\n",
         );
-        assert!(
-            matches!(&paragraph(&result.document.blocks[0])[0], Inline::Strong { inlines } if plain_text(inlines) == "u")
-        );
+        assert!(matches!(
+            &paragraph(&result.document.blocks[0])[0],
+            Inline::Strong { inlines } if plain_text(inlines) == "u"
+        ));
         for (index, text) in [
             (1, "==h=="),
             (2, "++i++"),

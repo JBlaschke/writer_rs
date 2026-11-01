@@ -37,13 +37,18 @@ class SiteTests(unittest.TestCase):
         return path.resolve()
 
     def mapper(self, prefix=""):
-        home = self.write("docs/site/index.html", "<!DOCTYPE html>\n<p>Home</p>\n")
+        home = self.write(
+            "docs/site/index.html", "<!DOCTYPE html>\n<p>Home</p>\n"
+        )
         guide = self.write("docs/guide/README.md", "# Guide\n")
         authoring = self.write("docs/guide/authoring.md", "# Authoring\n")
         pages = [site.Page("home", home, "index.html"),
             site.Page("guide", guide, "guide/index.html"),
             site.Page("guide-authoring", authoring, "guide/authoring.html")]
-        return site.Mapper(self.source, self.output, pages, REPO, SHA, prefix), pages
+        return (
+            site.Mapper(self.source, self.output, pages, REPO, SHA, prefix),
+            pages
+        )
 
     def test_rewriter_preserves_code_scripts_entities_and_tag_layout(self):
         original = '''<!DOCTYPE html>\n<a HREF = 'page.md#one' data-note="&amp;">go</a>
@@ -55,13 +60,20 @@ class SiteTests(unittest.TestCase):
 
         def rewrite(tag, attr, value):
             calls.append((tag, attr, value))
-            return {"page.md#one": "next.html?a=1&b=2#one", "pic.png": "assets/pic.png"}[value]
+            return {
+                "page.md#one": "next.html?a=1&b=2#one",
+                "pic.png": "assets/pic.png",
+            }[value]
 
         changed = site.AttributeRewriter(original, rewrite).result()
-        expected = original.replace("HREF = 'page.md#one'", "HREF = 'next.html?a=1&amp;b=2#one'")
+        expected = original.replace(
+            "HREF = 'page.md#one'", "HREF = 'next.html?a=1&amp;b=2#one'"
+        )
         expected = expected.replace('src="pic.png"', 'src="assets/pic.png"')
         self.assertEqual(changed, expected)
-        self.assertEqual(calls, [("a", "href", "page.md#one"), ("img", "src", "pic.png")])
+        self.assertEqual(calls, [
+            ("a", "href", "page.md#one"), ("img", "src", "pic.png")
+        ])
 
     def test_multiline_unquoted_and_srcset_values_are_actual_attributes(self):
         original = '<a\n href=one.md>one</a><img srcset="data:image/png;base64,AAAA 1x, two.png 2x">'
@@ -74,13 +86,24 @@ class SiteTests(unittest.TestCase):
         mapper, pages = self.mapper()
         page = pages[2]
         self.write("docs/spec/config.md", "# Configuration\n")
-        self.assertEqual(mapper.rewrite(page, "a", "href", "README.md"), "index.html")
-        self.assertEqual(mapper.rewrite(page, "a", "href", "authoring.md#notes"), "#notes")
-        self.assertEqual(mapper.rewrite(page, "a", "href", "../spec/config.md#paths"),
-            f"{REPO}/blob/{SHA}/docs/spec/config.md#paths")
-        self.assertEqual(mapper.rewrite(page, "a", "href", "writer-site:home"), "../index.html")
-        self.assertEqual(mapper.rewrite(page, "a", "href", "writer-site:source"),
-            f"{REPO}/blob/{SHA}/docs/guide/authoring.md")
+        self.assertEqual(
+            mapper.rewrite(page, "a", "href", "README.md"), "index.html"
+        )
+        self.assertEqual(
+            mapper.rewrite(page, "a", "href", "authoring.md#notes"), "#notes"
+        )
+        self.assertEqual(
+            mapper.rewrite(page, "a", "href", "../spec/config.md#paths"),
+            f"{REPO}/blob/{SHA}/docs/spec/config.md#paths"
+        )
+        self.assertEqual(
+            mapper.rewrite(page, "a", "href", "writer-site:home"),
+            "../index.html"
+        )
+        self.assertEqual(
+            mapper.rewrite(page, "a", "href", "writer-site:source"),
+            f"{REPO}/blob/{SHA}/docs/guide/authoring.md"
+        )
 
     def test_source_bytes_are_untouched_and_local_asset_is_copied(self):
         mapper, pages = self.mapper()
@@ -89,40 +112,80 @@ class SiteTests(unittest.TestCase):
         original = pages[2].source.read_bytes()
         result = mapper.rewrite(pages[2], "img", "src", "plot%20one.png")
         self.assertEqual(result, "../assets/source/docs/guide/plot%20one.png")
-        self.assertEqual((self.output / "assets/source/docs/guide/plot one.png").read_bytes(), image.read_bytes())
+        self.assertEqual(
+            (self.output / "assets/source/docs/guide/plot one.png").read_bytes(),
+            image.read_bytes()
+        )
         self.assertEqual(pages[2].source.read_bytes(), original)
 
     def test_prefixes_are_portable_and_do_not_assume_a_hostname(self):
         mapper, pages = self.mapper("reports/v1")
-        self.assertEqual(mapper.rewrite(pages[2], "a", "href", "writer-site:guide"),
-            "/reports/v1/guide/index.html")
+        self.assertEqual(
+            mapper.rewrite(pages[2], "a", "href", "writer-site:guide"),
+            "/reports/v1/guide/index.html"
+        )
         self.assertEqual(site.normalize_prefix("/reports/v1/"), "/reports/v1/")
         self.assertEqual(site.normalize_prefix(""), "")
         self.assertEqual(site.normalize_prefix("/"), "/")
-        self.assertEqual(site.artifact_target("guide/authoring.html", "../index.html", "/reports/v1/"),
-            ("index.html", ""))
-        self.assertEqual(site.artifact_target("guide/authoring.html", "/reports/v1/guide/index.html#one", "/reports/v1/"),
-            ("guide/index.html", "one"))
-        for prefix in ("https://site.invalid/docs", "//site.invalid/docs", "a/../b", "a//b", "a%2fb", "docs?x=1"):
+        self.assertEqual(
+            site.artifact_target(
+                "guide/authoring.html", "../index.html", "/reports/v1/"
+            ),
+            ("index.html", "")
+        )
+        self.assertEqual(
+            site.artifact_target(
+                "guide/authoring.html", "/reports/v1/guide/index.html#one",
+                "/reports/v1/"
+            ),
+            ("guide/index.html", "one")
+        )
+        for prefix in (
+            "https://site.invalid/docs", "//site.invalid/docs",
+            "a/../b", "a//b", "a%2fb", "docs?x=1"
+        ):
             with self.subTest(prefix=prefix), self.assertRaises(site.SiteError):
                 site.normalize_prefix(prefix)
 
     def test_escaping_prefix_unknown_schemes_and_case_collisions_fail(self):
-        for value, prefix in (("../../outside.html", ""), ("/guide/index.html", ""),
-                ("/other/index.html", "/reports/"), ("/reports/../outside.html", "/reports/"),
-                ("%2e%2e/%2e%2e/outside.html", "/reports/"), ("asset:unresolved", "")):
+        for value, prefix in (
+            ("../../outside.html", ""), ("/guide/index.html", ""),
+            ("/other/index.html", "/reports/"),
+            ("/reports/../outside.html", "/reports/"),
+            ("%2e%2e/%2e%2e/outside.html", "/reports/"),
+            ("asset:unresolved", ""),
+        ):
             with self.subTest(value=value), self.assertRaises(site.SiteError):
                 site.artifact_target("guide/index.html", value, prefix)
         first = self.write("one.md", "# One")
         second = self.write("two.md", "# Two")
         with self.assertRaisesRegex(site.SiteError, "case-insensitive"):
-            site.Mapper(self.source, self.output,
-                [site.Page("one", first, "Guide.html"), site.Page("two", second, "guide.html")], REPO, SHA, "")
+            site.Mapper(
+                self.source, self.output,
+                [
+                    site.Page("one", first, "Guide.html"),
+                    site.Page("two", second, "guide.html"),
+                ],
+                REPO, SHA, ""
+            )
 
     def test_all_local_links_assets_svg_and_fragments_are_validated(self):
-        self.write("index.html", '<a href="guide/page.html#one">guide</a><img src="assets/pixel.png">', self.output)
-        self.write("guide/page.html", '<h1 id="one">One</h1><a href="../index.html">home</a><svg><use href="../assets/shape.svg#mark"></use></svg>', self.output)
-        self.write("assets/shape.svg", '<svg><g id="mark"></g></svg>', self.output)
+        self.write(
+            "index.html",
+            '<a href="guide/page.html#one">guide</a>'
+            '<img src="assets/pixel.png">',
+            self.output
+        )
+        self.write(
+            "guide/page.html",
+            '<h1 id="one">One</h1><a href="../index.html">home</a>'
+            '<svg><use href="../assets/shape.svg#mark"></use></svg>',
+            self.output
+        )
+        self.write(
+            "assets/shape.svg", '<svg><g id="mark"></g></svg>',
+            self.output
+        )
         pixel = self.output / "assets/pixel.png"
         pixel.write_bytes(b"png fixture")
         site.validate_site(self.output, "")
@@ -130,32 +193,58 @@ class SiteTests(unittest.TestCase):
         with self.assertRaisesRegex(site.SiteError, "missing local target"):
             site.validate_site(self.output, "")
         pixel.write_bytes(b"restored")
-        self.write("assets/shape.svg", '<svg><g id="different"></g></svg>', self.output)
+        self.write(
+            "assets/shape.svg", '<svg><g id="different"></g></svg>',
+            self.output
+        )
         with self.assertRaisesRegex(site.SiteError, "missing local fragment"):
             site.validate_site(self.output, "")
 
     def test_prefixed_site_duplicate_ids_css_and_path_leaks_are_checked(self):
-        self.write("index.html", '<a href="/docs/guide/page.html#one">guide</a>', self.output)
+        self.write(
+            "index.html", '<a href="/docs/guide/page.html#one">guide</a>',
+            self.output
+        )
         self.write("guide/page.html", '<h1 id="one">One</h1>', self.output)
         site.validate_site(self.output, "/docs/")
-        self.write("guide/page.html", '<h1 id="one">One</h1><p id="one">duplicate</p>', self.output)
+        self.write(
+            "guide/page.html", '<h1 id="one">One</h1><p id="one">duplicate</p>',
+            self.output
+        )
         with self.assertRaisesRegex(site.SiteError, "duplicate ids"):
             site.validate_site(self.output, "/docs/")
-        self.write("guide/page.html", '<h1 id="one">One</h1><style>body{background:url(missing.png)}</style>', self.output)
+        self.write(
+            "guide/page.html",
+            '<h1 id="one">One</h1>'
+            '<style>body{background:url(missing.png)}</style>',
+            self.output
+        )
         with self.assertRaisesRegex(site.SiteError, "missing local target"):
             site.validate_site(self.output, "/docs/")
-        self.write("guide/page.html", f'<h1 id="one">One</h1><pre>{self.source}</pre>', self.output)
+        self.write(
+            "guide/page.html", f'<h1 id="one">One</h1><pre>{self.source}</pre>',
+            self.output
+        )
         with self.assertRaisesRegex(site.SiteError, "path leaked"):
             site.validate_site(self.output, "/docs/", (self.source,))
 
     def test_unfinished_guide_is_refused_before_any_writer_call(self):
         for name in site.GUIDE_PAGES:
             self.write(f"docs/guide/{name}.md", "# Finished prose\n")
-        self.write("docs/guide/cli.md", "# CLI\n```text\n$ writer --help\n```\n")
-        self.write("docs/guide/configuration.md", "# Config\n<!-- generated: writer dump --default-config -->\n```toml\n[document]\nlang = \"en\"\n```\n")
+        self.write(
+            "docs/guide/cli.md", "# CLI\n```text\n$ writer --help\n```\n"
+        )
+        self.write(
+            "docs/guide/configuration.md",
+            "# Config\n<!-- generated: writer dump --default-config -->\n"
+            "```toml\n[document]\nlang = \"en\"\n```\n"
+        )
         with self.assertRaisesRegex(site.SiteError, "help fences"):
             site.require_complete_guide(self.source)
-        self.write("docs/guide/cli.md", "# CLI\n```text\n$ writer --help\nUsage: writer\n```\n")
+        self.write(
+            "docs/guide/cli.md",
+            "# CLI\n```text\n$ writer --help\nUsage: writer\n```\n"
+        )
         site.require_complete_guide(self.source)
         self.write("docs/guide/typst.md", "# Typst\nPending T74\n")
         with self.assertRaisesRegex(site.SiteError, "milestone"):
@@ -208,9 +297,13 @@ class SiteTests(unittest.TestCase):
         with patch.object(site, "require_complete_guide"):
             with patch.object(site, "pages", return_value=pages):
                 with patch.object(site, "command", side_effect=command):
-                    with patch.object(site, "landing_page", return_value=landing):
+                    with patch.object(
+                        site, "landing_page", return_value=landing
+                    ):
                         site.build(args)
-        manifest = site.json.loads((destination / "site-manifest.json").read_text())
+        manifest = site.json.loads(
+            (destination / "site-manifest.json").read_text()
+        )
         self.assertEqual(manifest["prefix"], "/r%C3%A9sum%C3%A9%20docs/")
         self.assertEqual(manifest["downloads"], [])
         self.assertIsNone(manifest["release"])
@@ -237,7 +330,9 @@ class SiteTests(unittest.TestCase):
         mapper, pages = self.mapper()
         route = "examples/basic/document.pdf"
         with self.assertRaisesRegex(site.SiteError, "unknown site artifact"):
-            mapper.rewrite(pages[2], "a", "href", f"writer-site:artifact/{route}")
+            mapper.rewrite(
+                pages[2], "a", "href", f"writer-site:artifact/{route}"
+            )
         mapper.claim(route)
         self.assertEqual(mapper.rewrite(pages[2], "a", "href",
             f"writer-site:artifact/{route}"), "../examples/basic/document.pdf")
@@ -289,14 +384,22 @@ class SiteTests(unittest.TestCase):
             "tag_name": "v0.2.0", "published_at": "2026-11-02T09:00:00Z",
             "html_url": "https://github.com/example/writer/releases/tag/v0.2.0",
             "assets": [
-                {"name": name, "size": 28_068_371, "browser_download_url": base + name}
-                for name in [*names, "SHA256SUMS", "writer-v0.1.0-x86_64-apple-darwin.tar.gz"]
+                {
+                    "name": name, "size": 28_068_371,
+                    "browser_download_url": base + name,
+                }
+                for name in [
+                    *names, "SHA256SUMS",
+                    "writer-v0.1.0-x86_64-apple-darwin.tar.gz",
+                ]
             ],
         }
         table = site.download_section(release, REPO)
         rows = site.re.findall(r"<code>(writer-[^<]+)</code>", table)
         self.assertEqual(rows, list(reversed(names)))
-        self.assertIn("writer v0.2.0</a></strong>, published 2026-11-02.", table)
+        self.assertIn(
+            "writer v0.2.0</a></strong>, published 2026-11-02.", table
+        )
         self.assertIn(f'href="{base}SHA256SUMS"', table)
         self.assertIn("28.1 MB", table)
         for missing in (None, {"tag_name": "v0.2.0", "assets": []}):
@@ -307,18 +410,24 @@ class SiteTests(unittest.TestCase):
 
     def test_landing_template_fills_and_validates_with_example_outputs(self):
         template = SCRIPT.parents[1] / "docs/site/index.html"
-        home = self.write("docs/site/index.html", template.read_text(encoding="utf-8"))
+        home = self.write(
+            "docs/site/index.html", template.read_text(encoding="utf-8")
+        )
         guides = []
         for name in site.GUIDE_PAGES:
             key = "guide" if name == "README" else f"guide-{name}"
             leaf = "index" if name == "README" else name
             source = self.write(f"docs/guide/{name}.md", f"# {name.title()}\n")
             guides.append(site.Page(key, source, f"guide/{leaf}.html"))
-        basic = self.write("examples/basic/document.md", "---\ntitle: <Basic>\n---\n")
+        basic = self.write(
+            "examples/basic/document.md", "---\ntitle: <Basic>\n---\n"
+        )
         notebook = self.write("examples/notebook/analysis.ipynb", "{}")
         examples = [
             site.Page("example-basic", basic, "examples/basic/index.html"),
-            site.Page("example-notebook", notebook, "examples/notebook/index.html"),
+            site.Page(
+                "example-notebook", notebook, "examples/notebook/index.html"
+            ),
         ]
         all_pages = [site.Page("home", home, "index.html"), *guides, *examples]
         mapper = site.Mapper(self.source, self.output, all_pages, REPO, SHA, "")
@@ -327,12 +436,24 @@ class SiteTests(unittest.TestCase):
             folder = site.posixpath.dirname(page.route)
             stem = page.source.stem
             outputs = [site.Output("html", page.route, 690_300)]
-            for route in (f"{stem}.pdf", f"{stem}.docx", f"{stem}-latex.zip", f"{stem}-typst.zip"):
+            for route in (
+                f"{stem}.pdf", f"{stem}.docx",
+                f"{stem}-latex.zip", f"{stem}-typst.zip"
+            ):
                 mapper.claim(f"{folder}/{route}")
-                target = route.removesuffix(".zip").rpartition("-")[2] if route.endswith(".zip") else route.rpartition(".")[2]
-                outputs.append(site.Output(target, f"{folder}/{route}", 50_800, 3 if target == "pdf" else None))
+                target = (
+                    route.removesuffix(".zip").rpartition("-")[2]
+                    if route.endswith(".zip") else route.rpartition(".")[2]
+                )
+                outputs.append(site.Output(
+                    target, f"{folder}/{route}", 50_800,
+                    3 if target == "pdf" else None
+                ))
             mapper.claim(f"{folder}/page-1.png")
-            built.append(site.Example(page, f"{stem} & title", tuple(outputs), f"{folder}/page-1.png", (827, 1169)))
+            built.append(site.Example(
+                page, f"{stem} & title", tuple(outputs),
+                f"{folder}/page-1.png", (827, 1169)
+            ))
         for page in all_pages[1:]:
             self.write(page.route, "<h1>Page</h1>", self.output)
         for example in built:
@@ -341,7 +462,9 @@ class SiteTests(unittest.TestCase):
             self.write(example.thumbnail, "png", self.output)
         for route in ("site.css", "licenses/LICENSE", "licenses/embedded.txt"):
             self.write(route, "", self.output)
-        text = site.landing_page(self.source, all_pages[0], built, mapper, None, "writer 0.1.0")
+        text = site.landing_page(
+            self.source, all_pages[0], built, mapper, None, "writer 0.1.0"
+        )
         self.assertNotIn("${", text)
         self.assertIn("examples/basic/document.md", text)
         self.assertIn("&lt;Basic&gt;", text)
@@ -352,10 +475,14 @@ class SiteTests(unittest.TestCase):
         result = (self.output / "index.html").read_text(encoding="utf-8")
         self.assertNotIn('="writer-site:', result)
         self.assertIn('href="examples/basic/document.pdf"', result)
-        self.assertIn(f'href="{REPO}/blob/{SHA}/examples/basic/document.md"', result)
+        self.assertIn(
+            f'href="{REPO}/blob/{SHA}/examples/basic/document.md"', result
+        )
         site.validate_site(self.output, "")
         with self.assertRaisesRegex(site.SiteError, "basic example"):
-            site.landing_page(self.source, all_pages[0], built[1:], mapper, None, "writer")
+            site.landing_page(
+                self.source, all_pages[0], built[1:], mapper, None, "writer"
+            )
 
     def test_fresh_publication_preserves_a_racing_directory(self):
         artifact = self.root / "prepared"
@@ -388,7 +515,9 @@ class SiteTests(unittest.TestCase):
         site.publish_fresh(artifact, destination)
         self.assertFalse(artifact.exists())
         self.assertEqual((destination / "index.html").read_bytes(), b"home\r\n")
-        self.assertEqual((destination / "guide/page.html").read_bytes(), b"guide\n")
+        self.assertEqual(
+            (destination / "guide/page.html").read_bytes(), b"guide\n"
+        )
 
     def katex_fixture(self):
         font = b"wOF2known-source-font-fixture"
@@ -426,7 +555,9 @@ class SiteTests(unittest.TestCase):
         for extra in extras:
             with self.subTest(extra=extra):
                 path.write_text(body + extra, encoding="utf-8", newline="")
-                with self.assertRaisesRegex(site.SiteError, "missing local target"):
+                with self.assertRaisesRegex(
+                    site.SiteError, "missing local target"
+                ):
                     site.validate_site(self.output, "", legacy_rules=rules)
 
     def test_fallback_rule_requires_exact_same_face_source_and_order(self):
@@ -437,20 +568,31 @@ class SiteTests(unittest.TestCase):
         ).decode("ascii")
         variants = {
             "missing embedded source": original,
-            "invalid embedded source": standalone.replace(uri, "data:font/woff2;base64,AA=="),
+            "invalid embedded source": standalone.replace(
+                uri, "data:font/woff2;base64,AA=="
+            ),
             "wrong embedded font": standalone.replace(uri, wrong_face),
             "fallback before embedded source": standalone.replace(
-                "src:", 'src:url(fonts/KaTeX_AMS-Regular.woff) format("woff"),', 1
+                "src:",
+                'src:url(fonts/KaTeX_AMS-Regular.woff) format("woff"),', 1
             ),
             "unknown face": standalone.replace("KaTeX_AMS", "KaTeX_Unknown"),
-            "changed fallback": standalone.replace("Regular.woff)", "Regular-missing.woff)"),
-            "changed rule": standalone.replace("font-weight:400", "font-weight:700"),
-            "unpaired fallback": '@font-face{src:url(fonts/KaTeX_AMS-Regular.woff)}',
+            "changed fallback": standalone.replace(
+                "Regular.woff)", "Regular-missing.woff)"
+            ),
+            "changed rule": standalone.replace(
+                "font-weight:400", "font-weight:700"
+            ),
+            "unpaired fallback": (
+                '@font-face{src:url(fonts/KaTeX_AMS-Regular.woff)}'
+            ),
         }
         for name, css in variants.items():
             with self.subTest(name=name):
                 self.write("index.html", f"<style>{css}</style>", self.output)
-                with self.assertRaisesRegex(site.SiteError, "missing local target"):
+                with self.assertRaisesRegex(
+                    site.SiteError, "missing local target"
+                ):
                     site.validate_site(self.output, "", legacy_rules=rules)
 
     def test_canonical_font_source_must_exist_and_have_woff2_signature(self):

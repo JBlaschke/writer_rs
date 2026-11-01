@@ -75,7 +75,10 @@ impl Flow {
             return;
         }
         let index = self.blocks.len();
-        let anchor = matches!(&inlines[..], [Inline::Span { inlines, .. }] if inlines.is_empty());
+        let anchor = matches!(
+            &inlines[..],
+            [Inline::Span { inlines, .. }] if inlines.is_empty()
+        );
         let target = std::mem::replace(&mut self.target, Target::Ignored);
         self.target = match target {
             Target::Pending(_) if anchor => Target::Block(index),
@@ -772,7 +775,11 @@ impl<'a> Context<'a> {
             }
         };
         if child.explicit_meta {
-            self.warning("include-meta-ignored", format!("`{written}` sets document metadata; an included file's document metadata is ignored"), node);
+            self.warning(
+                "include-meta-ignored",
+                format!("`{written}` sets document metadata; an included file's document metadata is ignored"),
+                node
+            );
         }
         self.merge_included(child.parsed)
     }
@@ -824,7 +831,13 @@ fn last_character(inline: &Inline) -> Option<char> {
 
 fn is_space(inline: &Inline) -> bool {
     matches!(inline, Inline::SoftBreak)
-        || matches!(inline, Inline::Text { text } if text.chars().all(|ch| matches!(ch, ' ' | '\t' | '\n' | '\r')))
+        || matches!(
+            inline,
+            Inline::Text { text }
+                if text
+                    .chars()
+                    .all(|ch| matches!(ch, ' ' | '\t' | '\n' | '\r'))
+        )
 }
 
 fn trim(inlines: &mut Inlines) -> usize {
@@ -875,7 +888,11 @@ fn block_labelable(block: &Block) -> bool {
             | Block::Callout { .. }
             | Block::Cell(_)
     ) || matches!(block, Block::Div { blocks, .. } if blocks.is_empty())
-        || matches!(block, Block::Paragraph { inlines, .. } if inlines.len() == 1 && inline_labelable(&inlines[0]))
+        || matches!(
+            block,
+            Block::Paragraph { inlines, .. }
+                if inlines.len() == 1 && inline_labelable(&inlines[0])
+        )
 }
 
 fn label_inline(inline: &mut Inline, label: &str) -> bool {
