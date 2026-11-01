@@ -126,7 +126,7 @@ mod tests {
             "styles":{"Recipient":{"font":"body","line_height":"12.1pt"}}});
         let design = merge(&[Layer {
             table: table.as_object().unwrap().clone(),
-            base_dir: Path::new("/tmp"),
+            base_dir: Path::new(env!("CARGO_MANIFEST_DIR")),
             origin: Origin::FrontMatter,
         }])
         .unwrap();

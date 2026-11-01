@@ -230,7 +230,7 @@ mod tests {
     fn layer(value: Value) -> Layer<'static> {
         Layer {
             table: value.as_object().unwrap().clone(),
-            base_dir: Path::new("/tmp"),
+            base_dir: Path::new(env!("CARGO_MANIFEST_DIR")),
             origin: Origin::FrontMatter,
         }
     }
@@ -247,7 +247,11 @@ mod tests {
         let design = merge(&[parent.clone(), child]).unwrap();
         assert_eq!(
             design.fonts.body.as_ref().unwrap().files,
-            vec![std::fs::canonicalize("/tmp").unwrap().join("c.ttf")]
+            vec![
+                std::fs::canonicalize(env!("CARGO_MANIFEST_DIR"))
+                    .unwrap()
+                    .join("c.ttf")
+            ]
         );
         assert_eq!(design.colors.link, Some(Color([170, 187, 204])));
         assert_eq!(
