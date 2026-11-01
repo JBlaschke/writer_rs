@@ -121,6 +121,7 @@ fn math_md(route: HtmlMath) -> (Emitted, AssetRegistry, Diagnostics) {
         &prepared.document,
         &mut EmitOptions {
             config: &config,
+            design: &writer::design::Design::default(),
             positions: false,
             includes: &prepared.document.includes,
             math: &mut renderer,

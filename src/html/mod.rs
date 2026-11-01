@@ -4,6 +4,7 @@
 //! It returns HTML and site assets without writing files to disk.
 
 pub mod context;
+pub mod design;
 pub mod document;
 pub mod emit;
 pub mod highlight;
@@ -89,6 +90,8 @@ pub struct RenderInput<'a> {
     pub theme: &'a Theme,
     /// Effective configuration; the renderer applies no further merges.
     pub config: &'a Config,
+    /// Resolved cross-format typography and page geometry.
+    pub design: &'a crate::design::Design,
     /// How helpers and document placeholders become URLs.
     pub output: OutputMode,
     /// Values exposed as the template's `build` object.

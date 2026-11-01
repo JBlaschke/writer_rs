@@ -67,6 +67,7 @@ fn render(
         document,
         &mut EmitOptions {
             config,
+            design: &writer::design::Design::default(),
             positions,
             includes: &document.includes,
             math: &mut math,
@@ -615,6 +616,7 @@ fn math_hook_receives_enclosing_spans() {
         &doc,
         &mut EmitOptions {
             config: &config,
+            design: &writer::design::Design::default(),
             positions: true,
             includes: &[],
             math: &mut hook,

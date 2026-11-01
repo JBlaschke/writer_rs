@@ -30,6 +30,7 @@ pub(crate) fn build_context(
         document,
         &mut EmitOptions {
             config,
+            design: input.design,
             positions: input.build.mode == BuildMode::Serve
                 || config.markdown.sourcepos,
             includes: &document.includes,
@@ -54,7 +55,7 @@ pub(crate) fn build_context(
         "lang".into(),
         if lang.is_empty() { "en" } else { lang }.into(),
     );
-    context.insert("theme".into(), theme_json(input.theme)?);
+    context.insert("theme".into(), theme_json(input.theme, input.design)?);
     context.insert("build".into(), to_json(&input.build)?);
     Ok((emitted, Value::Object(context)))
 }
@@ -77,7 +78,7 @@ fn html_json(emitted: &Emitted) -> Value {
     Value::Object(map)
 }
 
-fn theme_json(theme: &Theme) -> Result<Value> {
+fn theme_json(theme: &Theme, design: &crate::design::Design) -> Result<Value> {
     let scripts: Vec<String> = theme
         .script_entries()?
         .into_iter()
@@ -99,5 +100,6 @@ fn theme_json(theme: &Theme) -> Result<Value> {
     );
     map.insert("vars".into(), Value::Object(theme.vars()));
     map.insert("scripts".into(), scripts.into());
+    map.insert("design".into(), design.to_json(crate::design::PathMode::Real));
     Ok(Value::Object(map))
 }

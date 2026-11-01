@@ -53,7 +53,7 @@ impl UrlRules {
 }
 
 /// What resolved references become.
-pub(super) enum Targets<'r> {
+pub enum Targets<'r> {
     /// Registered `asset:<id>` placeholders for standalone and site output.
     Placeholders(&'r mut AssetRegistry),
     /// Versioned helper URLs; no bytes are copied into the registry.
@@ -75,17 +75,24 @@ impl Targets<'_> {
 /// for its output mode. Invalid entry extensions are [`Error::Theme`]; local
 /// imports, invalid UTF-8 and missing URL targets are [`Error::Style`].
 pub fn compile_theme_css(
-    theme: &Theme, features: &Features, registry: &mut AssetRegistry,
+    theme: &Theme, design: &crate::design::Design, features: &Features,
+    registry: &mut AssetRegistry,
 ) -> Result<String> {
-    compile(theme, features, Targets::Placeholders(registry), &mut Vec::new())
+    compile(
+        theme,
+        design,
+        features,
+        Targets::Placeholders(registry),
+        &mut Vec::new(),
+    )
 }
 
 /// Compiles entries with the requested URL targets and records remote imports.
 pub(super) fn compile(
-    theme: &Theme, features: &Features, mut targets: Targets<'_>,
-    remote: &mut Vec<(String, String)>,
+    theme: &Theme, design: &crate::design::Design, features: &Features,
+    mut targets: Targets<'_>, remote: &mut Vec<(String, String)>,
 ) -> Result<String> {
-    let mut css = String::new();
+    let mut css = super::design::tokens_css(design, &mut targets)?;
     let mut imports = Vec::new();
     for entry in theme.style_entries()? {
         let written = format!("@{}/{}", entry.theme, entry.rel_path);
@@ -103,6 +110,16 @@ pub(super) fn compile(
             file: key.clone(),
             message: format!("stylesheet is not UTF-8: {err}"),
         })?;
+        // An untouched ejected default sheet is the same baseline. Once a
+        // user edits it, its explicit token declarations regain precedence.
+        let default_tokens = entry.rel_path == "styles/theme.css"
+            && (theme.dir(&entry.theme).is_some_and(|dir| {
+                matches!(
+                    &dir.source, crate::theme::ThemeSource::Embedded { prefix }
+                        if prefix == "themes/default/"
+                )
+            }) || crate::vendor::get("themes/default/styles/theme.css")
+                .is_some_and(|default| default.as_ref() == text.as_bytes()));
         let text = take_imports(&key, &text, &mut imports, remote)?;
         let text = rewrite_urls(
             theme,
@@ -112,11 +129,17 @@ pub(super) fn compile(
             targets.reborrow(),
         )?;
         let _ = writeln!(css, "/* {key} */");
+        let text = if design.declared && default_tokens {
+            default_token_baseline(&text)
+        } else {
+            text
+        };
         css.push_str(&text);
         if !css.ends_with('\n') {
             css.push('\n');
         }
     }
+    css.push_str(&super::design::layout_css(design, &mut targets)?);
     if features.code {
         append_code_css(theme, &mut css)?;
     }
@@ -125,6 +148,18 @@ pub(super) fn compile(
         let _ = writeln!(head, "/* hoisted from {key} */\n{rule}");
     }
     Ok(head + &css)
+}
+
+// The built-in base tokens must remain defaults under a declared design.
+// A cascade layer lowers only that first :root rule; explicit child entries
+// and the unlayered dark-mode block still override the generated tokens.
+fn default_token_baseline(text: &str) -> String {
+    match text.split_once('}') {
+        Some((root, rest)) if root.trim_start().starts_with(":root {") => {
+            format!("@layer writer-default {{\n{root}}}\n}}{rest}")
+        }
+        _ => text.to_string(),
+    }
 }
 
 /// Writes the two code themes in disjoint colour-scheme queries when both

@@ -63,10 +63,14 @@ pub fn render(input: RenderInput<'_>) -> Result<RenderedDocument> {
 }
 
 fn render_document(mut input: RenderInput<'_>) -> Result<RenderedDocument> {
+    for file in input.design.referenced_files() {
+        input.assets.register_file(&file);
+    }
     let mut diagnostics = Diagnostics::new();
     let (emitted, ctx) = context::build_context(&mut input, &mut diagnostics)?;
     let mut state = HelperState {
         theme: input.theme.clone(),
+        design: input.design.clone(),
         mode: input.output.clone(),
         registry: AssetRegistry::new(),
         files: Vec::new(),
@@ -140,6 +144,7 @@ fn script_safe_json(json: &str) -> String {
 /// State shared by the template helpers of one render.
 struct HelperState {
     theme: Theme,
+    design: crate::design::Design,
     mode: OutputMode,
     registry: AssetRegistry,
     files: Vec<EmittedFile>,
@@ -190,7 +195,9 @@ impl HelperState {
             OutputMode::Serve => Targets::ServeUrls,
             _ => Targets::Placeholders(&mut self.registry),
         };
-        let css = styles::compile(&self.theme, features, targets, &mut remote)?;
+        let css = styles::compile(
+            &self.theme, &self.design, features, targets, &mut remote,
+        )?;
         for (key, url) in remote {
             self.warn_remote_import(
                 &format!("theme stylesheet entry '{key}'"),
