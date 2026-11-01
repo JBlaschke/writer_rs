@@ -102,6 +102,10 @@ whole `header` when all are absent. Title, subtitle and date are plain strings (
 | `Bibliography` | §1.12 |
 | `Cell` | §1.9 |
 
+> **Contract change (coordinator, 2026-11-01):** a `Div` that design.md §8.2's resolver maps to a
+> `[design.styles]` name carries `data-style="<name>"` after `class` (design.md §5.5); `custom-style`
+> itself stays dropped. Without a declared design the markup is unchanged (T85).
+
 ### 1.5 Code blocks (`html::highlight`)
 ```
 <pre id class="hl-code[ numbered][ classes]" style="counter-reset:line S-1" …><code class="language-LANG">LINES</code></pre>
@@ -399,6 +403,11 @@ ScriptsSection { entries }, vars }` (`src/theme/manifest.rs`, every table `#[ser
 Trimmed from presenter: `reveal_theme`, `highlight_style`, `[reveal]`, `[layouts]`, `REVEAL_THEMES`; using one is
 `Error::Theme` naming the replacement (`highlight_style` → `code_theme`; the others "has no meaning in writer").
 
+> **Contract change (coordinator, 2026-11-01):** `theme.toml` gains an optional `[design]` table
+> (design.md §2.2); `ThemeManifest` gains `design: serde_json::Map<String, serde_json::Value>`, kept
+> raw and merged along `extends` like `[vars]` (design.md §1.2). Paths in it resolve against the
+> theme directory and must stay inside it (`theme-link-outside`). The built-in theme declares none.
+
 ### 3.3 Inheritance, resolution, chain (lifted)
 - Child values override parent values key by key; `styles.entries`/`scripts.entries` concatenate **parent-first**; code
   themes are plain overrides (unset in the whole chain = `"none"`); `[vars]` deep-merge, child wins.
@@ -464,6 +473,9 @@ built-ins, `attrs` (a map → ` k="v"` pairs, escaped, `none` skipped), `json` (
 > `BuildInfo` serialization order: `id` precedes `version`. The context example
 > now matches that struct order.
 
+> **Contract change (coordinator, 2026-11-01):** `theme` gains `"design": <design.md §3.3 JSON> | null`
+> after `scripts` (`null` when no design is declared); `dump --context` shows it (T81).
+
 ### 4.2 Helpers (all return HTML marked safe)
 | helper | standalone | site | serve |
 |---|---|---|---|
@@ -478,6 +490,10 @@ Helper paths (one resolver, `html::paths::resolve_helper_path`, also behind the 
 normalized (`/`, `\`, `.`, `..`; climbing out finds nothing), then resolved by first segment: `vendor/…` → the embedded
 vendor tree; `writer/…` → `assets/writer/`; `@<theme>/<path>` → that theme's root directory; else the chain's `assets/`,
 child first. Nothing found → `Error::Template` naming the path and where it looked.
+
+> **Contract change (coordinator, 2026-11-01):** new helper `design_furniture(slot, variant)` (`slot`
+> `"header"` | `"footer"`, `variant` `"first"` | `"rest"`) returning the screen furniture of
+> design.md §9.3 or `""` (T86). `render`/`EmitOptions` receive `&Design` (design.md §5.5).
 
 ### 4.3 `math_init()`
 `""` unless `Emitted.math` has `katex`, `mathml` or `typst_mathml`; else these parts joined by `\n`: (1) with `katex`:
@@ -544,6 +560,15 @@ pub fn compile_theme_css(theme: &Theme, features: &Features, registry: &mut Asse
 > its existing trailing newline, adding one only when missing, as in the lifted
 > compiler. The new document model and helper implementation otherwise use the
 > same stylesheet assembly.
+
+> **Contract change (coordinator, 2026-11-01):** the compiled theme stylesheet becomes hoisted
+> `@import`s + `design::tokens_css` + the entries + `design::layout_css` + the code-theme blocks
+> (design.md §5.1–5.3). Both generated blocks are empty without a declared design, so today's
+> output is unchanged; the token block comes first so an entry's own `:root` still wins, the layout
+> block (`@page`, named styles, furniture, paragraph spacing) comes after the entries so a declared
+> margin beats the default theme's `print.css`. Design font files are registered as assets and their
+> `url()`s go through the same `Targets` as entry URLs. `compile_theme_css` gains a `&Design`
+> parameter (T81). The generated blocks do not count toward §6.3's budget.
 
 ## 6. Emission modes and size budget — T14 (`src/assets/{mod,emit}.rs`), T15, T16
 
@@ -640,6 +665,12 @@ raw-text elements that have `attr`, bare or valued (built on `HtmlScan::start_ta
 - `README.md`: layout of the theme, every token, the class list of §1 with one line each, how to extend
   (`extends = "default"`, `{% extends "@default/document.html" %}`), `eject theme`.
 
+> **Contract change (coordinator, 2026-11-01):** the default theme's `document.html` calls
+> `design_furniture("header", "first")` before and `design_furniture("footer", "first")` after
+> `html.main` (design.md §9.3); with no design both render `""` and the default output is
+> unchanged (T86; the §6.3 budget check still passes). `theme.toml` of the default theme does not
+> declare `[design]`: its tokens stay in `styles/theme.css` (design.md §4.2).
+
 ## 8. Diagnostics
 | code | level | raised by | when |
 |---|---|---|---|
@@ -653,6 +684,11 @@ Hard failures: `Error::Theme`, `Error::Template`, `Error::Style` (ir.md §5), un
 every IR construct. The one lossy case is `Ref { form: Page }`, which renders as Normal; `check --target html` reports
 it as `unsupported-construct` (warning, references.md §6, T71); the emitter raises nothing for it. `Raw` of other
 formats is skipped silently (`check`: `raw-skipped`).
+
+> **Contract change (coordinator, 2026-11-01):** new codes from design.md §10, reported through the
+> theme/HTML `check` pass: `design-font-file`, `design-image-missing` (errors), `design-style-unused`
+> (warning), `design-theme-unavailable` (warning, non-HTML targets only). Design errors in a theme's
+> `theme.toml` are `Error::Theme` located with `line_of_key` (design.md §4.4).
 
 ## 9. Fixtures
 | owner | what | where |

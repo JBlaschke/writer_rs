@@ -74,6 +74,16 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T77 | *Stretch:* Chrome print engine | M7 | M | T16 | todo |
 | T78 | *Stretch:* typst HTML export web view | M7 | M | T52 | todo |
 | T79 | *Stretch:* SCSS themes and minijinja 3 | M7 | M | T19 | todo |
+| T80 | Design layer: schema, merge, resolution, `dump --design`, `eject theme --design` | M8 | L | T16, T71, T72 | todo |
+| T81 | HTML design tokens and fonts | M8 | M | T80 | todo |
+| T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | todo |
+| T83 | DOCX generated styles and section from the design | M8 | M | T80 | todo |
+| T84 | Typst emitter `writer-div`, package 0.2.0 | M8 | S | T80, T82 | todo |
+| T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | todo |
+| T86 | Page furniture: HTML | M8 | M | T85 | todo |
+| T87 | Page furniture: DOCX | M8 | M | T85 | todo |
+| T88 | Page furniture: Typst | M8 | M | T85 | todo |
+| T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | todo |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -89,7 +99,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 7 | T24, T33, T43, T61 | 4 |
 | 8 | T52, T72 | 2 |
 | 9 | T53, T71, T78 | 3 |
-| 10 | T74 | 1 |
+| 10 | T74, T80 | 2 |
+| 11 | T81, T82, T83 | 3 |
+| 12 | T84 | 1 |
+| 13 | T85 | 1 |
+| 14 | T86, T87, T88 | 3 |
+| 15 | T89 | 1 |
 
 ## Coordinator notes (2026-10-24)
 - T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI
@@ -626,3 +641,9 @@ Manual checks performed: …
   dependency PRs have passing or pending checks without failures. Six hosted
   native jobs/publication remain unperformed. The user chose finishing after
   core milestones, so T76–T79 stay unimplemented.
+
+- 2026-11-01: M8, the cross-format design layer, is specified in `docs/spec/design.md` with
+  contract-change notes in config.md, html-output.md, typst-dialect.md, docx-output.md, cli.md and
+  live-reload.md, and task files T80–T89 (waves 10–15 above). Nothing under `src/` or `assets/`
+  changed; every task starts `todo`. T80 joins wave 10 beside T74; T81–T83 can run in parallel
+  once it lands.

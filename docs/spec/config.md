@@ -29,6 +29,12 @@ precedence tests for every pair.
 
 Tables merge key by key; lists replace.
 
+> **Contract change (coordinator, 2026-11-01):** a sixth source joins the list between items 4 and 5
+> for the `[design]` table only (design.md §1.1): the HTML theme chain's `theme.toml` `[design]`
+> tables, parent first. Unlike `[vars]`, a theme's `[design]` **is** a build setting: it reaches
+> the PDF and DOCX backends (design.md §1.4), and `writer.toml` `[design]` and front matter
+> `design:` override it key by key with the same deep-merge rule (tables merge, lists replace).
+
 ## 2. `writer.toml` schema with defaults
 
 ```toml
@@ -134,6 +140,12 @@ view = ""                  # "" → "pages" for .typ inputs, "web" otherwise | "
 The tables above are the schema; `docs/spec/math.md`, `latex-output.md` and `docx-output.md`
 explain each of their keys and may not add or rename keys without a contract change here.
 
+> **Contract change (coordinator, 2026-11-01):** the schema gains a `[design]` table (design.md
+> §2.2: `fonts`, `text`, `colors`, `page`, `styles`). Every key is optional and an unset key keeps
+> the backend's default, so the built-in `writer.toml` above shows `[design]` only as a commented
+> pointer to design.md. `[pdf] paper` stays the paper for PDF and DOCX when `[design.page] paper`
+> is unset. Path-valued design keys (font files, furniture images) follow this file's path rule.
+
 ## 3. Front matter mapping (Markdown and notebooks)
 
 | front matter key | goes to |
@@ -178,6 +190,11 @@ with a hint). `yes/no/on/off` are strings (YAML 1.2 core schema via `serde_norwa
 > document directory, and CLI template/reference paths use the working directory.
 > This includes PDF/DOCX/LaTeX templates, bibliography and path-valued CSL styles,
 > while empty built-in template paths and named citation styles remain intact.
+
+> **Contract change (coordinator, 2026-11-01):** the "maps" row of the table gains `design:`: a
+> front-matter `design:` map overrides the merged `[design]` table for this document (deep merge,
+> design.md §1.1–1.2); its paths resolve against the document's directory (design.md §1.3).
+> Notebook metadata uses `metadata.writer.design`.
 
 ## 4. Rust shape (`src/config.rs`)
 
@@ -257,6 +274,12 @@ pub struct CliOverrides { pub targets: Option<Vec<Target>>, pub out: Option<Path
 
 Precedence is implemented by calling defaults → `load/discover` → `merge_front_matter` →
 `apply_cli`. Write a unit test for every precedence pair.
+
+> **Contract change (coordinator, 2026-11-01):** `Config` gains `pub design: serde_json::Map<String,
+> serde_json::Value>` (the raw `[design]` table, `#[serde(default)]`, front matter deep-merged into
+> it by `merge_front_matter`). It is validated once, together with the theme chain's tables, by
+> `design::merge` (design.md §2.3, §4.4); unknown keys and bad values are reported with the key path
+> and `with_unknown_key_hint`'s wording. The resolved result lives in `Prepared.design` (T80).
 
 ## 5. Determinism
 `default_toml()` is byte-stable and documented in the guide; snapshot tests depend on it.

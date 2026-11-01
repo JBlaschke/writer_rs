@@ -28,6 +28,10 @@ files). Facts come from R1, R2, R4, R5 and probes run for this spec and its revi
 | `src/typst/emit.rs`, `frontend.rs`, `includes.rs` | T30, T50, T53 (T16: `MarkdownIncludes` stub) | §5; §2–§3 (`typst::frontend::parse`, ir.md §4); §6.4's `MarkdownIncludes` (the trait is T03's, in `world.rs`) |
 | `assets/typst/writer-doc/**` | T31 (+T53 in `cells.typ`) | §4 |
 
+> **Contract change (coordinator, 2026-11-01):** `WRITER_DOC_VERSION` becomes `0.2.0` when T84 adds
+> the `writer-div` export (design.md §6.4, open point 10); the import line of §5.3, the
+> `eject typst-package` directory and the snapshots follow.
+
 ## 2. The structured subset: typst → IR (T50; §2.7 also T53)
 
 > **Contract change (coordinator, 2026-10-28):** T50 may split its implementation
@@ -164,6 +168,10 @@ only). A required argument missing or of the wrong shape is `E-TYP-ARG-INVALID`;
 | `listing(numbered:, start:, highlight:, plain:)[raw]` | `CodeBlock` with class `numbered`/`plain`, pairs `start`, `highlight` | |
 | `code-cell(index:, count:, lang:, input:)[out]..` | `Cell` with `index`, `language` = lang, `source` = the input raw's text, `execution_count` = count, `show_input` = input is not `none`, `show_output` = any outputs; per trailing block one `CellOutput` of kind `Display` with one candidate (mime `text/x-typst`, the walked blocks) | |
 | `include-notebook(file, cells:, tags:, hide-input:, hide-output:)` (`file` = `path(Str)` or `Str`) | the blocks of `notebook::parse_with(source, json, &effective_config, ParseOptions { includes: &mut *crate::markdown::include::cell_includes_in(source, &chain), nested: true, selection })` (`source` = the notebook, `chain` as §2.7; notebook-mapping.md §7.3, authoritative; T53) | |
+
+> **Contract change (coordinator, 2026-11-01):** `writer-div(style: S, classes: C)[body]` joins the
+> allow-list: it maps to `Div { attrs: { classes: C, pairs: { "custom-style": S } } }` (no pair when
+> `S` is `none`), so the §7 round trip of design.md §6.4's emitter output holds (T84).
 
 ### 2.5 Literal arguments
 `Str`, `Int`, `Float`, `Bool`, `none`, `auto`, `Numeric`, `Label`, `ContentBlock`, alignment idents
@@ -316,6 +324,14 @@ references.md §3's numbering rules cover all of them. A non-`auto` `toc-title` 
 the whole document (explicit `#outline`/`#bibliography` calls follow it) and replaces the
 citation-locale `title:` of the bibliography the package places.
 
+> **Contract change (coordinator, 2026-11-01):** a middle rung joins the defaults: an explicit
+> argument wins over `sys.inputs.writer-design` (design.md §6.1), which wins over the built-in
+> default. `from-design(key, default)` decodes it like `from-config`; the package exposes
+> `writer-design` (the decoded dictionary or `(:)`), `writer-div(style: none, classes: (), body)`
+> (design.md §8.4) and `writer-furniture(spec, text-width)` (design.md §9.4). The mapping of design
+> keys to `set`/`show` rules is design.md §6.2; a declared furniture slot sets `page(header: none,
+> footer: none, numbering: none)` and places the furniture through `page(background:)` (T82, T85, T88).
+
 ### 4.3 Callouts, numbering, figures
 - `callout(kind: "note", title: auto, body)`: `title: auto` → the dictionary word for the kind
   (below; "Note", "Tip", "Important", "Warning", "Caution" in English; other kinds: the kind with
@@ -374,6 +390,10 @@ this path end to end. `eject
 typst-template FILE` writes `template.typ`: `#import "@writer/doc:0.1.0" as base` and `#let
 writer-doc(..args, body) = { show heading: set text(fill: rgb("#1a3a8a")); base.writer-doc(..args,
 body) }` with comments naming every argument.
+
+> **Contract change (coordinator, 2026-11-01):** a template that delegates inherits the design
+> defaults; one that builds its own layout reads `sys.inputs.writer-design` itself (design.md §6.3).
+> Template code and explicit arguments always win over the design.
 
 ## 5. IR → typst emitter (T30)
 
@@ -464,6 +484,14 @@ spaces, final newline.
 | `ThematicBreak` / `PageBreak` / `Toc` | `#line(length: 100%)` / `#pagebreak()` / `#outline(depth: N)`, plus `title: "<meta.vars["toc-title"]>"` (§5.2 string) when that is a string |
 | `Bibliography` | `#bibliography(("p1", "p2"), style: "ieee")` from `EmitOptions`, only when `resolved.bibliography` is `Some` (references.md §4.9, §6); `title: "<meta.vars["reference-section-title"]>"` when that is a string, else `title: [<term Bibliography>]` under a citation locale (references.md §3) |
 | `Cell` | `#code-cell(index: 3, count: 2, lang: "python", input: [` fence `])[` output blocks `]`…; `input: none` when `!show_input`; no outputs when `!show_output`; each output = `CellOutput::pick("typst")` |
+
+> **Contract change (coordinator, 2026-11-01):** the `Div` row becomes: no id, classes or
+> `custom-style` → its blocks (unchanged); `#metadata(none) <id>` when labelled; then, with classes
+> or `custom-style`, `#writer-div(style: "<name>" | none, classes: ("a", "b"))[ …blocks… ]` where
+> `style` is design.md §8.2's resolved name, else the raw `custom-style` value, else `none`
+> (`EmitOptions` gains `design: &Design`). Presenter
+> layout divs are wrapped too; `writer-div` is the identity without a matching style (design.md
+> §6.4, T84).
 
 ### 5.5 Inlines
 `Text` escaped; `Emph`/`Strong` → `_.._`/`*..*`, or `#emph[..]`/`#strong[..]` when a letter or digit
@@ -590,6 +618,12 @@ of the first two: `from_config` starts with it, `WorldSlot::get` and `load_typst
 map by hand, so `set_inputs` sees an equal map for an unchanged config and keeps the Libraries
 (and typst's comemo cache) instead of alternating between two spellings.
 
+> **Contract change (coordinator, 2026-11-01):** `world_inputs(config, design)` adds
+> `writer-design` = design.md §3.3 JSON with virtual asset paths, compact, **only when a design is
+> declared** (the key is absent otherwise, so the map, the Libraries and the comemo cache are
+> unchanged for undeclared designs). `world_inputs` stays the only producer; furniture images are
+> registered in the `AssetRegistry` before the inputs are built (design.md §6.1, T82).
+
 ### 6.3 Virtual files (all under `VirtualRoot::Project`)
 | vpath | served from |
 |---|---|
@@ -689,6 +723,11 @@ Modern, New Computer Modern Math, DejaVu Sans Mono), then `extend(scan(dir))` fo
 font_paths` entry, then `extend(system())` when `[pdf] system_fonts`. Embedded first makes output
 independent of the machine for the package's families; `system_fonts = false` gives byte-identical
 PDFs across machines (R1 §8).
+
+> **Contract change (coordinator, 2026-11-01):** `WorldOptions` gains `font_files: Vec<PathBuf>`
+> (the design's `fonts.*.files`), loaded with `scan(file)` after `[pdf] font_paths` and before the
+> system fonts: embedded → `font_paths` → design files → system (design.md §6.5, T82). A native
+> `.typ` input gets the input but nothing injected (design.md §6.6).
 
 ## 7. Lints and the round trip (T71, T52)
 
@@ -902,6 +941,11 @@ by the main file. The tree compiles with `typst compile --package-path <eject ty
 `--install` uses typst's data package directory (`<data dir>/typst/packages`, as
 `FsPackages::system_data()`, R1 §3). An existing version
 directory → exit 2, nothing written. `eject typst-template FILE` writes `template.typ` (§4.6).
+
+> **Contract change (coordinator, 2026-11-01):** exports are unchanged by the design layer: the
+> exported source reads `sys.inputs`, a standalone `typst compile` falls back to the package
+> defaults, and `--input writer-design="$(writer dump --design DOC)"` restores the design
+> (design.md §6.7, open point 5).
 
 ## 11. Verified API hints
 

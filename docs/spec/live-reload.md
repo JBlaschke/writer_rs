@@ -636,6 +636,11 @@ is in `set.pages_paths` or below one of them (the `[pdf] template` file; the deb
 for no paths. `theme.toml`, templates, `writer.toml`, sources, includes, images, bibliographies
 are content.
 
+> **Contract change (coordinator, 2026-11-01):** files a declared design references (font files,
+> furniture images; `Design::referenced_files()`) are content inputs even under a theme's `assets/`
+> or `styles/` directory, because a change must rebuild PDF and DOCX too (design.md §12).
+> `theme.toml` stays content; `set_inputs` sees a new map only when the serialized design changes.
+
 ### 6.3 Mechanics (lifted verbatim)
 A batch is sent once no relevant event has arrived for `DEBOUNCE` (150 ms), at the latest
 `MAX_BATCH_WAIT` (2 s) after its first event; one coalescing thread `writer-watch` on `notify` 8.2
