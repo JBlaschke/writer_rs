@@ -195,7 +195,9 @@
     }
 }
 
-#let writer-furniture(spec, text-width) = context {
+// `spacing` is the document's paragraph spacing: the default gap between an
+// image and the lines below it (design.md §9.1).
+#let writer-furniture(spec, text-width, spacing: 1.2em) = context {
     if spec == none { return none }
     let size = if spec.size == none { text.size } else { spec.size * 1pt }
     let fill = if spec.color == none { text.fill } else { rgb(spec.color) }
@@ -213,10 +215,19 @@
             let img = spec.image
             let alignment = if img.align == none { spec.align }
                 else { img.align }
-            align(furniture-align(alignment), image(
-                img.path,
-                width: if img.width == none { auto } else { img.width * 1pt },
-            ))
+            // The lines are a paragraph of their own below the image: its
+            // `gap` (the paragraph spacing unless set) separates them. The
+            // text box starts at the cap height, so the gap runs from the
+            // image's bottom edge to the first line's capitals. The block
+            // spans the text width so that `align` can place the image.
+            let gap = img.at("gap", default: none)
+            block(width: 100%,
+                below: if gap == none { spacing } else { gap * 1pt },
+                align(furniture-align(alignment), image(
+                    img.path,
+                    width: if img.width == none { auto }
+                        else { img.width * 1pt },
+                )))
         }
         #if spec.right_lines.len() > 0 {
             grid(
@@ -257,7 +268,7 @@
             let offset = if offset == none { margin.top * 0.3 }
                 else { offset * 1pt }
             place(top + left, dx: margin.left, dy: offset,
-                writer-furniture(chosen, text-width))
+                writer-furniture(chosen, text-width, spacing: settings.spacing))
         }
     }
     let footer = from-design("page.footer", none)
@@ -268,8 +279,8 @@
             let offset = if offset == none { margin.bottom * 0.3 }
                 else { offset * 1pt }
             let content = if chosen.size == none {
-                text(size: 0.75em, writer-furniture(chosen, text-width))
-            } else { writer-furniture(chosen, text-width) }
+                text(size: 0.75em, writer-furniture(chosen, text-width, spacing: settings.spacing))
+            } else { writer-furniture(chosen, text-width, spacing: settings.spacing) }
             place(bottom + left, dx: margin.left, dy: -offset, content)
         }
     }

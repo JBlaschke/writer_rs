@@ -127,6 +127,14 @@ fn letter_variants_place_logo_and_footer_at_design_offsets() {
         images[0]
     );
     assert!((images[0].1 - 50.0 * 72.0 / 25.4).abs() < 0.01);
+    // The header is centred and the margins are equal, so the logo's centre
+    // is the page's.
+    let centre = images[0].0.x.to_pt() + images[0].1 / 2.0;
+    let page_centre = document.pages()[0].frame.width().to_pt() / 2.0;
+    assert!(
+        (centre - page_centre).abs() < 0.5,
+        "logo centre {centre}, page centre {page_centre}"
+    );
     let expected_bottom =
         document.pages()[0].frame.height().to_pt() - 10.0 * 72.0 / 25.4;
     assert!(
@@ -242,6 +250,62 @@ fn unset_offsets_use_thirty_percent_of_the_matching_margin() {
         (bottom - expected).abs() < 1.0,
         "footer bottom {bottom}, expected {expected}"
     );
+}
+
+#[test]
+fn image_gap_separates_the_image_from_the_first_line_cap_height() {
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::write(directory.path().join("logo.svg"),
+        "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><rect width='10' height='10'/></svg>",
+    ).unwrap();
+    let header = "[design.page.header]\nsize = '9pt'\nlines = ['GAPLINE']\n";
+    for (design, expected) in [
+        // Unset: writer-doc's own paragraph spacing, 1.2em of the furniture
+        // text, as HTML's 1em is.
+        (
+            format!("{header}image = {{src = 'logo.svg', width = '10mm'}}\n"),
+            1.2 * 9.0,
+        ),
+        // The design's paragraph spacing.
+        (
+            format!(
+                "[design.text]\nparagraph_spacing = '3.6mm'\n{header}\
+                 image = {{src = 'logo.svg', width = '10mm'}}\n"
+            ),
+            3.6 * 72.0 / 25.4,
+        ),
+        // An explicit gap.
+        (
+            format!(
+                "[design.text]\nparagraph_spacing = '3.6mm'\n{header}\
+                 image = {{src = 'logo.svg', width = '10mm', gap = '3mm'}}\n"
+            ),
+            3.0 * 72.0 / 25.4,
+        ),
+    ] {
+        std::fs::write(
+            directory.path().join("writer.toml"),
+            format!("[pdf]\nsystem_fonts = false\n{design}"),
+        )
+        .unwrap();
+        let document = compile(directory.path(), "Body.\n");
+        let frame = &document.pages()[0].frame;
+        let mut images = Vec::new();
+        geometry(frame, Transform::identity(), &mut images, &mut Vec::new());
+        assert_eq!(images.len(), 1);
+        // The logo is square, so its height is its width.
+        let bottom = images[0].0.y.to_pt() + images[0].1;
+        let (origin, run) =
+            find_run(frame, Transform::identity(), "GAPLINE").unwrap();
+        // Typst's default top edge is the cap height, so the gap ends there.
+        let top = origin.y.to_pt()
+            - run.font.metrics().cap_height.at(run.size).to_pt();
+        let gap = top - bottom;
+        assert!(
+            (gap - expected).abs() < 0.3,
+            "{design}\ngap {gap}, expected {expected}"
+        );
+    }
 }
 
 fn font_size(frame: &Frame, marker: &str) -> Option<f64> {
