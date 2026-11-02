@@ -282,7 +282,7 @@ None` for the page classes it covers), which still *declares* the slot (§9.1).
 - `image = "path"` → `FurnitureImage { path, width: None, align: None, gap }`; a `None` width means
   the image's natural size at 96 dpi for raster images (HTML: intrinsic size; Typst: `image(..)`
   default; DOCX: pixel size × 9525 EMU), `align: None` → the furniture's `align`.
-- Image `gap` (T92): `text.paragraph_spacing` when it is set and the image table has no `gap`;
+- Image `gap` (T90): `text.paragraph_spacing` when it is set and the image table has no `gap`;
   unset otherwise, and each backend then uses its own paragraph spacing (HTML `1em` of the
   furniture text, Typst `writer-doc`'s `spacing`, `1.2em` of the furniture text, DOCX the
   document defaults' `w:after`). The
@@ -672,7 +672,7 @@ like in HTML and Typst. The body emitter (docx-output.md §4.1) pushes `Style(id
 `style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
 exists, so `custom` returns its id). With a reference document, §7.3.
 
-## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst, T92 image gap)
+## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst, T90 image gap)
 
 ### 9.1 Model
 A **slot** is `page.header` or `page.footer`; a slot has a **first-page** and a **rest** furniture
@@ -680,7 +680,7 @@ A **slot** is `page.header` or `page.footer`; a slot has a **first-page** and a 
 left column and `right_lines` as a right column when the latter is non-empty; otherwise one column
 aligned by `align`), and the rule at its `position` (above everything for `above`, below for
 `below`). The image's `gap` (§2.2; the paragraph spacing by default, §3.2) is the vertical space
-between its bottom edge and the top of the first line's box (T92). That box starts at the cap
+between its bottom edge and the top of the first line's box (T90). That box starts at the cap
 height in Typst, at the ascender plus half the leading in HTML, and in Word below the image line's
 descent and the line spacing Word adds above the text. The same value therefore looks larger in
 HTML and larger again in Word: in the §11 letter the line's capitals sit 0, 1.1 and 3.4 mm below

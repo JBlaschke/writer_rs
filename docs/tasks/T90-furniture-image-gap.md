@@ -1,4 +1,4 @@
-# T92 — Furniture image `gap` (space between a furniture image and its lines)
+# T90 — Furniture image `gap` (space between a furniture image and its lines)
 
 | | |
 |---|---|
