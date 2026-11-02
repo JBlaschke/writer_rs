@@ -160,12 +160,9 @@ impl WriterWorld {
                     (path, font.info().clone())
                 })
                 .collect::<Vec<_>>();
-            if faces.is_empty() {
-                return Err(Error::Config(format!(
-                    "design font file contains no supported faces: {}",
-                    file.display()
-                )));
-            }
+            // Web fonts and unreadable faces are still valid HTML assets.
+            // An empty iterator leaves Typst's normal fallback fonts intact;
+            // check reports an unavailable declared family for PDF targets.
             fonts.extend(faces);
         }
         if opts.system_fonts {
@@ -463,6 +460,13 @@ impl WriterWorld {
     }
 
     fn load(&self, id: FileId) -> FileResult<Loaded> {
+        // Paths used inside writer-doc keep the package root in Typst. Mount
+        // its reserved asset paths through the document registry as well.
+        if is_asset(id) {
+            let name =
+                id.vpath().get_with_slash().trim_start_matches("/__assets/");
+            return self.load_asset(name);
+        }
         if let VirtualRoot::Package(spec) = id.root() {
             let (bytes, real_path) = self.packages.load(spec, id.vpath())?;
             if let Some(path) = &real_path {
@@ -482,9 +486,6 @@ impl WriterWorld {
                 .cloned()
                 .map(|bytes| Loaded { bytes, real_path: None, retain: true })
                 .ok_or_else(|| FileError::NotFound(path.into()));
-        }
-        if let Some(name) = path.strip_prefix("/__assets/") {
-            return self.load_asset(name);
         }
         let path = self.project_path(id.vpath())?;
         self.load_disk(&path)
@@ -699,8 +700,13 @@ fn is_include(id: FileId) -> bool {
 }
 
 fn is_asset(id: FileId) -> bool {
-    matches!(id.root(), VirtualRoot::Project)
-        && id.vpath().get_with_slash().starts_with("/__assets/")
+    let document_root = match id.root() {
+        VirtualRoot::Project => true,
+        VirtualRoot::Package(spec) => {
+            spec.namespace == "writer" && spec.name == "doc"
+        }
+    };
+    document_root && id.vpath().get_with_slash().starts_with("/__assets/")
 }
 
 fn is_virtual(id: FileId) -> bool {

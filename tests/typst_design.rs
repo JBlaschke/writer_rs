@@ -317,3 +317,70 @@ fn native_typography_arguments_stay_with_the_compiler() {
     let (document, _) = compile_document(world).into_result().unwrap();
     assert_eq!(document.pages().len(), 1);
 }
+#[test]
+fn listing_fonts_use_design_defaults_and_explicit_mono_font_overrides() {
+    use typst::layout::{Frame, FrameItem};
+
+    fn family(frame: &Frame, marker: &str) -> Option<String> {
+        for (_, item) in frame.items() {
+            match item {
+                FrameItem::Group(group) => {
+                    if let Some(family) = family(&group.frame, marker) {
+                        return Some(family);
+                    }
+                }
+                FrameItem::Text(run) if run.text.contains(marker) => {
+                    return Some(run.font.info().family.clone());
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    for (configured, explicit, expected) in [
+        (None, None, "DejaVu Sans Mono"),
+        (Some("Libertinus Serif"), None, "Libertinus Serif"),
+        (
+            Some("DejaVu Sans Mono"),
+            Some("Libertinus Serif"),
+            "Libertinus Serif",
+        ),
+    ] {
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path();
+        let design = configured.map_or(String::new(), |family| {
+            format!("[design.fonts]\nmono = {family:?}\n",)
+        });
+        std::fs::write(
+            root.join("writer.toml"),
+            format!("[pdf]\nsystem_fonts = false\n{design}",),
+        )
+        .unwrap();
+        let args = explicit
+            .map_or(String::new(), |family| format!("mono-font: {family:?}",));
+        let input = root.join("document.typ");
+        std::fs::write(&input, format!(
+            concat!(
+                "#import \"@writer/doc:{}\": *\n",
+                "#show: writer-doc.with({args})\n",
+                "#listing(numbered: true)[\n```text\nNUMBEREDMARKER\n```\n]\n",
+                "#listing(highlight: \"1\")[\n```text\nHIGHLIGHTMARKER\n```\n]\n",
+            ),
+            writer::typst::WRITER_DOC_VERSION,
+            args = args,
+        )).unwrap();
+        let opts = BuildOptions::new(input);
+        let prepared = pipeline::prepare(&opts).unwrap();
+        let mut worlds = WorldSlot::new();
+        let world = worlds.get(Some(&prepared), &opts).unwrap();
+        let (document, _) = compile_document(world).into_result().unwrap();
+        for marker in ["NUMBEREDMARKER", "HIGHLIGHTMARKER"] {
+            assert_eq!(
+                family(&document.pages()[0].frame, marker).as_deref(),
+                Some(expected),
+                "configured={configured:?}, explicit={explicit:?}, marker={marker}"
+            );
+        }
+    }
+}

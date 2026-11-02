@@ -52,8 +52,7 @@ pub fn pdf_problems(
     ];
     let mut seen = std::collections::BTreeSet::new();
     for font in fonts.into_iter().flatten() {
-        if font.files.is_empty()
-            && seen.insert(&font.family)
+        if seen.insert(&font.family)
             && !world.book().contains_family(&font.family.to_lowercase())
         {
             findings.push(Diagnostic::warning(
