@@ -118,6 +118,27 @@ artifacts are ignored local evidence; commands above reproduce them on another
 machine. A QuickLook thumbnail does not establish Word pagination, field-update
 interaction, editable-math behavior or the baseline of an equation picture.
 
+## M8 page furniture validation record
+
+Checked on 2026-11-01 in Word for Mac 16.114.3 on macOS 26.7
+(25G229). Built the two-page `examples/letter/letter.md` staged for T89
+with `writer build --to docx`, without a reference document. Opened the
+result through Word's file picker and inspected both pages in Print Layout.
+
+- The file opened without a repair prompt.
+- Page one showed the inline neutral logo and centred institute name.
+  Page two showed the compact correspondence header.
+- Both pages showed the copper rule, legal lines and right-aligned phone
+  and email column. Nothing overlapped the body.
+- Word displayed the actual fields as “Page 1 of 2” and “Page 2 of 2”.
+
+The automated furniture suite also validates and independently reads the
+package, snapshots the parts and relationships, checks explicit empty slots,
+and preserves reference-owned furniture. Tests cover first/default aliases,
+retained even-page settings, shared media and reference Normal font sizes.
+This scoped Mac check does not complete the broader release checklist or
+establish rendering in Word for Windows, LibreOffice or Google Docs.
+
 ## Manual release checklist
 
 These checks are **not performed by the automated tests**. Before each release,

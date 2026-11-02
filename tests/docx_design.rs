@@ -147,3 +147,68 @@ fn reference_defaults_and_section_win_but_missing_vocabulary_gets_tokens() {
     assert!(table.to_xml().contains("Source Sans 3"));
     assert!(table.to_xml().contains("<w:docDefaults/>"));
 }
+
+#[test]
+fn heading_font_covers_every_level_linked_character_title_and_subtitle() {
+    use writer::design::{Font, Fonts};
+    let design = Design {
+        declared: true,
+        fonts: Fonts {
+            heading: Some(Font {
+                family: "Heading Face".into(),
+                files: Vec::new(),
+            }),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let mut table = StyleTable::generated(&design);
+    let mut ids = Vec::new();
+    for level in 1..=6 {
+        ids.push(
+            table.ensure(&format!("heading {level}"), StyleKind::Paragraph),
+        );
+        ids.push(
+            table
+                .ensure(&format!("Heading {level} Char"), StyleKind::Character),
+        );
+    }
+    for (name, kind) in [
+        ("Title", StyleKind::Paragraph),
+        ("Subtitle", StyleKind::Paragraph),
+        ("Title Char", StyleKind::Character),
+        ("Subtitle Char", StyleKind::Character),
+    ] {
+        ids.push(table.ensure(name, kind));
+    }
+    let generated = table.to_xml();
+    for id in ids {
+        let start = generated
+            .find(&format!("w:styleId=\"{id}\""))
+            .unwrap_or_else(|| panic!("missing generated style {id}"));
+        let definition = generated[start..].split_once("</w:style>").unwrap().0;
+        for attribute in ["w:ascii", "w:hAnsi", "w:cs"] {
+            assert!(
+                definition.contains(&format!("{attribute}=\"Heading Face\"")),
+                "{id} does not use heading font for {attribute}: {definition}"
+            );
+        }
+    }
+    // Selecting the heading role alone leaves the independent body role intact.
+    let defaults = generated
+        .split_once("<w:docDefaults>")
+        .unwrap()
+        .1
+        .split_once("</w:docDefaults>")
+        .unwrap()
+        .0;
+    assert!(defaults.contains("w:ascii=\"Calibri\""));
+
+    // A reference's complete vocabulary keeps its own fonts verbatim.
+    let reference = writer::vendor::get_str("docx/styles.xml").unwrap();
+    let original = StyleTable::from_reference(&reference).unwrap().to_xml();
+    let preserved = StyleTable::from_reference_with_design(&reference, &design)
+        .unwrap()
+        .to_xml();
+    assert_eq!(preserved, original);
+}
