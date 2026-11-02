@@ -428,6 +428,15 @@ or digit is removed. For example,
 `Inside Address` matches `:::inside-address`. Names that normalize identically
 cannot both be declared. Styles apply to divs, not inline spans.
 
+A name that matches one of writer's built-in Word styles, such as `Title`,
+`Heading 1`, `TOC Heading`, `toc 2`, `Caption` or `footer`, restyles that Word
+style instead of adding one: the keys you set replace the built-in values and
+every other property, such as an outline level or a contents-list indent,
+keeps its built-in value. Word applies the result wherever writer uses the
+style, so `writer check` does not report such a name as unused. The same holds
+for `Header`, the style of the header lines. HTML and PDF apply named styles
+to divs only.
+
 | Key | Type / unit | Default and effect |
 |---|---|---|
 | `styles.<Name>.font` | `body`, `heading`, `mono` or family string | Unset: inherit; an unset role also inherits |

@@ -178,9 +178,12 @@ fn furniture_paragraphs(
     if furniture.image.is_some() {
         xml.push_str(&image_paragraph(furniture, context, part)?);
     }
-    let style = context
-        .styles
-        .ensure(if header { "Header" } else { "Footer" }, StyleKind::Paragraph);
+    let name = if header {
+        super::styles::HEADER
+    } else {
+        "Footer"
+    };
+    let style = context.styles.ensure(name, StyleKind::Paragraph);
     let size = furniture
         .size
         .unwrap_or(Pt(context.body_size.0 * if header { 1.0 } else { 0.75 }));
