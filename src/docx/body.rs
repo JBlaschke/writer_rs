@@ -452,7 +452,9 @@ impl Emitter<'_> {
     fn div(&mut self, blocks: &[Block], attrs: &Attrs) {
         let bookmark =
             attrs.id.as_deref().and_then(|id| self.start_bookmark(id));
-        if let Some(name) = attrs.pairs.get("custom-style") {
+        if let Some(name) = crate::design::style_for(self.design, attrs) {
+            self.styled_blocks(blocks, name, true);
+        } else if let Some(name) = attrs.pairs.get("custom-style") {
             self.styled_blocks(blocks, name, true);
         } else {
             self.blocks(blocks);

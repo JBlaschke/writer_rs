@@ -79,7 +79,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | done |
 | T83 | DOCX generated styles and section from the design | M8 | M | T80 | done |
 | T84 | Typst emitter `writer-div`, package 0.2.0 | M8 | S | T80, T82 | done |
-| T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | todo |
+| T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | done |
 | T86 | Page furniture: HTML | M8 | M | T85 | todo |
 | T87 | Page furniture: DOCX | M8 | M | T85 | todo |
 | T88 | Page furniture: Typst | M8 | M | T85 | todo |

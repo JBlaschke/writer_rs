@@ -14,6 +14,9 @@ use super::{MathLocation, error_diagnostic, visible};
 
 pub(super) fn run(prepared: &Prepared, opts: &BuildOptions) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
+    diagnostics.extend(super::design::unused_styles(
+        &prepared.design, &prepared.document,
+    ));
     let mut selected = Vec::new();
     let mut world = CheckWorld::default();
     diagnostics.extend(super::design::problems(

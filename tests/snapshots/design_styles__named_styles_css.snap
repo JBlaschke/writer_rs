@@ -1,0 +1,10 @@
+---
+source: tests/design_styles.rs
+expression: "writer::html::design::styles_css(&prepared.design)"
+---
+[data-style="Closing"]{margin-top:17.008pt;margin-bottom:22.677pt;break-after:avoid}
+[data-style="Date"]{font-size:10pt;margin-bottom:8.504pt}
+[data-style="Inside Address"]{break-inside:avoid}
+[data-style="Recipient"]{line-height:12.1pt;margin-bottom:17.008pt;break-inside:avoid}
+[data-style="Salutation"]{margin-top:17.008pt;margin-bottom:8.504pt}
+[data-style="Signature"]{line-height:12.1pt;margin-top:0pt;margin-bottom:0pt;break-inside:avoid}

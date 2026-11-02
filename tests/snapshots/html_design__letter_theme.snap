@@ -461,3 +461,9 @@ nav.toc {
 /* design: layout */
 [data-writer-document] p{margin-block:0 10.205pt;text-align:start}
 @page{size:A4;margin:141.732pt 62.362pt 107.717pt 62.362pt}
+[data-style="Closing"]{margin-top:17.008pt;margin-bottom:22.677pt;break-after:avoid}
+[data-style="Date"]{font-size:10pt;margin-bottom:8.504pt}
+[data-style="Inside Address"]{break-inside:avoid}
+[data-style="Recipient"]{line-height:12.1pt;margin-bottom:17.008pt;break-inside:avoid}
+[data-style="Salutation"]{margin-top:17.008pt;margin-bottom:8.504pt}
+[data-style="Signature"]{line-height:12.1pt;margin-top:0pt;margin-bottom:0pt;break-inside:avoid}

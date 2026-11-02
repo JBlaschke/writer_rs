@@ -793,6 +793,9 @@ impl<'d> Emitter<'d, '_, '_> {
         span: Option<&SourceSpan>,
     ) -> String {
         let mut own = Vec::new();
+        if let Some(name) = crate::design::style_for(self.opts.design, attrs) {
+            own.push(value("data-style", name));
+        }
         let mut consumed = Vec::new();
         if attrs.classes.iter().any(|class| class == "columns") {
             consumed.push("widths");

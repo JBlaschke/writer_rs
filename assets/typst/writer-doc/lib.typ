@@ -370,4 +370,48 @@
 }
 
 // Preserve div semantics for templates; named design styles are applied in T85.
-#let writer-div(style: none, classes: (), body) = body
+#let writer-div(style: none, classes: (), body) = {
+    let spec = if style != none {
+        from-design("styles", (:)).at(style, default: none)
+    } else { none }
+    if spec == none { return body }
+    let text-opts = (:)
+    let par-opts = (:)
+    if spec.font != none {
+        let family = if spec.font in ("body", "heading", "mono") {
+            from-design("fonts." + spec.font + ".family", none)
+        } else { spec.font }
+        if family != none { text-opts.insert("font", family) }
+    }
+    if spec.size != none { text-opts.insert("size", spec.size * 1pt) }
+    if spec.color != none { text-opts.insert("fill", rgb(spec.color)) }
+    if spec.weight != none { text-opts.insert("weight", spec.weight) }
+    if spec.italic != none {
+        text-opts.insert("style", if spec.italic { "italic" } else { "normal" })
+    }
+    if spec.line_height != none {
+        let size = if spec.size != none { spec.size }
+            else { from-design("text.size", 11) }
+        par-opts.insert("leading", design-leading(spec.line_height, size * 1pt))
+    }
+    if spec.align != none {
+        par-opts.insert("justify", spec.align == "justify")
+    }
+    let inner = {
+        set text(..text-opts)
+        set par(..par-opts)
+        if spec.align in ("left", "center", "right") {
+            let position = (left: left, center: center, right: right).at(spec.align)
+            align(position, body)
+        } else { body }
+    }
+    block(
+        above: if spec.space_before != none { spec.space_before * 1pt }
+            else { auto },
+        below: if spec.space_after != none { spec.space_after * 1pt }
+            else { auto },
+        breakable: not spec.keep_together,
+        sticky: spec.keep_with_next,
+        width: 100%, inner
+    )
+}
