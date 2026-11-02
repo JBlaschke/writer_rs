@@ -25,6 +25,7 @@ use crate::math::latex_source;
 use crate::notebook::nbformat::{self, CellType};
 use crate::pipeline::{self, BuildFailure, BuildOptions, Mode};
 
+pub mod design;
 mod targets;
 mod visible;
 

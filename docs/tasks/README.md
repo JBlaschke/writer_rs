@@ -74,7 +74,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T77 | *Stretch:* Chrome print engine | M7 | M | T16 | todo |
 | T78 | *Stretch:* typst HTML export web view | M7 | M | T52 | todo |
 | T79 | *Stretch:* SCSS themes and minijinja 3 | M7 | M | T19 | todo |
-| T80 | Design layer: schema, merge, resolution, `dump --design`, `eject theme --design` | M8 | L | T16, T71, T72 | todo |
+| T80 | Design layer: schema, merge, resolution, `dump --design`, `eject theme --design` | M8 | L | T16, T71, T72 | done |
 | T81 | HTML design tokens and fonts | M8 | M | T80 | todo |
 | T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | todo |
 | T83 | DOCX generated styles and section from the design | M8 | M | T80 | todo |

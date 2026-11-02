@@ -38,6 +38,17 @@ pub const MANIFEST_FILE: &str = "theme.toml";
 /// more than [`MAX_CHAIN_LEN`] themes, two themes share a name, or the root
 /// lacks required templates (the message lists the missing files).
 pub fn resolve(spec: &str, search_roots: &[&Path]) -> Result<Theme> {
+    resolve_chain(spec, search_roots, true)
+}
+
+/// Reads only the inheritance manifests, without requiring HTML templates.
+pub fn resolve_manifests(spec: &str, search_roots: &[&Path]) -> Result<Theme> {
+    resolve_chain(spec, search_roots, false)
+}
+
+fn resolve_chain(
+    spec: &str, search_roots: &[&Path], templates: bool,
+) -> Result<Theme> {
     let source = locate(spec, search_roots)
         .map_err(|message| theme_error(spec, message))?;
     let mut chain: Vec<ThemeDir> = Vec::new();
@@ -63,7 +74,9 @@ pub fn resolve(spec: &str, search_roots: &[&Path]) -> Result<Theme> {
         };
         chain.push(dir);
     }
-    check_root_templates(spec, &chain)?;
+    if templates {
+        check_root_templates(spec, &chain)?;
+    }
     tracing::debug!(
         theme = spec, chain = %chain_text(&chain), "resolved theme"
     );

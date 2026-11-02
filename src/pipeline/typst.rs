@@ -349,6 +349,7 @@ mod tests {
 
     fn prepared(path: &Path) -> Prepared {
         Prepared {
+            design: Default::default(),
             document: Document {
                 meta: DocMeta::default(),
                 blocks: Vec::new(),

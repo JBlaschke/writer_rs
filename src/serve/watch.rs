@@ -69,6 +69,8 @@ pub struct WatchSet {
     pub theme_dirs: Vec<PathBuf>,
     /// Files or directory roots whose changes only affect typeset output.
     pub pages_paths: Vec<PathBuf>,
+    /// Design files which rebuild content even under theme assets.
+    pub content_paths: Vec<PathBuf>,
 }
 
 impl WatchSet {
@@ -91,6 +93,7 @@ impl WatchSet {
             dirs_recursive: themes.iter().cloned().collect(),
             theme_dirs: themes.into_iter().collect(),
             pages_paths: Vec::new(),
+            content_paths: Vec::new(),
         }
     }
 
@@ -106,6 +109,7 @@ impl WatchSet {
         union(&mut self.dirs_flat, &other.dirs_flat);
         union(&mut self.theme_dirs, &other.theme_dirs);
         union(&mut self.pages_paths, &other.pages_paths);
+        union(&mut self.content_paths, &other.content_paths);
     }
 }
 
@@ -119,8 +123,13 @@ pub fn watch_set(
     let mut files = accessed.to_vec();
     let mut themes = Vec::new();
     let mut pages = Vec::new();
+    let mut content = Vec::new();
     for (path, role) in inputs {
         match role {
+            InputRole::Design => {
+                files.push(path.clone());
+                content.push(path.clone());
+            }
             InputRole::Theme => themes.push(path.clone()),
             InputRole::ReferenceDoc
                 if !targets.is_some_and(|t| t.contains(&Target::Docx)) => {}
@@ -135,6 +144,7 @@ pub fn watch_set(
     }
     let mut set = WatchSet::new(files, themes);
     set.pages_paths = canonical_set(pages).into_iter().collect();
+    set.content_paths = canonical_set(content).into_iter().collect();
     if cfg!(debug_assertions) {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let theme = root.join("assets/themes/default");
@@ -176,6 +186,7 @@ pub fn watch_set_before_build(opts: &BuildOptions) -> WatchSet {
         Vec::new()
     };
     let prepared = Prepared {
+        design: Default::default(),
         document: Document {
             meta: Default::default(),
             blocks: Vec::new(),
@@ -221,6 +232,9 @@ pub struct ChangeBatch {
 /// Classifies a nonempty uniform batch as CSS or pages; all other batches are
 /// content.
 pub fn classify(paths: &[PathBuf], set: &WatchSet) -> ChangeKind {
+    if paths.iter().any(|path| set.content_paths.contains(path)) {
+        return ChangeKind::Content;
+    }
     classify_paths(paths, &set.theme_dirs, &set.pages_paths)
 }
 
@@ -1611,6 +1625,7 @@ mod tests {
             dirs_recursive: vec![root.join("writer-doc")],
             theme_dirs: vec![root.join("theme")],
             pages_paths: vec![root.join("writer-doc")],
+            content_paths: Vec::new(),
         };
         first.merge(&second);
         assert_eq!(first.files, [root.join("a.md"), root.join("fig/a.png")]);
@@ -1634,6 +1649,7 @@ mod tests {
             dirs_flat: vec![root.join("img")],
             theme_dirs: vec![root.join("theme")],
             pages_paths: vec![root.join("template.typ")],
+            content_paths: Vec::new(),
         };
         let filter = Filter::new(&set);
         assert_eq!(

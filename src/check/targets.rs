@@ -16,6 +16,10 @@ pub(super) fn run(prepared: &Prepared, opts: &BuildOptions) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
     let mut selected = Vec::new();
     let mut world = CheckWorld::default();
+    diagnostics.extend(super::design::problems(
+        &prepared.design,
+        &prepared.config.targets_for(prepared.document.source.kind),
+    ));
     for target in prepared.config.targets_for(prepared.document.source.kind) {
         if selected.contains(&target) {
             continue;

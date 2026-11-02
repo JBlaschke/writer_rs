@@ -16,6 +16,7 @@ pub mod check;
 pub mod cite;
 pub mod cli;
 pub mod config;
+pub mod design;
 pub mod docx;
 pub mod error;
 pub mod html;

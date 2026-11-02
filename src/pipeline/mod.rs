@@ -76,6 +76,8 @@ impl BuildOptions {
 /// A document with its effective configuration and registered assets.
 #[derive(Debug, Clone)]
 pub struct Prepared {
+    /// Resolved design shared by all output targets.
+    pub design: crate::design::Design,
     /// Parsed, and normally resolved, document IR.
     pub document: Document,
     /// Registered document resources.
@@ -114,6 +116,8 @@ pub enum InputRole {
     Config,
     /// Registered local resource.
     Asset,
+    /// Cross-format design resource; always a content dependency.
+    Design,
     /// Referenced resource that does not exist yet.
     MissingAsset,
     /// A theme directory, or one of its files in a clash check.
@@ -135,6 +139,7 @@ impl fmt::Display for InputRole {
             Self::Include => "the included file",
             Self::Config => "the config file",
             Self::Asset => "the document's asset",
+            Self::Design => "the design's resource",
             Self::MissingAsset => "the missing asset",
             Self::Theme => "the theme file",
             Self::Bibliography => "the bibliography or style file",
@@ -238,13 +243,30 @@ pub fn parse_only(
     } else {
         parsed.diagnostics
     };
-    Ok(Prepared {
+    let mut prepared = Prepared {
+        design: Default::default(),
         document: parsed.document,
         assets: parsed.assets,
         config,
         config_path,
         diagnostics,
-    })
+    };
+    let (design, findings) = resolve_design(&prepared, opts)?;
+    prepared.design = design;
+    prepared.diagnostics.extend(findings);
+    if matches!(opts.mode, Mode::Build)
+        && let Some(problem) = crate::check::design::problems(
+            &prepared.design,
+            &prepared.config.targets_for(kind),
+        )
+        .first()
+    {
+        return Err(BuildFailure {
+            error: Box::new(Error::Config(problem.message.clone())),
+            diagnostics: prepared.diagnostics,
+        });
+    }
+    Ok(prepared)
 }
 
 /// Parses and resolves one source; preview and lint requests are lenient.
@@ -406,6 +428,12 @@ fn meta_sets(
 pub fn resolve_theme(
     prepared: &Prepared, opts: &BuildOptions,
 ) -> Result<Theme> {
+    resolve_theme_source(prepared, opts, false)
+}
+
+fn resolve_theme_source(
+    prepared: &Prepared, opts: &BuildOptions, manifests: bool,
+) -> Result<Theme> {
     let cwd;
     let roots: Vec<&Path> = if opts.cli.theme.is_some() {
         cwd = absolute(Path::new("."))?;
@@ -419,7 +447,73 @@ pub fn resolve_theme(
     } else {
         Vec::new()
     };
-    theme::resolve(&prepared.config.html.theme, &roots)
+    if manifests {
+        theme::resolve::resolve_manifests(&prepared.config.html.theme, &roots)
+    } else {
+        theme::resolve(&prepared.config.html.theme, &roots)
+    }
+}
+
+fn with_design_layers<T>(
+    prepared: &Prepared, opts: &BuildOptions,
+    consume: impl FnOnce(&[crate::design::Layer<'_>]) -> Result<T>,
+) -> Result<(T, Diagnostics)> {
+    use crate::design::{Layer, Origin};
+    let mut diagnostics = Diagnostics::new();
+    let theme = match resolve_theme_source(prepared, opts, true) {
+        Ok(theme) => Some(theme),
+        Err(error) => {
+            if !prepared
+                .config
+                .targets_for(prepared.document.source.kind)
+                .contains(&Target::Html)
+            {
+                diagnostics.push(Diagnostic::warning(
+                    "design-theme-unavailable",
+                    error.to_string(),
+                ));
+            }
+            None
+        }
+    };
+    let mut layers =
+        theme.as_ref().map(Theme::design_layers).unwrap_or_default();
+    if let Some(path) = &prepared.config_path {
+        layers.push(Layer {
+            table: Config::load(path)?.design,
+            base_dir: path.parent().unwrap_or(Path::new("/")),
+            origin: Origin::ProjectFile(path.clone()),
+        });
+    }
+    let front = prepared
+        .document
+        .meta
+        .vars
+        .get("design")
+        .and_then(serde_json::Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    layers.push(Layer {
+        table: front,
+        base_dir: &prepared.document.source.base_dir,
+        origin: Origin::FrontMatter,
+    });
+    Ok((consume(&layers)?, diagnostics))
+}
+
+/// Resolves theme, project and document design sources once.
+pub fn resolve_design(
+    prepared: &Prepared, opts: &BuildOptions,
+) -> Result<(crate::design::Design, Diagnostics)> {
+    with_design_layers(prepared, opts, crate::design::merge)
+}
+
+/// The validated design table with paths resolved per contributing source.
+pub fn merged_design_table(
+    prepared: &Prepared, opts: &BuildOptions,
+) -> Result<serde_json::Map<String, serde_json::Value>> {
+    with_design_layers(prepared, opts, crate::design::merged_table)
+        .map(|(table, _)| table)
 }
 
 /// Every source, resource and theme directory to watch, in first-use order.
@@ -436,6 +530,13 @@ pub fn watch_inputs(prepared: &Prepared) -> Vec<(PathBuf, InputRole)> {
     );
     inputs.extend(
         prepared.config_path.iter().cloned().map(|p| (p, InputRole::Config)),
+    );
+    inputs.extend(
+        prepared
+            .design
+            .referenced_files()
+            .into_iter()
+            .map(|path| (path, InputRole::Design)),
     );
     inputs.extend(prepared.assets.iter().filter_map(|a| match &a.data {
         AssetData::File(path) => Some((path.clone(), InputRole::Asset)),
@@ -1473,6 +1574,7 @@ mod tests {
         let parsed =
             crate::markdown::parse(&source, "# Heading\n", &config).unwrap();
         let prepared = Prepared {
+            design: Default::default(),
             document: parsed.document,
             assets: parsed.assets,
             config,

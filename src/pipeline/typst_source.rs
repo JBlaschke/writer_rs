@@ -155,6 +155,7 @@ mod tests {
         let mut config = Config::default();
         config.references.bibliography = vec![path("refs.bib")];
         let prepared = Prepared {
+            design: Default::default(),
             document: Document {
                 meta: DocMeta::default(),
                 blocks: Vec::new(),

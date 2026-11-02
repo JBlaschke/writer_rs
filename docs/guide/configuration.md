@@ -136,6 +136,9 @@ host = "127.0.0.1"
 port = 3000
 open = false
 view = ""                  # "" → "pages" for .typ inputs, "web" otherwise | "web" | "pages"
+
+# [design]                # optional cross-format typography, styles and furniture
+# See docs/spec/design.md for all keys; unset values keep backend defaults.
 ```
 
 ## `[document]`

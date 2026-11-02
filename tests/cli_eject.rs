@@ -150,10 +150,17 @@ fn ejected_root_theme_keeps_all_embedded_bytes_and_renders() {
     let expected: BTreeMap<_, _> = writer::vendor::list("themes/default/")
         .into_iter()
         .map(|path| {
-            (
-                PathBuf::from(path.strip_prefix("themes/default/").unwrap()),
-                writer::vendor::get(&path).unwrap().into_owned(),
-            )
+            (PathBuf::from(path.strip_prefix("themes/default/").unwrap()), {
+                let mut bytes =
+                    writer::vendor::get(&path).unwrap().into_owned();
+                if path.ends_with("/theme.toml") {
+                    bytes.extend_from_slice(b"\n");
+                    bytes.extend_from_slice(
+                        writer::design::TEMPLATE_TOML.as_bytes(),
+                    );
+                }
+                bytes
+            })
         })
         .collect();
     assert_eq!(inventory(&root.path().join(directory)), expected);

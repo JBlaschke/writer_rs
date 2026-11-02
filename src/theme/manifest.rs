@@ -30,6 +30,9 @@ pub struct ThemeManifest {
     /// (deep-merged along the chain).
     #[serde(deserialize_with = "json_map")]
     pub vars: Map<String, Value>,
+    /// Raw cross-format design settings, merged before validation.
+    #[serde(deserialize_with = "json_map")]
+    pub design: Map<String, Value>,
 }
 
 /// The `[styles]` table.

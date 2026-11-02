@@ -1,0 +1,61 @@
+
+# Cross-format design (uncomment the settings you need).
+# [design]                       # absent or empty: nothing is generated, every backend is unchanged
+# 
+# [design.fonts]                 # each role: a family string, or { family = "…", files = ["…"] }
+# body    = { family = "Source Sans 3",       # string; default unset (HTML: theme CSS; PDF: Libertinus Serif; DOCX: Calibri)
+#             files  = ["assets/fonts/SourceSans3-Regular.ttf"] }   # paths (§1.3); default []; see §4.3 for what each backend does with them
+# heading = "Source Sans 3"      # same shape; default unset (HTML: theme; PDF: the body font; DOCX: Calibri Light)
+# mono    = "Source Code Pro"    # same shape; default unset (HTML: theme; PDF: DejaVu Sans Mono; DOCX: Consolas)
+# 
+# [design.text]
+# size              = "11pt"     # Length; default unset (HTML: theme; PDF 11pt; DOCX 11pt)
+# line_height       = 1.35       # LineHeight; default unset (HTML: theme; PDF: leading 0.65em; DOCX: 1.1 = line 264)
+# paragraph_spacing = "3.6mm"    # Length between paragraphs; default unset (HTML: theme; PDF: par spacing 1.2em; DOCX: 0)
+# justify           = false      # bool; default unset (HTML: theme, i.e. off; PDF: true; DOCX: off)
+# 
+# [design.colors]                # Color each; default unset (HTML: theme tokens; PDF: black text; DOCX: black text)
+# text       = "#242424"         # body text
+# accent     = "#a96d4b"         # rules in furniture, HTML --w-accent
+# muted      = "#575757"         # HTML --w-muted; furniture text defaults to it in footers (§9.1)
+# link       = "#a96d4b"         # HTML --w-link; PDF `show link`; DOCX Hyperlink style colour
+# background = "#ffffff"         # HTML --w-bg; PDF page fill; DOCX: not applied (open point 3)
+# 
+# [design.page]
+# paper         = "a4"           # Paper; default unset → `[pdf] paper` (default "a4") for PDF and DOCX, the theme's @page for HTML
+# margin        = { top = "50mm", right = "22mm", bottom = "38mm", left = "22mm" }
+#                                # one Length (all sides) or a table of optional sides; an unset side keeps the backend default
+#                                # (HTML: theme @page; PDF 2.5cm; DOCX 1in)
+# header_offset = "17mm"         # Length from the top edge to the top of the header furniture; default unset (DOCX 0.5in; PDF: header-ascent)
+# footer_offset = "10mm"         # Length from the bottom edge to the bottom of the footer furniture; default unset (DOCX 0.5in)
+# print         = "margin-boxes" # HTML print furniture mode: "margin-boxes" (default) | "fixed" (§9.3)
+# 
+# [design.page.header]           # a furniture table (§9.1); declaring it replaces the backend's built-in header, if any
+# image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align }; default none
+# lines       = ["Generative Biology Institute"]   # strings, or { text = "…", weight, italic, size, color }; default []
+# right_lines = []               # lines set flush right beside `lines` (§9.1); default []
+# rule        = false            # bool, or { position = "above" | "below", color = Color, width = Length }
+#                                # true = accent colour, "0.5pt", below for headers, above for footers
+# align       = "center"         # Align without "justify"; default: header "center", footer "left"
+# size        = "11pt"           # Length; default: the body size (header), 0.75 × the body size (footer)
+# color       = "accent"         # Color; default: text (header), muted when set else text (footer)
+# weight      = "semibold"       # Weight; default normal
+# italic      = false            # default false
+# [design.page.header.first]     # the same keys: page 1 only; absent → page 1 uses the table above
+# [design.page.header.rest]      # the same keys: pages 2…; absent → they use the table above
+# [design.page.footer]           # same shape as header, with .first / .rest
+# [design.page.footer.first]
+# [design.page.footer.rest]
+# 
+# [design.styles.Recipient]      # one table per named style; the key is the style name (§8.1)
+# font           = "body"        # FontRef; default unset (inherits)
+# size           = "11pt"        # Length; default unset
+# line_height    = 1.2           # LineHeight; default unset
+# color          = "text"        # Color; default unset
+# weight         = "normal"      # Weight; default unset
+# italic         = false         # default unset
+# align          = "left"        # Align; default unset
+# space_before   = "0mm"         # Length; default unset
+# space_after    = "6mm"         # Length; default unset
+# keep_together  = true          # bool; default unset (false)
+# keep_with_next = false         # bool; default unset (false)
