@@ -84,7 +84,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T87 | Page furniture: DOCX | M8 | M | T85 | done (PR #60) |
 | T88 | Page furniture: Typst | M8 | M | T85 | done (PR #61) |
 | T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | done |
-| T90 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | ready for review |
+| T90 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | ready for review (PR #65) |
 
 ## Order of execution (waves, computed from the dependency column)
 
