@@ -89,6 +89,7 @@ fn emit_with_assets(
         assets,
         &mut FakeRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config,
             reference: None,
             source_date_epoch: Some("0".into()),

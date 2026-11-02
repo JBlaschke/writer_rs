@@ -356,12 +356,20 @@ fn body_section_node(document: &XmlNode) -> Option<&XmlNode> {
 /// Selects the reference's body section or writer's footer-bearing page setup.
 pub(crate) fn page_layout(
     reference: Option<&Reference>, paper: &str, footer_rel: Option<&str>,
+    design: &crate::design::Design,
 ) -> PageLayout {
     let (width, height) = paper_size(paper);
     let sect_pr = reference
         .and_then(|reference| reference.sect_pr.clone())
         .unwrap_or_else(|| {
-            builtin_section(width, height, footer_rel.unwrap_or(""))
+            if design.declared {
+                let footer_refs = footer_rel
+                    .map(|id| vec![("default", id.into())])
+                    .unwrap_or_default();
+                super::design::section(design, paper, &[], &footer_refs)
+            } else {
+                builtin_section(width, height, footer_rel.unwrap_or(""))
+            }
         });
     let builtin;
     let section =
@@ -534,7 +542,8 @@ mod tests {
     fn pandoc_default_reference_text_width() {
         let reference =
             load(parts("<w:sectPr><w:footnotePr/></w:sectPr>")).unwrap();
-        let layout = page_layout(Some(&reference), "a4", None);
+        let layout =
+            page_layout(Some(&reference), "a4", None, &Default::default());
         assert_eq!(layout.text_width_twips, 9026);
         assert_eq!(layout.text_height_twips, 13958);
         assert_eq!(layout.sect_pr, "<w:sectPr><w:footnotePr/></w:sectPr>");
@@ -549,7 +558,8 @@ mod tests {
             ("us-legal", 12240, 20160),
             ("b5", 11906, 16838),
         ] {
-            let layout = page_layout(None, paper, Some("rId9"));
+            let layout =
+                page_layout(None, paper, Some("rId9"), &Default::default());
             assert_eq!(layout.text_width_twips, width - 2880);
             assert_eq!(layout.text_height_twips, height - 2880);
             assert!(
@@ -565,7 +575,12 @@ mod tests {
             r#"<w:sectPr><w:pgSz w:w="10000"/><w:pgMar w:top="-1000" w:bottom="-2000" w:left="100" w:right="200" w:gutter="300"/></w:sectPr>"#
         ))
         .unwrap();
-        let layout = page_layout(Some(&reference), "us-letter", None);
+        let layout = page_layout(
+            Some(&reference),
+            "us-letter",
+            None,
+            &Default::default(),
+        );
         assert_eq!(layout.text_width_twips, 9400);
         assert_eq!(layout.text_height_twips, 12840);
     }
@@ -573,12 +588,18 @@ mod tests {
     #[test]
     fn paragraph_level_sect_pr_is_ignored() {
         let reference = load(parts(
-            r#"<w:p><w:pPr><w:sectPr><w:pgSz w:w="10" w:h="20"/></w:sectPr></w:pPr></w:p>"#
+            r#"<w:p><w:pPr><w:sectPr><w:pgSz w:w="10" w:h="20"/></w:sectPr></w:pPr></w:p>"#,
         ))
         .unwrap();
         assert!(reference.sect_pr.is_none());
         assert_eq!(
-            page_layout(Some(&reference), "a4", Some("rId4")).text_width_twips,
+            page_layout(
+                Some(&reference),
+                "a4",
+                Some("rId4"),
+                &Default::default()
+            )
+            .text_width_twips,
             9026
         );
     }
@@ -760,7 +781,7 @@ mod tests {
         let reference = load(parts).unwrap();
         assert_eq!(reference.document_namespaces["xmlns:w14"], "urn:w14");
         assert!(
-            page_layout(Some(&reference), "a4", None)
+            page_layout(Some(&reference), "a4", None, &Default::default())
                 .sect_pr
                 .contains("w14:extra")
         );

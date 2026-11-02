@@ -255,6 +255,7 @@ fn render_with_reference(reference: &Path) -> Vec<u8> {
         &assets,
         &mut NoRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &config,
             reference: Some(reference),
             source_date_epoch: None,

@@ -1,3 +1,6 @@
+[document]
+lang = "en-GB"
+
 [html]
 theme = "theme"
 [pdf]

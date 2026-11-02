@@ -98,6 +98,7 @@ fn emit(
         assets,
         renderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &Config::default(),
             reference: None,
             source_date_epoch: Some("0".into()),
@@ -474,6 +475,7 @@ fn missing_registered_files_preserve_the_first_error_and_source_span() {
         &assets,
         &mut FakeRenderer::default(),
         &DocxOptions {
+            design: &Default::default(),
             config: &Config::default(),
             reference: None,
             source_date_epoch: Some("0".into()),

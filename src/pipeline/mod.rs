@@ -942,9 +942,9 @@ fn build_target(
         }
         Target::Pdf => return pdf::build_detailed(prepared, opts, out, world),
         Target::Docx => {
-            let diagnostics = docx::build(
+            let diagnostics = docx::build_with_design(
                 &prepared.document, &prepared.assets, &prepared.config,
-                out, world,
+                &prepared.design, out, world,
             )?;
             Ok((vec![out.to_path_buf()], diagnostics))
         }

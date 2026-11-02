@@ -508,6 +508,7 @@ fn no_escape_byte_in_emitters() {
         &parsed.assets,
         &mut NoRenderer,
         &DocxOptions {
+            design: &Default::default(),
             config: &config,
             reference: None,
             source_date_epoch: Some("0".into()),

@@ -88,3 +88,66 @@ fn imports_writer_doc(node: &typst_syntax::SyntaxNode) -> bool {
     }
     node.children().any(imports_writer_doc)
 }
+/// Explains which declared design settings a Word reference document wins over.
+/// Invalid reference packages are reported by the DOCX target adapter itself.
+pub fn docx_shadowed(
+    design: &Design, path: &std::path::Path,
+) -> Vec<Diagnostic> {
+    if !design.declared || path.as_os_str().is_empty() {
+        return Vec::new();
+    }
+    let Ok(reference) = crate::docx::reference::Reference::load(path) else {
+        return Vec::new();
+    };
+    let mut parts = Vec::new();
+    if reference.sect_pr.is_some() && design.page != Default::default() {
+        parts.push("page setup".to_string());
+        if design.page.header.is_some() || design.page.footer.is_some() {
+            parts.push("header/footer".to_string());
+        }
+    }
+    let Ok(tree) = crate::docx::validate::parse_xml(&reference.styles_xml)
+    else {
+        return Vec::new();
+    };
+    let tokens = design.fonts != Default::default()
+        || design.text != Default::default()
+        || design.colors.text.is_some()
+        || design.colors.link.is_some();
+    if tokens && tree.children.iter().any(|node| node.name == "w:docDefaults") {
+        parts.push("document defaults".to_string());
+    }
+    let mut names = Vec::new();
+    for name in design.styles.keys() {
+        if tree
+            .children
+            .iter()
+            .filter(|node| node.name == "w:style")
+            .flat_map(|node| &node.children)
+            .any(|node| {
+                node.name == "w:name"
+                    && node.attr("w:val").is_some_and(|reference| {
+                        reference.eq_ignore_ascii_case(name)
+                    })
+            })
+        {
+            names.push(name.as_str());
+        }
+    }
+    if !names.is_empty() {
+        parts.push(format!("styles: {}", names.join(", ")));
+    }
+    if parts.is_empty() {
+        return Vec::new();
+    }
+    vec![
+        Diagnostic::info(
+            "design-shadowed",
+            format!(
+                "Word reference document overrides design {}",
+                parts.join("; ")
+            ),
+        )
+        .with_path(path),
+    ]
+}
