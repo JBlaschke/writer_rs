@@ -35,7 +35,26 @@ pub(super) fn run(prepared: &Prepared, opts: &BuildOptions) -> Vec<Diagnostic> {
                 docx(prepared, opts, &mut world, &mut diagnostics);
                 true
             }
-            Target::Pdf | Target::Typst => true,
+            Target::Pdf => {
+                if prepared.design.declared
+                    && prepared.document.source.kind != SourceKind::Typst
+                {
+                    match world.get(prepared, opts) {
+                        Ok(Some(world)) => diagnostics.extend(
+                            super::design::pdf_problems(prepared, world),
+                        ),
+                        Ok(None) => {}
+                        Err(failure) => {
+                            diagnostics.extend(failure.diagnostics);
+                            diagnostics.push(error_diagnostic(
+                                &failure.error, &prepared.document.source.path,
+                            ));
+                        }
+                    }
+                }
+                true
+            }
+            Target::Typst => true,
         };
         if inspect {
             structural(prepared, target, &mut diagnostics);

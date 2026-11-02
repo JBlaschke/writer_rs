@@ -253,6 +253,7 @@ pub fn parse_only(
     };
     let (design, findings) = resolve_design(&prepared, opts)?;
     prepared.design = design;
+    prepared.design.register_images(&mut prepared.assets);
     prepared.diagnostics.extend(findings);
     if matches!(opts.mode, Mode::Build)
         && let Some(problem) = crate::check::design::problems(
@@ -1019,6 +1020,7 @@ pub fn is_not_implemented(error: &Error) -> bool {
 pub struct WorldSlot {
     world: Option<WriterWorld>,
     font_paths: Vec<PathBuf>,
+    font_files: Vec<(PathBuf, Option<(SystemTime, u64)>)>,
     system_fonts: bool,
     allow_packages: bool,
     package_paths: Vec<PathBuf>,
@@ -1073,17 +1075,39 @@ impl WorldSlot {
                 return Err(error.into());
             }
         };
-        if self.needs_recreation(config) {
+        let font_files = prepared
+            .map(|prepared| {
+                prepared
+                    .design
+                    .font_files()
+                    .into_iter()
+                    .map(|path| {
+                        let stamp =
+                            std::fs::metadata(&path).ok().and_then(|meta| {
+                                Some((meta.modified().ok()?, meta.len()))
+                            });
+                        (path, stamp)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        if self.needs_recreation(config) || self.font_files != font_files {
             self.create(config, prepared, opts, timestamp)?;
         } else if prepared.is_some() {
             // All paths reaching this branch retain the previously created
             // world.
             let world = self.world.as_mut().expect("kept world exists");
-            world.set_inputs(world_inputs(config));
+            let prepared = prepared.expect("prepared world is retained");
+            world.set_inputs(world_inputs(
+                config, &prepared.design, &prepared.assets,
+            ));
+            world.set_assets(prepared.assets.clone());
             world.set_include_provider(Box::new(MarkdownIncludes {
+                design: prepared.design.clone(),
                 config: config.clone(),
             }));
         }
+        self.font_files = font_files;
         Ok(())
     }
 
@@ -1112,9 +1136,16 @@ impl WorldSlot {
         } else {
             MainFile::Virtual
         };
-        let mut world =
-            WriterWorld::from_config(config, root, main, timestamp)?;
+        let mut world = if let Some(prepared) = prepared {
+            WriterWorld::from_config_design(
+                config, &prepared.design, &prepared.assets, root, main,
+                timestamp,
+            )?
+        } else {
+            WriterWorld::from_config(config, root, main, timestamp)?
+        };
         world.set_include_provider(Box::new(MarkdownIncludes {
+            design: prepared.map(|p| p.design.clone()).unwrap_or_default(),
             config: config.clone(),
         }));
         self.world = Some(world);

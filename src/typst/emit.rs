@@ -26,6 +26,8 @@ use super::{MITEX_VERSION, WRITER_DOC_VERSION};
 pub struct EmitOptions<'a> {
     /// Effective configuration, after front matter and command-line overrides.
     pub config: &'a Config,
+    /// Resolved design supplied to the compiler input.
+    pub design: &'a crate::design::Design,
     /// How registered assets are named in the generated source.
     pub assets: AssetPaths,
     /// Optional import path of a custom `writer-doc` template.
@@ -325,7 +327,14 @@ impl<'a> Emitter<'a> {
             &string(effective_lang(self.document, self.opts.config)),
         );
         self.argument("numbering", &numbering(self.opts.config));
-        self.argument("paper", &string(&self.opts.config.pdf.paper));
+        let paper = if self.opts.design.page.paper.is_some()
+            && matches!(self.opts.assets, AssetPaths::Virtual)
+        {
+            "auto".into()
+        } else {
+            string(&self.opts.config.pdf.paper)
+        };
+        self.argument("paper", &paper);
         self.argument("toc", "false");
         if !self.opts.config.references.locale.is_empty() {
             self.argument(

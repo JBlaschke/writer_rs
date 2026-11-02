@@ -417,6 +417,7 @@ mod tests {
             today: at(2026, 10, 24, 0, 0, 0),
             system_fonts: false,
             font_paths: Vec::new(),
+            font_files: Vec::new(),
             package_paths: vec![packages],
             allow_packages: false,
             inputs: BTreeMap::new(),

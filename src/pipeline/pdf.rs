@@ -81,7 +81,9 @@ pub(crate) fn load_with_diagnostics(
     for (prefix, directory) in mounts {
         world.mount(&prefix, &directory);
     }
-    world.set_inputs(world_inputs(&prepared.config));
+    world.set_inputs(world_inputs(
+        &prepared.config, &prepared.design, &prepared.assets,
+    ));
     world.set_assets(prepared.assets.clone());
     world.set_main_text(&emitted.text, emitted.map);
     Ok(emitted.diagnostics)
@@ -114,6 +116,7 @@ fn generate(prepared: &Prepared) -> Result<(Emitted, Vec<(String, PathBuf)>)> {
         config.references.style.clone()
     };
     let options = EmitOptions {
+        design: &prepared.design,
         config,
         assets: AssetPaths::Virtual,
         template,

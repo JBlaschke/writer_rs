@@ -17,6 +17,7 @@ use typst_kit::fonts::{FontPath, FontStore};
 
 use crate::assets::registry::{AssetData, AssetRegistry};
 use crate::config::{Config, Toc};
+use crate::design::{Design, PathMode};
 use crate::error::{Diagnostics, Error, Result};
 
 use super::package::PackageStore;
@@ -46,6 +47,8 @@ pub struct WorldOptions {
     pub system_fonts: bool,
     /// Additional font directories, searched in order.
     pub font_paths: Vec<PathBuf>,
+    /// Individual design font files, searched before system fonts.
+    pub font_files: Vec<PathBuf>,
     /// Additional Typst package roots, searched in order.
     pub package_paths: Vec<PathBuf>,
     /// Permit downloading packages from Typst Universe.
@@ -141,6 +144,30 @@ impl WriterWorld {
         for dir in &opts.font_paths {
             fonts.extend(typst_kit::fonts::scan(dir));
         }
+        for file in &opts.font_files {
+            let bytes = fs::read(file).map_err(|error| {
+                Error::Config(format!(
+                    "cannot read design font file {}: {error}",
+                    file.display()
+                ))
+            })?;
+            // scan() accepts directories. Parse this file's faces, keeping
+            // their actual collection indices for lazy FontPath loading.
+            let faces = Font::iter(Bytes::new(bytes))
+                .map(|font| {
+                    let path =
+                        FontPath { path: file.clone(), index: font.index() };
+                    (path, font.info().clone())
+                })
+                .collect::<Vec<_>>();
+            if faces.is_empty() {
+                return Err(Error::Config(format!(
+                    "design font file contains no supported faces: {}",
+                    file.display()
+                )));
+            }
+            fonts.extend(faces);
+        }
         if opts.system_fonts {
             fonts.extend(typst_kit::fonts::system());
         }
@@ -177,19 +204,37 @@ impl WriterWorld {
     pub fn from_config(
         config: &Config, root: &Path, main: MainFile, today: Datetime,
     ) -> Result<Self> {
+        Self::from_config_design(
+            config,
+            &Design::default(),
+            &AssetRegistry::new(),
+            root,
+            main,
+            today,
+        )
+    }
+
+    /// Builds a world with the document's resolved design and virtual assets.
+    pub fn from_config_design(
+        config: &Config, design: &Design, assets: &AssetRegistry, root: &Path,
+        main: MainFile, today: Datetime,
+    ) -> Result<Self> {
         let paths = |items: &[PathBuf]| {
             items.iter().map(|path| root.join(path)).collect()
         };
-        Self::new(WorldOptions {
+        let mut world = Self::new(WorldOptions {
             root: root.to_path_buf(),
             main,
             today,
             system_fonts: config.pdf.system_fonts,
             font_paths: paths(&config.pdf.font_paths),
+            font_files: design.font_files(),
             package_paths: paths(&config.typst.package_paths),
             allow_packages: config.pdf.allow_packages,
-            inputs: world_inputs(config),
-        })
+            inputs: world_inputs(config, design, assets),
+        })?;
+        world.set_assets(assets.clone());
+        Ok(world)
     }
 
     /// Replaces the virtual document source while retaining its syntax tree.
@@ -243,6 +288,11 @@ impl WriterWorld {
         (self.paged_library, self.html_library) = libraries(&inputs);
         self.inputs = inputs;
         self.library_builds += 1;
+    }
+
+    /// Number of library pairs built for this world, including construction.
+    pub fn library_builds(&self) -> usize {
+        self.library_builds
     }
 
     /// Installs the provider used for subsequent Markdown/notebook includes.
@@ -545,7 +595,9 @@ impl World for WriterWorld {
 }
 
 /// The canonical `writer-version` and compact `writer-config` input strings.
-pub fn world_inputs(config: &Config) -> BTreeMap<String, String> {
+pub fn world_inputs(
+    config: &Config, design: &Design, assets: &AssetRegistry,
+) -> BTreeMap<String, String> {
     let toc = match config.document.toc {
         Toc::Off => 0,
         Toc::Depth(depth) => depth,
@@ -561,10 +613,17 @@ pub fn world_inputs(config: &Config) -> BTreeMap<String, String> {
         "paper": config.pdf.paper,
         "cite_locale": config.references.locale,
     });
-    BTreeMap::from([
+    let mut inputs = BTreeMap::from([
         ("writer-version".into(), env!("CARGO_PKG_VERSION").into()),
         ("writer-config".into(), json.to_string()),
-    ])
+    ]);
+    if design.declared {
+        inputs.insert(
+            "writer-design".into(),
+            design.to_json(PathMode::Virtual(assets)).to_string(),
+        );
+    }
+    inputs
 }
 
 fn libraries(
@@ -670,16 +729,25 @@ mod tests {
             today: Datetime::from_ymd(2026, 10, 24).unwrap(),
             system_fonts: false,
             font_paths: Vec::new(),
+            font_files: Vec::new(),
             package_paths: Vec::new(),
             allow_packages: false,
-            inputs: world_inputs(&Config::default()),
+            inputs: world_inputs(
+                &Config::default(),
+                &Design::default(),
+                &AssetRegistry::new(),
+            ),
         })
         .unwrap()
     }
 
     #[test]
     fn world_inputs_default_config() {
-        let inputs = world_inputs(&Config::default());
+        let inputs = world_inputs(
+            &Config::default(),
+            &Design::default(),
+            &AssetRegistry::new(),
+        );
         assert_eq!(inputs.len(), 2);
         assert_eq!(inputs["writer-version"], "0.1.0");
         assert_eq!(
@@ -697,7 +765,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            world_inputs(&config)["writer-config"],
+            world_inputs(&config, &Design::default(), &AssetRegistry::new())["writer-config"],
             r#"{"lang":"de","toc":3,"numbering":{"headings":"1.1","figures":"section","equations":"labelled"},"paper":"a4","cite_locale":"de"}"#
         );
     }
@@ -828,9 +896,14 @@ mod tests {
             today: timestamp,
             system_fonts: false,
             font_paths: Vec::new(),
+            font_files: Vec::new(),
             package_paths: Vec::new(),
             allow_packages: false,
-            inputs: world_inputs(&Config::default()),
+            inputs: world_inputs(
+                &Config::default(),
+                &Design::default(),
+                &AssetRegistry::new(),
+            ),
         })
         .unwrap();
         assert_eq!(world.session_timestamp(), timestamp);

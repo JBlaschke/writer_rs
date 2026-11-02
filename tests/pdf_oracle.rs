@@ -131,7 +131,7 @@ fn check(
         Datetime::from_ymd(2026, 10, 24).unwrap(),
     )
     .unwrap_or_else(|error| panic!("{name}: world: {error}"));
-    let mut inputs = world_inputs(config);
+    let mut inputs = world_inputs(config, &prepared.design, &prepared.assets);
     inputs.insert("writer-oracle".into(), "1".into());
     world.set_inputs(inputs);
 
@@ -161,6 +161,7 @@ fn check(
         &prepared.assets,
         &EmitOptions {
             config,
+            design: &prepared.design,
             assets: AssetPaths::Virtual,
             template,
             bibliography,

@@ -632,6 +632,7 @@ fn markdown_fixtures_round_trip_with_only_the_documented_losses() {
             &left.assets,
             &EmitOptions {
                 config: &left_config,
+                design: &Default::default(),
                 assets: AssetPaths::Source,
                 template: None,
                 bibliography,

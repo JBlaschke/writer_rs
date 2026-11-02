@@ -88,6 +88,26 @@ fn prepare_inner<'a>(
                         );
                     }
                     for (name, expr) in args.named_items() {
+                        // Native layout stays with the compiler, including
+                        // expressions such as rgb(...). These arguments are
+                        // not document metadata or a design source.
+                        if matches!(
+                            name,
+                            "font"
+                                | "heading-font"
+                                | "mono-font"
+                                | "size"
+                                | "leading"
+                                | "spacing"
+                                | "justify"
+                                | "margin"
+                                | "text-fill"
+                                | "link-fill"
+                                | "background"
+                                | "design"
+                        ) {
+                            continue;
+                        }
                         let key = canonical_key(name);
                         if let Ok(value) = metadata_literal(ctx, expr)
                             && pending.assign(

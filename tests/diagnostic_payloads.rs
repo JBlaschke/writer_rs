@@ -29,9 +29,14 @@ fn world(root: &Path, main: MainFile) -> WriterWorld {
         today: Datetime::from_ymd(2026, 10, 29).unwrap(),
         system_fonts: false,
         font_paths: vec![],
+        font_files: Vec::new(),
         package_paths: vec![],
         allow_packages: false,
-        inputs: world_inputs(&Config::default()),
+        inputs: world_inputs(
+            &Config::default(),
+            &Default::default(),
+            &Default::default(),
+        ),
     })
     .unwrap()
 }

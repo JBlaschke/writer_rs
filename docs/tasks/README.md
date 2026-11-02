@@ -76,7 +76,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T79 | *Stretch:* SCSS themes and minijinja 3 | M7 | M | T19 | todo |
 | T80 | Design layer: schema, merge, resolution, `dump --design`, `eject theme --design` | M8 | L | T16, T71, T72 | done |
 | T81 | HTML design tokens and fonts | M8 | M | T80 | done |
-| T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | todo |
+| T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | done |
 | T83 | DOCX generated styles and section from the design | M8 | M | T80 | todo |
 | T84 | Typst emitter `writer-div`, package 0.2.0 | M8 | S | T80, T82 | todo |
 | T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | todo |
