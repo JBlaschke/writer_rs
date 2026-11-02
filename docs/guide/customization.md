@@ -92,6 +92,9 @@ page numbering whenever either furniture slot is declared. HTML prints through
 page margin boxes by default; `design.page.print = "fixed"` selects repeated fixed furniture.
 Margin boxes flatten per-line styling to the slot's styling; screen HTML,
 Typst and Word support per-line weight, italic, size and color.
+`[design.page.background]` adds a full-page picture behind the content of page
+one, or of every page with `pages = "all"`, in all three outputs; the
+[configuration reference](configuration.md#page-background) lists its keys.
 
 Design sources merge parent theme first, then child theme, project settings
 and document front matter. Tables merge by key; lists replace. Resource paths

@@ -30,6 +30,12 @@
 # footer_offset = "10mm"         # Length from the bottom edge to the bottom of the footer furniture; default unset (DOCX 0.5in)
 # print         = "margin-boxes" # HTML print furniture mode: "margin-boxes" (default) | "fixed" (§9.3)
 # 
+# [design.page.background]       # one image behind everything on the page (§9.6); default none; an empty table removes an inherited one
+# image = { src = "assets/cover.jpg", fit = "cover", align = "center" }
+#                                # path, or { src = "…", fit = "cover" | "contain" | "stretch", align = "<keywords>" }; `src` required
+#                                # fit default "cover"; align default "center": one or two of top, bottom, left, right, center
+# pages = "first"                # "first" (default): page 1 only, the cover case | "all": every page
+# 
 # [design.page.header]           # a furniture table (§9.1); declaring it replaces the backend's built-in header, if any
 # image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align }; default none
 # lines       = ["Generative Biology Institute"]   # strings, or { text = "…", weight, italic, size, color }; default []

@@ -70,23 +70,33 @@ impl Design {
         if let PathMode::Virtual(registry) = paths {
             for slot in ["header", "footer"] {
                 for variant in ["first", "rest"] {
-                    let furniture = value
-                        .get_mut("page")
-                        .and_then(|page| page.get_mut(slot))
-                        .and_then(|slot| slot.get_mut(variant));
-                    if let Some(image) = furniture
-                        .and_then(|furniture| furniture.get_mut("image"))
-                        .and_then(Value::as_object_mut)
-                        && let Some(path) =
-                            image.get("path").and_then(Value::as_str)
-                    {
-                        let path = virtual_path(Path::new(path), registry);
-                        image.insert("path".into(), Value::String(path));
-                    }
+                    virtualise(
+                        &mut value,
+                        &["page", slot, variant, "image"],
+                        registry,
+                    );
                 }
             }
+            virtualise(&mut value, &["page", "background", "image"], registry);
         }
         value
+    }
+}
+
+/// Rewrites the `path` of the image object at `keys`, when there is one.
+fn virtualise(value: &mut Value, keys: &[&str], registry: &AssetRegistry) {
+    let mut node = value;
+    for key in keys {
+        let Some(next) = node.get_mut(*key) else {
+            return;
+        };
+        node = next;
+    }
+    if let Some(image) = node.as_object_mut()
+        && let Some(path) = image.get("path").and_then(Value::as_str)
+    {
+        let path = virtual_path(Path::new(path), registry);
+        image.insert("path".into(), Value::String(path));
     }
 }
 
@@ -122,7 +132,8 @@ mod tests {
     #[test]
     fn stable_json_has_expected_shapes_and_virtual_images() {
         let table = json!({"text":{"size":"11pt","line_height":1.35},
-            "page":{"margin":"22mm","header":{"image":"logo.png"}},
+            "page":{"margin":"22mm","header":{"image":"logo.png"},
+                "background":{"image":"cover.jpg","pages":"all"}},
             "styles":{"Recipient":{"font":"body","line_height":"12.1pt"}}});
         let design = merge(&[Layer {
             table: table.as_object().unwrap().clone(),
@@ -143,6 +154,19 @@ mod tests {
                 .unwrap()
                 .starts_with("/__assets/")
         );
+        let background = &value["page"]["background"];
+        assert!(
+            background["image"]["path"]
+                .as_str()
+                .unwrap()
+                .starts_with("/__assets/")
+        );
+        assert_eq!(background["image"]["fit"], "cover");
+        assert_eq!(
+            background["image"]["align"],
+            json!({"horizontal":"center","vertical":"center"})
+        );
+        assert_eq!(background["pages"], "all");
         assert_eq!(
             value
                 .as_object()

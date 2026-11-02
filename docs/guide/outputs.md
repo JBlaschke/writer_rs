@@ -95,7 +95,8 @@ not a body template. See [customization](customization.md) for editing it.
 
 Without a reference document, `[design]` generates Word font names, paragraph
 spacing, named styles, page geometry and header/footer parts. First-page
-furniture can differ from the continuation pages. Font files are not embedded;
+furniture can differ from the continuation pages, and a page background is a
+behind-text picture anchored in the header. Font files are not embedded;
 Word selects the declared family by name.
 
 A reference document's existing style definitions and body-level section,

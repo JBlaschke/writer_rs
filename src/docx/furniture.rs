@@ -1,12 +1,15 @@
-//! Design header/footer parts and shared first-page section references.
+//! Design header/footer parts, the page background picture, and shared
+//! first-page section references.
+
+use std::path::Path;
 
 use crate::design::{
-    Align, Color, Design, Furniture, Line, Pt, Rule, RulePosition, Segment,
-    Slot, segments,
+    Align, Background, BackgroundPages, Color, Design, Fit, Furniture, Line,
+    Pt, Rule, RulePosition, Segment, Slot, VerticalAlign, segments,
 };
 use crate::error::{Error, Result};
 
-use super::images::{InlineDrawing, normal_scale};
+use super::images::{InlineDrawing, normal_scale, picture_graphic};
 use super::package::Relationship;
 use super::reference::Reference;
 use super::validate::parse_xml;
@@ -29,23 +32,24 @@ pub(crate) struct PartContext<'a> {
     renderer: &'a mut dyn Renderer,
     text_width: u32,
     body_size: Pt,
+    page_size: (u32, u32),
 }
 
-/// Generates all declared furniture when the reference has no body section.
+/// Generates all declared furniture and the page background picture when the
+/// reference has no body section.
 pub(crate) fn generate(
     emitter: &mut Emitter<'_>, reference: Option<&Reference>,
 ) -> Result<()> {
     let design = emitter.design;
     if !design.declared
         || reference.is_some_and(|reference| reference.sect_pr.is_some())
-        || (design.page.header.is_none() && design.page.footer.is_none())
+        || (design.page.header.is_none()
+            && design.page.footer.is_none()
+            && design.page.background.is_none())
     {
         return Ok(());
     }
-    let first_page = [&design.page.header, &design.page.footer]
-        .into_iter()
-        .flatten()
-        .any(|slot| slot.first != slot.rest);
+    let first_page = super::design::first_page(design);
     let body_size = Pt(11.0 * normal_scale(&emitter.styles.to_xml()));
     let mut context = PartContext {
         design,
@@ -54,20 +58,39 @@ pub(crate) fn generate(
         renderer: emitter.renderer,
         text_width: emitter.layout.text_width_twips,
         body_size,
+        page_size: super::design::page_size(design, &emitter.config.pdf.paper),
     };
+    let background = design.page.background.as_ref();
+    let first_only = background
+        .is_some_and(|background| background.pages == BackgroundPages::First);
     let mut headers = Vec::new();
     let mut footers = Vec::new();
     for (header, slot, references) in [
         (true, design.page.header.as_ref(), &mut headers),
         (false, design.page.footer.as_ref(), &mut footers),
     ] {
-        let Some(slot) = slot else {
-            continue;
+        let plan = match slot {
+            Some(slot) => plan_slot(slot, first_page, header && first_only),
+            // The background picture needs a header part of its own when no
+            // header slot is declared.
+            None if header && background.is_some() => {
+                let pages = if first_only {
+                    vec!["first"]
+                } else if first_page {
+                    vec!["first", "default"]
+                } else {
+                    vec!["default"]
+                };
+                vec![(pages, None)]
+            }
+            None => continue,
         };
-        for (pages, furniture) in plan_slot(slot, first_page) {
+        for (pages, furniture) in plan {
             let (number, id) = emitter.package.reserve_furniture(header);
             let part = if header {
-                header_part(furniture, number, &mut context)?
+                let picture = background
+                    .filter(|_| !first_only || pages.contains(&"first"));
+                header_part(furniture, picture, number, &mut context)?
             } else {
                 footer_part(furniture, number, &mut context)?
             };
@@ -106,10 +129,12 @@ pub(crate) fn generate(
     Ok(())
 }
 
+/// One part per distinct furniture; `split_first` separates an identical
+/// first page anyway, so only its part can carry the background picture.
 fn plan_slot(
-    slot: &Slot, first_page: bool,
+    slot: &Slot, first_page: bool, split_first: bool,
 ) -> Vec<(Vec<&'static str>, Option<&Furniture>)> {
-    if slot.first == slot.rest {
+    if slot.first == slot.rest && !split_first {
         let pages = if first_page {
             vec!["first", "default"]
         } else {
@@ -125,20 +150,21 @@ fn plan_slot(
 }
 
 pub(crate) fn header_part(
-    furniture: Option<&Furniture>, number: usize, context: &mut PartContext<'_>,
+    furniture: Option<&Furniture>, background: Option<&Background>,
+    number: usize, context: &mut PartContext<'_>,
 ) -> Result<FurniturePart> {
-    furniture_part(furniture, true, number, context)
+    furniture_part(furniture, background, true, number, context)
 }
 
 pub(crate) fn footer_part(
     furniture: Option<&Furniture>, number: usize, context: &mut PartContext<'_>,
 ) -> Result<FurniturePart> {
-    furniture_part(furniture, false, number, context)
+    furniture_part(furniture, None, false, number, context)
 }
 
 fn furniture_part(
-    furniture: Option<&Furniture>, header: bool, number: usize,
-    context: &mut PartContext<'_>,
+    furniture: Option<&Furniture>, background: Option<&Background>,
+    header: bool, number: usize, context: &mut PartContext<'_>,
 ) -> Result<FurniturePart> {
     let name = if header { "header" } else { "footer" };
     let tag = if header { "hdr" } else { "ftr" };
@@ -148,10 +174,20 @@ fn furniture_part(
         rels: Vec::new(),
         media: Vec::new(),
     };
-    let body = if let Some(furniture) = furniture {
-        furniture_paragraphs(furniture, header, context, &mut part)?
-    } else {
-        "<w:p/>".into()
+    // The furniture comes first so its relationships and drawing ids do not
+    // depend on whether a background is declared.
+    let body = furniture
+        .map(|furniture| {
+            furniture_paragraphs(furniture, header, context, &mut part)
+        })
+        .transpose()?
+        .unwrap_or_else(|| "<w:p/>".into());
+    let picture = background
+        .map(|background| background_run(background, context, &mut part))
+        .transpose()?;
+    let body = match picture {
+        Some(run) => with_anchor(&body, &run),
+        None => body,
     };
     part.xml = format!(
         "{}<w:{tag} xmlns:w=\"{}\" xmlns:r=\"{}\" xmlns:a=\"{}\" xmlns:pic=\"{}\" xmlns:wp=\"{}\">{body}</w:{tag}>",
@@ -296,20 +332,30 @@ fn rule_paragraph(rule: Rule) -> String {
     )
 }
 
-fn image_paragraph(
-    furniture: &Furniture, context: &mut PartContext<'_>,
+/// A decoded design picture: its natural size in points and registered media.
+struct Picture {
+    width: f64,
+    height: f64,
+    rel: String,
+    name: String,
+    svg: String,
+}
+
+/// Reads a furniture or background image, rendering unsupported formats
+/// through the renderer, and registers its media with the part.
+fn load_picture(
+    path: &Path, width: Option<f64>, context: &mut PartContext<'_>,
     part: &mut FurniturePart,
-) -> Result<String> {
-    let image = furniture.image.as_ref().expect("image is present");
-    let bytes = std::fs::read(&image.path)?;
-    let mime = mime_guess::from_path(&image.path).first_or_octet_stream();
+) -> Result<Picture> {
+    let bytes = std::fs::read(path)?;
+    let mime = mime_guess::from_path(path).first_or_octet_stream();
     let (raster, svg, natural_width, natural_height) = match mime.essence_str()
     {
         "image/png" | "image/jpeg" => {
             let size = imagesize::blob_size(&bytes).map_err(|error| {
                 Error::Config(format!(
-                    "invalid design furniture image {}: {error}",
-                    image.path.display()
+                    "invalid design image {}: {error}",
+                    path.display()
                 ))
             })?;
             let ext = if mime.essence_str() == "image/png" {
@@ -325,24 +371,17 @@ fn image_paragraph(
             )
         }
         other => {
-            let rendered = context.renderer.image(
-                &bytes,
-                other,
-                image.width.map(|pt| pt.0),
-            )?;
+            let rendered = context.renderer.image(&bytes, other, width)?;
             let svg = (other == "image/svg+xml").then_some(bytes);
             (("png", rendered.png), svg, rendered.width_pt, rendered.height_pt)
         }
     };
     if natural_width <= 0.0 || natural_height <= 0.0 {
-        return Err(Error::Config(
-            "design furniture image has an empty size".into(),
-        ));
+        return Err(Error::Config(format!(
+            "design image {} has an empty size",
+            path.display()
+        )));
     }
-    let width = image.width.map_or(natural_width, |pt| pt.0);
-    let height = width * natural_height / natural_width;
-    let width = (width * 12700.0).round().max(1.0) as u64;
-    let height = (height * 12700.0).round().max(1.0) as u64;
     let (extension, bytes) = raster;
     let (rel, name) = image_rel(part, extension, bytes);
     let svg = svg.map(|bytes| {
@@ -351,18 +390,34 @@ fn image_paragraph(
             "<a:extLst><a:ext uri=\"{{96DAC541-7B7A-43D3-8B79-37D633B846F1}}\"><asvg:svgBlip xmlns:asvg=\"http://schemas.microsoft.com/office/drawing/2016/SVG/main\" r:embed=\"{id}\"/></a:ext></a:extLst>"
         )
     }).unwrap_or_default();
+    Ok(Picture { width: natural_width, height: natural_height, rel, name, svg })
+}
+
+fn emu(points: f64) -> u64 {
+    (points * 12700.0).round().max(1.0) as u64
+}
+
+fn image_paragraph(
+    furniture: &Furniture, context: &mut PartContext<'_>,
+    part: &mut FurniturePart,
+) -> Result<String> {
+    let image = furniture.image.as_ref().expect("image is present");
+    let picture =
+        load_picture(&image.path, image.width.map(|pt| pt.0), context, part)?;
+    let width = image.width.map_or(picture.width, |pt| pt.0);
+    let height = width * picture.height / picture.width;
     let id = context.ids.doc_pr;
     context.ids.doc_pr += 1;
     let drawing = InlineDrawing {
         props: "",
-        width,
-        height,
+        width: emu(width),
+        height: emu(height),
         id,
         title: "",
-        svg: &svg,
+        svg: &picture.svg,
         alt: "",
-        name: &name,
-        rel: &rel,
+        name: &picture.name,
+        rel: &picture.rel,
     }
     .to_xml();
     let mut props = Props::new("w:pPr", PPR);
@@ -377,6 +432,150 @@ fn image_paragraph(
         ),
     );
     Ok(format!("<w:p>{}{drawing}</w:p>", props.to_xml()))
+}
+
+/// The page background as Word stores a "behind text" picture: a run with an
+/// anchor relative to the page. `cover` crops with `a:srcRect`; `contain`
+/// shrinks the extent and offsets it; `stretch` fills the page.
+fn background_run(
+    background: &Background, context: &mut PartContext<'_>,
+    part: &mut FurniturePart,
+) -> Result<String> {
+    let image = &background.image;
+    let picture = load_picture(&image.path, None, context, part)?;
+    let (page_width, page_height) = context.page_size;
+    let page = (f64::from(page_width) * 635.0, f64::from(page_height) * 635.0);
+    let page_aspect = page.0 / page.1;
+    let aspect = picture.width / picture.height;
+    let wide = aspect > page_aspect;
+    let horizontal = match image.align.horizontal {
+        Align::Left => 0.0,
+        Align::Right => 1.0,
+        Align::Center | Align::Justify => 0.5,
+    };
+    let vertical = match image.align.vertical {
+        VerticalAlign::Top => 0.0,
+        VerticalAlign::Center => 0.5,
+        VerticalAlign::Bottom => 1.0,
+    };
+    let (extent, offset, source_rect) = match image.fit {
+        Fit::Stretch => (page, (0.0, 0.0), String::new()),
+        Fit::Cover => {
+            // Crop the overflow of the dimension the page does not bind, in
+            // thousandths of a percent, keeping the aligned part.
+            let (cut, keep) = if wide {
+                (1.0 - page_aspect / aspect, horizontal)
+            } else {
+                (1.0 - aspect / page_aspect, vertical)
+            };
+            let percent = |fraction: f64| (fraction * 100_000.0).round() as u64;
+            let (start, end) =
+                (percent(cut * keep), percent(cut * (1.0 - keep)));
+            let rect = if start + end == 0 {
+                String::new()
+            } else if wide {
+                format!("<a:srcRect l=\"{start}\" r=\"{end}\"/>")
+            } else {
+                format!("<a:srcRect t=\"{start}\" b=\"{end}\"/>")
+            };
+            (page, (0.0, 0.0), rect)
+        }
+        Fit::Contain => {
+            let extent = if wide {
+                (page.0, page.0 / aspect)
+            } else {
+                (page.1 * aspect, page.1)
+            };
+            let offset = (
+                (page.0 - extent.0) * horizontal,
+                (page.1 - extent.1) * vertical,
+            );
+            (extent, offset, String::new())
+        }
+    };
+    let id = context.ids.doc_pr;
+    context.ids.doc_pr += 1;
+    Ok(AnchoredDrawing {
+        width: extent.0.round() as u64,
+        height: extent.1.round() as u64,
+        x: offset.0.round() as u64,
+        y: offset.1.round() as u64,
+        id,
+        svg: &picture.svg,
+        name: &picture.name,
+        rel: &picture.rel,
+        source_rect: &source_rect,
+    }
+    .to_xml())
+}
+
+/// Opens the part's first paragraph, after its properties, with the anchored
+/// picture so the furniture keeps its place. A part without furniture gets
+/// one paragraph of Word's minimum exact line height (0.7 pt) instead.
+fn with_anchor(body: &str, run: &str) -> String {
+    let Some(rest) = body.strip_prefix("<w:p>") else {
+        let mut props = Props::new("w:pPr", PPR);
+        props.set(
+            "w:spacing",
+            property(
+                "w:spacing",
+                &[
+                    ("w:before", "0".into()),
+                    ("w:after", "0".into()),
+                    ("w:line", "14".into()),
+                    ("w:lineRule", "exact".into()),
+                ],
+            ),
+        );
+        let rest = body.strip_prefix("<w:p/>").unwrap_or(body);
+        return format!("<w:p>{}{run}</w:p>{rest}", props.to_xml());
+    };
+    let split = match rest.strip_prefix("<w:pPr>") {
+        Some(_) => {
+            rest.find("</w:pPr>").map_or(0, |end| end + "</w:pPr>".len())
+        }
+        None => 0,
+    };
+    format!("<w:p>{}{run}{}", &rest[..split], &rest[split..])
+}
+
+/// A picture anchored behind the text relative to the page.
+struct AnchoredDrawing<'a> {
+    width: u64,
+    height: u64,
+    x: u64,
+    y: u64,
+    id: u32,
+    svg: &'a str,
+    name: &'a str,
+    rel: &'a str,
+    source_rect: &'a str,
+}
+
+impl AnchoredDrawing<'_> {
+    fn to_xml(&self) -> String {
+        let Self { width, height, x, y, id, svg, name, rel, source_rect } =
+            self;
+        format!(
+            concat!(
+                "<w:r><w:drawing><wp:anchor distT=\"0\" distB=\"0\" distL=\"0\" distR=\"0\" simplePos=\"0\" relativeHeight=\"0\" behindDoc=\"1\" locked=\"0\" layoutInCell=\"1\" allowOverlap=\"1\">",
+                "<wp:simplePos x=\"0\" y=\"0\"/>",
+                "<wp:positionH relativeFrom=\"page\"><wp:posOffset>{x}</wp:posOffset></wp:positionH>",
+                "<wp:positionV relativeFrom=\"page\"><wp:posOffset>{y}</wp:posOffset></wp:positionV>",
+                "<wp:extent cx=\"{width}\" cy=\"{height}\"/><wp:effectExtent l=\"0\" t=\"0\" r=\"0\" b=\"0\"/><wp:wrapNone/>",
+                "<wp:docPr id=\"{id}\" name=\"Background {id}\" descr=\"\"/>",
+                "<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect=\"1\"/></wp:cNvGraphicFramePr>",
+                "{graphic}</wp:anchor></w:drawing></w:r>",
+            ),
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            id = id,
+            graphic =
+                picture_graphic(name, rel, svg, *width, *height, source_rect),
+        )
+    }
 }
 
 fn image_rel(

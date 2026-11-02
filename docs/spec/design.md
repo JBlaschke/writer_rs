@@ -71,7 +71,8 @@ an error names the key path (`design.text.size`) and, for theme sources, the fil
 (`ThemeManifest::line_of_key`).
 
 ### 1.3 Paths
-`fonts.<role>.files[]` and `page.{header,footer}[.first|.rest].image` (or `.image.src`) are paths.
+`fonts.<role>.files[]`, `page.{header,footer}[.first|.rest].image` (or `.image.src`) and
+`page.background.image` (or `.image.src`) are paths.
 They resolve against the directory of the file that declares them: the theme directory for a
 `theme.toml`, the directory of `writer.toml`, the document's directory for front matter. A theme
 path must stay inside the theme directory (`theme-link-outside`, html-output.md §8); the built-in
@@ -137,6 +138,12 @@ header_offset = "17mm"         # Length from the top edge to the top of the head
 footer_offset = "10mm"         # Length from the bottom edge to the bottom of the footer furniture; default unset (DOCX 0.5in)
 print         = "margin-boxes" # HTML print furniture mode: "margin-boxes" (default) | "fixed" (§9.3)
 
+[design.page.background]       # one image behind everything on the page (§9.6); default none; an empty table removes an inherited one
+image = { src = "assets/cover.jpg", fit = "cover", align = "center" }
+                               # path, or { src = "…", fit = "cover" | "contain" | "stretch", align = "<keywords>" }; `src` required
+                               # fit default "cover"; align default "center": one or two of top, bottom, left, right, center
+pages = "first"                # "first" (default): page 1 only, the cover case | "all": every page
+
 [design.page.header]           # a furniture table (§9.1); declaring it replaces the backend's built-in header, if any
 image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align }; default none
 lines       = ["Generative Biology Institute"]   # strings, or { text = "…", weight, italic, size, color }; default []
@@ -182,7 +189,10 @@ pub struct DesignSpec {
 }
 // FontsSpec { body, heading, mono: Option<FontSpec> }, FontSpec = untagged String | { family, files }
 // TextSpec, ColorsSpec, PageSpec { paper, margin: Option<MarginSpec>, header_offset, footer_offset,
-// print: Option<PrintMode>, header, footer: Option<FurnitureSpec> }, MarginSpec = untagged String | sides table,
+// print: Option<PrintMode>, background: Option<BackgroundSpec>, header, footer: Option<FurnitureSpec> },
+// MarginSpec = untagged String | sides table,
+// BackgroundSpec { image: Option<BackgroundImageSpec>, pages: Option<BackgroundPages> },
+// BackgroundImageSpec = untagged String | { src, fit: Option<Fit>, align: Option<String> },
 // FurnitureSpec { image: Option<ImageSpec>, lines, right_lines: Vec<LineSpec>, rule: Option<RuleSpec>,
 // align, size, color, weight, italic, first, rest: Option<Box<FurnitureSpec>> }, StyleSpec { … §2.2 }.
 // Every struct `#[serde(default, deny_unknown_fields)]`; scalar strings stay strings here.
@@ -210,8 +220,15 @@ pub struct Colors { pub text: Option<Color>, pub accent: Option<Color>, pub mute
 pub struct Page {
     pub paper: Option<String>, pub margin: Margin,
     pub header_offset: Option<Pt>, pub footer_offset: Option<Pt>, pub print: PrintMode,
+    pub background: Option<Background>,                          // None = no page background (§9.6)
     pub header: Option<Slot>, pub footer: Option<Slot>,          // None = slot not declared (built-in furniture stays)
 }
+#[derive(Debug, Clone, PartialEq, Serialize)] pub struct Background { pub image: BackgroundImage, pub pages: BackgroundPages }
+#[derive(Debug, Clone, PartialEq, Serialize)] pub struct BackgroundImage { pub path: PathBuf, pub fit: Fit, pub align: BackgroundAlign }
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)] #[serde(rename_all = "lowercase")] pub enum Fit { #[default] Cover, Contain, Stretch }
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)] #[serde(rename_all = "lowercase")] pub enum BackgroundPages { #[default] First, All }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)] pub struct BackgroundAlign { pub horizontal: Align, pub vertical: VerticalAlign }   // default center/center; Justify is rejected
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)] #[serde(rename_all = "lowercase")] pub enum VerticalAlign { Top, #[default] Center, Bottom }
 #[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)] pub struct Margin { pub top: Option<Pt>, pub right: Option<Pt>, pub bottom: Option<Pt>, pub left: Option<Pt> }
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)] #[serde(rename_all = "kebab-case")] pub enum PrintMode { #[default] MarginBoxes, Fixed }
 /// Resolved per page class: `first` = the `first` table else the base table; `rest` likewise.
@@ -293,6 +310,7 @@ Nothing else is derived: an unset key stays `None` (§0.2).
   "colors": { "text": "#242424", "accent": "#a96d4b", "muted": "#575757", "link": null, "background": null },
   "page": { "paper": "a4", "margin": { "top": 141.732, "right": 62.362, "bottom": 107.717, "left": 62.362 },
             "header_offset": 48.189, "footer_offset": 28.346, "print": "margin-boxes",
+            "background": { "image": { "path": "…", "fit": "cover", "align": { "horizontal": "center", "vertical": "center" } }, "pages": "first" },
             "header": { "first": { "image": { "path": "…", "width": 141.732, "align": null }, "lines": [ { "text": "…", "weight": null, "italic": null, "size": null, "color": null } ],
                                    "right_lines": [], "rule": null, "align": "center", "size": 11.0, "color": "#242424", "weight": 400, "italic": false },
                         "rest": { /* same shape */ } },
@@ -304,9 +322,10 @@ Nothing else is derived: an unset key stays `None` (§0.2).
 Keys in struct order (above); lengths are points as JSON numbers with at most three decimals
 (`(pt × 1000).round() / 1000`, so the same design always serializes to the same bytes); unset keys
 are `null`, unset `Slot` members are `null`, an undeclared slot is `null`; `styles` is a
-`BTreeMap` (sorted by declared name); `print` is always present. `PathMode::Real` writes absolute
-real paths; `PathMode::Virtual` writes the Typst virtual path `/__assets/<id>.<ext>` of each image
-registered in the `AssetRegistry` (typst-dialect.md §6.3) and omits nothing else. `declared` is not
+`BTreeMap` (sorted by declared name); `print` is always present; an undeclared background is `null`.
+`PathMode::Real` writes absolute real paths; `PathMode::Virtual` writes the Typst virtual path
+`/__assets/<id>.<ext>` of each furniture and background image registered in the `AssetRegistry`
+(typst-dialect.md §6.3) and omits nothing else. `declared` is not
 serialized: an undeclared design is `null` wherever the JSON appears.
 
 ## 4. CLI, errors and ejection
@@ -419,6 +438,7 @@ In this order, each part only when its keys are set:
    `typst::layout::Paper`), e.g. `size: 210mm 297mm`.
 3. Named styles (§8.3), one rule per style in `BTreeMap` order.
 4. Furniture (§9.3): screen rules, then the `@page` margin-box or `fixed` rules.
+5. Page background (§9.6): the `body::before` screen band, then its `@media print` box.
 
 ### 5.4 Escape hatch
 Theme CSS entries are unchanged and keep `url()` rewriting only (no templating). They can override
@@ -467,6 +487,7 @@ unchanged. `world_inputs` stays the only producer. Furniture images are register
 | `page.paper` | `paper` default (`auto` → design → `writer-config.paper`) |
 | `page.margin.*` | `set page(margin: (top:, right:, bottom:, left:))`, unset sides keep `2.5cm` |
 | `page.header`, `page.footer` | §9.4; a declared slot sets `page(header: none, footer: none, numbering: none)` and places the furniture through `page(background:)` |
+| `page.background` | §9.6; `page(background:)` places the image at the page origin before the furniture, on page 1 or on every page; a background without a declared slot leaves `numbering: "1"` and the built-in header and footer alone |
 | `styles.*` | §8.4 (`writer-div`) |
 | `colors.accent`, `colors.muted`, `fonts.*.files`, `header_offset`, `footer_offset`, `print` | read by furniture (§9.4) or not used by Typst (`files`: §6.5; `print`: HTML only) |
 
@@ -555,8 +576,9 @@ The built-in `sectPr` (docx-output.md §6.3) is generated from the design: `pgSz
 (else `[pdf] paper`; §6.3's table, anything else A4); `pgMar` `top/right/bottom/left` from
 `page.margin` in twips (unset sides 1440), `header` = `header_offset` twips (unset 720), `footer` =
 `footer_offset` twips (unset 720), `gutter` 0; `w:titlePg` when a declared slot's `first` and `rest`
-differ; `headerReference`/`footerReference` for the generated parts of §9.5 (`type="first"` for the
-first-page part when `titlePg`, `type="default"` for the rest). The built-in page-number footer
+differ or `page.background.pages` is `first` (§9.6); `headerReference`/`footerReference` for the
+generated parts of §9.5 and §9.6 (`type="first"` for the first-page part when `titlePg`,
+`type="default"` for the rest). The built-in page-number footer
 (`word/footer{k}.xml` with the `PAGE` field) is written only when **no** footer slot is declared;
 a declared footer slot replaces it (an empty one removes it). `DocxOptions` gains `design: &Design`.
 
@@ -664,7 +686,7 @@ like in HTML and Typst. The body emitter (docx-output.md §4.1) pushes `Style(id
 `style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
 exists, so `custom` returns its id). With a reference document, §7.3.
 
-## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst)
+## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst; T91 page background)
 
 ### 9.1 Model
 A **slot** is `page.header` or `page.footer`; a slot has a **first-page** and a **rest** furniture
@@ -678,6 +700,7 @@ furniture's width is the text width (page width − left − right margin); the 
 (backends that cannot honour an offset exactly say so below). Declaring a slot replaces the
 backend's built-in furniture for that slot (Typst's `numbering: "1"` footer, DOCX's `PAGE` footer,
 the default theme's `@bottom-center { content: counter(page) }`), including with an empty furniture.
+The page background of §9.6 is not a slot: it is painted behind both slots and declares nothing.
 
 ### 9.2 Placeholders
 `{page}` and `{pages}` inside a line's text become the current page number and the page count.
@@ -788,11 +811,71 @@ parts as `even`. Part body, in order:
 `sectPr` references and offsets: §7.2. With a reference document whose `sectPr` references parts,
 nothing is generated (§7.3).
 
+### 9.6 Page background (`page.background`; T91)
+**Model.** `page.background.image` is one image drawn at the page origin at the full page size,
+behind the body, the furniture and whatever built-in furniture remains. `fit` is `cover` (scale to
+fill the page and crop the overflow; default), `contain` (scale to fit inside the page; the page
+colour shows elsewhere) or `stretch` (fill the page, ignoring the aspect ratio). `align` is one or
+two of `top`, `bottom`, `left`, `right`, `center` in any order (`"center"` by default): the part of
+the picture that `cover` keeps, and where `contain` places the picture; `stretch` ignores it.
+`pages = "first"` (default) paints page 1 only, the cover case; `"all"` paints every page. The path
+follows §1.3 and is a build input (§12); `referenced_files` and `register_images` include it, so
+`design-image-missing`, `eject theme --design` and the Typst World treat it like a furniture image.
+An empty `[design.page.background]` table removes an inherited background (as an empty slot does)
+and resolves to `None`; a non-empty table must name an image. Nothing else changes: a background
+declares no slot, so Typst keeps `numbering: "1"` and DOCX keeps the `PAGE` footer unless a slot
+says otherwise.
+
+**HTML** (`background_css`, `layout_css` item 5). Pure CSS on `body::before`, so every template
+gets it without a helper call. Screen: `content:""; display:block; height:<paper height>;
+margin-bottom:-<paper height>; background:url(<asset>) no-repeat <horizontal> <vertical> /
+<size>; print-color-adjust:exact; -webkit-print-color-adjust:exact`, with `<size>` `cover`,
+`contain` or `100% 100%` by `fit`, paints the first paper height of the document (`page.paper`,
+A4 when unset) behind the content that follows it. Print: `@media print { body::before {
+position:absolute; top:0; left:0; width:100%; height:100%; margin:0 } }` for `first` (one box, on
+the first page) and `position:fixed` for `all` (Chromium repeats fixed boxes on every page, as the
+furniture `fixed` mode relies on); both assume a theme leaves `html` and `body` unpositioned, so
+the box's containing block is the page area. Limitation: browsers ignore `background` on
+`@page :first`, and absolute and fixed boxes are confined to the page area, so the printed image
+stops at the `@page` margins; a theme that wants a bleed to the paper edge sets
+`@page { margin: 0 }` (or `@page :first { margin: 0 }`) in its print CSS and pads the content
+itself.
+
+**Typst** (`background-image` in `lib.typ`; §9.4's `furniture-background`). Before the header and
+footer, `place(top + left, box(width: page.width, height: page.height, background-image(spec)))`:
+`image(path, width: 100%, height: 100%, fit:)` for `stretch` and for a centred `cover` or
+`contain`; an off-centre alignment measures the image (`measure(image(path))`), scales it by the
+larger (`cover`) or smaller (`contain`) of the page-to-image ratios and places it at `(page −
+image) × factor` (0, 0.5 or 1 per axis) inside a `box(clip: true)`; Typst would otherwise cap a
+picture with one forced dimension at the region and centre it. `pages` is tested with
+`counter(page).get().first() == 1`.
+When no slot is declared, `furniture-layout` sets `page(background:)` alone, so the built-in header,
+footer and numbering stay.
+
+**DOCX** (`background_run` and `with_anchor` in `src/docx/furniture.rs`). The picture is an
+anchored drawing in the header part, the way Word stores a "behind text" picture: one run with
+`<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="0"
+behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1">`, `wp:simplePos 0 0`, `wp:positionH`
+and `wp:positionV` `relativeFrom="page"` with `wp:posOffset` 0 (`contain`: the aligned offset),
+`wp:extent` the page size in EMU (`pgSz` twips × 635; `contain`: the fitted size), `wp:effectExtent`
+0, `wp:wrapNone`, `wp:docPr` (`Ids.doc_pr`) and the §9.5 picture body, with `a:srcRect` cropping
+(thousandths of a percent) for `cover`. The run opens the part's first paragraph, right after its
+`w:pPr`, so the furniture keeps its place; a part without furniture holds one paragraph of Word's
+minimum exact line (`w:spacing w:before="0" w:after="0" w:line="14" w:lineRule="exact"`, 0.7 pt)
+with the run. The media part and relationship are registered like furniture images (§9.5).
+`pages = "first"` forces `w:titlePg` (§7.2) and a first-page header part even when no header slot is
+declared: an undeclared slot gets a part holding the picture alone, referenced `first`; a declared
+slot whose `first` and `rest` agree is split into a first part with the picture and a default part
+without it. `pages = "all"` puts the picture into every header part (a part of its own, referenced
+`default` and, under `titlePg`, `first`, when no slot is declared). `furniture::generate` runs
+whenever a background is declared, even without slots. With a reference document whose `sectPr`
+references parts, nothing is generated (§7.3).
+
 ## 10. Diagnostics (`src/check/design.rs` new; codes in the `check` report, T80 for the first four, T85 for `design-style-unused`, T83/T82 for `design-shadowed`)
 | code | level | when |
 |---|---|---|
 | `design-font-file` | error | a `fonts.<role>.files` path does not exist (also a build error, §4.3) |
-| `design-image-missing` | error | a furniture image path does not exist (also a build error) |
+| `design-image-missing` | error | a furniture or page background image path does not exist (also a build error) |
 | `design-theme-unavailable` | warning | §1.4: the theme could not be resolved for a non-HTML target; the design was merged without it |
 | `design-font-family` | warning | `check --target pdf`: a declared family (with no files) is not in the World's font book after §6.5 (`FontBook::contains_family` queried with a lower-case family name, matching Typst font selection) |
 | `design-style-unused` | warning | a `[design.styles]` name that no `Div` of the document selects (§8.2); evaluated on the resolved IR |

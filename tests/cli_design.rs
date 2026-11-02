@@ -117,3 +117,41 @@ fn ejected_design_preserves_values_and_copies_colliding_asset_names() {
     }
     assert_eq!(before, after);
 }
+
+#[test]
+fn page_background_is_ejected_with_the_design_and_checked_when_missing() {
+    let root = tempfile::tempdir().unwrap();
+    let cover = b"\xff\xd8\xff\xe0cover";
+    fs::write(root.path().join("cover.jpg"), cover).unwrap();
+    fs::write(root.path().join("document.md"), "# Cover\n").unwrap();
+    fs::write(
+        root.path().join("writer.toml"),
+        "[design.page.background]\n\
+         image = {src = 'cover.jpg', fit = 'contain', align = 'top'}\n\
+         pages = 'all'\n",
+    )
+    .unwrap();
+    let mut before = design(root.path(), "document.md");
+    writer(root.path())
+        .args(["eject", "theme", "portable", "--design", "document.md"])
+        .assert()
+        .success();
+    let copied = root.path().join("portable/assets/design/cover.jpg");
+    assert_eq!(fs::read(&copied).unwrap(), cover);
+    fs::write(root.path().join("writer.toml"), "[html]\ntheme = 'portable'\n")
+        .unwrap();
+    let mut after = design(root.path(), "document.md");
+    let path = &mut after["page"]["background"]["image"]["path"];
+    assert_eq!(fs::read(path.as_str().unwrap()).unwrap(), cover);
+    *path = Value::Null;
+    before["page"]["background"]["image"]["path"] = Value::Null;
+    assert_eq!(before, after);
+    fs::remove_file(&copied).unwrap();
+    let opts =
+        writer::pipeline::BuildOptions::new(root.path().join("document.md"));
+    let findings = writer::check::run(&opts, &Default::default()).unwrap();
+    assert!(
+        findings.iter().any(|finding| finding.code == "design-image-missing"),
+        "{findings:?}"
+    );
+}

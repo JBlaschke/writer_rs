@@ -84,6 +84,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T87 | Page furniture: DOCX | M8 | M | T85 | done (PR #60) |
 | T88 | Page furniture: Typst | M8 | M | T85 | done (PR #61) |
 | T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | done |
+| T91 | Page background image (`[design.page.background]`) in HTML, Typst and DOCX | M8 | M | T86, T87, T88 | ready for review |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -104,7 +105,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 12 | T84 | 1 |
 | 13 | T85 | 1 |
 | 14 | T86, T87, T88 | 3 |
-| 15 | T89 | 1 |
+| 15 | T89, T91 | 2 |
 
 ## Coordinator notes (2026-10-24)
 - T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI

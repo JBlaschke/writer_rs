@@ -787,6 +787,14 @@ pub mod xml {
                 "wp:cNvGraphicFramePr", "a:graphic",
             ],
         ),
+        (
+            "wp:anchor",
+            &[
+                "wp:simplePos", "wp:positionH", "wp:positionV", "wp:extent",
+                "wp:effectExtent", "wp:wrapNone", "wp:docPr",
+                "wp:cNvGraphicFramePr", "a:graphic",
+            ],
+        ),
         ("m:r", &["m:rPr", "w:rPr", "m:t"]),
         ("m:rPr", &["m:lit", "m:nor", "m:scr", "m:sty", "m:brk", "m:aln"]),
         (

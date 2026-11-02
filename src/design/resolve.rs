@@ -78,7 +78,7 @@ pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
             "design.page",
             &[
                 "paper", "margin", "header_offset", "footer_offset", "print",
-                "header", "footer",
+                "background", "header", "footer",
             ],
         )?;
         let print = match string(map, "print", "design.page")?.as_deref() {
@@ -101,6 +101,11 @@ pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
             header_offset: length(map, "header_offset", "design.page")?,
             footer_offset: length(map, "footer_offset", "design.page")?,
             print,
+            background: map
+                .get("background")
+                .map(background)
+                .transpose()?
+                .flatten(),
             header: map
                 .get("header")
                 .map(|v| slot(v, true, &design))
@@ -317,6 +322,96 @@ fn furniture(
         weight,
         italic,
     }))
+}
+
+/// An empty table is an explicit "no background"; anything else needs an image.
+fn background(value: &Value) -> Result<Option<Background>> {
+    let path = "design.page.background";
+    let map = object(value, path)?;
+    keys(map, path, &["image", "pages"])?;
+    if map.is_empty() {
+        return Ok(None);
+    }
+    let image = map.get("image").ok_or_else(|| {
+        Error::Config(format!("{path}.image: expected an image path or table"))
+    })?;
+    let image = background_image(image, &format!("{path}.image"))?;
+    let pages = match string(map, "pages", path)?.as_deref() {
+        None | Some("first") => BackgroundPages::First,
+        Some("all") => BackgroundPages::All,
+        Some(other) => {
+            return bad(
+                &format!("{path}.pages"),
+                &format!("expected first or all, got {other:?}"),
+            );
+        }
+    };
+    Ok(Some(Background { image, pages }))
+}
+
+fn background_image(value: &Value, path: &str) -> Result<BackgroundImage> {
+    if let Value::String(value) = value {
+        return Ok(BackgroundImage {
+            path: value.into(),
+            fit: Fit::Cover,
+            align: BackgroundAlign::default(),
+        });
+    }
+    let map = object(value, path)?;
+    keys(map, path, &["src", "fit", "align"])?;
+    let source = string(map, "src", path)?.ok_or_else(|| {
+        Error::Config(format!("{path}.src: expected an image path"))
+    })?;
+    let fit = match string(map, "fit", path)?.as_deref() {
+        None | Some("cover") => Fit::Cover,
+        Some("contain") => Fit::Contain,
+        Some("stretch") => Fit::Stretch,
+        Some(other) => {
+            return bad(
+                &format!("{path}.fit"),
+                &format!("expected cover, contain or stretch, got {other:?}"),
+            );
+        }
+    };
+    let align = match string(map, "align", path)? {
+        Some(text) => {
+            context(background_align(&text), &format!("{path}.align"))?
+        }
+        None => BackgroundAlign::default(),
+    };
+    Ok(BackgroundImage { path: source.into(), fit, align })
+}
+
+/// One or two of `top`, `bottom`, `left`, `right`, `center`, in any order.
+fn background_align(text: &str) -> Result<BackgroundAlign> {
+    let invalid = || {
+        Error::Config(format!(
+            "expected one or two of top, bottom, left, right, center, got {text:?}"
+        ))
+    };
+    let words: Vec<&str> = text.split_whitespace().collect();
+    if words.is_empty() || words.len() > 2 {
+        return Err(invalid());
+    }
+    let mut horizontal = None;
+    let mut vertical = None;
+    for word in words {
+        let repeated = match word {
+            "left" => horizontal.replace(Align::Left).is_some(),
+            "right" => horizontal.replace(Align::Right).is_some(),
+            "top" => vertical.replace(VerticalAlign::Top).is_some(),
+            "bottom" => vertical.replace(VerticalAlign::Bottom).is_some(),
+            "center" => false,
+            _ => return Err(invalid()),
+        };
+        if repeated {
+            return Err(invalid());
+        }
+    }
+    Ok(BackgroundAlign {
+        horizontal: horizontal.unwrap_or(Align::Center),
+        vertical: vertical.unwrap_or(VerticalAlign::Center),
+    })
 }
 
 fn image(value: &Value, path: &str) -> Result<FurnitureImage> {

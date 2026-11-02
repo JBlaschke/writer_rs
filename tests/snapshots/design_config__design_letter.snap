@@ -40,6 +40,7 @@ expression: value
     "header_offset": 48.189,
     "footer_offset": 28.346,
     "print": "margin-boxes",
+    "background": null,
     "header": {
       "first": {
         "image": {

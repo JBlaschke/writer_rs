@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use typst::layout::{Frame, FrameItem, Point, Transform};
+use typst::layout::{Frame, FrameItem, Point, Size, Transform};
 use typst::text::{FontStyle, TextItem};
 use typst::visualize::{Geometry, ImageKind, Paint};
 use typst_layout::PagedDocument;
@@ -456,4 +456,103 @@ fn empty_first_variant_suppresses_only_first_page_furniture() {
     assert!(rest.contains("RESTFOOTER"));
     assert!(!first.contains('1'));
     assert!(!rest.contains('2'));
+}
+
+fn image_boxes(
+    frame: &Frame, transform: Transform, found: &mut Vec<(Point, Size)>,
+) {
+    for (position, item) in frame.items() {
+        let transform =
+            transform.pre_concat(Transform::translate(position.x, position.y));
+        match item {
+            FrameItem::Group(group) => image_boxes(
+                &group.frame,
+                transform.pre_concat(group.transform),
+                found,
+            ),
+            FrameItem::Image(_, size, _) => {
+                found.push((Point::zero().transform(transform), *size));
+            }
+            _ => {}
+        }
+    }
+}
+
+#[test]
+fn page_background_fills_the_first_page_or_every_page() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    std::fs::write(
+        root.join("cover.svg"),
+        "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='100'><rect width='200' height='100' fill='#3366cc'/></svg>",
+    )
+    .unwrap();
+    // A4 in points; the picture is twice as wide as it is high.
+    let (width, height) = (595.2756, 841.8898);
+    let cover = (2.0 * height, height);
+    for (image, pages, origin, size) in [
+        (
+            "{src = 'cover.svg', fit = 'stretch'}",
+            "first",
+            (0.0, 0.0),
+            (width, height),
+        ),
+        (
+            "{src = 'cover.svg', fit = 'stretch'}",
+            "all",
+            (0.0, 0.0),
+            (width, height),
+        ),
+        ("'cover.svg'", "first", ((width - cover.0) / 2.0, 0.0), cover),
+        ("{src = 'cover.svg', align = 'left'}", "all", (0.0, 0.0), cover),
+        (
+            "{src = 'cover.svg', align = 'right top'}",
+            "first",
+            (width - cover.0, 0.0),
+            cover,
+        ),
+        (
+            "{src = 'cover.svg', fit = 'contain', align = 'bottom'}",
+            "first",
+            (0.0, height - width / 2.0),
+            (width, width / 2.0),
+        ),
+    ] {
+        std::fs::write(
+            root.join("writer.toml"),
+            format!(
+                "[pdf]\nsystem_fonts = false\n[design.page.background]\nimage = {image}\npages = '{pages}'\n"
+            ),
+        )
+        .unwrap();
+        let document =
+            compile(root, "Body one.\n\n:::pagebreak\n:::\n\nBody two.\n");
+        assert_eq!(document.pages().len(), 2);
+        for (index, page) in document.pages().iter().enumerate() {
+            let mut found = Vec::new();
+            image_boxes(&page.frame, Transform::identity(), &mut found);
+            if index == 0 || pages == "all" {
+                assert_eq!(found.len(), 1, "{image} {pages} page {index}");
+                let (point, actual) = found[0];
+                for (got, expected) in [
+                    (point.x.to_pt(), origin.0),
+                    (point.y.to_pt(), origin.1),
+                    (actual.x.to_pt(), size.0),
+                    (actual.y.to_pt(), size.1),
+                ] {
+                    assert!(
+                        (got - expected).abs() < 0.01,
+                        "{image} {pages} page {index}: {point:?} {actual:?}"
+                    );
+                }
+            } else {
+                assert!(found.is_empty(), "{image} {pages} page {index}");
+            }
+            // A background declares no slot, so the built-in number stays.
+            assert!(
+                text(&page.frame).contains(&(index + 1).to_string()),
+                "{image} {pages} page {index}"
+            );
+        }
+    }
 }

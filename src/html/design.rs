@@ -155,9 +155,10 @@ pub fn layout_css(
     if !page.is_empty() {
         let _ = writeln!(css, "@page{{{}}}", page.join(";"));
     }
-    // Named styles and furniture append their CSS here in the later tasks.
+    // Named styles, furniture and the page background append their CSS here.
     css.push_str(&styles_css(design));
     css.push_str(&furniture_css(design, _targets)?);
+    css.push_str(&background_css(design, _targets)?);
     Ok(css)
 }
 
@@ -607,6 +608,61 @@ pub fn furniture_css(
         }
     }
     Ok(css)
+}
+
+/// The page background image behind the first sheet on screen, printed once
+/// on the first page or repeated as a fixed box on every page.
+pub fn background_css(
+    design: &Design, targets: &mut Targets<'_>,
+) -> Result<String> {
+    use crate::design::{Align, BackgroundPages, Fit, VerticalAlign};
+    let Some(background) = &design.page.background else {
+        return Ok(String::new());
+    };
+    if !design.declared {
+        return Ok(String::new());
+    }
+    let image = &background.image;
+    let url = file_url(&image.path, targets)?;
+    let size = match image.fit {
+        Fit::Cover => "cover",
+        Fit::Contain => "contain",
+        Fit::Stretch => "100% 100%",
+    };
+    let horizontal = match image.align.horizontal {
+        Align::Left => "left",
+        Align::Right => "right",
+        Align::Center | Align::Justify => "center",
+    };
+    let vertical = match image.align.vertical {
+        VerticalAlign::Top => "top",
+        VerticalAlign::Center => "center",
+        VerticalAlign::Bottom => "bottom",
+    };
+    let height = css_pt(paper_height(design.page.paper.as_deref()));
+    let position = match background.pages {
+        BackgroundPages::First => "absolute",
+        BackgroundPages::All => "fixed",
+    };
+    // Browsers ignore `background` on `@page :first`. A block before the
+    // content paints the first sheet on screen; in print an absolute box
+    // appears once on page one and a fixed box on every page, both confined
+    // to the page area.
+    let mut css = format!(
+        "body::before{{content:\"\";display:block;height:{height};margin-bottom:-{height};background:url({url}) no-repeat {horizontal} {vertical}/{size};print-color-adjust:exact;-webkit-print-color-adjust:exact}}\n"
+    );
+    let _ = writeln!(
+        css,
+        "@media print{{body::before{{position:{position};top:0;left:0;width:100%;height:100%;margin:0}}}}"
+    );
+    Ok(css)
+}
+
+/// The paper height in points; A4 for an unset or unknown paper name.
+fn paper_height(paper: Option<&str>) -> Pt {
+    paper
+        .and_then(|paper| paper.parse::<typst::layout::Paper>().ok())
+        .map_or(Pt(841.89), |paper| Pt(paper.height().to_pt()))
 }
 
 fn box_name(slot: FurnitureSlot, position: &str) -> String {

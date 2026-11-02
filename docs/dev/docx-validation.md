@@ -139,6 +139,32 @@ retained even-page settings, shared media and reference Normal font sizes.
 This scoped Mac check does not complete the broader release checklist or
 establish rendering in Word for Windows, LibreOffice or Google Docs.
 
+## T91 page background validation record
+
+Checked on 2026-11-02 in Word for Mac 16.114.3 on macOS 26.7 (25G229) with
+a release build of the T91 branch. The EIT controlled-document project, a
+design-only theme with no reference document, received a temporary
+`[design.page.background]` table naming its 873 × 1238 px `cover.jpg` with
+`fit = "cover"` and `pages = "first"`. The project was built with its
+`build.sh`, and the theme was then restored. The DOCX, with
+`w:updateFields` removed, was opened from Word's container folder and saved
+as PDF through AppleScript.
+
+- The file opened without a repair prompt. Its first-page header held only
+  the anchored picture, with a full A4 extent and a 0.136 % top and bottom
+  crop. The continuation header kept the logo and rule without a picture.
+- The photograph filled page one to all four paper edges, behind the title,
+  document code, author and date lines.
+- At 30 dpi, pages two to four were pixel-identical to a Word export of the
+  same build without the background, and both exports had four pages.
+- Page one's text positions matched that export, apart from the empty header
+  paragraph's baseline.
+
+The automated suite validates and independently reads the package. It
+snapshots the first-page header and checks the cover and contain geometry,
+the split of a shared slot, a picture-only part, `pages = "all"` and US
+Letter. Word for Windows, LibreOffice and Google Docs were not checked.
+
 ## Manual release checklist
 
 These checks are **not performed by the automated tests**. Before each release,
