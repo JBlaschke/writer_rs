@@ -498,7 +498,7 @@ presenter_rs per R8 §10.
 | T87 | DOCX page furniture: generated header/footer parts, media, `titlePg`, fields | M | T85 |
 | T88 | Typst page furniture: `writer-furniture`, `page(background:)` placement, counters | M | T85 |
 | T89 | Guide sections (customization, configuration, outputs, typst) and `examples/letter/` | M | T86, T87, T88 |
-| T90 | Furniture image `gap`: the space between a furniture image and its lines in HTML, Typst and DOCX, the paragraph spacing by default | S | T89 |
+| T92 | Furniture image `gap`: the space between a furniture image and its lines in HTML, Typst and DOCX, the paragraph spacing by default | S | T89 |
 
 ### Dependency graph (what each task unblocks; derived from the dependency column)
 
@@ -535,7 +535,7 @@ w11 T81 ─► T85        T82 ─► T84        T83 ─► T85
 w12 T84 ─► T85
 w13 T85 ─► T86, T87, T88
 w14 T86 ─► T89        T87 ─► T89        T88 ─► T89
-w15 T89 ─► T90
+w15 T89 ─► T92
 ```
 
 ### Waves (computed from the dependency column; no task depends on a task in its own wave)
@@ -558,7 +558,7 @@ w15 T89 ─► T90
 | 13 | T85 | 1 |
 | 14 | T86, T87, T88 | 3 |
 | 15 | T89 | 1 |
-| 16 | T90 | 1 |
+| 16 | T92 | 1 |
 
 Edges added after the first plan (`A → B`: B depends on A). Requested in the specs' Deviations:
 T03 → T15, T14 → T12, T13 → T18, T13 → T60, T30 → T1A, T16 → T1A (html-output.md, math.md);
