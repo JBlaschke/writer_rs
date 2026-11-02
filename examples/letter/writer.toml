@@ -1,0 +1,11 @@
+[document]
+lang = "en-GB"
+
+[build]
+targets = ["html", "pdf", "docx"]
+
+[html]
+theme = "theme"
+
+[pdf]
+system_fonts = false

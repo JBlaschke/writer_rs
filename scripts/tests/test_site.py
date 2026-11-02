@@ -326,6 +326,81 @@ class SiteTests(unittest.TestCase):
             if path.is_file()
         })
 
+    def test_letter_keeps_project_design_in_web_and_download_commands(self):
+        _, pages = self.mapper()
+        self.write("docs/site/theme/theme.toml", 'extends = "default"\n')
+        self.write("docs/site/site.css", "body { color: black; }\n")
+        self.write("LICENSE", "Project license\n")
+        letter = self.write("examples/letter/letter.md", "A design letter\n")
+        project_config = self.write(
+            "examples/letter/writer.toml", '[html]\ntheme = "theme"\n'
+        )
+        pages.append(site.Page(
+            "example-letter", letter, "examples/letter/index.html"
+        ))
+        binary = self.write("writer", "mocked executable\n", self.root)
+        destination = self.root / "published-site"
+        args = SimpleNamespace(
+            source=self.source, binary=binary, out=destination,
+            repo_url=REPO, revision=SHA, prefix="", release_json=None,
+            gs="mock-gs",
+        )
+        calls = []
+
+        def command(_binary, arguments, _root, _environment):
+            calls.append(arguments)
+            if arguments == ["--licenses"]:
+                return b"Embedded notices\n"
+            if arguments == ["--version"]:
+                return b"writer 0.1.0 (mocked)\n"
+            if "dump" in arguments:
+                return b'{"document":{"meta":{"title":"Letter"}}}'
+            output = Path(arguments[arguments.index("-o") + 1])
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(b"<p>Letter</p>")
+            return b"Written (2 pages, fixture)\n"
+
+        def first_page(_gs, _pdf, output):
+            output.write_bytes(
+                b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR"
+                b"\x00\x00\x00\x01\x00\x00\x00\x01"
+            )
+
+        with (
+            patch.object(site, "require_complete_guide"),
+            patch.object(site, "pages", return_value=pages),
+            patch.object(site, "command", side_effect=command),
+            patch.object(site, "first_page", side_effect=first_page),
+            patch.object(site, "landing_page", return_value="<p>Home</p>"),
+        ):
+            site.build(args)
+
+        letter_calls = [
+            arguments for arguments in calls if str(letter) in arguments
+        ]
+        self.assertEqual(len(letter_calls), 6)  # five formats plus context
+        for arguments in letter_calls:
+            self.assertEqual(
+                arguments[arguments.index("--config") + 1],
+                str(project_config),
+            )
+        letter_web = next(
+            arguments for arguments in letter_calls
+            if "--to" in arguments
+            and arguments[arguments.index("--to") + 1] == "html"
+        )
+        self.assertNotIn("--theme", letter_web)
+        guide_web = next(
+            arguments for arguments in calls
+            if str(pages[1].source) in arguments
+        )
+        self.assertIn("--theme", guide_web)
+        self.assertNotIn(str(project_config), guide_web)
+        for name in [
+            "letter.pdf", "letter.docx", "letter-latex.zip", "letter-typst.zip"
+        ]:
+            self.assertTrue((destination / "examples/letter" / name).is_file())
+
     def test_artifact_links_name_claimed_routes_and_keys_keep_fragments(self):
         mapper, pages = self.mapper()
         route = "examples/basic/document.pdf"

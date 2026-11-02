@@ -112,7 +112,7 @@ eighths of a point (`w:pBdr` `w:sz`) = `pt × 8`, EMU = `pt × 12700`.
 [design.fonts]                 # each role: a family string, or { family = "…", files = ["…"] }
 body    = { family = "Source Sans 3",       # string; default unset (HTML: theme CSS; PDF: Libertinus Serif; DOCX: Calibri)
             files  = ["assets/fonts/SourceSans3-Regular.ttf"] }   # paths (§1.3); default []; see §4.3 for what each backend does with them
-heading = "Source Sans 3"      # same shape; default unset (HTML: theme; PDF: the body font; DOCX: Calibri Light)
+heading = "Source Sans 3"      # same shape; default unset (HTML: theme; PDF: the body font; DOCX: built-in heading fonts)
 mono    = "Source Code Pro"    # same shape; default unset (HTML: theme; PDF: DejaVu Sans Mono; DOCX: Consolas)
 
 [design.text]
@@ -510,8 +510,9 @@ store. `typst_kit::fonts::scan` accepts directories, not individual files. Order
 embedded → `font_paths` → design files → system, so a design file never shadows the package's
 embedded families. `system_fonts = false` stays byte-identical across machines when the design
 ships its fonts. A
-family named without files that the book does not contain is `design-font-family` in `check` (§10);
-at build time Typst falls back as it does today (its own warning).
+family that the book does not contain is `design-font-family` in `check` (§10),
+including web-only or undecodable files. Unsupported faces keep the backend's
+fallback; missing or unreadable files still produce resource errors.
 
 ### 6.6 Native `.typ` input
 Nothing is injected: a native document gets `sys.inputs.writer-design` (when the project declares a
@@ -535,7 +536,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 | design key | edit |
 |---|---|
 | `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`) |
-| `fonts.heading` | every `w:rFonts` naming `Calibri Light` (Heading 1–9, Title, Subtitle) = family |
+| `fonts.heading` | Heading 1–9, Title, Subtitle and their linked character styles = family (the asset uses both `Calibri Light` and `Calibri`) |
 | `fonts.mono` | every `w:rFonts` naming `Consolas` (Source Code, Verbatim Char, …) = family |
 | `text.size` | `rPrDefault` `w:sz`/`w:szCs` = half-points; styles whose `w:sz` is relative to the body in §2.3 (headings, Title, captions, footnotes, code) are scaled by `new/22` and rounded to even half-points |
 | `text.line_height` | `pPrDefault/w:spacing` `w:line` = `round(n × 240)` `w:lineRule="auto"`, or twips with `w:lineRule="exact"` |
@@ -757,14 +758,20 @@ A declared slot sets `page(header: none, footer: none, numbering: none)` and
 An unset `header_offset` is 30 % of the top margin (Typst's own `header-ascent` default, expressed
 as an offset from the edge); an unset `footer_offset` is 30 % of the bottom margin.
 Rules: `line(length: 100%, stroke: width * 1pt + rgb(color))`; `{page}`/`{pages}` per §9.2; `align`
-→ `align(..)` inside the block. Image paths are the virtual `/__assets/…` paths of §3.3.
+→ `align(..)` inside the block. Rules occupy a separate block with a 0.3em
+clearance from adjacent text. Image paths are the virtual `/__assets/…` paths
+of §3.3. The World mounts those reserved paths for both project code and
+`@writer/doc`, whose image calls otherwise retain the package root.
 
 ### 9.5 DOCX (`src/docx/design.rs`, `reference.rs`; T87)
 Generated parts: `word/header<k>.xml` and `word/footer<k>.xml` with k the smallest free index
 (docx-output.md §6.2's rule), one part per **distinct** furniture: the `first` part referenced
 `w:type="first"` and the `rest` part `w:type="default"` when they differ (then `w:titlePg`), else one
 `default` part; an empty furniture is an empty part (`<w:hdr><w:p/></w:hdr>`), which is how a
-declared empty footer removes the page number. Part body, in order:
+declared empty footer removes the page number. Since `titlePg` applies to both
+slots, a shared slot also references its single part as `first` when the other
+slot differs. Retained `evenAndOddHeaders` settings similarly alias continuation
+parts as `even`. Part body, in order:
 - rule `above`: a paragraph with `w:pPr/w:pBdr/w:top w:val="single" w:sz="<eighths>" w:space="1" w:color="rrggbb"`
   and a `w:sz w:val="2"` empty run (the reference document's own construction);
 - image: a paragraph (`w:jc` from the image's or furniture's align) with an inline drawing

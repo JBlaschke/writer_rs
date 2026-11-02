@@ -36,7 +36,7 @@ GUIDE_PAGES = (
     "README", "getting-started", "authoring", "notebooks", "typst",
     "outputs", "customization", "configuration", "cli", "troubleshooting",
 )
-EXAMPLES = ("basic", "notebook", "typst")
+EXAMPLES = ("basic", "notebook", "typst", "letter")
 # What each example card says the example shows; titles come from the sources.
 EXAMPLE_NOTES = {
     "basic": (
@@ -53,6 +53,11 @@ EXAMPLE_NOTES = {
         "Native Typst",
         "The PDF compiles the original source; the web page and the Word "
         "file use its structured subset.",
+    ),
+    "letter": (
+        "Shared letterhead",
+        "One design supplies typography, paragraph styles, and first-page "
+        "and continuation furniture in HTML, PDF and Word.",
     ),
 }
 # The outputs on the landing page: target, label and short name.
@@ -201,7 +206,8 @@ def pages(root: Path) -> list[Page]:
         ))
     for name in EXAMPLES:
         filename = {
-            "notebook": "analysis.ipynb", "typst": "document.typ"
+            "notebook": "analysis.ipynb", "typst": "document.typ",
+            "letter": "letter.md"
         }.get(name, "document.md")
         result.append(Page(
             f"example-{name}", root / "examples" / name / filename,
@@ -712,6 +718,13 @@ def first_page(gs: str, pdf: Path, png: Path) -> None:
         )
 
 
+def example_config(page: Page, fallback: Path) -> Path:
+    """Keep the design showcase's own project settings in every output."""
+    if page.key == "example-letter":
+        return page.source.parent / "writer.toml"
+    return fallback
+
+
 def build_example(
             binary: Path, gs: str | None, page: Page, artifact: Path,
             mapper: Mapper, config: Path, work: Path, root: Path,
@@ -722,6 +735,7 @@ def build_example(
         raise SiteError(
             "page previews need Ghostscript: install it or pass --gs"
         )
+    config = example_config(page, config)
     folder = posixpath.dirname(page.route)
     stem = page.source.stem
     base = ["--config", str(config), "build", str(page.source)]
@@ -1048,11 +1062,16 @@ def build(args) -> None:
                 home = page
                 continue
             raw = work / f"page-{index}.html"
+            page_config = example_config(page, config)
+            theme_args = (
+                [] if page.key == "example-letter"
+                else ["--theme", str(theme)]
+            )
             command(
                 binary,
                 [
-                    "--config", str(config), "build", str(page.source),
-                    "--to", "html", "--standalone", "--theme", str(theme),
+                    "--config", str(page_config), "build", str(page.source),
+                    "--to", "html", "--standalone", *theme_args,
                     "-o", str(raw)
                 ],
                 root, environment

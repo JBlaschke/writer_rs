@@ -74,16 +74,16 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T77 | *Stretch:* Chrome print engine | M7 | M | T16 | todo |
 | T78 | *Stretch:* typst HTML export web view | M7 | M | T52 | todo |
 | T79 | *Stretch:* SCSS themes and minijinja 3 | M7 | M | T19 | todo |
-| T80 | Design layer: schema, merge, resolution, `dump --design`, `eject theme --design` | M8 | L | T16, T71, T72 | done |
-| T81 | HTML design tokens and fonts | M8 | M | T80 | done |
-| T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | done |
-| T83 | DOCX generated styles and section from the design | M8 | M | T80 | done |
-| T84 | Typst emitter `writer-div`, package 0.2.0 | M8 | S | T80, T82 | done |
-| T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | done |
-| T86 | Page furniture: HTML | M8 | M | T85 | done |
-| T87 | Page furniture: DOCX | M8 | M | T85 | done |
-| T88 | Page furniture: Typst | M8 | M | T85 | done |
-| T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | todo |
+| T80 | Design layer: schema, merge, resolution, `dump --design`, `eject theme --design` | M8 | L | T16, T71, T72 | done (PR #53) |
+| T81 | HTML design tokens and fonts | M8 | M | T80 | done (PR #54) |
+| T82 | Typst `writer-design` input, `writer-doc` defaults, design fonts | M8 | M | T80 | done (PR #55) |
+| T83 | DOCX generated styles and section from the design | M8 | M | T80 | done (PR #56) |
+| T84 | Typst emitter `writer-div`, package 0.2.0 | M8 | S | T80, T82 | done (PR #57) |
+| T85 | Named paragraph styles in HTML, Typst and DOCX | M8 | M | T81, T83, T84 | done (PR #58) |
+| T86 | Page furniture: HTML | M8 | M | T85 | done (PR #59) |
+| T87 | Page furniture: DOCX | M8 | M | T85 | done (PR #60) |
+| T88 | Page furniture: Typst | M8 | M | T85 | done (PR #61) |
+| T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | done |
 
 ## Order of execution (waves, computed from the dependency column)
 

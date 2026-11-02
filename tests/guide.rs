@@ -24,7 +24,7 @@ const GUIDE_PAGES: &[&str] = &[
     "troubleshooting.md",
 ];
 const EXAMPLES: &[&str] =
-    &["basic", "notebook", "mixed", "typst", "latex-template"];
+    &["basic", "notebook", "mixed", "typst", "latex-template", "letter"];
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf()
@@ -544,4 +544,96 @@ fn config_default_cells_compare_values_without_layout_assumptions() {
         Some(toml::Value::Array(vec!["html".into(), "pdf".into()]))
     );
     assert_eq!(default_cell("unset"), None);
+}
+
+#[test]
+fn design_reference_covers_the_serialized_schema_shapes() {
+    use writer::design::{
+        DesignSpec, FontDetailsSpec, FurnitureSpec, ImageDetailsSpec,
+        LineDetailsSpec, MarginSidesSpec, RuleDetailsSpec, StyleSpec,
+    };
+    fn keys(
+        value: &serde_json::Value, prefix: &str, into: &mut BTreeSet<String>,
+    ) {
+        if let Some(map) = value.as_object() {
+            for (name, child) in map {
+                let key = if prefix.is_empty() {
+                    name.clone()
+                } else {
+                    format!("{prefix}.{name}")
+                };
+                if child.is_object() {
+                    keys(child, &key, into);
+                } else {
+                    into.insert(key);
+                }
+            }
+        }
+    }
+    let mut expected = BTreeSet::new();
+    let shapes = [
+        ("", serde_json::to_value(DesignSpec::default()).unwrap()),
+        (
+            "fonts.<role>",
+            serde_json::to_value(FontDetailsSpec::default()).unwrap(),
+        ),
+        (
+            "page.margin",
+            serde_json::to_value(MarginSidesSpec::default()).unwrap(),
+        ),
+        (
+            "page.<slot>",
+            serde_json::to_value(FurnitureSpec::default()).unwrap(),
+        ),
+        (
+            "page.<slot>.image",
+            serde_json::to_value(ImageDetailsSpec::default()).unwrap(),
+        ),
+        (
+            "page.<slot>.lines[]",
+            serde_json::to_value(LineDetailsSpec::default()).unwrap(),
+        ),
+        (
+            "page.<slot>.rule",
+            serde_json::to_value(RuleDetailsSpec::default()).unwrap(),
+        ),
+        ("styles.<Name>", serde_json::to_value(StyleSpec::default()).unwrap()),
+    ];
+    for (prefix, shape) in shapes {
+        keys(&shape, prefix, &mut expected);
+    }
+    let text = read(&guide("configuration.md"));
+    let heading = text.split_once("## `[design]`").unwrap().1;
+    let section = heading.split_once("## Strictness").unwrap().0;
+    let key_row = Regex::new(r"(?m)^\| `([^`]+)` \|").unwrap();
+    let actual = key_row
+        .captures_iter(section)
+        .map(|row| row[1].to_owned())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn letter_example_builds_html_pdf_and_word() {
+    let output = tempfile::tempdir().unwrap();
+    let result = Command::new(env!("CARGO_BIN_EXE_writer"))
+        .args([
+            "build", "examples/letter/letter.md", "--to", "html,pdf,docx", "-o",
+        ])
+        .arg(output.path())
+        .current_dir(root())
+        .env("SOURCE_DATE_EPOCH", "0")
+        .env_remove("RUST_LOG")
+        .stdin(Stdio::null())
+        .output()
+        .expect("build the shared-design letter example");
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    for extension in ["html", "pdf", "docx"] {
+        let path = output.path().join(format!("letter.{extension}"));
+        assert!(path.metadata().unwrap().len() > 0, "{}", path.display());
+    }
 }
