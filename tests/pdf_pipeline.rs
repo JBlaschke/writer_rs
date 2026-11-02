@@ -246,7 +246,7 @@ fn custom_template_resolves_relative_imports_and_retained_world_replacement() {
         .unwrap();
         fs::write(
             root.join("template.typ"),
-            "#import \"helper.typ\": marker\n#import \"@writer/doc:0.1.0\": writer-doc as base\n#let writer-doc(..args) = base(..args)\n"
+            "#import \"helper.typ\": marker\n#import \"@writer/doc:0.2.0\": writer-doc as base\n#let writer-doc(..args) = base(..args)\n"
         )
         .unwrap();
     }

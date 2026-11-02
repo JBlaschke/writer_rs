@@ -231,6 +231,7 @@ fn native(name: &str) -> bool {
             | "path"
             | "label"
             | "datetime"
+            | "writer-div"
             | "writer-doc"
             | "writer-doc.with"
     )
@@ -241,6 +242,7 @@ fn exported(module: Module, name: &str) -> bool {
         Module::Writer => matches!(
             name,
             "writer-doc"
+                | "writer-div"
                 | "callout"
                 | "listing"
                 | "code-cell"
@@ -719,8 +721,8 @@ pub(super) fn record_import<'a>(
             Some(module) => {
                 let names: &[&str] = match module {
                     Module::Writer => &[
-                        "writer-doc", "callout", "listing", "code-cell",
-                        "include-notebook",
+                        "writer-doc", "writer-div", "callout", "listing",
+                        "code-cell", "include-notebook",
                     ],
                     _ => &["mi", "mitex"],
                 };

@@ -370,7 +370,10 @@ impl<'a> Emitter<'a> {
                 self.document.resolved.bibliography.is_some()
             }
             Block::Div { attrs, blocks, .. } => {
-                attrs.id.is_some() || blocks.iter().any(|b| self.renders(b))
+                attrs.id.is_some()
+                    || !attrs.classes.is_empty()
+                    || attrs.pairs.contains_key("custom-style")
+                    || blocks.iter().any(|b| self.renders(b))
             }
             _ => true,
         }
@@ -388,6 +391,8 @@ impl<'a> Emitter<'a> {
         }
         if let Block::Div { attrs, blocks, .. } = block
             && attrs.id.is_none()
+            && attrs.classes.is_empty()
+            && !attrs.pairs.contains_key("custom-style")
         {
             self.nested(blocks, indent)?;
         } else {
@@ -477,6 +482,36 @@ impl<'a> Emitter<'a> {
             Block::Div { attrs, blocks, .. } => {
                 if let Some(id) = &attrs.id {
                     self.write(&format!("#metadata(none) <{id}>\n"));
+                }
+                if !attrs.classes.is_empty()
+                    || attrs.pairs.contains_key("custom-style")
+                {
+                    if attrs.id.is_some() {
+                        self.indent(indent);
+                    }
+                    let style =
+                        crate::design::style_for(self.opts.design, attrs)
+                            .or_else(|| {
+                                attrs
+                                    .pairs
+                                    .get("custom-style")
+                                    .map(String::as_str)
+                            })
+                            .map_or_else(|| "none".into(), string);
+                    let classes = array(
+                        &attrs
+                            .classes
+                            .iter()
+                            .map(|class| string(class))
+                            .collect::<Vec<_>>(),
+                    );
+                    self.write(&format!(
+                        "#writer-div(style: {style}, classes: {classes})[\n"
+                    ));
+                    self.nested(blocks, indent + 2)?;
+                    self.indent(indent);
+                    self.write("]");
+                } else if attrs.id.is_some() {
                     self.blocks(blocks, indent)?;
                 } else if let Some((first, rest)) = blocks.split_first() {
                     self.block_body(first, indent)?;

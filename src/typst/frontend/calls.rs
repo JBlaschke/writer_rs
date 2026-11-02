@@ -34,7 +34,7 @@ pub(super) fn is_block<'a>(ctx: &Context<'a>, call: ast::FuncCall<'a>) -> bool {
         "figure" | "image" | "table" | "list" | "enum" | "terms" | "align"
         | "block" | "par" | "pagebreak" | "colbreak" | "line" | "outline"
         | "bibliography" | "v" | "heading" | "callout" | "mitex"
-        | "listing" | "code-cell" | "include-notebook" => true,
+        | "listing" | "code-cell" | "include-notebook" | "writer-div" => true,
         "quote" | "raw" | "math.equation" => call.args().items().any(|arg| {
             matches!(arg, ast::Arg::Named(named)
                 if named.name().as_str() == "block" &&
@@ -61,7 +61,7 @@ pub(super) fn call<'a>(
         | "footnote" | "cite" | "ref" | "bibliography" | "callout" | "mi"
         | "mitex" | "listing" | "include-notebook" | "strong" | "emph"
         | "underline" | "strike" | "smallcaps" | "super" | "sub"
-        | "overline" | "highlight" => Some(1),
+        | "overline" | "highlight" | "writer-div" => Some(1),
         "link" => Some(2),
         _ => None,
     };
@@ -136,6 +136,7 @@ pub(super) fn call<'a>(
             }
         }
         "callout" => callout(ctx, &args),
+        "writer-div" => writer_div(ctx, &args),
         "mi" | "mitex" => latex(ctx, &args, name == "mitex"),
         "listing" => listing(ctx, &args),
         "code-cell" => code_cell(ctx, &args),
@@ -544,6 +545,50 @@ fn terms<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
         items,
         span: Some(ctx.span(args.node)),
     }])
+}
+
+fn writer_div<'a>(ctx: &mut Context<'a>, args: &Args<'a>) -> Nodes {
+    args.check_named(ctx, &["style", "classes"], &[]);
+    let Some(expr) = required(ctx, args, 0, "body") else {
+        return Nodes::Ignored;
+    };
+    let mut attrs = Attrs::default();
+    if let Some(expr) = args.named("style") {
+        match literal(ctx, expr) {
+            Some(Literal::None) => {}
+            Some(Literal::Str(name)) => {
+                attrs.pairs.insert("custom-style".into(), name);
+            }
+            Some(_) => wrong(ctx, expr.to_untyped(), "a style name or none"),
+            None => {}
+        }
+    }
+    if let Some(expr) = args.named("classes") {
+        match literal(ctx, expr) {
+            Some(Literal::Str(class)) => attrs.classes.push(class),
+            Some(Literal::Array(classes)) => {
+                for class in classes {
+                    match class {
+                        Literal::Str(class) => attrs.classes.push(class),
+                        _ => wrong(
+                            ctx,
+                            expr.to_untyped(),
+                            "an array of class strings",
+                        ),
+                    }
+                }
+            }
+            Some(_) => wrong(ctx, expr.to_untyped(), "a class string or array"),
+            None => {}
+        }
+    }
+    blocks(ctx, expr).map_or(Nodes::Ignored, |blocks| {
+        Nodes::Blocks(vec![Block::Div {
+            attrs,
+            blocks,
+            span: Some(ctx.span(args.node)),
+        }])
+    })
 }
 
 fn wrapper<'a>(ctx: &mut Context<'a>, args: &Args<'a>, name: &str) -> Nodes {

@@ -1132,7 +1132,7 @@ fn dynamic_markdown_include_recovers_nested_files_and_missing_images() {
     write(
         &dir.path().join("native.typ"),
         concat!(
-            "#import \"@writer/doc:0.1.0\": *\n",
+            "#import \"@writer/doc:0.2.0\": *\n",
             "#show: writer-doc.with(title: [Dynamic include watch])\n",
             "#include (\"dynamic\" + \".md\")\n",
         ),
@@ -1206,7 +1206,7 @@ fn included_notebook_edits_and_late_cell_errors_keep_real_provenance() {
     write(
         &dir.path().join("native.typ"),
         concat!(
-            "#import \"@writer/doc:0.1.0\": *\n",
+            "#import \"@writer/doc:0.2.0\": *\n",
             "#show: writer-doc.with(title: [Notebook include watch])\n",
             "#include-notebook(path(\"book.ipynb\"), cells: \"plot\", hide-input: true)\n",
         ),

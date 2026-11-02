@@ -368,3 +368,6 @@
         content
     }
 }
+
+// Preserve div semantics for templates; named design styles are applied in T85.
+#let writer-div(style: none, classes: (), body) = body

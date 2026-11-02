@@ -11,7 +11,7 @@
 // let design = if "writer-design" in sys.inputs {
 //     json(bytes(sys.inputs.at("writer-design")))
 // } else { (:) }
-#import "@writer/doc:0.1.0" as base
+#import "@writer/doc:0.2.0" as base
 
 #let writer-doc(..args, body) = {
     show heading: set text(fill: rgb("#1a3a8a"))
