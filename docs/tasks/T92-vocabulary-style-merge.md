@@ -1,4 +1,4 @@
-# T90 — Design styles restyle writer's Word definitions in place
+# T92 — Design styles restyle writer's Word definitions in place
 
 | | |
 |---|---|
@@ -53,7 +53,7 @@ pub fn style_xml(name: &str, style: &Style, design: &Design, ids: &StyleTable) -
    `writer_selects` (a vocabulary paragraph name, or `HEADER` compared case-insensitively, as a
    custom name resolves); `src/docx/furniture.rs` names the header lines' style through `HEADER`.
 4. `src/check/design.rs`: `unused_styles` skips names for which `writer_selects` is true.
-5. Specs and guides as listed under "Files you own"; the task board and PLAN.md gain T90.
+5. Specs and guides as listed under "Files you own"; the task board and PLAN.md gain T92.
 6. Tests: `design::tests::vocabulary_styles_keep_unset_built_in_properties` (TOC Heading keeps
    `outlineLvl 9` under a design rPr, `toc 2` keeps `ind` and merges spacing, `Title` keeps
    `jc center`, `Heading 3` gets `b val=0`, a custom name is unchanged);

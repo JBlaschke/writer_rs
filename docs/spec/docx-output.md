@@ -190,7 +190,7 @@ table already has a default style of that type (V14).
 > and must stay byte-identical to `assets/docx/styles.xml` (a test); `StyleTable::generated(design:
 > &Design)` applies design.md §7.1's edits and appends `[design.styles]` definitions (design.md §8.5),
 > which `custom(name, Paragraph, None)` then finds by name (T83, T85). A design style named after a
-> §2.3 paragraph style restyles that definition in place instead (design.md §8.1, T90).
+> §2.3 paragraph style restyles that definition in place instead (design.md §8.1, T92).
 
 ### 2.2 Built-in `styles.xml`: explicit fonts and hex colours, no theme attributes
 No `asciiTheme`/`hAnsiTheme`/`eastAsiaTheme`/`cstheme`/`themeColor`/`themeShade`/`themeTint`/`themeFill*`
@@ -203,7 +203,7 @@ No `asciiTheme`/`hAnsiTheme`/`eastAsiaTheme`/`cstheme`/`themeColor`/`themeShade`
 > fonts, the Hyperlink colour (design.md §7.1, table). A `[design.styles]` name equal to a §2.3
 > paragraph name restyles that definition in place: its id and references stay, and the design's
 > keys are laid over its `pPr`/`rPr` child by child, `w:spacing` attribute by attribute, so
-> `outlineLvl`, `ind` and `tabs` survive (design.md §8.1, §8.5; T90 replaced the earlier
+> `outlineLvl`, `ind` and `tabs` survive (design.md §8.1, §8.5; T92 replaced the earlier
 > wholesale `pPr`/`rPr` replacement).
 
 ### 2.3 Vocabulary (pandoc's names; writer's own marked †). `sp a/b` = `w:spacing before/after` (twips), `sz` half-points

@@ -535,7 +535,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 
 | design key | edit |
 |---|---|
-| `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`); Author and Date, whose `w:rFonts` name `Calibri` only to undo Title's heading font, follow it (T90) |
+| `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`); Author and Date, whose `w:rFonts` name `Calibri` only to undo Title's heading font, follow it (T92) |
 | `fonts.heading` | Heading 1–9, Title, Subtitle and their linked character styles = family (the asset uses both `Calibri Light` and `Calibri`) |
 | `fonts.mono` | every `w:rFonts` naming `Consolas` (Source Code, Verbatim Char, …) = family |
 | `text.size` | `rPrDefault` `w:sz`/`w:szCs` = half-points; styles whose `w:sz` is relative to the body in §2.3 (headings, Title, captions, footnotes, code) are scaled by `new/22` and rounded to even half-points |
@@ -545,7 +545,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 | `colors.text` | `rPrDefault/w:color` (inserted) = hex without `#` |
 | `colors.link` | Hyperlink style `w:color` = hex |
 | `colors.accent`, `muted`, `background`, `page.*` | not applied to styles (accent and muted are used by furniture, §9.5; page: §7.2) |
-| `styles.*` | appended as `w:style` definitions, §8.5; a §2.3 paragraph name restyles that built-in definition in place (§8.1, T90) |
+| `styles.*` | appended as `w:style` definitions, §8.5; a §2.3 paragraph name restyles that built-in definition in place (§8.1, T92) |
 
 Edits are made on the parsed asset with `docx::xml` helpers, not with string replacement, and keep
 §5's child order. `set_lang` is unchanged. Appended named styles go through the §2.1 id rules.
@@ -588,7 +588,7 @@ Address`, `inside-address`, `InsideAddress` → `insideaddress`) agrees; equal k
 (§4.4). A design style whose name is one of docx-output.md §2.3's paragraph vocabulary names
 (`Body Text`, `Heading 1`, `TOC Heading`, `toc 2`, `Date`, …; compared by normalised key, so
 `Heading-1` is `heading 1`) restyles writer's built-in definition for DOCX instead of adding one
-(T90): the §2.3 id, `basedOn`, `next`, `link` and `uiPriority` stay, and the design's keys are laid
+(T92): the §2.3 id, `basedOn`, `next`, `link` and `uiPriority` stay, and the design's keys are laid
 over the built-in `w:pPr`/`w:rPr` as §8.5 describes, so every property the design leaves unset
 keeps its built-in value. `TOC Heading` and `Heading N Unlisted` therefore keep `outlineLvl 9` and
 stay out of the TOC field (docx-output.md §4.13), `toc N` keeps its indent, and `Title` stays
@@ -667,7 +667,7 @@ Each design style is appended to `styles.xml` (§7.1) as
 </w:style>
 ```
 in §5's child order, id from the §2.1 rules, `basedOn` the table's id for `Body Text`. The XML is
-built over the table's registered definition for the name (T90): for a §2.3 paragraph name that is
+built over the table's registered definition for the name (T92): for a §2.3 paragraph name that is
 writer's built-in definition with §7.1's edits applied, for any other name the empty `custom`
 definition, so a custom style carries the design's keys alone. A set key replaces the child of the
 same name in that definition's `w:pPr`/`w:rPr` (`keepNext`, `keepLines`, `contextualSpacing`,
