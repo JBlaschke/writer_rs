@@ -915,6 +915,7 @@ fn markdown_numbering_to_html() {
         &parsed.document,
         &mut EmitOptions {
             config: &config,
+            design: &writer::design::Design::default(),
             positions: false,
             includes: &parsed.document.includes,
             math: &mut math,

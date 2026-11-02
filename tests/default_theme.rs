@@ -486,8 +486,13 @@ fn default_theme_compiles() {
     let theme = writer::theme::resolve("default", &[]).unwrap();
     assert!(theme.problems().is_empty(), "{:?}", theme.problems());
     let mut registry = AssetRegistry::default();
-    let plain =
-        compile_theme_css(&theme, &Features::default(), &mut registry).unwrap();
+    let plain = compile_theme_css(
+        &theme,
+        &writer::design::Design::default(),
+        &Features::default(),
+        &mut registry,
+    )
+    .unwrap();
     let mut previous = 0;
     for entry in ENTRIES {
         let found = plain.find(&format!("/* @default/{entry} */")).unwrap();
@@ -497,6 +502,7 @@ fn default_theme_compiles() {
     assert!(!plain.contains("code theme"));
     let code = compile_theme_css(
         &theme,
+        &writer::design::Design::default(),
         &Features { code: true, ..Features::default() },
         &mut registry,
     )

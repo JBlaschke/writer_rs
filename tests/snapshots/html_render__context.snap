@@ -1913,7 +1913,8 @@ expression: ctx
     },
     "scripts": [
       "@child-theme/scripts/child.js"
-    ]
+    ],
+    "design": null
   },
   "build": {
     "mode": "build",

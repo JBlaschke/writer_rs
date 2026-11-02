@@ -72,6 +72,7 @@ fn try_render_with(
         assets: &mut assets,
         theme,
         config,
+        design: &writer::design::Design::default(),
         output,
         build,
         math: &mut math,
@@ -161,6 +162,7 @@ fn context_has_the_spec_shape() {
         assets: &mut assets,
         theme: &theme,
         config: &config,
+        design: &writer::design::Design::default(),
         output: OutputMode::Standalone,
         build: BuildInfo::build(true),
         math: &mut math,
@@ -185,6 +187,7 @@ fn context_has_the_spec_shape() {
             "code_theme": "Nord", "code_theme_dark": "OneHalfDark",
             "vars": {"accent": "#aa3300"},
             "scripts": ["@child-theme/scripts/child.js"],
+            "design": null,
         })
     );
     assert_eq!(
@@ -226,6 +229,7 @@ fn context_title_and_language_fallbacks_and_source_positions() {
         assets: &mut assets,
         theme: &theme,
         config: &config,
+        design: &writer::design::Design::default(),
         output: OutputMode::Standalone,
         build: BuildInfo::build(true),
         math: &mut math,
@@ -457,6 +461,7 @@ fn render_math(
         assets: &mut assets,
         theme: &theme,
         config: &config,
+        design: &writer::design::Design::default(),
         output,
         build,
         math: &mut math,
@@ -957,6 +962,7 @@ fn equation_images_remain_registered_for_the_serve_route() {
         assets: &mut assets,
         theme: &theme,
         config: &Config::default(),
+        design: &writer::design::Design::default(),
         output: OutputMode::Serve,
         build: BuildInfo::serve(3),
         math: &mut math,

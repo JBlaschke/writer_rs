@@ -95,6 +95,8 @@ impl MathHook for KatexOnly {
 pub struct EmitOptions<'a> {
     /// Effective per-document configuration.
     pub config: &'a Config,
+    /// Resolved cross-format paragraph styles.
+    pub design: &'a crate::design::Design,
     /// Include source-position attributes on blocks.
     pub positions: bool,
     /// Included paths, in the same order as `Document.includes`.

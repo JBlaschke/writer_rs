@@ -114,6 +114,7 @@ fn md_fixtures() {
             &parsed.document,
             &mut EmitOptions {
                 config: &config,
+                design: &writer::design::Design::default(),
                 positions: false,
                 includes: &parsed.document.includes,
                 math: &mut math,

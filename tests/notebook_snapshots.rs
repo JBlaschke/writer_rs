@@ -202,6 +202,7 @@ fn html(parsed: &Parsed) -> String {
     writer::html::emit::emit(
         &document,
         &mut HtmlOptions {
+            design: &Default::default(),
             config: &config,
             positions: false,
             includes: &document.includes,
