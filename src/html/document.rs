@@ -332,6 +332,52 @@ impl HelperState {
         }
     }
 
+    fn design_furniture(
+        &mut self, slot: &str, variant: &str,
+    ) -> Result<String> {
+        use super::design::{FurnitureSlot, FurnitureVariant};
+        let slot = match slot {
+            "header" => FurnitureSlot::Header,
+            "footer" => FurnitureSlot::Footer,
+            _ => {
+                return Err(Error::Other(
+                    "design_furniture: slot must be header or footer".into(),
+                ));
+            }
+        };
+        let variant = match variant {
+            "first" => FurnitureVariant::First,
+            "rest" => FurnitureVariant::Rest,
+            _ => {
+                return Err(Error::Other(
+                    "design_furniture: variant must be first or rest".into(),
+                ));
+            }
+        };
+        let mut targets = Targets::Placeholders(&mut self.registry);
+        let mut html = super::design::furniture_html(
+            &self.design, slot, variant, &mut targets,
+        )?;
+        if self.design.page.print == crate::design::PrintMode::Fixed
+            && variant == FurnitureVariant::First
+        {
+            let rest = super::design::furniture_html(
+                &self.design,
+                slot,
+                FurnitureVariant::Rest,
+                &mut targets,
+            )?;
+            // The default template calls the first variant once. Its hidden
+            // continuation copy supplies Chromium's repeated fixed furniture.
+            html.push_str(
+                &rest.replacen(
+                    " data-align=", " data-print-copy data-align=", 1,
+                ),
+            );
+        }
+        self.with_emitter(|emitter| emitter.resolve_html(&html))
+    }
+
     fn theme_style(&mut self, css: &str, build_id: u64) -> Result<String> {
         match &self.mode {
             OutputMode::Serve => Ok(format!(
@@ -415,6 +461,13 @@ fn register_helpers(
     env.add_function("asset", move |path: String| {
         call(&st, |s| s.asset(&path))
     });
+    let st = Arc::clone(state);
+    env.add_function(
+        "design_furniture",
+        move |slot: String, variant: String| {
+            call(&st, |s| s.design_furniture(&slot, &variant))
+        },
+    );
     let st = Arc::clone(state);
     env.add_function("theme_style", move || {
         call(&st, |s| s.theme_style(&theme_css, build_id))

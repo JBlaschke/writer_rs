@@ -347,6 +347,31 @@ impl Page {
         Ok(result_value(&evaluated["result"]))
     }
 
+    /// Prints this page with its CSS page sizes and background graphics.
+    pub fn print_pdf(&mut self) -> Result<Vec<u8>> {
+        use base64::Engine;
+        let printed = self.run("printing PDF", |cdp, session| {
+            call(
+                cdp,
+                session,
+                "Page.printToPDF",
+                json!({
+                    "printBackground": true,
+                    "preferCSSPageSize": true,
+                    "displayHeaderFooter": false,
+                }),
+                &mut |_| {},
+            )
+        })?;
+        let encoded =
+            printed.get("data").and_then(Value::as_str).ok_or_else(|| {
+                Error::Other("Chrome returned no printed PDF".into())
+            })?;
+        base64::prelude::BASE64_STANDARD.decode(encoded).map_err(|error| {
+            Error::Other(format!("Chrome returned invalid PDF data: {error}"))
+        })
+    }
+
     /// The page's errors so far (module docs), oldest first: `console.error: …`
     /// for a console message, the first line of an uncaught exception, a `Log`
     /// entry's text with its URL, `dismissed a JavaScript …` for a dialog.
