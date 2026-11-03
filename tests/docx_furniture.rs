@@ -5,9 +5,8 @@ use std::path::Path;
 
 use writer::design::{
     Align, Background, BackgroundAlign, BackgroundImage, BackgroundPages, Fit,
-    VerticalAlign,
+    FurnitureImage, Pt, VerticalAlign,
 };
-
 use writer::docx::xml::{
     CT_DOCUMENT, CT_RELS, CT_SETTINGS, CT_STYLES, NS_R, NS_RELS, NS_W,
     REL_OFFICE_DOCUMENT, REL_SETTINGS, REL_STYLES,

@@ -1,8 +1,8 @@
 //! Design tokens in generated Word styles and section properties.
 
-use crate::design::{BackgroundPages, Design, LineHeight, Pt};
-
 use std::collections::BTreeMap;
+
+use crate::design::{BackgroundPages, Design, LineHeight, Pt};
 
 use super::validate::{XmlNode, parse_xml};
 use super::xml::{PPR, Props, RPR, escape};
