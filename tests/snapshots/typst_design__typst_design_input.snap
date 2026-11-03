@@ -45,7 +45,8 @@ expression: snapshot
         "image": {
           "path": "/__assets/<logo>.png",
           "width": 141.732,
-          "align": null
+          "align": null,
+          "gap": 10.205
         },
         "lines": [
           {

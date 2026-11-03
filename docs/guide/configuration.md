@@ -411,6 +411,7 @@ below works in both `lines` and `right_lines`.
 | `page.<slot>.image.src` | File path | Required in an image table |
 | `page.<slot>.image.width` | Length | Unset: natural size; raster images use 96 dpi |
 | `page.<slot>.image.align` | `left`, `center` or `right` | Slot alignment |
+| `page.<slot>.image.gap` | Length | `text.paragraph_spacing`, else the backend's paragraph spacing; space between the image and the lines |
 | `page.<slot>.lines[].text` | String | Required in a line table |
 | `page.<slot>.lines[].weight` | Weight | Slot weight |
 | `page.<slot>.lines[].italic` | Boolean | Slot italic |

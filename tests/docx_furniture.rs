@@ -3,6 +3,7 @@
 use std::io::{Cursor, Read, Write};
 use std::path::Path;
 
+use writer::design::{FurnitureImage, Pt};
 use writer::docx::xml::{
     CT_DOCUMENT, CT_RELS, CT_SETTINGS, CT_STYLES, NS_R, NS_RELS, NS_W,
     REL_OFFICE_DOCUMENT, REL_SETTINGS, REL_STYLES,
@@ -158,6 +159,10 @@ fn first_header_shared_footer_and_media_are_valid_parts() {
         insta::assert_snapshot!(name, xml);
     }
     assert!(first.contains("cx=\"1800000\""));
+    // The image paragraph's spacing after is the letter's paragraph spacing.
+    assert!(
+        first.contains("<w:spacing w:after=\"204\"/><w:jc w:val=\"center\"/>")
+    );
     assert!(first.contains("Generative Biology Institute"));
     assert!(first.contains("A96D4B"));
     assert!(rest.contains("EIT Oxford | Generative Biology Institute"));
@@ -176,6 +181,24 @@ fn first_header_shared_footer_and_media_are_valid_parts() {
             .count(),
         1
     );
+}
+
+#[test]
+fn image_gap_sets_the_spacing_after_the_image_paragraph() {
+    fn image(prepared: &mut pipeline::Prepared) -> &mut FurnitureImage {
+        let header = prepared.design.page.header.as_mut().unwrap();
+        header.first.as_mut().unwrap().image.as_mut().unwrap()
+    }
+    let mut prepared = letter();
+    image(&mut prepared).gap = Some(Pt(3.0 * 72.0 / 25.4));
+    let first = part(&write(&prepared, None), "word/header1.xml");
+    assert!(first.contains("<w:spacing w:after=\"170\"/>"));
+    assert!(!first.contains("w:after=\"204\""));
+    // Without a resolved gap the paragraph inherits the document defaults.
+    image(&mut prepared).gap = None;
+    let first = part(&write(&prepared, None), "word/header1.xml");
+    assert!(!first.contains("<w:spacing"));
+    assert!(first.contains("<w:pPr><w:jc w:val=\"center\"/></w:pPr>"));
 }
 
 #[test]

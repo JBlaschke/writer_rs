@@ -85,6 +85,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T88 | Page furniture: Typst | M8 | M | T85 | done (PR #61) |
 | T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | done |
 | T92 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | ready for review (PR #65) |
+| T90 | Furniture image `gap` | M8 | S | T89 | ready for review (PR #64) |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -107,6 +108,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 14 | T86, T87, T88 | 3 |
 | 15 | T89 | 1 |
 | 16 | T92 | 1 |
+| 16 | T90 | 1 |
 
 ## Coordinator notes (2026-10-24)
 - T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI

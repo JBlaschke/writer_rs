@@ -379,6 +379,17 @@ fn image_paragraph(
             )],
         ),
     );
+    // An unset gap keeps the document defaults' spacing after: Word's own
+    // paragraph spacing.
+    if let Some(gap) = image.gap {
+        props.set(
+            "w:spacing",
+            property(
+                "w:spacing",
+                &[("w:after", super::design::twips(gap).to_string())],
+            ),
+        );
+    }
     Ok(format!("<w:p>{}{drawing}</w:p>", props.to_xml()))
 }
 

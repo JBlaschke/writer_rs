@@ -66,6 +66,7 @@ spec!(FurnitureSpec {
 });
 spec!(ImageDetailsSpec {
     src: String, width: Option<String>, align: Option<String>,
+    gap: Option<String>,
 });
 spec!(LineDetailsSpec {
     text: String, weight: Option<WeightSpec>, italic: Option<bool>,
@@ -338,6 +339,9 @@ pub struct FurnitureImage {
     pub width: Option<Pt>,
     /// Image alignment, or the furniture alignment.
     pub align: Option<Align>,
+    /// Space between the image and the lines below it, in points; `None`
+    /// means the backend's own paragraph spacing.
+    pub gap: Option<Pt>,
 }
 
 /// A plain-text furniture line with optional typography overrides.
