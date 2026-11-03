@@ -62,7 +62,9 @@ uses paragraph keep-lines, which prevents splitting each paragraph but can
 still split a div containing several paragraphs. `keep_with_next` keeps the
 block with the following content where the output supports that behavior.
 
-Furniture slots can contain an image, lines, a right column and a rule. Text
+Furniture slots can contain an image, lines, a right column and a rule. The
+lines follow an image at the design's paragraph spacing unless the image table
+sets its own `gap`. Text
 is plain text. `{page}` and `{pages}` become page counters in printed output;
 screen HTML displays `1`. A `first` or `rest` table replaces the base slot for
 that page class; it does not inherit the base slot's contents.

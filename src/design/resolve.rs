@@ -290,7 +290,9 @@ fn furniture(
     let italic = boolean(map, "italic", path)?.unwrap_or(false);
     let image = map
         .get("image")
-        .map(|v| image(v, &format!("{path}.image")))
+        .map(|v| {
+            image(v, &format!("{path}.image"), design.text.paragraph_spacing)
+        })
         .transpose()?;
     let right_lines = lines(map, "right_lines", path, &design.colors)?;
     let lines = lines(map, "lines", path, &design.colors)?;
@@ -319,16 +321,21 @@ fn furniture(
     }))
 }
 
-fn image(value: &Value, path: &str) -> Result<FurnitureImage> {
+// `spacing` is the design's paragraph spacing, the default gap between the
+// image and the lines below it so that they are spaced like two paragraphs.
+fn image(
+    value: &Value, path: &str, spacing: Option<Pt>,
+) -> Result<FurnitureImage> {
     if let Value::String(value) = value {
         return Ok(FurnitureImage {
             path: value.into(),
             width: None,
             align: None,
+            gap: spacing,
         });
     }
     let map = object(value, path)?;
-    keys(map, path, &["src", "width", "align"])?;
+    keys(map, path, &["src", "width", "align", "gap"])?;
     let source = string(map, "src", path)?.ok_or_else(|| {
         Error::Config(format!("{path}.src: expected an image path"))
     })?;
@@ -336,6 +343,7 @@ fn image(value: &Value, path: &str) -> Result<FurnitureImage> {
         path: source.into(),
         width: length(map, "width", path)?,
         align: alignment(map, "align", path, true)?,
+        gap: length(map, "gap", path)?.or(spacing),
     })
 }
 

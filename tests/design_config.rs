@@ -96,6 +96,51 @@ fn lists_replace_and_empty_furniture_removes_inherited_content() {
 }
 
 #[test]
+fn image_gap_defaults_to_the_paragraph_spacing() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/design/letter/theme");
+    let gap = |design: serde_json::Value| {
+        let design = merge(&[layer(design, &root)]).unwrap();
+        let header = design.page.header.unwrap().first.unwrap();
+        header.image.unwrap().gap.map(|gap| gap.0)
+    };
+    let spacing = 3.6 * 72.0 / 25.4;
+    // The string form and a table without `gap` take the paragraph spacing.
+    for image in [
+        json!("assets/logo.png"),
+        json!({"src": "assets/logo.png", "width": "50mm"}),
+    ] {
+        let gap = gap(json!({
+            "text": {"paragraph_spacing": "3.6mm"},
+            "page": {"header": {"image": image}},
+        }))
+        .unwrap();
+        assert!((gap - spacing).abs() < 1e-9, "{gap}");
+    }
+    let explicit = gap(json!({
+        "text": {"paragraph_spacing": "3.6mm"},
+        "page": {"header": {"image": {"src": "assets/logo.png", "gap": "3mm"}}},
+    }))
+    .unwrap();
+    assert!((explicit - 3.0 * 72.0 / 25.4).abs() < 1e-9, "{explicit}");
+    // Without paragraph spacing the backends keep their own.
+    assert_eq!(
+        gap(json!({"page": {"header": {"image": "assets/logo.png"}}})),
+        None
+    );
+    let error = merge(&[layer(
+        json!({"page": {"header": {"image": {"src": "assets/logo.png", "gap": "3"}}}}),
+        &root,
+    )])
+    .unwrap_err()
+    .to_string();
+    assert!(
+        error.contains("design.page.header.image.gap: expected a length"),
+        "{error}"
+    );
+}
+
+#[test]
 fn undeclared_design_is_null_and_does_not_add_inputs() {
     let dir = tempfile::tempdir().unwrap();
     let input = dir.path().join("plain.md");
