@@ -69,11 +69,12 @@ fn the_letter_has_screen_furniture_and_distinct_print_headers() {
     insta::assert_snapshot!("letter_screen_footer", stable_assets(&footer));
     insta::assert_snapshot!("letter_print_furniture", stable_assets(&css));
     assert!(header.contains("w-furniture w-header w-header-first"));
-    assert!(header.contains("width:141.732pt"));
+    assert!(header.contains("width:141.732pt;margin-bottom:10.205pt"));
     assert!(css.contains(
         "@page :first{@top-center{content:\"Generative Biology Institute\""
     ));
-    assert!(css.contains("padding-top:141.732pt"));
+    // The logo's height plus the paragraph spacing that separates the line.
+    assert!(css.contains("padding-top:151.937pt"));
     assert!(css.contains("@page{@top-center{content:\"EIT Oxford | Generative Biology Institute\""));
     assert!(css.contains("border-top:0.709pt solid #a96d4b"));
     assert!(css.contains(
@@ -160,11 +161,57 @@ fn image_only_svg_margin_boxes_reserve_the_logo_width_and_aspect_ratio() {
     .unwrap();
     assert!(css.contains("content:\"\""));
     assert!(css.contains("min-width:56.693pt"));
-    assert!(css.contains("padding-top:5.669pt"));
+    assert!(css.contains("padding-top:calc(5.669pt + 1em)"));
     assert!(css.contains("/56.693pt auto"));
     let output = render(&prepared, &opts).unwrap();
     assert!(output.html.contains("data:image/svg+xml"));
     assert!(!output.html.contains("asset:"));
+}
+
+#[test]
+fn image_gap_is_the_screen_margin_and_grows_the_print_padding() {
+    let root = tempfile::tempdir().unwrap();
+    fs::write(root.path().join("document.md"), "Body.\n").unwrap();
+    fs::write(
+        root.path().join("logo.svg"),
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 20"><rect width="200" height="20"/></svg>"#,
+    ).unwrap();
+    for (design, margin, padding) in [
+        // An unset gap is the backend's paragraph spacing.
+        (
+            "[design.page.header]\nimage = { src = 'logo.svg', width = '20mm' }\nlines = ['Line']\n",
+            "margin-bottom:1em",
+            "padding-top:calc(5.669pt + 1em)",
+        ),
+        // The design's paragraph spacing fills the gap in.
+        (
+            "[design.text]\nparagraph_spacing = '6pt'\n[design.page.header]\nimage = { src = 'logo.svg', width = '20mm' }\nlines = ['Line']\n",
+            "margin-bottom:6pt",
+            "padding-top:11.669pt",
+        ),
+        // An explicit gap wins.
+        (
+            "[design.text]\nparagraph_spacing = '6pt'\n[design.page.header]\nimage = { src = 'logo.svg', width = '20mm', gap = '3mm' }\nlines = ['Line']\n",
+            "margin-bottom:8.504pt",
+            "padding-top:14.173pt",
+        ),
+    ] {
+        fs::write(root.path().join("writer.toml"), design).unwrap();
+        let opts = BuildOptions::new(root.path().join("document.md"));
+        let prepared = pipeline::prepare(&opts).unwrap();
+        let mut registry = AssetRegistry::new();
+        let mut targets = Targets::Placeholders(&mut registry);
+        let header = furniture_html(
+            &prepared.design,
+            FurnitureSlot::Header,
+            FurnitureVariant::First,
+            &mut targets,
+        )
+        .unwrap();
+        let css = furniture_css(&prepared.design, &mut targets).unwrap();
+        assert!(header.contains(margin), "{design}\n{header}");
+        assert!(css.contains(padding), "{design}\n{css}");
+    }
 }
 
 #[test]

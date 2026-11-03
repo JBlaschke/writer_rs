@@ -162,6 +162,35 @@ pub const VOCABULARY: &[(&str, StyleKind)] = &[
     ("Heading 6 Unlisted", StyleKind::Paragraph),
 ];
 
+/// The §2.3 paragraph name whose normalised key equals `name`'s, if any.
+///
+/// A design style of such a name restyles writer's own definition instead
+/// of adding one, and writer's emitters select it by name.
+pub fn vocabulary_paragraph(name: &str) -> Option<&'static str> {
+    let key = crate::design::normalise_style_key(name);
+    VOCABULARY
+        .iter()
+        .find(|(candidate, kind)| {
+            *kind == StyleKind::Paragraph
+                && crate::design::normalise_style_key(candidate) == key
+        })
+        .map(|(candidate, _)| *candidate)
+}
+
+/// The paragraph style of the page furniture's header lines.
+///
+/// §2.3 has no header entry, so the name gets a custom definition unless the
+/// design or a reference defines it. The footer lines use §2.3's `footer`.
+pub const HEADER: &str = "Header";
+
+/// Whether writer's own paragraphs select a design style of this name.
+///
+/// §2.3 paragraph names qualify by normalised key, as the design installs
+/// them; [`HEADER`] qualifies case-insensitively, as a custom name resolves.
+pub fn writer_selects(name: &str) -> bool {
+    vocabulary_paragraph(name).is_some() || name.eq_ignore_ascii_case(HEADER)
+}
+
 #[derive(Debug, Clone)]
 struct Definition {
     id: String,
@@ -391,6 +420,11 @@ impl StyleTable {
             .expect("definition replacement preserves the root");
     }
 
+    /// Registers the design's styles, then formats each over its definition.
+    ///
+    /// A name the reference defines keeps the reference's definition. A
+    /// vocabulary name restyles writer's built-in definition in place; any
+    /// other name gets a custom definition based on Body Text.
     fn install_design_styles(&mut self, reference_names: &BTreeSet<String>) {
         let styles = self.design.styles.clone();
         let mut selected = Vec::new();
@@ -405,12 +439,7 @@ impl StyleTable {
                     .insert((StyleKind::Paragraph, name.to_lowercase()), id);
                 continue;
             }
-            let vocabulary = VOCABULARY.iter().find(|(candidate, kind)| {
-                *kind == StyleKind::Paragraph
-                    && crate::design::normalise_style_key(candidate)
-                        == crate::design::normalise_style_key(name)
-            });
-            let id = if let Some((vocabulary, _)) = vocabulary {
+            let id = if let Some(vocabulary) = vocabulary_paragraph(name) {
                 self.ensure(vocabulary, StyleKind::Paragraph)
             } else {
                 self.custom(name, StyleKind::Paragraph, None)
@@ -1432,5 +1461,42 @@ mod design_tests {
             StyleTable::generated(&Design::default()).to_xml(),
             expected
         );
+    }
+
+    #[test]
+    fn vocabulary_names_restyle_writer_definitions_in_place() {
+        use crate::design::{Color, Style};
+        let mut design = Design { declared: true, ..Design::default() };
+        design.styles.insert(
+            "Heading 1 Unlisted".into(),
+            Style { color: Some(Color([169, 109, 75])), ..Style::default() },
+        );
+        design.styles.insert("Recipient".into(), Style::default());
+        let xml = StyleTable::generated(&design).to_xml();
+        assert_eq!(xml.matches("w:styleId=\"Heading1Unlisted\"").count(), 1);
+        let unlisted = xml
+            .split_once("<w:name w:val=\"Heading 1 Unlisted\"/>")
+            .unwrap()
+            .1
+            .split_once("</w:style>")
+            .unwrap()
+            .0;
+        assert!(unlisted.contains("<w:basedOn w:val=\"Heading1\"/>"));
+        assert!(unlisted.contains("<w:next w:val=\"BodyText\"/>"));
+        assert!(
+            unlisted.contains("<w:pPr><w:outlineLvl w:val=\"9\"/></w:pPr>")
+        );
+        assert!(
+            unlisted.contains("<w:rPr><w:color w:val=\"A96D4B\"/></w:rPr>")
+        );
+        assert!(xml.contains("w:styleId=\"Heading1\""));
+        assert!(xml.contains("w:customStyle=\"1\" w:styleId=\"Recipient\""));
+        assert_eq!(vocabulary_paragraph("Heading-1"), Some("heading 1"));
+        assert_eq!(vocabulary_paragraph("TOC Heading"), Some("TOC Heading"));
+        assert_eq!(vocabulary_paragraph("Hyperlink"), None);
+        assert_eq!(vocabulary_paragraph("Recipient"), None);
+        assert!(writer_selects("toc 2"));
+        assert!(writer_selects("header"));
+        assert!(!writer_selects("Recipient"));
     }
 }

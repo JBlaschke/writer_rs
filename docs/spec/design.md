@@ -145,7 +145,9 @@ image = { src = "assets/cover.jpg", fit = "cover", align = "center" }
 pages = "first"                # "first" (default): page 1 only, the cover case | "all": every page
 
 [design.page.header]           # a furniture table (§9.1); declaring it replaces the backend's built-in header, if any
-image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align }; default none
+image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align, gap = Length }; default none
+                               # gap: space between the image and the lines; default text.paragraph_spacing, else the
+                               # backend's paragraph spacing (HTML 1em, PDF writer-doc's spacing, DOCX document defaults) — §9.1
 lines       = ["Generative Biology Institute"]   # strings, or { text = "…", weight, italic, size, color }; default []
 right_lines = []               # lines set flush right beside `lines` (§9.1); default []
 rule        = false            # bool, or { position = "above" | "below", color = Color, width = Length }
@@ -239,7 +241,7 @@ pub struct Furniture {
     pub image: Option<FurnitureImage>, pub lines: Vec<Line>, pub right_lines: Vec<Line>, pub rule: Option<Rule>,
     pub align: Align, pub size: Option<Pt>, pub color: Option<Color>, pub weight: Weight, pub italic: bool,
 }
-#[derive(Debug, Clone, PartialEq, Serialize)] pub struct FurnitureImage { pub path: PathBuf, pub width: Option<Pt>, pub align: Option<Align> }
+#[derive(Debug, Clone, PartialEq, Serialize)] pub struct FurnitureImage { pub path: PathBuf, pub width: Option<Pt>, pub align: Option<Align>, pub gap: Option<Pt> }
 #[derive(Debug, Clone, PartialEq, Serialize)] pub struct Line { pub text: String, pub weight: Option<Weight>, pub italic: Option<bool>, pub size: Option<Pt>, pub color: Option<Color> }
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)] pub struct Rule { pub position: RulePosition, pub color: Color, pub width: Pt }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)] #[serde(rename_all = "lowercase")] pub enum RulePosition { Above, Below }
@@ -294,9 +296,15 @@ None` for the page classes it covers), which still *declares* the slot (§9.1).
   when neither is set (backend text colour).
 - `rule = true` → `Rule { position: Below (header) | Above (footer), color: colors.accent else
   colors.text else #000000, width: 0.5pt }`.
-- `image = "path"` → `FurnitureImage { path, width: None, align: None }`; a `None` width means the
-  image's natural size at 96 dpi for raster images (HTML: intrinsic size; Typst: `image(..)`
+- `image = "path"` → `FurnitureImage { path, width: None, align: None, gap }`; a `None` width means
+  the image's natural size at 96 dpi for raster images (HTML: intrinsic size; Typst: `image(..)`
   default; DOCX: pixel size × 9525 EMU), `align: None` → the furniture's `align`.
+- Image `gap` (T90): `text.paragraph_spacing` when it is set and the image table has no `gap`;
+  unset otherwise, and each backend then uses its own paragraph spacing (HTML `1em` of the
+  furniture text, Typst `writer-doc`'s `spacing`, `1.2em` of the furniture text, DOCX the
+  document defaults' `w:after`). The
+  image and the lines are two paragraphs of the furniture, so they are spaced like body
+  paragraphs: the §11 letter gets 3.6 mm, the distance its hand-made letterheads use.
 - Style `font = "body" | "heading" | "mono"` → `FontRef::Body | Heading | Mono`; any other string →
   `FontRef::Family`.
 Nothing else is derived: an unset key stays `None` (§0.2).
@@ -311,7 +319,7 @@ Nothing else is derived: an unset key stays `None` (§0.2).
   "page": { "paper": "a4", "margin": { "top": 141.732, "right": 62.362, "bottom": 107.717, "left": 62.362 },
             "header_offset": 48.189, "footer_offset": 28.346, "print": "margin-boxes",
             "background": { "image": { "path": "…", "fit": "cover", "align": { "horizontal": "center", "vertical": "center" } }, "pages": "first" },
-            "header": { "first": { "image": { "path": "…", "width": 141.732, "align": null }, "lines": [ { "text": "…", "weight": null, "italic": null, "size": null, "color": null } ],
+            "header": { "first": { "image": { "path": "…", "width": 141.732, "align": null, "gap": 10.205 }, "lines": [ { "text": "…", "weight": null, "italic": null, "size": null, "color": null } ],
                                    "right_lines": [], "rule": null, "align": "center", "size": 11.0, "color": "#242424", "weight": 400, "italic": false },
                         "rest": { /* same shape */ } },
             "footer": { "first": { /* … */ }, "rest": { /* … */ } } },
@@ -556,7 +564,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 
 | design key | edit |
 |---|---|
-| `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`) |
+| `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`); Author and Date, whose `w:rFonts` name `Calibri` only to undo Title's heading font, follow it (T92) |
 | `fonts.heading` | Heading 1–9, Title, Subtitle and their linked character styles = family (the asset uses both `Calibri Light` and `Calibri`) |
 | `fonts.mono` | every `w:rFonts` naming `Consolas` (Source Code, Verbatim Char, …) = family |
 | `text.size` | `rPrDefault` `w:sz`/`w:szCs` = half-points; styles whose `w:sz` is relative to the body in §2.3 (headings, Title, captions, footnotes, code) are scaled by `new/22` and rounded to even half-points |
@@ -566,7 +574,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 | `colors.text` | `rPrDefault/w:color` (inserted) = hex without `#` |
 | `colors.link` | Hyperlink style `w:color` = hex |
 | `colors.accent`, `muted`, `background`, `page.*` | not applied to styles (accent and muted are used by furniture, §9.5; page: §7.2) |
-| `styles.*` | appended as `w:style` definitions, §8.5 |
+| `styles.*` | appended as `w:style` definitions, §8.5; a §2.3 paragraph name restyles that built-in definition in place (§8.1, T92) |
 
 Edits are made on the parsed asset with `docx::xml` helpers, not with string replacement, and keep
 §5's child order. `set_lang` is unchanged. Appended named styles go through the §2.1 id rules.
@@ -607,10 +615,19 @@ The TOML key of `[design.styles.<Name>]` is the style's declared name, used verb
 `w:name`, the HTML `data-style` value, the Typst `style:` argument and the JSON key. Two names are
 the same style when `normalise_style_key` (lower-case ASCII letters and digits only: `Inside
 Address`, `inside-address`, `InsideAddress` → `insideaddress`) agrees; equal keys are an error
-(§4.4). A design style whose name is one of docx-output.md §2.3's vocabulary names (`Body Text`,
-`Heading 1`, `Date`, `Author`, …) replaces writer's built-in definition for DOCX (its `w:styleId`
-stays the §2.3 id; the `w:pPr`/`w:rPr` are the design's) and otherwise behaves like any style; this
-is how a letter restyles `Date`.
+(§4.4). A design style whose name is one of docx-output.md §2.3's paragraph vocabulary names
+(`Body Text`, `Heading 1`, `TOC Heading`, `toc 2`, `Date`, …; compared by normalised key, so
+`Heading-1` is `heading 1`) restyles writer's built-in definition for DOCX instead of adding one
+(T92): the §2.3 id, `basedOn`, `next`, `link` and `uiPriority` stay, and the design's keys are laid
+over the built-in `w:pPr`/`w:rPr` as §8.5 describes, so every property the design leaves unset
+keeps its built-in value. `TOC Heading` and `Heading N Unlisted` therefore keep `outlineLvl 9` and
+stay out of the TOC field (docx-output.md §4.13), `toc N` keeps its indent, and `Title` stays
+centred until `align` says otherwise. Writer's own emitters select such a style by name (headings,
+the title block, the contents list, captions, footer lines), so `design-style-unused` does not
+report it (§10); a div may select it as well. Otherwise it behaves like any style; this is how a
+letter restyles `Date`. The header furniture's lines select `Header` (`docx::styles::HEADER`,
+§9.5), which §2.3 does not list: a design style of that name (compared case-insensitively) is a
+custom definition those lines use, and `design-style-unused` does not report it either.
 
 ### 8.2 Resolution order (one function, `design::style_for`, every backend)
 For a `Div` (ir.md: `attrs.classes`, `attrs.pairs`):
@@ -679,21 +696,35 @@ Each design style is appended to `styles.xml` (§7.1) as
     </w:rPr>
 </w:style>
 ```
-in §5's child order, id from the §2.1 rules, `basedOn` the table's id for `Body Text` (a §2.3 name:
-`basedOn` is that definition's own). `w:contextualSpacing` makes consecutive paragraphs of the same
+in §5's child order, id from the §2.1 rules, `basedOn` the table's id for `Body Text`. The XML is
+built over the table's registered definition for the name (T92): for a §2.3 paragraph name that is
+writer's built-in definition with §7.1's edits applied, for any other name the empty `custom`
+definition, so a custom style carries the design's keys alone. A set key replaces the child of the
+same name in that definition's `w:pPr`/`w:rPr` (`keepNext`, `keepLines`, `contextualSpacing`,
+`jc`, `rFonts`, `b`/`bCs`, `i`/`iCs`, `color`, `sz`/`szCs`); `w:spacing` merges attribute by
+attribute (`before`, `after`, `line` with `lineRule`), so `toc 2` with `space_after` alone keeps
+its `before="0"`; every other child (`outlineLvl`, `ind`, `tabs`, `pBdr`, `shd`, …) is kept.
+`keep_with_next` and `keep_together` are booleans: true adds the element, false (the default)
+leaves the built-in's alone. `w:contextualSpacing` makes consecutive paragraphs of the same
 style omit the gap between them, so `space_before`/`space_after` behave as the div's outer margins
 like in HTML and Typst. The body emitter (docx-output.md §4.1) pushes `Style(id)` for a `Div` when
 `style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
 exists, so `custom` returns its id). With a reference document, §7.3.
 
-## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst; T91 page background)
+## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst; T90 image gap, T91 page background)
 
 ### 9.1 Model
 A **slot** is `page.header` or `page.footer`; a slot has a **first-page** and a **rest** furniture
 (§2.2, §3.1). A furniture lays out, top to bottom: the image (when any), the lines (`lines` as a
 left column and `right_lines` as a right column when the latter is non-empty; otherwise one column
 aligned by `align`), and the rule at its `position` (above everything for `above`, below for
-`below`). Line text is plain text with §9.2 placeholders; no inline markup (open point 6). Lines
+`below`). The image's `gap` (§2.2; the paragraph spacing by default, §3.2) is the vertical space
+between its bottom edge and the top of the first line's box (T90). That box starts at the cap
+height in Typst, at the ascender plus half the leading in HTML, and in Word below the image line's
+descent and the line spacing Word adds above the text. The same value therefore looks larger in
+HTML and larger again in Word: in the §11 letter the line's capitals sit 0, 1.1 and 3.4 mm below
+the gap's end (PDF, HTML screen, Word's own PDF export; measured 2 Nov 2026). Line text is plain
+text with §9.2 placeholders; no inline markup (open point 6). Lines
 inherit the furniture's `size`, `color`, `weight`, `italic` unless they set their own. The
 furniture's width is the text width (page width − left − right margin); the header's top edge is at
 `header_offset` from the page top, the footer's bottom edge at `footer_offset` from the page bottom
@@ -714,7 +745,7 @@ result `1`); Typst → `context counter(page).display()` / `context counter(page
 `variant` = `"first" | "rest"`) returns the furniture's HTML or `""`:
 ```html
 <div class="w-furniture w-header w-header-first" data-align="center">
-    <img class="w-furniture-image" src="asset:…" alt="" style="width:141.732pt">
+    <img class="w-furniture-image" src="asset:…" alt="" style="width:141.732pt;margin-bottom:10.205pt">
     <div class="w-furniture-lines">
         <p class="w-furniture-line" style="font-weight:600;color:#a96d4b">Generative Biology Institute</p>
     </div>
@@ -722,8 +753,9 @@ result `1`); Typst → `context counter(page).display()` / `context counter(page
     <hr class="w-furniture-rule" style="border-color:#a96d4b;border-width:0.5pt">
 </div>
 ```
-(the rule precedes the image for `above`; `style` attributes carry only set values; the image is
-registered as an asset). The default theme's `document.html` (T86's one asset change) calls
+(the rule precedes the image for `above`; `style` attributes carry only set values, except the
+image's `margin-bottom`, its `gap` or `1em` when unset; the image is registered as an asset).
+The default theme's `document.html` (T86's one asset change) calls
 `{{ design_furniture("header", "first") }}` before `html.main` and `{{ design_furniture("footer",
 "first") }}` after it; an undeclared design renders nothing, so the template's output is unchanged.
 Screen CSS in `layout_css`: `.w-furniture { display: grid; grid-template-columns: 1fr auto; gap: 0 1em; … }`,
@@ -740,8 +772,9 @@ lines; `white-space: pre-line`), `font: <weight> <italic> <size>/<line-height> <
 `text-align`, `vertical-align: top` plus `margin-top: <header_offset>` for top boxes and
 `vertical-align: bottom` plus `margin-bottom: <footer_offset>` for bottom boxes; no `width` (margin
 boxes size themselves from their content). The image becomes `background: url(…)
-no-repeat top center / <width> auto` with `padding-top: <image height>` (height from the image's
-pixel size and the width, read with `imagesize::blob_size` as `src/docx/images.rs` does, Verified API hints), the rule a
+no-repeat top center / <width> auto` with `padding-top: <image height + gap>` (height from the image's
+pixel size and the width, read with `imagesize::blob_size` as `src/docx/images.rs` does, Verified API hints;
+`calc(<height> + 1em)` when the gap is unset), the rule a
 `border-top`/`border-bottom: <width> solid <color>` with `padding` to separate it. Per-line
 weight/colour cannot be expressed in one `content:` string: lines whose own `weight`, `italic`,
 `size` or `color` differ from the furniture's are rendered with the furniture's values in margin
@@ -759,22 +792,24 @@ A declared slot sets `page(header: none, footer: none, numbering: none)` and
 `page(background: context { … })` places both slots (the way the §11 letter's hand-written
 `letterhead.typ` does, which keeps offsets exact):
 ```typst
-#let writer-furniture(spec, text-width) = {
+#let writer-furniture(spec, text-width, spacing: 1.2em) = {
     // spec: the §3.3 furniture dictionary; returns content: optional rule above,
-    // image(spec.image.path, width:), grid(columns: (1fr, auto)) of lines / right_lines
-    // joined by linebreak(), optional rule below; text(size:, fill:, weight:, style:) per line.
+    // block(below: gap, image(spec.image.path, width:)) with gap = spec.image.gap * 1pt or
+    // `spacing` (the document's paragraph spacing) when null, grid(columns: (1fr, auto)) of
+    // lines / right_lines joined by linebreak(), optional rule below; text(size:, fill:,
+    // weight:, style:) per line.
 }
 #set page(background: context {
     let first = counter(page).get().first() == 1
     let header = if first { design.page.header.first } else { design.page.header.rest }
     if header != none {
         place(top + left, dx: margin.left, dy: header-offset,
-              block(width: text-width, writer-furniture(header, text-width)))
+              block(width: text-width, writer-furniture(header, text-width, spacing: settings.spacing)))
     }
     let footer = …
     if footer != none {
         place(bottom + left, dx: margin.left, dy: -footer-offset,
-              block(width: text-width, writer-furniture(footer, text-width)))
+              block(width: text-width, writer-furniture(footer, text-width, spacing: settings.spacing)))
     }
 })
 ```
@@ -797,11 +832,13 @@ slot differs. Retained `evenAndOddHeaders` settings similarly alias continuation
 parts as `even`. Part body, in order:
 - rule `above`: a paragraph with `w:pPr/w:pBdr/w:top w:val="single" w:sz="<eighths>" w:space="1" w:color="rrggbb"`
   and a `w:sz w:val="2"` empty run (the reference document's own construction);
-- image: a paragraph (`w:jc` from the image's or furniture's align) with an inline drawing
+- image: a paragraph (`w:jc` from the image's or furniture's align; `w:spacing w:after` from the
+  image's resolved `gap`, inherited from the document defaults when unset) with an inline drawing
   (`wp:inline`, extent EMU from `width` and the image's aspect ratio; `wp:docPr/@id` from
   `Ids.doc_pr`; `r:embed` → `word/_rels/header<k>.xml.rels` → `word/media/<name>`; content type
   by extension as docx-output.md §4.16 does for figures);
-- lines: one `w:p` per line of `lines`, `w:pStyle` Header / Footer (§2.3 names, `ensure`d),
+- lines: one `w:p` per line of `lines`, `w:pStyle` Header / Footer (`ensure`d; `footer` is a §2.3
+  name, `Header` is a custom style based on Body Text unless the design, §8.1, or a reference defines it),
   `w:jc` from `align`; with `right_lines`, line *i* of `lines` is followed by `<w:r><w:tab/></w:r>`
   and the runs of line *i* of `right_lines`, with `w:pPr/w:tabs/w:tab w:val="right" w:pos="<text
   width twips>"` (the reference document's layout); extra right lines get paragraphs of their own
@@ -878,7 +915,7 @@ references parts, nothing is generated (§7.3).
 | `design-image-missing` | error | a furniture or page background image path does not exist (also a build error) |
 | `design-theme-unavailable` | warning | §1.4: the theme could not be resolved for a non-HTML target; the design was merged without it |
 | `design-font-family` | warning | `check --target pdf`: a declared family (with no files) is not in the World's font book after §6.5 (`FontBook::contains_family` queried with a lower-case family name, matching Typst font selection) |
-| `design-style-unused` | warning | a `[design.styles]` name that no `Div` of the document selects (§8.2); evaluated on the resolved IR |
+| `design-style-unused` | warning | a `[design.styles]` name that no `Div` of the document selects (§8.2) and that writer's own paragraphs do not select (`docx::styles::writer_selects`: a docx-output.md §2.3 paragraph name or `Header`, §8.1); evaluated on the resolved IR |
 | `design-shadowed` | note | per target: a `[docx] reference_doc` whose `sectPr` or style names override design keys (names the parts: "page setup", "styles: Recipient, Date", "header/footer"); a `[pdf] template` that does not import `@writer/doc` while a design is declared |
 Config errors of §4.4 fail `check` and `build` alike. `check` without `--target` runs the
 target-specific rows for every configured target.
@@ -896,6 +933,7 @@ The Letters template (an HTML theme with a hand-written `document.html`, `letter
 | header offset | `"17mm"` | 48.189 | header 964 | `.letterhead { top: 17mm }`; `pgMar/@header="964"` |
 | footer offset | `"10mm"` | 28.346 | footer 567 | `.legal-footer { bottom: 10mm }` (reference: 737) |
 | logo width | `"50mm"` | 141.732 | 1800000 EMU | `.letterhead img { width: 50mm }`; `wp:extent cx="1800000"` |
+| logo to institute line | unset (`gap`): the paragraph spacing | 10.205 | after 204 | `.institute-name { margin-top: 3mm }`; header `w:spacing w:after="120"`; `letterhead.typ` places the line 4 mm below the logo |
 | ink / copper / footer grey | `#242424` / `#a96d4b` / `#575757` | | | `--ink`, `--copper`, `.legal-footer { color: #575757 }` |
 
 `theme/theme.toml` of the letter theme (paths relative to the theme directory):
@@ -1024,7 +1062,8 @@ and `letter.md` keeps its directives: `:::recipient {custom-style="Recipient"}` 
 - **DOCX** (T83, T85, T87): no `reference_doc`; generated `styles.xml` with Source Sans 3 in
   `rPrDefault`, sz 22, color 242424, `pPrDefault` spacing line 324 auto after 204; headings in
   Source Sans 3; six appended paragraph styles (`Recipient`: keepLines, after 340, line 242 exact,
-  contextualSpacing; `Closing`: keepNext, before 340, after 454; `Date`: sz 20, after 170; …);
+  contextualSpacing; `Closing`: keepNext, before 340, after 454; `Date`: the built-in definition
+  with sz 20 and after 170 laid over it; …);
   `sectPr` with `pgSz 11906×16838`, `pgMar top=2835 right=1247 bottom=2154 left=1247 header=964
   footer=567`, `titlePg`, `header1.xml` (first: centred logo drawing 1800000 EMU wide + centred
   semibold copper "Generative Biology Institute"), `header2.xml` (default: the compact line, sz 20),

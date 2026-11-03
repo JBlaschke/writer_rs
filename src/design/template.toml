@@ -37,7 +37,9 @@
 # pages = "first"                # "first" (default): page 1 only, the cover case | "all": every page
 # 
 # [design.page.header]           # a furniture table (§9.1); declaring it replaces the backend's built-in header, if any
-# image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align }; default none
+# image       = "assets/logo.png"            # path, or { src = "…", width = Length, align = Align, gap = Length }; default none
+#                                            # gap: space between the image and the lines; default text.paragraph_spacing,
+#                                            # else the backend's paragraph spacing (HTML 1em, PDF 1.2em, Word document defaults)
 # lines       = ["Generative Biology Institute"]   # strings, or { text = "…", weight, italic, size, color }; default []
 # right_lines = []               # lines set flush right beside `lines` (§9.1); default []
 # rule        = false            # bool, or { position = "above" | "below", color = Color, width = Length }

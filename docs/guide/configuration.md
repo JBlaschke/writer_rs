@@ -436,6 +436,7 @@ below works in both `lines` and `right_lines`.
 | `page.<slot>.image.src` | File path | Required in an image table |
 | `page.<slot>.image.width` | Length | Unset: natural size; raster images use 96 dpi |
 | `page.<slot>.image.align` | `left`, `center` or `right` | Slot alignment |
+| `page.<slot>.image.gap` | Length | `text.paragraph_spacing`, else the backend's paragraph spacing; space between the image and the lines |
 | `page.<slot>.lines[].text` | String | Required in a line table |
 | `page.<slot>.lines[].weight` | Weight | Slot weight |
 | `page.<slot>.lines[].italic` | Boolean | Slot italic |
@@ -452,6 +453,15 @@ ASCII letters are lowercased and every character other than an ASCII letter
 or digit is removed. For example,
 `Inside Address` matches `:::inside-address`. Names that normalize identically
 cannot both be declared. Styles apply to divs, not inline spans.
+
+A name that matches one of writer's built-in Word styles, such as `Title`,
+`Heading 1`, `TOC Heading`, `toc 2`, `Caption` or `footer`, restyles that Word
+style instead of adding one: the keys you set replace the built-in values and
+every other property, such as an outline level or a contents-list indent,
+keeps its built-in value. Word applies the result wherever writer uses the
+style, so `writer check` does not report such a name as unused. The same holds
+for `Header`, the style of the header lines. HTML and PDF apply named styles
+to divs only.
 
 | Key | Type / unit | Default and effect |
 |---|---|---|

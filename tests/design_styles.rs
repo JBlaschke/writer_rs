@@ -89,6 +89,11 @@ fn class_and_attribute_routes_share_html_typst_and_word_styles() {
         .unwrap()
         .0;
     assert!(date.contains("<w:sz w:val=\"20\"/>"));
+    // The built-in Date definition stays underneath the design's two keys.
+    assert!(date.contains("<w:basedOn w:val=\"Title\"/>"));
+    assert!(date.contains("<w:spacing w:before=\"0\" w:after=\"170\"/>"));
+    assert!(date.contains("w:ascii=\"Source Sans 3\""));
+    assert!(date.contains("<w:color w:val=\"59636E\"/>"));
     let findings = writer::check::design::unused_styles(
         &prepared.design, &prepared.document,
     );
@@ -99,8 +104,10 @@ fn class_and_attribute_routes_share_html_typst_and_word_styles() {
 fn unused_styles_warn_once_and_unknown_attributes_can_fall_back_to_class() {
     use serde_json::json;
     let root = tempfile::tempdir().unwrap();
-    let value =
-        design(json!({"styles":{"Date":{}, "Recipient":{}}}), root.path());
+    let value = design(
+        json!({"styles":{"Postscript":{}, "Recipient":{}}}),
+        root.path(),
+    );
     let mut attrs = writer::ir::Attrs::default();
     attrs.classes.push("recipient".into());
     attrs.pairs.insert("custom-style".into(), "Other".into());
@@ -118,7 +125,15 @@ fn unused_styles_warn_once_and_unknown_attributes_can_fall_back_to_class() {
     let findings = writer::check::design::unused_styles(&value, &document);
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].code, "design-style-unused");
-    assert!(findings[0].message.contains("Date"));
+    assert!(findings[0].message.contains("Postscript"));
+    // Writer's own paragraphs carry Word vocabulary names and the header
+    // furniture's Header: never unused.
+    let value = design(
+        json!({"styles":{"Date":{}, "Heading-1":{}, "Header":{}}}),
+        root.path(),
+    );
+    let findings = writer::check::design::unused_styles(&value, &document);
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]

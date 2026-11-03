@@ -416,6 +416,7 @@ pub fn furniture_html(
         if let Some(align) = image.align {
             style.push(format!("justify-self:{}", furniture_align(align)));
         }
+        style.push(format!("margin-bottom:{}", image_gap(image.gap)));
         let _ = write!(
             html,
             "<img class=\"w-furniture-image\" src=\"{}\" alt=\"\"",
@@ -474,6 +475,12 @@ pub fn furniture_html(
     }
     html.push_str("</div>");
     Ok(html)
+}
+
+// The lines below an image are a paragraph of their own: an unset gap is the
+// backend's paragraph spacing, which a stylesheet can only express as 1em.
+fn image_gap(gap: Option<Pt>) -> String {
+    gap.map_or_else(|| "1em".into(), css_pt)
 }
 
 fn rule_html(rule: crate::design::Rule) -> String {
@@ -708,7 +715,13 @@ fn margin_box(
                     rule.position == crate::design::RulePosition::Above
                 })
                 .map_or(0.0, |_| 4.0);
-            props.push(format!("padding-top:{}", css_pt(Pt(height + extra))));
+            let padding = Pt(height + extra);
+            props.push(match image.gap {
+                Some(gap) => {
+                    format!("padding-top:{}", css_pt(Pt(padding.0 + gap.0)))
+                }
+                None => format!("padding-top:calc({} + 1em)", css_pt(padding)),
+            });
         }
     }
     let size = furniture.size.map_or_else(

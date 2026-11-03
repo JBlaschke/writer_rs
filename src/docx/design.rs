@@ -2,6 +2,8 @@
 
 use crate::design::{BackgroundPages, Design, LineHeight, Pt};
 
+use std::collections::BTreeMap;
+
 use super::validate::{XmlNode, parse_xml};
 use super::xml::{PPR, Props, RPR, escape};
 
@@ -46,15 +48,37 @@ fn property(name: &str, attrs: &[(&str, String)]) -> String {
     format!("<{name}{attrs}/>")
 }
 
-fn run_props(
-    node: &XmlNode, design: &Design, defaults: bool, scale: bool, heading: bool,
-) -> String {
-    let mut props = Props::new("w:rPr", RPR);
-    for child in &node.children {
-        if let Some(&tag) = RPR.iter().find(|&&tag| tag == child.name) {
+/// Starts an ordered property element from the children a node already has.
+fn seeded(
+    tag: &'static str, order: &'static [&'static str], node: Option<&XmlNode>,
+) -> Props {
+    let mut props = Props::new(tag, order);
+    for child in node.into_iter().flat_map(|node| node.children.iter()) {
+        if let Some(&tag) = order.iter().find(|&&tag| tag == child.name) {
             props.set(tag, element(child));
         }
     }
+    props
+}
+
+/// Orders merged `w:spacing` attributes as the asset writes them.
+fn spacing_attrs(attrs: &BTreeMap<String, String>) -> Vec<(&str, String)> {
+    const FIRST: [&str; 4] = ["w:before", "w:after", "w:line", "w:lineRule"];
+    let rest = attrs
+        .iter()
+        .filter(|(key, _)| !FIRST.contains(&key.as_str()))
+        .map(|(key, value)| (key.as_str(), value.clone()));
+    FIRST
+        .iter()
+        .filter_map(|key| attrs.get(*key).map(|value| (*key, value.clone())))
+        .chain(rest)
+        .collect()
+}
+
+fn run_props(
+    node: &XmlNode, design: &Design, defaults: bool, scale: bool, heading: bool,
+) -> String {
+    let mut props = seeded("w:rPr", RPR, Some(node));
     let font = if defaults {
         design.fonts.body.as_ref()
     } else if heading {
@@ -65,8 +89,11 @@ fn run_props(
             .iter()
             .find(|n| n.name == "w:rFonts")
             .and_then(|n| n.attr("w:ascii"));
+        // Author and Date name Calibri only to undo Title's heading font:
+        // they follow the body role like the paragraphs around them.
         match family {
             Some("Calibri Light") => design.fonts.heading.as_ref(),
+            Some("Calibri") => design.fonts.body.as_ref(),
             Some("Consolas") => design.fonts.mono.as_ref(),
             _ => None,
         }
@@ -112,12 +139,7 @@ fn run_props(
 }
 
 fn paragraph_defaults(node: &XmlNode, design: &Design) -> String {
-    let mut props = Props::new("w:pPr", PPR);
-    for child in &node.children {
-        if let Some(&tag) = PPR.iter().find(|&&tag| tag == child.name) {
-            props.set(tag, element(child));
-        }
-    }
+    let mut props = seeded("w:pPr", PPR, Some(node));
     if design.text.line_height.is_some()
         || design.text.paragraph_spacing.is_some()
     {
@@ -218,12 +240,7 @@ fn rewrite(
             run_props(node, design, parent == "w:rPrDefault", scale, heading);
         if hyperlink && let Some(color) = design.colors.link {
             let tree = fragment(&result);
-            let mut props = Props::new("w:rPr", RPR);
-            for child in &tree.children {
-                if let Some(&tag) = RPR.iter().find(|&&tag| tag == child.name) {
-                    props.set(tag, element(child));
-                }
-            }
+            let mut props = seeded("w:rPr", RPR, Some(&tree));
             props.set("w:color", property("w:color", &[("w:val", hex(color))]));
             result = props.to_xml();
         }
@@ -340,7 +357,12 @@ pub fn section(
     )
 }
 
-/// Formats a paragraph style, retaining its existing ID and base definition.
+/// Formats a paragraph style over its registered definition.
+///
+/// A vocabulary name's definition is writer's built-in one with the design's
+/// tokens applied, so every key the design leaves unset keeps its built-in
+/// value: outline levels, indents and tabs survive. A custom definition has
+/// no properties of its own, so the design's keys are all there is.
 pub fn style_xml(
     name: &str, style: &crate::design::Style, design: &Design,
     ids: &super::styles::StyleTable,
@@ -372,30 +394,35 @@ pub fn style_xml(
     }
     definition.set("w:name", property("w:name", &[("w:val", name.to_owned())]));
     definition.set("w:qFormat", "<w:qFormat/>");
-    let mut paragraph = Props::new("w:pPr", PPR);
+    let child = |tag: &str| tree.children.iter().find(|n| n.name == tag);
+    let mut paragraph = seeded("w:pPr", PPR, child("w:pPr"));
     if style.keep_with_next {
         paragraph.set("w:keepNext", "<w:keepNext/>");
     }
     if style.keep_together {
         paragraph.set("w:keepLines", "<w:keepLines/>");
     }
-    let mut spacing = Vec::new();
+    let mut spacing = child("w:pPr")
+        .and_then(|node| node.children.iter().find(|n| n.name == "w:spacing"))
+        .map(|node| node.attrs.clone())
+        .unwrap_or_default();
     if let Some(space) = style.space_before {
-        spacing.push(("w:before", twips(space).to_string()));
+        spacing.insert("w:before".into(), twips(space).to_string());
     }
     if let Some(space) = style.space_after {
-        spacing.push(("w:after", twips(space).to_string()));
+        spacing.insert("w:after".into(), twips(space).to_string());
     }
     if let Some(height) = style.line_height {
         let (line, rule) = match height {
             LineHeight::Multiple(n) => ((n * 240.0).round() as u32, "auto"),
             LineHeight::Exact(pt) => (twips(pt), "exact"),
         };
-        spacing.push(("w:line", line.to_string()));
-        spacing.push(("w:lineRule", rule.into()));
+        spacing.insert("w:line".into(), line.to_string());
+        spacing.insert("w:lineRule".into(), rule.into());
     }
     if !spacing.is_empty() {
-        paragraph.set("w:spacing", property("w:spacing", &spacing));
+        let attrs = spacing_attrs(&spacing);
+        paragraph.set("w:spacing", property("w:spacing", &attrs));
     }
     if style.space_before.is_some() || style.space_after.is_some() {
         paragraph.set("w:contextualSpacing", "<w:contextualSpacing/>");
@@ -410,7 +437,7 @@ pub fn style_xml(
         paragraph.set("w:jc", property("w:jc", &[("w:val", align.into())]));
     }
     definition.set("w:pPr", paragraph.to_xml());
-    let mut run = Props::new("w:rPr", RPR);
+    let mut run = seeded("w:rPr", RPR, child("w:rPr"));
     if let Some(font) = &style.font {
         let family = match font {
             FontRef::Family(family) => Some(family.as_str()),
@@ -544,6 +571,149 @@ mod tests {
             descendant(link, &["w:rPr", "w:color"]).attr("w:val"),
             Some("A96D4B")
         );
+        let date = tree
+            .children
+            .iter()
+            .find(|n| n.attr("w:styleId") == Some("Date"))
+            .unwrap();
+        assert_eq!(
+            descendant(date, &["w:rPr", "w:rFonts"]).attr("w:ascii"),
+            Some("Body Family")
+        );
+    }
+
+    #[test]
+    fn vocabulary_styles_keep_unset_built_in_properties() {
+        use crate::design::{Align, FontRef, Style, Weight};
+        use crate::docx::StyleTable;
+        let mut design = design();
+        let styles = [
+            (
+                "TOC Heading",
+                Style {
+                    font: Some(FontRef::Family("Display Face".into())),
+                    size: Some(Pt(18.0)),
+                    weight: Some(Weight(400)),
+                    color: Some(Color([10, 47, 65])),
+                    ..Style::default()
+                },
+            ),
+            ("toc 2", Style { space_after: Some(Pt(0.0)), ..Style::default() }),
+            ("Title", Style { size: Some(Pt(30.0)), ..Style::default() }),
+            (
+                "Heading 3",
+                Style {
+                    weight: Some(Weight(400)),
+                    align: Some(Align::Left),
+                    ..Style::default()
+                },
+            ),
+            (
+                "Postscript",
+                Style {
+                    space_before: Some(Pt(6.0)),
+                    keep_with_next: true,
+                    ..Style::default()
+                },
+            ),
+        ];
+        design.styles =
+            styles.into_iter().map(|(name, s)| (name.to_owned(), s)).collect();
+        let xml = StyleTable::generated(&design).to_xml();
+        let tree = parse_xml(&xml).unwrap();
+        let style = |id: &str| {
+            tree.children
+                .iter()
+                .find(|n| n.attr("w:styleId") == Some(id))
+                .unwrap_or_else(|| panic!("missing style {id}"))
+        };
+        let names = |node: &XmlNode| {
+            node.children.iter().map(|n| n.name.clone()).collect::<Vec<_>>()
+        };
+
+        // A design rPr over a definition without one, keeping its pPr.
+        let toc_heading = style("TOCHeading");
+        assert_eq!(
+            descendant(toc_heading, &["w:basedOn"]).attr("w:val"),
+            Some("Heading1")
+        );
+        assert_eq!(
+            descendant(toc_heading, &["w:pPr", "w:outlineLvl"]).attr("w:val"),
+            Some("9")
+        );
+        let run = descendant(toc_heading, &["w:rPr"]);
+        assert_eq!(
+            names(run),
+            ["w:rFonts", "w:b", "w:bCs", "w:color", "w:sz", "w:szCs"]
+        );
+        assert_eq!(
+            descendant(run, &["w:rFonts"]).attr("w:ascii"),
+            Some("Display Face")
+        );
+        assert_eq!(descendant(run, &["w:b"]).attr("w:val"), Some("0"));
+        assert_eq!(descendant(run, &["w:sz"]).attr("w:val"), Some("36"));
+
+        // Spacing merges attribute by attribute; the indent stays.
+        let toc2 = descendant(style("TOC2"), &["w:pPr"]);
+        assert_eq!(names(toc2), ["w:spacing", "w:ind", "w:contextualSpacing"]);
+        let spacing = descendant(toc2, &["w:spacing"]);
+        assert_eq!(spacing.attr("w:before"), Some("0"));
+        assert_eq!(spacing.attr("w:after"), Some("0"));
+        assert_eq!(descendant(toc2, &["w:ind"]).attr("w:left"), Some("240"));
+
+        // An unset align keeps the built-in centring; tokens stay applied.
+        let title = style("Title");
+        assert_eq!(
+            names(descendant(title, &["w:pPr"])),
+            ["w:keepNext", "w:keepLines", "w:spacing", "w:jc"]
+        );
+        assert_eq!(
+            descendant(title, &["w:pPr", "w:jc"]).attr("w:val"),
+            Some("center")
+        );
+        assert_eq!(
+            descendant(title, &["w:rPr", "w:rFonts"]).attr("w:ascii"),
+            Some("Heading Family")
+        );
+        assert_eq!(
+            descendant(title, &["w:rPr", "w:sz"]).attr("w:val"),
+            Some("60")
+        );
+
+        // A set key replaces the built-in child of the same name.
+        let heading = style("Heading3");
+        assert_eq!(
+            descendant(heading, &["w:pPr", "w:jc"]).attr("w:val"),
+            Some("left")
+        );
+        assert_eq!(
+            descendant(heading, &["w:pPr", "w:outlineLvl"]).attr("w:val"),
+            Some("2")
+        );
+        assert_eq!(
+            descendant(heading, &["w:rPr", "w:b"]).attr("w:val"),
+            Some("0")
+        );
+        assert_eq!(
+            descendant(heading, &["w:rPr", "w:bCs"]).attr("w:val"),
+            Some("0")
+        );
+        assert_eq!(
+            descendant(heading, &["w:rPr", "w:color"]).attr("w:val"),
+            Some("0F4761")
+        );
+
+        // A custom name starts from an empty definition, as before.
+        let custom = style("Postscript");
+        assert_eq!(
+            descendant(custom, &["w:basedOn"]).attr("w:val"),
+            Some("BodyText")
+        );
+        assert_eq!(
+            names(descendant(custom, &["w:pPr"])),
+            ["w:keepNext", "w:spacing", "w:contextualSpacing"]
+        );
+        assert!(custom.children.iter().all(|n| n.name != "w:rPr"));
     }
 
     #[test]

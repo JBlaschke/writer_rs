@@ -94,10 +94,11 @@ on its settings. A reference document supplies styles and page setup; it is
 not a body template. See [customization](customization.md) for editing it.
 
 Without a reference document, `[design]` generates Word font names, paragraph
-spacing, named styles, page geometry and header/footer parts. First-page
-furniture can differ from the continuation pages, and a page background is a
-behind-text picture anchored in the header. Font files are not embedded;
-Word selects the declared family by name.
+spacing, named styles, page geometry and header/footer parts. A named style
+that matches a built-in Word style name, such as `Heading 1` or `toc 2`,
+restyles that style in place and keeps the properties it does not set.
+First-page furniture can differ from the continuation pages. Font files are
+not embedded; Word selects the declared family by name.
 
 A reference document's existing style definitions and body-level section,
 including its referenced headers and footers, take precedence. Missing styles
