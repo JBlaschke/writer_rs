@@ -152,6 +152,9 @@ pub fn docx_shadowed(
 }
 
 /// Reports declared styles which no div in the resolved document selects.
+///
+/// Names writer's own paragraphs select are exempt: the Word vocabulary's
+/// paragraph names and the header furniture's `Header`.
 pub fn unused_styles(
     design: &Design, document: &crate::ir::Document,
 ) -> Vec<Diagnostic> {
@@ -169,7 +172,10 @@ pub fn unused_styles(
     design
         .styles
         .keys()
-        .filter(|name| !selected.contains(*name))
+        .filter(|name| {
+            !selected.contains(*name)
+                && !crate::docx::styles::writer_selects(name)
+        })
         .map(|name| {
             Diagnostic::warning(
                 "design-style-unused",

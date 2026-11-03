@@ -62,9 +62,18 @@ uses paragraph keep-lines, which prevents splitting each paragraph but can
 still split a div containing several paragraphs. `keep_with_next` keeps the
 block with the following content where the output supports that behavior.
 
-Furniture slots can contain an image, lines, a right column and a rule. The
-lines follow an image at the design's paragraph spacing unless the image table
-sets its own `gap`. Text
+A style named after one of writer's built-in Word styles, such as `Title`,
+`Heading 1`, `TOC Heading`, `toc 2`, `Caption` or `footer`, restyles that Word
+style rather than adding one. Word applies it wherever writer uses the style:
+headings, the title block, the contents list, captions and footer lines. The
+keys you set replace the built-in values and everything else stays, so a
+restyled `TOC Heading` keeps its outline level and stays out of the contents
+list, and `toc 2` keeps its indent. Header lines use a style named `Header`,
+which you can declare the same way. HTML and PDF apply named styles to divs
+only; their heading look comes from the theme and the Typst template.
+`writer check` does not report any of these styles as unused.
+
+Furniture slots can contain an image, lines, a right column and a rule. Text
 is plain text. `{page}` and `{pages}` become page counters in printed output;
 screen HTML displays `1`. A `first` or `rest` table replaces the base slot for
 that page class; it does not inherit the base slot's contents.

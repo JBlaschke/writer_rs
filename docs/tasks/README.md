@@ -84,6 +84,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T87 | Page furniture: DOCX | M8 | M | T85 | done (PR #60) |
 | T88 | Page furniture: Typst | M8 | M | T85 | done (PR #61) |
 | T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | done |
+| T92 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | ready for review (PR #65) |
 | T90 | Furniture image `gap` | M8 | S | T89 | ready for review (PR #64) |
 
 ## Order of execution (waves, computed from the dependency column)
@@ -106,6 +107,7 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 13 | T85 | 1 |
 | 14 | T86, T87, T88 | 3 |
 | 15 | T89 | 1 |
+| 16 | T92 | 1 |
 | 16 | T90 | 1 |
 
 ## Coordinator notes (2026-10-24)
@@ -649,3 +651,10 @@ Manual checks performed: …
   live-reload.md, and task files T80–T89 (waves 10–15 above). Nothing under `src/` or `assets/`
   changed; every task starts `todo`. T80 joins wave 10 beside T74; T81–T83 can run in parallel
   once it lands.
+
+- 2026-11-02: T92 (wave 16) follows from the first design-only theme built on M8, the EIT Oxford
+  controlled document: a `[design.styles]` table named after a Word vocabulary style replaced the
+  built-in `pPr`/`rPr` wholesale, so `TOC Heading` and `Heading 1 Unlisted` could not be restyled
+  without losing `outlineLvl 9` (and so entering the TOC field), `toc 2`–`toc 6` lost their indents
+  and `Title` its centring, while `check` called every such style unused. T92 merges instead and
+  exempts vocabulary names and the header furniture's `Header` from `design-style-unused`.

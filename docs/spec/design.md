@@ -543,7 +543,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 
 | design key | edit |
 |---|---|
-| `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`) |
+| `fonts.body` | `rPrDefault/w:rFonts` `ascii`/`hAnsi`/`cs` = family (replaces `Calibri`); Author and Date, whose `w:rFonts` name `Calibri` only to undo Title's heading font, follow it (T92) |
 | `fonts.heading` | Heading 1–9, Title, Subtitle and their linked character styles = family (the asset uses both `Calibri Light` and `Calibri`) |
 | `fonts.mono` | every `w:rFonts` naming `Consolas` (Source Code, Verbatim Char, …) = family |
 | `text.size` | `rPrDefault` `w:sz`/`w:szCs` = half-points; styles whose `w:sz` is relative to the body in §2.3 (headings, Title, captions, footnotes, code) are scaled by `new/22` and rounded to even half-points |
@@ -553,7 +553,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 | `colors.text` | `rPrDefault/w:color` (inserted) = hex without `#` |
 | `colors.link` | Hyperlink style `w:color` = hex |
 | `colors.accent`, `muted`, `background`, `page.*` | not applied to styles (accent and muted are used by furniture, §9.5; page: §7.2) |
-| `styles.*` | appended as `w:style` definitions, §8.5 |
+| `styles.*` | appended as `w:style` definitions, §8.5; a §2.3 paragraph name restyles that built-in definition in place (§8.1, T92) |
 
 Edits are made on the parsed asset with `docx::xml` helpers, not with string replacement, and keep
 §5's child order. `set_lang` is unchanged. Appended named styles go through the §2.1 id rules.
@@ -593,10 +593,19 @@ The TOML key of `[design.styles.<Name>]` is the style's declared name, used verb
 `w:name`, the HTML `data-style` value, the Typst `style:` argument and the JSON key. Two names are
 the same style when `normalise_style_key` (lower-case ASCII letters and digits only: `Inside
 Address`, `inside-address`, `InsideAddress` → `insideaddress`) agrees; equal keys are an error
-(§4.4). A design style whose name is one of docx-output.md §2.3's vocabulary names (`Body Text`,
-`Heading 1`, `Date`, `Author`, …) replaces writer's built-in definition for DOCX (its `w:styleId`
-stays the §2.3 id; the `w:pPr`/`w:rPr` are the design's) and otherwise behaves like any style; this
-is how a letter restyles `Date`.
+(§4.4). A design style whose name is one of docx-output.md §2.3's paragraph vocabulary names
+(`Body Text`, `Heading 1`, `TOC Heading`, `toc 2`, `Date`, …; compared by normalised key, so
+`Heading-1` is `heading 1`) restyles writer's built-in definition for DOCX instead of adding one
+(T92): the §2.3 id, `basedOn`, `next`, `link` and `uiPriority` stay, and the design's keys are laid
+over the built-in `w:pPr`/`w:rPr` as §8.5 describes, so every property the design leaves unset
+keeps its built-in value. `TOC Heading` and `Heading N Unlisted` therefore keep `outlineLvl 9` and
+stay out of the TOC field (docx-output.md §4.13), `toc N` keeps its indent, and `Title` stays
+centred until `align` says otherwise. Writer's own emitters select such a style by name (headings,
+the title block, the contents list, captions, footer lines), so `design-style-unused` does not
+report it (§10); a div may select it as well. Otherwise it behaves like any style; this is how a
+letter restyles `Date`. The header furniture's lines select `Header` (`docx::styles::HEADER`,
+§9.5), which §2.3 does not list: a design style of that name (compared case-insensitively) is a
+custom definition those lines use, and `design-style-unused` does not report it either.
 
 ### 8.2 Resolution order (one function, `design::style_for`, every backend)
 For a `Div` (ir.md: `attrs.classes`, `attrs.pairs`):
@@ -665,8 +674,16 @@ Each design style is appended to `styles.xml` (§7.1) as
     </w:rPr>
 </w:style>
 ```
-in §5's child order, id from the §2.1 rules, `basedOn` the table's id for `Body Text` (a §2.3 name:
-`basedOn` is that definition's own). `w:contextualSpacing` makes consecutive paragraphs of the same
+in §5's child order, id from the §2.1 rules, `basedOn` the table's id for `Body Text`. The XML is
+built over the table's registered definition for the name (T92): for a §2.3 paragraph name that is
+writer's built-in definition with §7.1's edits applied, for any other name the empty `custom`
+definition, so a custom style carries the design's keys alone. A set key replaces the child of the
+same name in that definition's `w:pPr`/`w:rPr` (`keepNext`, `keepLines`, `contextualSpacing`,
+`jc`, `rFonts`, `b`/`bCs`, `i`/`iCs`, `color`, `sz`/`szCs`); `w:spacing` merges attribute by
+attribute (`before`, `after`, `line` with `lineRule`), so `toc 2` with `space_after` alone keeps
+its `before="0"`; every other child (`outlineLvl`, `ind`, `tabs`, `pBdr`, `shd`, …) is kept.
+`keep_with_next` and `keep_together` are booleans: true adds the element, false (the default)
+leaves the built-in's alone. `w:contextualSpacing` makes consecutive paragraphs of the same
 style omit the gap between them, so `space_before`/`space_after` behave as the div's outer margins
 like in HTML and Typst. The body emitter (docx-output.md §4.1) pushes `Style(id)` for a `Div` when
 `style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
@@ -797,7 +814,8 @@ parts as `even`. Part body, in order:
   (`wp:inline`, extent EMU from `width` and the image's aspect ratio; `wp:docPr/@id` from
   `Ids.doc_pr`; `r:embed` → `word/_rels/header<k>.xml.rels` → `word/media/<name>`; content type
   by extension as docx-output.md §4.16 does for figures);
-- lines: one `w:p` per line of `lines`, `w:pStyle` Header / Footer (§2.3 names, `ensure`d),
+- lines: one `w:p` per line of `lines`, `w:pStyle` Header / Footer (`ensure`d; `footer` is a §2.3
+  name, `Header` is a custom style based on Body Text unless the design, §8.1, or a reference defines it),
   `w:jc` from `align`; with `right_lines`, line *i* of `lines` is followed by `<w:r><w:tab/></w:r>`
   and the runs of line *i* of `right_lines`, with `w:pPr/w:tabs/w:tab w:val="right" w:pos="<text
   width twips>"` (the reference document's layout); extra right lines get paragraphs of their own
@@ -814,7 +832,7 @@ nothing is generated (§7.3).
 | `design-image-missing` | error | a furniture image path does not exist (also a build error) |
 | `design-theme-unavailable` | warning | §1.4: the theme could not be resolved for a non-HTML target; the design was merged without it |
 | `design-font-family` | warning | `check --target pdf`: a declared family (with no files) is not in the World's font book after §6.5 (`FontBook::contains_family` queried with a lower-case family name, matching Typst font selection) |
-| `design-style-unused` | warning | a `[design.styles]` name that no `Div` of the document selects (§8.2); evaluated on the resolved IR |
+| `design-style-unused` | warning | a `[design.styles]` name that no `Div` of the document selects (§8.2) and that writer's own paragraphs do not select (`docx::styles::writer_selects`: a docx-output.md §2.3 paragraph name or `Header`, §8.1); evaluated on the resolved IR |
 | `design-shadowed` | note | per target: a `[docx] reference_doc` whose `sectPr` or style names override design keys (names the parts: "page setup", "styles: Recipient, Date", "header/footer"); a `[pdf] template` that does not import `@writer/doc` while a design is declared |
 Config errors of §4.4 fail `check` and `build` alike. `check` without `--target` runs the
 target-specific rows for every configured target.
@@ -961,7 +979,8 @@ and `letter.md` keeps its directives: `:::recipient {custom-style="Recipient"}` 
 - **DOCX** (T83, T85, T87): no `reference_doc`; generated `styles.xml` with Source Sans 3 in
   `rPrDefault`, sz 22, color 242424, `pPrDefault` spacing line 324 auto after 204; headings in
   Source Sans 3; six appended paragraph styles (`Recipient`: keepLines, after 340, line 242 exact,
-  contextualSpacing; `Closing`: keepNext, before 340, after 454; `Date`: sz 20, after 170; …);
+  contextualSpacing; `Closing`: keepNext, before 340, after 454; `Date`: the built-in definition
+  with sz 20 and after 170 laid over it; …);
   `sectPr` with `pgSz 11906×16838`, `pgMar top=2835 right=1247 bottom=2154 left=1247 header=964
   footer=567`, `titlePg`, `header1.xml` (first: centred logo drawing 1800000 EMU wide + centred
   semibold copper "Generative Biology Institute"), `header2.xml` (default: the compact line, sz 20),
