@@ -458,6 +458,8 @@ nav.toc {
         background-color: var(--w-error-bg);
     }
 }
+/* design: print colors */
+@media print{:root{--w-text:#242424;--w-muted:#575757;--w-accent:#a96d4b;--w-link:#a96d4b}body{color:var(--w-text)}}
 /* design: layout */
 [data-writer-document] p{margin-block:0 10.205pt;text-align:start}
 @page{size:A4;margin:141.732pt 62.362pt 107.717pt 62.362pt}

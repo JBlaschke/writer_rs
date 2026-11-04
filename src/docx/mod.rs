@@ -1042,6 +1042,22 @@ pub mod xml {
         format!("{start}{result_runs}{end}")
     }
 
+    /// Builds a complex field whose framing runs all carry `run_props`, a
+    /// `w:rPr` element. Word formats a recomputed result like the field's
+    /// own runs, so a result keeps the formatting of its cached runs only
+    /// when the begin, instruction, separator and end runs share it.
+    pub fn formatted_field(
+        instr: &str, run_props: &str, result_runs: &str,
+    ) -> String {
+        let (start, end) = field_parts(instr);
+        let run = format!("<w:r>{run_props}");
+        format!(
+            "{}{result_runs}{}",
+            start.replace("<w:r>", &run),
+            end.replace("<w:r>", &run),
+        )
+    }
+
     /// Shared framing for cached fields spanning multiple paragraphs.
     pub(crate) fn field_parts(instr: &str) -> (String, &'static str) {
         let start = format!(
@@ -1388,6 +1404,30 @@ mod tests {
             "<w:fldChar w:fldCharType=\"separate\"/></w:r><w:r><w:fldChar w:fldCharType=\"end\"/>"
         ));
         assert!(!empty.contains("w:dirty"));
+    }
+
+    #[test]
+    fn formatted_field_repeats_the_run_properties_on_every_run() {
+        let props = "<w:rPr><w:color w:val=\"A96D4B\"/></w:rPr>";
+        let result = format!("<w:r>{props}<w:t>1</w:t></w:r>");
+        let xml = formatted_field("PAGE", props, &result);
+        assert_eq!(
+            xml,
+            format!(
+                concat!(
+                    "<w:r>{p}<w:fldChar w:fldCharType=\"begin\"/></w:r>",
+                    "<w:r>{p}<w:instrText xml:space=\"preserve\"> PAGE </w:instrText></w:r>",
+                    "<w:r>{p}<w:fldChar w:fldCharType=\"separate\"/></w:r>{r}",
+                    "<w:r>{p}<w:fldChar w:fldCharType=\"end\"/></w:r>"
+                ),
+                p = props,
+                r = result,
+            ),
+        );
+        assert_eq!(
+            formatted_field("PAGE", "", &result),
+            field("PAGE", &result)
+        );
     }
 
     #[test]

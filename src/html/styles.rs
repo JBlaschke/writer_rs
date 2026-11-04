@@ -112,14 +112,21 @@ pub(super) fn compile(
         })?;
         // An untouched ejected default sheet is the same baseline. Once a
         // user edits it, its explicit token declarations regain precedence.
-        let default_tokens = entry.rel_path == "styles/theme.css"
-            && (theme.dir(&entry.theme).is_some_and(|dir| {
-                matches!(
-                    &dir.source, crate::theme::ThemeSource::Embedded { prefix }
-                        if prefix == "themes/default/"
-                )
-            }) || crate::vendor::get("themes/default/styles/theme.css")
-                .is_some_and(|default| default.as_ref() == text.as_bytes()));
+        let untouched = |sheet: &str| {
+            entry.rel_path == sheet
+                && (theme.dir(&entry.theme).is_some_and(|dir| {
+                    matches!(
+                        &dir.source,
+                        crate::theme::ThemeSource::Embedded { prefix }
+                            if prefix == "themes/default/"
+                    )
+                }) || crate::vendor::get(&format!(
+                    "themes/default/{sheet}"
+                ))
+                .is_some_and(|default| default.as_ref() == text.as_bytes()))
+        };
+        let default_tokens = untouched("styles/theme.css");
+        let default_print = untouched("styles/print.css");
         let text = take_imports(&key, &text, &mut imports, remote)?;
         let text = rewrite_urls(
             theme,
@@ -137,6 +144,12 @@ pub(super) fn compile(
         css.push_str(&text);
         if !css.ends_with('\n') {
             css.push('\n');
+        }
+        // The default print sheet restores its own light palette and black
+        // text for paper; a declared design's colours take their place. Later
+        // entries can still refine them, as they can the tokens.
+        if default_print {
+            css.push_str(&super::design::print_colors_css(design));
         }
     }
     css.push_str(&super::design::layout_css(design, &mut targets)?);

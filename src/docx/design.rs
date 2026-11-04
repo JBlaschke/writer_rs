@@ -190,6 +190,26 @@ fn paragraph_defaults(node: &XmlNode, design: &Design) -> String {
     props.to_xml()
 }
 
+/// Body Text's paragraph properties under `text.paragraph_spacing`.
+///
+/// Its built-in 6 pt before and after would override the document defaults,
+/// so body paragraphs (and First Paragraph, based on it) take the spacing
+/// here: after the paragraph only, as HTML's `margin-block: 0 <spacing>` and
+/// Typst's paragraph spacing separate paragraphs.
+fn body_text_paragraph(node: &XmlNode, spacing: Pt) -> String {
+    let mut props = seeded("w:pPr", PPR, Some(node));
+    let mut attrs = node
+        .children
+        .iter()
+        .find(|n| n.name == "w:spacing")
+        .map(|n| n.attrs.clone())
+        .unwrap_or_default();
+    attrs.insert("w:before".into(), "0".into());
+    attrs.insert("w:after".into(), twips(spacing).to_string());
+    props.set("w:spacing", property("w:spacing", &spacing_attrs(&attrs)));
+    props.to_xml()
+}
+
 fn rewrite(
     node: &XmlNode, design: &Design, parent: &str, hyperlink: bool,
     scale: bool, heading: bool,
@@ -199,6 +219,7 @@ fn rewrite(
             && node.children.iter().any(|n| {
                 n.name == "w:name" && n.attr("w:val") == Some("Hyperlink")
             }));
+    let mut body_text = None;
     let (scale, heading) = if node.name == "w:style" {
         let name = node
             .children
@@ -207,6 +228,9 @@ fn rewrite(
             .and_then(|n| n.attr("w:val"))
             .unwrap_or("")
             .to_ascii_lowercase();
+        if name == "body text" {
+            body_text = design.text.paragraph_spacing;
+        }
         // Heading levels three onward and some linked character styles use
         // Calibri rather than Calibri Light in the asset. Select by role,
         // including Title and Subtitle, instead of relying on the old family.
@@ -259,7 +283,12 @@ fn rewrite(
         escape(&node.text),
         node.children
             .iter()
-            .map(|n| rewrite(n, design, &node.name, hyperlink, scale, heading))
+            .map(|n| match body_text {
+                Some(spacing) if n.name == "w:pPr" => {
+                    body_text_paragraph(n, spacing)
+                }
+                _ => rewrite(n, design, &node.name, hyperlink, scale, heading),
+            })
             .collect::<String>()
     );
     if contents.is_empty() {
@@ -424,7 +453,16 @@ pub fn style_xml(
         let attrs = spacing_attrs(&spacing);
         paragraph.set("w:spacing", property("w:spacing", &attrs));
     }
-    if style.space_before.is_some() || style.space_after.is_some() {
+    // The paragraphs of one div, or the lines of one footer, form one block
+    // whose outer margins the space keys are, as in HTML and Typst. Writer
+    // selects the other built-in names per block (body paragraphs, headings,
+    // contents entries, captions), so their space separates consecutive
+    // paragraphs of the same style and they keep the built-in's setting.
+    let block = matches!(
+        super::styles::vocabulary_paragraph(name),
+        None | Some("footer")
+    );
+    if block && (style.space_before.is_some() || style.space_after.is_some()) {
         paragraph.set("w:contextualSpacing", "<w:contextualSpacing/>");
     }
     if let Some(align) = style.align {
@@ -580,6 +618,39 @@ mod tests {
             descendant(date, &["w:rPr", "w:rFonts"]).attr("w:ascii"),
             Some("Body Family")
         );
+
+        // The paragraph spacing replaces Body Text's own 6 pt before and
+        // after; First Paragraph inherits it and Compact keeps its own.
+        let style = |tree: &XmlNode, id: &str| {
+            tree.children
+                .iter()
+                .find(|n| n.attr("w:styleId") == Some(id))
+                .unwrap()
+                .clone()
+        };
+        let body = style(&tree, "BodyText");
+        let spacing = descendant(&body, &["w:pPr", "w:spacing"]);
+        assert_eq!(spacing.attr("w:before"), Some("0"));
+        assert_eq!(spacing.attr("w:after"), Some("204"));
+        assert!(
+            style(&tree, "FirstParagraph")
+                .children
+                .iter()
+                .all(|n| n.name != "w:pPr")
+        );
+        let compact = style(&tree, "Compact");
+        let spacing = descendant(&compact, &["w:pPr", "w:spacing"]);
+        assert_eq!(spacing.attr("w:before"), Some("36"));
+        assert_eq!(spacing.attr("w:after"), Some("36"));
+
+        // Without the token Body Text keeps its built-in spacing.
+        let mut unset = design();
+        unset.text.paragraph_spacing = None;
+        let tree = parse_xml(&apply_tokens(&source, &unset)).unwrap();
+        let body = style(&tree, "BodyText");
+        let spacing = descendant(&body, &["w:pPr", "w:spacing"]);
+        assert_eq!(spacing.attr("w:before"), Some("120"));
+        assert_eq!(spacing.attr("w:after"), Some("120"));
     }
 
     #[test]
@@ -599,6 +670,14 @@ mod tests {
                 },
             ),
             ("toc 2", Style { space_after: Some(Pt(0.0)), ..Style::default() }),
+            (
+                "Body Text",
+                Style { space_before: Some(Pt(3.0)), ..Style::default() },
+            ),
+            (
+                "footer",
+                Style { space_after: Some(Pt(0.0)), ..Style::default() },
+            ),
             ("Title", Style { size: Some(Pt(30.0)), ..Style::default() }),
             (
                 "Heading 3",
@@ -653,13 +732,27 @@ mod tests {
         assert_eq!(descendant(run, &["w:b"]).attr("w:val"), Some("0"));
         assert_eq!(descendant(run, &["w:sz"]).attr("w:val"), Some("36"));
 
-        // Spacing merges attribute by attribute; the indent stays.
+        // Spacing merges attribute by attribute; the indent stays, and a
+        // built-in name gets no contextual spacing (consecutive contents
+        // entries keep the space the design gives them).
         let toc2 = descendant(style("TOC2"), &["w:pPr"]);
-        assert_eq!(names(toc2), ["w:spacing", "w:ind", "w:contextualSpacing"]);
+        assert_eq!(names(toc2), ["w:spacing", "w:ind"]);
         let spacing = descendant(toc2, &["w:spacing"]);
         assert_eq!(spacing.attr("w:before"), Some("0"));
         assert_eq!(spacing.attr("w:after"), Some("0"));
         assert_eq!(descendant(toc2, &["w:ind"]).attr("w:left"), Some("240"));
+
+        // A Body Text key overrides the paragraph spacing's before and keeps
+        // its after, without contextual spacing between body paragraphs.
+        let body = descendant(style("BodyText"), &["w:pPr"]);
+        assert_eq!(names(body), ["w:spacing"]);
+        let spacing = descendant(body, &["w:spacing"]);
+        assert_eq!(spacing.attr("w:before"), Some("60"));
+        assert_eq!(spacing.attr("w:after"), Some("204"));
+
+        // The footer, a block of lines like the custom names, does get it.
+        let footer = descendant(style("Footer"), &["w:pPr"]);
+        assert!(names(footer).contains(&"w:contextualSpacing".to_owned()));
 
         // An unset align keeps the built-in centring; tokens stay applied.
         let title = style("Title");

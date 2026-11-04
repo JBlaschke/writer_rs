@@ -82,21 +82,53 @@ pub fn tokens_css(
     if let Some(height) = design.text.line_height {
         tokens.push(format!("--w-line-height:{}", css_line_height(height)));
     }
-    for (color, property) in [
+    tokens.extend(color_tokens(design));
+    if !tokens.is_empty() {
+        let _ = writeln!(css, ":root{{{}}}", tokens.join(";"));
+    }
+    Ok(css)
+}
+
+/// The declared `colors.*` as `--w-*` declarations, in §5.2's order.
+fn color_tokens(design: &Design) -> Vec<String> {
+    [
         (design.colors.text, "--w-text"),
         (design.colors.background, "--w-bg"),
         (design.colors.muted, "--w-muted"),
         (design.colors.accent, "--w-accent"),
         (design.colors.link, "--w-link"),
-    ] {
-        if let Some(color) = color {
-            tokens.push(format!("{property}:{}", css_color(color)));
-        }
+    ]
+    .into_iter()
+    .filter_map(|(color, property)| {
+        color.map(|color| format!("{property}:{}", css_color(color)))
+    })
+    .collect()
+}
+
+/// The declared colours once more for print, placed after the default
+/// theme's print sheet, whose light palette and `body { background: #fff;
+/// color: #000 }` would otherwise replace them on paper.
+pub fn print_colors_css(design: &Design) -> String {
+    let tokens = color_tokens(design);
+    if !design.declared || tokens.is_empty() {
+        return String::new();
     }
-    if !tokens.is_empty() {
-        let _ = writeln!(css, ":root{{{}}}", tokens.join(";"));
+    let mut body = Vec::new();
+    if design.colors.background.is_some() {
+        body.push("background:var(--w-bg)");
     }
-    Ok(css)
+    if design.colors.text.is_some() {
+        body.push("color:var(--w-text)");
+    }
+    let body = if body.is_empty() {
+        String::new()
+    } else {
+        format!("body{{{}}}", body.join(";"))
+    };
+    format!(
+        "/* design: print colors */\n@media print{{:root{{{}}}{body}}}\n",
+        tokens.join(";")
+    )
 }
 
 /// Explicit geometry and paragraph layout, after the theme's generic rules.

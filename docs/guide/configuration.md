@@ -340,8 +340,13 @@ title styles.
 |---|---|---|
 | `text.size` | Length | Unset: HTML theme, PDF and Word 11 pt |
 | `text.line_height` | Positive multiple or Length | Unset: HTML theme, PDF leading 0.65 em, Word multiple 1.1 |
-| `text.paragraph_spacing` | Length | Unset: HTML theme, PDF 1.2 em, Word 0 |
+| `text.paragraph_spacing` | Length | Unset: HTML theme, PDF 1.2 em, Word 6 pt before and after body paragraphs; set: the space after each body paragraph, with none before |
 | `text.justify` | Boolean | Unset: HTML theme, PDF true, Word false |
+
+In Word, `text.paragraph_spacing` becomes the space after Body Text and First
+Paragraph and the document's default space after. Other Word styles keep their
+own spacing, such as Compact in tight lists and table cells or the headings;
+restyle them under [named paragraph styles](#named-paragraph-styles).
 
 ### Colors
 
@@ -352,6 +357,11 @@ title styles.
 | `colors.muted` | Color | Unset; optional footer text color and HTML muted token |
 | `colors.link` | Color | Unset; theme/backend link styling |
 | `colors.background` | Color | Unset; HTML background and PDF page fill; Word does not apply it |
+
+Printed HTML keeps the declared colors: writer repeats them after the default
+theme's print stylesheet, which otherwise switches to its own palette and
+black text on paper. A theme's own entries still override them, in print as on
+screen.
 
 ### Page geometry and furniture slots
 
@@ -462,6 +472,13 @@ keeps its built-in value. Word applies the result wherever writer uses the
 style, so `writer check` does not report such a name as unused. The same holds
 for `Header`, the style of the header lines. HTML and PDF apply named styles
 to divs only.
+
+In Word, `space_before` and `space_after` of a div's style, of `Header` and of
+`footer` surround the whole block: Word drops them between consecutive
+paragraphs of the same style, as HTML and PDF space a div rather than the
+paragraphs inside it. Every other built-in name keeps them between
+consecutive paragraphs, because each body paragraph, heading or contents entry
+is a block of its own: `space_after` on `Body Text` separates body paragraphs.
 
 | Key | Type / unit | Default and effect |
 |---|---|---|

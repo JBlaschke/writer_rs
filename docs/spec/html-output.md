@@ -567,7 +567,9 @@ pub fn compile_theme_css(theme: &Theme, features: &Features, registry: &mut Asse
 > output is unchanged; the token block comes first so an entry's own `:root` still wins, the layout
 > block (`@page`, named styles, furniture, paragraph spacing) comes after the entries so a declared
 > margin beats the default theme's `print.css`. Design font files are registered as assets and their
-> `url()`s go through the same `Targets` as entry URLs. `compile_theme_css` gains a `&Design`
+> `url()`s go through the same `Targets` as entry URLs. Since 2026-11-04 the untouched default
+> `styles/print.css` is followed by `design::print_colors_css`, which repeats the declared colours
+> for print (design.md §5.2). `compile_theme_css` gains a `&Design`
 > parameter (T81). The generated blocks do not count toward §6.3's budget.
 
 ## 6. Emission modes and size budget — T14 (`src/assets/{mod,emit}.rs`), T15, T16

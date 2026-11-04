@@ -4,8 +4,8 @@ use std::io::{Cursor, Read, Write};
 use std::path::Path;
 
 use writer::design::{
-    Align, Background, BackgroundAlign, BackgroundImage, BackgroundPages, Fit,
-    FurnitureImage, Pt, VerticalAlign,
+    Align, Background, BackgroundAlign, BackgroundImage, BackgroundPages,
+    Color, Fit, FurnitureImage, Pt, Rule, RulePosition, VerticalAlign,
 };
 use writer::docx::xml::{
     CT_DOCUMENT, CT_RELS, CT_SETTINGS, CT_STYLES, NS_R, NS_RELS, NS_W,
@@ -162,15 +162,31 @@ fn first_header_shared_footer_and_media_are_valid_parts() {
         insta::assert_snapshot!(name, xml);
     }
     assert!(first.contains("cx=\"1800000\""));
-    // The image paragraph's spacing after is the letter's paragraph spacing.
-    assert!(
-        first.contains("<w:spacing w:after=\"204\"/><w:jc w:val=\"center\"/>")
-    );
+    // The image paragraph takes the header style with nothing before it, a
+    // single line and, without a gap, the letter's paragraph spacing after;
+    // its mark is one point so it adds no line of its own.
+    assert!(first.contains(concat!(
+        "<w:pPr><w:pStyle w:val=\"Header\"/>",
+        "<w:spacing w:before=\"0\" w:after=\"204\" w:line=\"240\" ",
+        "w:lineRule=\"auto\"/><w:contextualSpacing w:val=\"0\"/>",
+        "<w:jc w:val=\"center\"/><w:rPr><w:sz w:val=\"2\"/>",
+        "<w:szCs w:val=\"2\"/></w:rPr></w:pPr>",
+    )));
     assert!(first.contains("Generative Biology Institute"));
     assert!(first.contains("A96D4B"));
     assert!(rest.contains("EIT Oxford | Generative Biology Institute"));
     assert!(!rest.contains("wp:inline"));
-    assert!(footer.contains("<w:top w:val=\"single\" w:sz=\"6\""));
+    // The rule paragraph is a one-point footer line with no space around it.
+    assert!(footer.contains(concat!(
+        "<w:p><w:pPr><w:pStyle w:val=\"Footer\"/><w:pBdr>",
+        "<w:top w:val=\"single\" w:sz=\"6\" w:space=\"1\" ",
+        "w:color=\"A96D4B\"/></w:pBdr>",
+        "<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"20\" ",
+        "w:lineRule=\"exact\"/><w:contextualSpacing w:val=\"0\"/>",
+        "<w:rPr><w:sz w:val=\"2\"/><w:szCs w:val=\"2\"/></w:rPr></w:pPr>",
+        "<w:r><w:rPr><w:sz w:val=\"2\"/><w:szCs w:val=\"2\"/></w:rPr><w:t/>",
+        "</w:r></w:p>",
+    )));
     assert!(footer.contains("w:pos=\"9412\""));
     assert!(!footer.contains(" PAGE "));
     assert!(document.contains("<w:titlePg/>"));
@@ -195,13 +211,48 @@ fn image_gap_sets_the_spacing_after_the_image_paragraph() {
     let mut prepared = letter();
     image(&mut prepared).gap = Some(Pt(3.0 * 72.0 / 25.4));
     let first = part(&write(&prepared, None), "word/header1.xml");
-    assert!(first.contains("<w:spacing w:after=\"170\"/>"));
+    assert!(first.contains(
+        "<w:spacing w:before=\"0\" w:after=\"170\" w:line=\"240\" \
+         w:lineRule=\"auto\"/>"
+    ));
     assert!(!first.contains("w:after=\"204\""));
-    // Without a resolved gap the paragraph inherits the document defaults.
+    // Without a resolved gap the paragraph takes the document defaults'
+    // space after (the paragraph spacing), stated on the paragraph so that
+    // the header style's own spacing does not replace it.
     image(&mut prepared).gap = None;
     let first = part(&write(&prepared, None), "word/header1.xml");
-    assert!(!first.contains("<w:spacing"));
-    assert!(first.contains("<w:pPr><w:jc w:val=\"center\"/></w:pPr>"));
+    assert!(first.contains(
+        "<w:spacing w:before=\"0\" w:after=\"204\" w:line=\"240\" \
+         w:lineRule=\"auto\"/>"
+    ));
+    prepared.design.text.paragraph_spacing = None;
+    let first = part(&write(&prepared, None), "word/header1.xml");
+    assert!(first.contains(
+        "<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"240\" \
+         w:lineRule=\"auto\"/>"
+    ));
+}
+
+#[test]
+fn rule_below_the_header_lines_is_a_tight_header_paragraph() {
+    let mut prepared = letter();
+    let header = prepared.design.page.header.as_mut().unwrap();
+    header.rest.as_mut().unwrap().rule = Some(Rule {
+        position: RulePosition::Below,
+        color: Color([128, 128, 128]),
+        width: Pt(0.5),
+    });
+    let rest = part(&write(&prepared, None), "word/header2.xml");
+    let lines = rest.find("EIT Oxford | Generative Biology Institute").unwrap();
+    let rule = rest.find("<w:bottom w:val=\"single\" w:sz=\"4\"").unwrap();
+    assert!(lines < rule);
+    assert!(rest.contains(concat!(
+        "<w:p><w:pPr><w:pStyle w:val=\"Header\"/><w:pBdr>",
+        "<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"1\" ",
+        "w:color=\"808080\"/></w:pBdr>",
+        "<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"20\" ",
+        "w:lineRule=\"exact\"/><w:contextualSpacing w:val=\"0\"/>",
+    )));
 }
 
 #[test]
@@ -217,6 +268,23 @@ fn placeholders_are_fields_and_empty_footer_removes_builtin_numbering() {
     let footer = part(&bytes, "word/footer1.xml");
     assert!(footer.contains(" PAGE "));
     assert!(footer.contains(" NUMPAGES "));
+    // Word formats a recomputed field result like the field's runs, so every
+    // run of both fields carries the line's colour and size, not just the
+    // cached result.
+    let field_runs = footer
+        .split("<w:r>")
+        .filter(|run| {
+            run.contains("<w:fldChar") || run.contains("<w:instrText")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(field_runs.len(), 8);
+    for run in field_runs {
+        assert!(run.starts_with("<w:rPr>"), "{run}");
+        assert!(
+            run.contains("<w:color w:val=\"575757\"/><w:sz w:val=\"15\"/>"),
+            "{run}"
+        );
+    }
     prepared.design.page.footer = Some(Default::default());
     let bytes = write(&prepared, None);
     let footer = part(&bytes, "word/footer1.xml");
