@@ -18,6 +18,13 @@ LaTeX or Typst source from it.
   cross-references, footnotes, citations and a bibliography with a CSL style.
 - **Checks without output.** `writer check` reports frontend, reference and
   target diagnostics without writing files.
+- **One design for every format.** A theme's `[design]` table names the
+  fonts, colours, page size and margins, letterheads, running headers and
+  footers, a full-page background image and named paragraph styles once.
+  writer turns it into the web page's stylesheet, the PDF layout and the Word
+  file's styles, headers and footers, without a Word reference document. The
+  [letter example](https://jblaschke.github.io/writer_rs/examples/letter/)
+  shows one design in all three.
 - **Customization.** `writer init` scaffolds a document; `writer eject`
   copies the built-in theme, Typst and LaTeX templates or the Word reference
   document for editing.
