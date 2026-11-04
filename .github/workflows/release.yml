@@ -117,8 +117,13 @@ jobs:
         # The release tests dominate: CI's `cargo test --release` took
         # 57-90 min on ubuntu-latest, 99-130 on macos-latest and 120-174 on
         # windows-latest (2-4 Nov 2026; thin LTO links each of about 90 test
-        # binaries). The arm64 Windows and Intel macOS runners are unmeasured.
-        # GitHub ends any hosted job at 360 min.
+        # binaries); in the first full dry run (4 Nov 2026) they took 61-156
+        # min per runner (whole jobs 64-165), longest on Intel macOS. The
+        # archived executable is then built again from scratch with the dist
+        # profile's fat LTO: about 4 min cold on an M4 Max, unmeasured on
+        # hosted runners, where the dry run's thin release build of only the
+        # binary and a few crates already took 2.5-6 min. GitHub ends any
+        # hosted job at 360 min.
         timeout-minutes: 350
         strategy:
             fail-fast: false
@@ -185,8 +190,8 @@ jobs:
             - name: Release tests (embedded assets)
               timeout-minutes: 300
               run: cargo test --release --locked --target "$TARGET" --no-fail-fast
-            - name: Build native release executable
-              run: cargo build --release --locked --target "$TARGET" --bin writer
+            - name: Build native release executable (dist profile, fat LTO)
+              run: cargo build --profile dist --locked --target "$TARGET" --bin writer
             - name: Capture the same target's normal runtime crate set
               run: |
                   mkdir -p target/release-inputs
@@ -198,14 +203,14 @@ jobs:
             - name: Assemble exact embedded and linked-crate notices
               run: >-
                   python scripts/release-notices.py
-                  --binary "target/$TARGET/release/$EXECUTABLE" --target "$TARGET"
+                  --binary "target/$TARGET/dist/$EXECUTABLE" --target "$TARGET"
                   --metadata-json target/release-inputs/metadata.json
                   --tree-text target/release-inputs/tree.txt --assets assets
                   --out "$RELEASE_STAGE/THIRD-PARTY-LICENSES"
             - name: Create deterministic archive with 64 MiB binary gate
               run: >-
                   python scripts/release-archive.py pack
-                  --binary "target/$TARGET/release/$EXECUTABLE"
+                  --binary "target/$TARGET/dist/$EXECUTABLE"
                   --readme docs/release/README.md --license LICENSE
                   --notices "$RELEASE_STAGE/THIRD-PARTY-LICENSES"
                   --version "$RELEASE_VERSION" --target "$TARGET"
@@ -213,7 +218,7 @@ jobs:
             - name: Prove same-input archive byte reproducibility
               run: |
                   python scripts/release-archive.py pack \
-                      --binary "target/$TARGET/release/$EXECUTABLE" \
+                      --binary "target/$TARGET/dist/$EXECUTABLE" \
                       --readme docs/release/README.md --license LICENSE \
                       --notices "$RELEASE_STAGE/THIRD-PARTY-LICENSES" \
                       --version "$RELEASE_VERSION" --target "$TARGET" \
