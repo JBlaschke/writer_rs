@@ -13,10 +13,12 @@ deployed to GitHub Pages by `.github/workflows/site.yml`.
   the site theme in `docs/site/theme/` (the default theme plus a header and
   footer). Links between guide pages stay on the site; links to other
   repository files point at GitHub at the built revision.
-- **The examples** `basic`, `notebook` and `typst`, each as a web page plus a
-  PDF, a Word file and zips of the LaTeX and Typst exports (no Typst export
-  for the Typst example, whose source is already Typst). Ghostscript draws
-  each PDF's first page for the landing page.
+- **The examples** `basic`, `notebook`, `typst` and `letter`, each as a web
+  page plus a PDF, a Word file and zips of the LaTeX and Typst exports (no
+  Typst export for the Typst example, whose source is already Typst).
+  Ghostscript draws each PDF's first page for the landing page. The letter
+  shows the design layer, so it builds with its own `writer.toml` and theme
+  rather than the site theme.
 - The MIT license, `writer --licenses` output and `site-manifest.json`.
 
 Nothing loads fonts or scripts from elsewhere; every page works offline.

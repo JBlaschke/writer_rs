@@ -60,6 +60,8 @@ EXAMPLE_NOTES = {
         "and continuation furniture in HTML, PDF and Word.",
     ),
 }
+# Card titles for examples whose source has no title, such as a letter.
+EXAMPLE_TITLES = {"letter": "A letter on the shared letterhead"}
 # The outputs on the landing page: target, label and short name.
 FORMATS = (
     ("html", "Web page", "Web"),
@@ -776,9 +778,11 @@ def build_example(
         root, environment
     ))
     title = context.get("document", {}).get("meta", {}).get("title")
+    name = page.source.parent.name
     return Example(
         page,
-        title if isinstance(title, str) and title else page.source.parent.name,
+        title if isinstance(title, str) and title
+        else EXAMPLE_TITLES.get(name, name),
         tuple(outputs), thumbnail, png_size(artifact / thumbnail)
     )
 

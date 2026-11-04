@@ -32,6 +32,12 @@ If a build fails, nothing is published: fix the problem on `main`, delete the
 tag (`git push --delete origin v0.1.0` and `git tag -d v0.1.0`) and tag the
 fixed commit. If publishing itself fails, re-run the failed job.
 
+Expect a release to take about three hours. Each native job runs the release
+tests first, and thin LTO links each of the roughly 90 test binaries: CI's
+`cargo test --release` took up to 90 min on Linux, 130 on macOS and 174 on
+Windows in November 2026. The build job allows 350 min and the test step
+300, below GitHub's 360-minute limit for a hosted job.
+
 ## Native build matrix
 
 | Rust target | GitHub-hosted label | Archive |

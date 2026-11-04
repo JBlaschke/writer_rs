@@ -114,7 +114,12 @@ jobs:
     build:
         name: Native archive (${{ matrix.target }})
         needs: label
-        timeout-minutes: 120
+        # The release tests dominate: CI's `cargo test --release` took
+        # 57-90 min on ubuntu-latest, 99-130 on macos-latest and 120-174 on
+        # windows-latest (2-4 Nov 2026; thin LTO links each of about 90 test
+        # binaries). The arm64 Windows and Intel macOS runners are unmeasured.
+        # GitHub ends any hosted job at 360 min.
+        timeout-minutes: 350
         strategy:
             fail-fast: false
             matrix:
@@ -178,6 +183,7 @@ jobs:
                   rustc --version --verbose
                   python --version
             - name: Release tests (embedded assets)
+              timeout-minutes: 300
               run: cargo test --release --locked --target "$TARGET" --no-fail-fast
             - name: Build native release executable
               run: cargo build --release --locked --target "$TARGET" --bin writer
