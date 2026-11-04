@@ -217,3 +217,90 @@ fn an_untouched_ejected_default_theme_keeps_the_design_baseline() {
     assert!(!customized.contains("@layer writer-default {"));
     assert!(customized.contains(":root{--w-font-size:16pt}"));
 }
+
+#[test]
+fn design_colors_follow_the_default_print_sheet_until_it_is_edited() {
+    let root = tempfile::tempdir().unwrap();
+    fs::write(
+        root.path().join("writer.toml"),
+        "[design.colors]\ntext = '#123456'\nbackground = '#fffefb'\n\
+         accent = '#a96d4b'\n[pdf]\nsystem_fonts = false\n",
+    )
+    .unwrap();
+    fs::write(root.path().join("document.md"), "# Document\n").unwrap();
+    let opts = BuildOptions::new(root.path().join("document.md"));
+    let prepared = pipeline::prepare(&opts).unwrap();
+    let (rendered, _) = render(
+        &prepared,
+        &opts,
+        OutputMode::Standalone,
+        BuildInfo::build(true),
+    );
+    let css = rendered.theme_css;
+    // The default print sheet sets its own light palette and black text;
+    // the declared colours follow it, before the design's layout rules.
+    let print = css.find("/* @default/styles/print.css */").unwrap();
+    let colors = css.find("/* design: print colors */\n").unwrap();
+    let layout = css.find("/* design: layout */").unwrap();
+    assert!(print < colors && colors < layout);
+    assert!(!css[print + 1..colors].contains("/* @"));
+    let block = css[colors..].lines().nth(1).unwrap();
+    assert_eq!(
+        block,
+        "@media print{:root{--w-text:#123456;--w-bg:#fffefb;\
+         --w-accent:#a96d4b}body{background:var(--w-bg);\
+         color:var(--w-text)}}"
+    );
+
+    // Without declared colours the print sheet keeps its own palette.
+    fs::write(
+        root.path().join("writer.toml"),
+        "[design.text]\nsize = '12pt'\n[pdf]\nsystem_fonts = false\n",
+    )
+    .unwrap();
+    let prepared = pipeline::prepare(&opts).unwrap();
+    let (rendered, _) = render(
+        &prepared,
+        &opts,
+        OutputMode::Standalone,
+        BuildInfo::build(true),
+    );
+    assert!(!rendered.theme_css.contains("design: print colors"));
+}
+
+#[test]
+fn an_edited_ejected_print_sheet_keeps_its_own_print_colors() {
+    let root = tempfile::tempdir().unwrap();
+    fs::write(
+        root.path().join("writer.toml"),
+        "[design.colors]\ntext = '#123456'\n[pdf]\nsystem_fonts = false\n",
+    )
+    .unwrap();
+    fs::write(root.path().join("document.md"), "# Document\n").unwrap();
+    assert_cmd::Command::new(env!("CARGO_BIN_EXE_writer"))
+        .current_dir(root.path())
+        .args(["eject", "theme", "portable", "--design", "document.md"])
+        .assert()
+        .success();
+    let mut config =
+        fs::read_to_string(root.path().join("writer.toml")).unwrap();
+    config.push_str("[html]\ntheme = 'portable'\n");
+    fs::write(root.path().join("writer.toml"), config).unwrap();
+    let build = || {
+        assert_cmd::Command::new(env!("CARGO_BIN_EXE_writer"))
+            .current_dir(root.path())
+            .args(["build", "document.md", "--to", "html", "-o", "result.html"])
+            .assert()
+            .success();
+        fs::read_to_string(root.path().join("result.html")).unwrap()
+    };
+    // An untouched copy of the default print sheet is treated as the default.
+    assert!(build().contains("@media print{:root{--w-text:#123456}"));
+    let print = root.path().join("portable/styles/print.css");
+    let mut css = fs::read_to_string(&print).unwrap();
+    css.push_str("\n@media print{body{color:#000}}\n");
+    fs::write(&print, css).unwrap();
+    let edited = build();
+    assert!(!edited.contains("design: print colors"));
+    assert!(edited.contains("@media print{body{color:#000}}"));
+}

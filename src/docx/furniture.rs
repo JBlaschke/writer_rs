@@ -32,6 +32,8 @@ pub(crate) struct PartContext<'a> {
     renderer: &'a mut dyn Renderer,
     text_width: u32,
     body_size: Pt,
+    /// The document defaults' space after a paragraph, in twips.
+    default_after: u32,
     page_size: (u32, u32),
 }
 
@@ -50,7 +52,8 @@ pub(crate) fn generate(
         return Ok(());
     }
     let first_page = super::design::first_page(design);
-    let body_size = Pt(11.0 * normal_scale(&emitter.styles.to_xml()));
+    let styles_xml = emitter.styles.to_xml();
+    let body_size = Pt(11.0 * normal_scale(&styles_xml));
     let mut context = PartContext {
         design,
         styles: &mut emitter.styles,
@@ -58,6 +61,7 @@ pub(crate) fn generate(
         renderer: emitter.renderer,
         text_width: emitter.layout.text_width_twips,
         body_size,
+        default_after: default_after(&styles_xml),
         page_size: super::design::page_size(design, &emitter.config.pdf.paper),
     };
     let background = design.page.background.as_ref();
@@ -206,20 +210,20 @@ fn furniture_paragraphs(
     part: &mut FurniturePart,
 ) -> Result<String> {
     let mut xml = String::new();
-    if let Some(rule) =
-        furniture.rule.filter(|rule| rule.position == RulePosition::Above)
-    {
-        xml.push_str(&rule_paragraph(rule));
-    }
-    if furniture.image.is_some() {
-        xml.push_str(&image_paragraph(furniture, context, part)?);
-    }
     let name = if header {
         super::styles::HEADER
     } else {
         "Footer"
     };
     let style = context.styles.ensure(name, StyleKind::Paragraph);
+    if let Some(rule) =
+        furniture.rule.filter(|rule| rule.position == RulePosition::Above)
+    {
+        xml.push_str(&rule_paragraph(rule, &style));
+    }
+    if furniture.image.is_some() {
+        xml.push_str(&image_paragraph(furniture, &style, context, part)?);
+    }
     let size = furniture
         .size
         .unwrap_or(Pt(context.body_size.0 * if header { 1.0 } else { 0.75 }));
@@ -255,7 +259,7 @@ fn furniture_paragraphs(
     if let Some(rule) =
         furniture.rule.filter(|rule| rule.position == RulePosition::Below)
     {
-        xml.push_str(&rule_paragraph(rule));
+        xml.push_str(&rule_paragraph(rule, &style));
     }
     Ok(if xml.is_empty() { "<w:p/>".into() } else { xml })
 }
@@ -308,16 +312,56 @@ fn line_runs(
                     escape(text)
                 )
             };
+            // Word formats a recomputed number like the field's own runs, so
+            // they carry the line's properties as well as the cached result.
             match segment {
                 Segment::Text(text) => text_run(&text),
-                Segment::Page => xml::field("PAGE", &text_run("1")),
-                Segment::Pages => xml::field("NUMPAGES", &text_run("1")),
+                Segment::Page => {
+                    xml::formatted_field("PAGE", &props, &text_run("1"))
+                }
+                Segment::Pages => {
+                    xml::formatted_field("NUMPAGES", &props, &text_run("1"))
+                }
             }
         })
         .collect()
 }
 
-fn rule_paragraph(rule: Rule) -> String {
+/// One-point run properties for the rule's empty run, its paragraph mark and
+/// the image paragraph's mark and drawing run.
+const POINT_RUN: &str =
+    "<w:rPr><w:sz w:val=\"2\"/><w:szCs w:val=\"2\"/></w:rPr>";
+
+/// The furniture's own paragraphs (rule and image) in the slot's style, with
+/// their spacing set explicitly so that neither the style nor the document
+/// defaults (paragraph spacing, line height, body-size paragraph mark) move
+/// the lines away from them.
+fn furniture_props(style: &str, after: u32, line: (u32, &str)) -> Props {
+    let mut props = Props::new("w:pPr", PPR);
+    props.set("w:pStyle", property("w:pStyle", &[("w:val", style.into())]));
+    props.set(
+        "w:spacing",
+        property(
+            "w:spacing",
+            &[
+                ("w:before", "0".into()),
+                ("w:after", after.to_string()),
+                ("w:line", line.0.to_string()),
+                ("w:lineRule", line.1.into()),
+            ],
+        ),
+    );
+    // A style with space keys sets contextualSpacing, which would drop the
+    // image's gap before a line of the same style.
+    props.set("w:contextualSpacing", "<w:contextualSpacing w:val=\"0\"/>");
+    props.set("w:rPr", POINT_RUN);
+    props
+}
+
+/// The rule is the border of an empty paragraph one point high (the
+/// reference document's own construction), so it sits `w:space` (1 pt) from
+/// the adjacent line as in the PDF and HTML.
+fn rule_paragraph(rule: Rule, style: &str) -> String {
     let side = match rule.position {
         RulePosition::Above => "top",
         RulePosition::Below => "bottom",
@@ -327,12 +371,9 @@ fn rule_paragraph(rule: Rule) -> String {
         super::design::eighths(rule.width),
         hex(rule.color),
     );
-    let mut props = Props::new("w:pPr", PPR);
+    let mut props = furniture_props(style, 0, (20, "exact"));
     props.set("w:pBdr", border);
-    format!(
-        "<w:p>{}<w:r><w:rPr><w:sz w:val=\"2\"/></w:rPr><w:t/></w:r></w:p>",
-        props.to_xml()
-    )
+    format!("<w:p>{}<w:r>{POINT_RUN}<w:t/></w:r></w:p>", props.to_xml())
 }
 
 /// A decoded design picture: its natural size in points and registered media.
@@ -401,7 +442,7 @@ fn emu(points: f64) -> u64 {
 }
 
 fn image_paragraph(
-    furniture: &Furniture, context: &mut PartContext<'_>,
+    furniture: &Furniture, style: &str, context: &mut PartContext<'_>,
     part: &mut FurniturePart,
 ) -> Result<String> {
     let image = furniture.image.as_ref().expect("image is present");
@@ -412,7 +453,7 @@ fn image_paragraph(
     let id = context.ids.doc_pr;
     context.ids.doc_pr += 1;
     let drawing = InlineDrawing {
-        props: "",
+        props: POINT_RUN,
         width: emu(width),
         height: emu(height),
         id,
@@ -423,7 +464,11 @@ fn image_paragraph(
         rel: &picture.rel,
     }
     .to_xml();
-    let mut props = Props::new("w:pPr", PPR);
+    // Single spacing and one-point runs make the line as high as the
+    // picture. An unset gap keeps the document defaults' spacing after:
+    // Word's own paragraph spacing.
+    let after = image.gap.map_or(context.default_after, super::design::twips);
+    let mut props = furniture_props(style, after, (240, "auto"));
     props.set(
         "w:jc",
         property(
@@ -434,18 +479,22 @@ fn image_paragraph(
             )],
         ),
     );
-    // An unset gap keeps the document defaults' spacing after: Word's own
-    // paragraph spacing.
-    if let Some(gap) = image.gap {
-        props.set(
-            "w:spacing",
-            property(
-                "w:spacing",
-                &[("w:after", super::design::twips(gap).to_string())],
-            ),
-        );
-    }
     Ok(format!("<w:p>{}{drawing}</w:p>", props.to_xml()))
+}
+
+/// The `w:after` of the document defaults' paragraph properties, in twips.
+fn default_after(styles_xml: &str) -> u32 {
+    let Ok(root) = parse_xml(styles_xml) else {
+        return 0;
+    };
+    let mut node = &root;
+    for name in ["w:docDefaults", "w:pPrDefault", "w:pPr", "w:spacing"] {
+        match node.children.iter().find(|child| child.name == name) {
+            Some(child) => node = child,
+            None => return 0,
+        }
+    }
+    node.attr("w:after").and_then(|after| after.parse().ok()).unwrap_or(0)
 }
 
 /// The page background as Word stores a "behind text" picture: a run with an

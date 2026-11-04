@@ -165,6 +165,47 @@ snapshots the first-page header and checks the cover and contain geometry,
 the split of a shared slot, a picture-only part, `pages = "all"` and US
 Letter. Word for Windows, LibreOffice and Google Docs were not checked.
 
+## Furniture paragraph and body spacing validation record
+
+Checked on 2026-11-04 in Word for Mac 16.114.3 on macOS 26.7 (25G229).
+Three projects were built with `main` (ee0a57d) and with this change, each
+DOCX had `w:updateFields` removed, and each was opened from Word's container
+folder and saved as PDF through AppleScript. The PDFs were measured from
+300 dpi rasters; positions are ink tops from the paper's top edge.
+
+- EIT controlled document (design-only theme), page two: the grey rule now
+  sits 1.6 mm below the last header line (9.3 mm before; the reference
+  document's export, 1.3 mm). The logo top moved from 17.3 to 16.0 mm, its
+  `header_offset`. The body no longer starts below the header. Its first
+  heading moved up from 54.5 to 42.2 mm, under the 40 mm top margin.
+- The same document, with the theme's `[design.styles.footer]` size and
+  colour removed: Word's recomputed page number changed from the footer
+  style's grey 9 pt to the line's copper 10 pt.
+- The same document's contents list: `toc 1` entries now get their 6 pt
+  before and after, since a built-in style no longer receives
+  `w:contextualSpacing`. Their 7.3 mm pitch equals the reference export's.
+  The last entry moved to page three. Both exports have four pages.
+- Letters (design-only theme): the copper footer rule now sits 1.7 mm above
+  the company lines (12.4 mm before; the reference document's export,
+  2.8 mm). Body paragraphs are 3.6 mm apart, the theme's
+  `paragraph_spacing`; Body Text's own 6 pt applied before. Word placed the
+  larger of space after and space before between paragraphs. The letter
+  stays one page.
+- §11 example letter: the institute line's capitals sit 1.5 mm below the
+  logo gap's end (3.4 mm before; PDF 0 mm). The continuation header line
+  moved up 2.1 mm. The footer rule sits 1.6 mm above the first line
+  (12.3 mm before; PDF 0.6 mm).
+
+The example letter's four footer lines remain 8.7 mm apart in Word, against
+3.2 mm in the PDF. The `footer` style inherits the paragraph spacing and line
+height unless the design sets `[design.styles.footer]`, which this change
+leaves as it was.
+
+The automated suite checks the rule and image paragraph properties, field
+run properties, Body Text spacing and the contextual spacing rule, and
+snapshots the parts. Word for Windows, LibreOffice and Google Docs were not
+checked.
+
 ## Manual release checklist
 
 These checks are **not performed by the automated tests**. Before each release,

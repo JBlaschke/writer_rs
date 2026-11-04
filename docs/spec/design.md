@@ -382,8 +382,9 @@ special hints. Two style names that normalise equal (§8.1) → `design.styles: 
 
 ### 5.1 Where the generated CSS goes
 `compile_theme_css` (html-output.md §5) gains the design: the compiled theme stylesheet becomes
-`hoisted @imports` + **`design::tokens_css`** + the entries (parent first, as today) + **`design::layout_css`**
-+ the code-theme blocks. Both generated blocks are empty strings for an undeclared design (the
+`hoisted @imports` + **`design::tokens_css`** + the entries (parent first, as today; the untouched
+default `styles/print.css` is followed by **`design::print_colors_css`**, §5.2) +
+**`design::layout_css`** + the code-theme blocks. The generated blocks are empty strings for an undeclared design (the
 output is byte-identical to today). `tokens_css` starts with `/* design: tokens */\n`, `layout_css`
 with `/* design: layout */\n`. The split is deliberate: tokens are *defaults* a theme's own CSS may
 refine (they come first, so an entry's `:root { --w-accent: … }` still wins), while layout rules
@@ -433,6 +434,24 @@ In this order:
    block (`@media (prefers-color-scheme: dark)`, html-output.md §7) comes later in the stylesheet
    and still wins in dark mode; a theme that wants design colours in both schemes overrides that
    block in its own CSS (open point 2). An empty `:root {}` is not emitted.
+
+**Print colours** (`print_colors_css`). The default theme's `print.css` restores its own light
+palette for paper (`@media print { :root { --w-text: #23262b; --w-accent: #366b76; … } }`) and
+sets `body { background: #fff; color: #000 }`, so a printed page would lose the declared colours
+that the PDF and Word keep. Directly after that sheet, when it is the embedded default or an
+ejected copy with the same bytes (the rule §5.1's caller applies to `styles/theme.css`), the
+stylesheet repeats the declared colour tokens for print, in the table's order, and points `body`
+back at them:
+```css
+/* design: print colors */
+@media print{:root{--w-text:#242424;--w-bg:#ffffff;--w-accent:#a96d4b}body{background:var(--w-bg);color:var(--w-text)}}
+```
+`background` only when `colors.background` is set (the PDF's page fill), `color` only when
+`colors.text` is set; nothing at all when no colour is declared. It follows the default sheet
+rather than every entry, so §5.4 still holds: a later entry (a child theme's, or an edited print
+sheet, which is no longer the default) refines the colours on paper as it does on screen. The
+default dark block comes earlier, so printing from a dark-mode browser keeps the declared
+colours too.
 
 ### 5.3 `layout_css`
 In this order, each part only when its keys are set:
@@ -569,7 +588,7 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 | `fonts.mono` | every `w:rFonts` naming `Consolas` (Source Code, Verbatim Char, …) = family |
 | `text.size` | `rPrDefault` `w:sz`/`w:szCs` = half-points; styles whose `w:sz` is relative to the body in §2.3 (headings, Title, captions, footnotes, code) are scaled by `new/22` and rounded to even half-points |
 | `text.line_height` | `pPrDefault/w:spacing` `w:line` = `round(n × 240)` `w:lineRule="auto"`, or twips with `w:lineRule="exact"` |
-| `text.paragraph_spacing` | `pPrDefault/w:spacing` `w:after` = twips (Body Text and First Paragraph inherit it; §2.3's own `sp a/b` values stay) |
+| `text.paragraph_spacing` | `pPrDefault/w:spacing` `w:after` = twips, and Body Text's `w:spacing` becomes `w:before="0"` `w:after` = twips (its §2.3 `sp 120/120` would otherwise override the default); First Paragraph, based on Body Text, inherits it. Body paragraphs are therefore the spacing apart, with none before them, as HTML's `margin-block: 0 <spacing>` and Typst's `par(spacing:)` set them. Every other §2.3 style keeps its own `sp b/a` values (Compact, Block Text, captions, headings, …); one without them inherits the default `w:after` |
 | `text.justify` | `pPrDefault/w:jc` `both` when true (`left` when false) |
 | `colors.text` | `rPrDefault/w:color` (inserted) = hex without `#` |
 | `colors.link` | Hyperlink style `w:color` = hex |
@@ -684,7 +703,7 @@ Each design style is appended to `styles.xml` (§7.1) as
         <w:keepNext/>                 <!-- keep_with_next -->
         <w:keepLines/>                <!-- keep_together -->
         <w:spacing w:before="0" w:after="340" w:line="242" w:lineRule="exact"/>  <!-- set keys only -->
-        <w:contextualSpacing/>        <!-- when space_before or space_after is set -->
+        <w:contextualSpacing/>        <!-- space_before or space_after set, on a block style (below) -->
         <w:jc w:val="left|center|right|both"/>
     </w:pPr>
     <w:rPr>
@@ -706,8 +725,15 @@ attribute (`before`, `after`, `line` with `lineRule`), so `toc 2` with `space_af
 its `before="0"`; every other child (`outlineLvl`, `ind`, `tabs`, `pBdr`, `shd`, …) is kept.
 `keep_with_next` and `keep_together` are booleans: true adds the element, false (the default)
 leaves the built-in's alone. `w:contextualSpacing` makes consecutive paragraphs of the same
-style omit the gap between them, so `space_before`/`space_after` behave as the div's outer margins
-like in HTML and Typst. The body emitter (docx-output.md §4.1) pushes `Style(id)` for a `Div` when
+style omit the gap between them. It is added only to a **block style**, one whose paragraphs
+together form one block: a custom name (a div's paragraphs; `Header`, the header furniture's
+lines) and `footer` (the footer furniture's lines). There `space_before`/`space_after` behave as
+the block's outer margins, like a div's in HTML and Typst. Writer selects every other §2.3 name
+per block (each body paragraph, heading, contents entry, caption, table-cell or tight-list
+paragraph is a block of its own), so those keep the built-in definition's setting (none in
+writer's asset) and their space separates consecutive paragraphs of the same style:
+`[design.styles."Body Text"]` with `space_after` keeps body paragraphs apart, and `toc 1` with
+`space_before` spaces consecutive top-level contents entries. The body emitter (docx-output.md §4.1) pushes `Style(id)` for a `Div` when
 `style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
 exists, so `custom` returns its id). With a reference document, §7.3.
 
@@ -722,8 +748,9 @@ aligned by `align`), and the rule at its `position` (above everything for `above
 between its bottom edge and the top of the first line's box (T90). That box starts at the cap
 height in Typst, at the ascender plus half the leading in HTML, and in Word below the image line's
 descent and the line spacing Word adds above the text. The same value therefore looks larger in
-HTML and larger again in Word: in the §11 letter the line's capitals sit 0, 1.1 and 3.4 mm below
-the gap's end (PDF, HTML screen, Word's own PDF export; measured 2 Nov 2026). Line text is plain
+HTML and larger again in Word: in the §11 letter the line's capitals sit 0, 1.1 and 1.5 mm below
+the gap's end (PDF, HTML screen, Word's own PDF export; measured 4 Nov 2026, after the image
+paragraph took single line spacing, §9.5; Word's was 3.4 mm before). Line text is plain
 text with §9.2 placeholders; no inline markup (open point 6). Lines
 inherit the furniture's `size`, `color`, `weight`, `italic` unless they set their own. The
 furniture's width is the text width (page width − left − right margin); the header's top edge is at
@@ -737,8 +764,9 @@ The page background of §9.6 is not a slot: it is painted behind both slots and 
 `{page}` and `{pages}` inside a line's text become the current page number and the page count.
 `segments` splits a line into `Text`/`Page`/`Pages`; any other `{…}` is literal text. Backends:
 HTML print → `counter(page)` / `counter(pages)` in the `content:` string list; HTML screen → `1` /
-`1` (one continuous page); DOCX → `PAGE` / `NUMPAGES` fields through `docx::xml::field` (cached
-result `1`); Typst → `context counter(page).display()` / `context counter(page).final().first()`.
+`1` (one continuous page); DOCX → `PAGE` / `NUMPAGES` fields through `docx::xml::formatted_field`
+(cached result `1`; the begin, instruction, separator and end runs carry the line's run properties,
+because Word formats a recomputed result like the field's runs, not like its cached result); Typst → `context counter(page).display()` / `context counter(page).final().first()`.
 
 ### 9.3 HTML (`design_furniture` helper, `layout_css` item 4; T86)
 **Screen.** The context helper `design_furniture(slot, variant)` (`slot` = `"header" | "footer"`,
@@ -829,11 +857,20 @@ Generated parts: `word/header<k>.xml` and `word/footer<k>.xml` with k the smalle
 declared empty footer removes the page number. Since `titlePg` applies to both
 slots, a shared slot also references its single part as `first` when the other
 slot differs. Retained `evenAndOddHeaders` settings similarly alias continuation
-parts as `even`. Part body, in order:
-- rule `above`: a paragraph with `w:pPr/w:pBdr/w:top w:val="single" w:sz="<eighths>" w:space="1" w:color="rrggbb"`
-  and a `w:sz w:val="2"` empty run (the reference document's own construction);
+parts as `even`. The rule and image paragraphs take the slot's style (`w:pStyle` Header / Footer,
+as the lines do) and set their own spacing explicitly, so neither that style nor the document
+defaults (`text.paragraph_spacing` after, `text.line_height`, a body-size paragraph mark) push the
+lines away from them: `w:spacing w:before="0"`, `w:contextualSpacing w:val="0"` (a style with
+space keys sets it, §8.5, which would drop the image's gap before a line of the same style) and a
+one-point paragraph mark, `w:rPr/w:sz w:val="2"`. Part body, in order:
+- rule `above`: a paragraph with `w:pPr/w:pBdr/w:top w:val="single" w:sz="<eighths>" w:space="1" w:color="rrggbb"`,
+  `w:spacing w:after="0" w:line="20" w:lineRule="exact"` and a `w:sz w:val="2"` empty run (the
+  reference document's own construction: a one-point paragraph, so the rule sits `w:space` from
+  the adjacent line as it does in the PDF and HTML);
 - image: a paragraph (`w:jc` from the image's or furniture's align; `w:spacing w:after` from the
-  image's resolved `gap`, inherited from the document defaults when unset) with an inline drawing
+  image's resolved `gap`, else the document defaults' `w:after`, and `w:line="240"
+  w:lineRule="auto"`, so the line is as high as the picture) with an inline drawing in a
+  one-point run
   (`wp:inline`, extent EMU from `width` and the image's aspect ratio; `wp:docPr/@id` from
   `Ids.doc_pr`; `r:embed` → `word/_rels/header<k>.xml.rels` → `word/media/<name>`; content type
   by extension as docx-output.md §4.16 does for figures);
@@ -843,7 +880,8 @@ parts as `even`. Part body, in order:
   and the runs of line *i* of `right_lines`, with `w:pPr/w:tabs/w:tab w:val="right" w:pos="<text
   width twips>"` (the reference document's layout); extra right lines get paragraphs of their own
   with the tab only. Runs carry `w:rFonts` (furniture font = body font when set), `w:sz`, `w:color`,
-  `w:b`, `w:i` from the line's resolved values; `{page}`/`{pages}` are `PAGE`/`NUMPAGES` fields;
+  `w:b`, `w:i` from the line's resolved values; `{page}`/`{pages}` are `PAGE`/`NUMPAGES` fields
+  whose every run carries those properties (§9.2);
 - rule `below`: as above with `w:pBdr/w:bottom`.
 `sectPr` references and offsets: §7.2. With a reference document whose `sectPr` references parts,
 nothing is generated (§7.3).
@@ -1060,8 +1098,8 @@ and `letter.md` keeps its directives: `:::recipient {custom-style="Recipient"}` 
   World, so `system_fonts = false` is byte-identical across machines. `letterhead.typ` becomes
   unnecessary (or stays as a BYO template that delegates).
 - **DOCX** (T83, T85, T87): no `reference_doc`; generated `styles.xml` with Source Sans 3 in
-  `rPrDefault`, sz 22, color 242424, `pPrDefault` spacing line 324 auto after 204; headings in
-  Source Sans 3; six appended paragraph styles (`Recipient`: keepLines, after 340, line 242 exact,
+  `rPrDefault`, sz 22, color 242424, `pPrDefault` spacing line 324 auto after 204, Body Text
+  spacing before 0 after 204 (§7.1); headings in Source Sans 3; six appended paragraph styles (`Recipient`: keepLines, after 340, line 242 exact,
   contextualSpacing; `Closing`: keepNext, before 340, after 454; `Date`: the built-in definition
   with sz 20 and after 170 laid over it; …);
   `sectPr` with `pgSz 11906×16838`, `pgMar top=2835 right=1247 bottom=2154 left=1247 header=964
