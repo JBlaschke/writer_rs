@@ -172,7 +172,7 @@ fn rewrite_paths(
         }
     }
     if let Some(page) = table.get_mut("page").and_then(Value::as_object_mut) {
-        for slot in ["header", "footer"] {
+        for slot in ["header", "footer", "background"] {
             if let Some(value) = page.get_mut(slot) {
                 furniture(value, paths);
             }

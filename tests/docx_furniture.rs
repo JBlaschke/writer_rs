@@ -3,7 +3,10 @@
 use std::io::{Cursor, Read, Write};
 use std::path::Path;
 
-use writer::design::{FurnitureImage, Pt};
+use writer::design::{
+    Align, Background, BackgroundAlign, BackgroundImage, BackgroundPages, Fit,
+    FurnitureImage, Pt, VerticalAlign,
+};
 use writer::docx::xml::{
     CT_DOCUMENT, CT_RELS, CT_SETTINGS, CT_STYLES, NS_R, NS_RELS, NS_W,
     REL_OFFICE_DOCUMENT, REL_SETTINGS, REL_STYLES,
@@ -316,4 +319,203 @@ fn retained_even_header_setting_aliases_rest_furniture_only_when_enabled() {
     );
     assert_eq!(reference_id(&document, "footer", "first"), Some(default));
     assert!(part(&bytes, "word/footer1.xml").contains(" PAGE "));
+}
+
+/// A PNG signature and header of the given size: the writer reads the size
+/// and copies the bytes, and the readers do not decode them.
+fn png_header(width: u32, height: u32) -> Vec<u8> {
+    let mut bytes = b"\x89PNG\r\n\x1a\n\0\0\0\x0dIHDR".to_vec();
+    bytes.extend(width.to_be_bytes());
+    bytes.extend(height.to_be_bytes());
+    bytes.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
+    bytes
+}
+
+fn background(
+    path: &Path, fit: Fit, align: (Align, VerticalAlign),
+    pages: BackgroundPages,
+) -> Option<Background> {
+    Some(Background {
+        image: BackgroundImage {
+            path: path.into(),
+            fit,
+            align: BackgroundAlign { horizontal: align.0, vertical: align.1 },
+        },
+        pages,
+    })
+}
+
+fn anchors(xml: &str) -> Vec<String> {
+    regex::Regex::new(
+        r"<w:r><w:drawing><wp:anchor .*?</wp:anchor></w:drawing></w:r>",
+    )
+    .unwrap()
+    .find_iter(xml)
+    .map(|found| found.as_str().into())
+    .collect()
+}
+
+fn media(bytes: &[u8]) -> usize {
+    names(bytes).iter().filter(|name| name.starts_with("word/media/")).count()
+}
+
+#[test]
+fn page_background_is_a_behind_text_picture_in_the_first_page_header() {
+    use BackgroundPages::{All, First};
+    let directory = tempfile::tempdir().unwrap();
+    let wide = directory.path().join("wide.png");
+    let tall = directory.path().join("tall.png");
+    std::fs::write(&wide, png_header(300, 200)).unwrap();
+    std::fs::write(&tall, png_header(100, 300)).unwrap();
+    let centre = (Align::Center, VerticalAlign::Center);
+    let plain = write(&letter(), None);
+
+    // The cover: page one's header gains one anchored run in its first
+    // paragraph and is otherwise unchanged; the continuation header is not.
+    let mut prepared = letter();
+    prepared.design.page.background =
+        background(&wide, Fit::Cover, centre, First);
+    let bytes = write(&prepared, None);
+    let first = part(&bytes, "word/header1.xml");
+    insta::assert_snapshot!("design_background_header_first", first);
+    let found = anchors(&first);
+    assert_eq!(found.len(), 1);
+    assert!(first.contains(&format!("</w:pPr>{}", found[0])));
+    assert_eq!(first.replace(&found[0], ""), part(&plain, "word/header1.xml"));
+    for expected in [
+        r#"behindDoc="1""#,
+        r#"<wp:positionH relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionH>"#,
+        r#"<wp:positionV relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionV>"#,
+        r#"<wp:extent cx="7560310" cy="10692130"/>"#,
+        "<wp:wrapNone/>",
+        r#"<a:srcRect l="26430" r="26430"/>"#,
+    ] {
+        assert!(found[0].contains(expected), "{expected}");
+    }
+    assert_eq!(
+        part(&bytes, "word/header2.xml"),
+        part(&plain, "word/header2.xml")
+    );
+    assert_eq!(
+        part(&bytes, "word/_rels/header1.xml.rels")
+            .matches("relationships/image")
+            .count(),
+        2
+    );
+    assert!(part(&bytes, "word/document.xml").contains("<w:titlePg/>"));
+    assert_eq!(media(&bytes), 2);
+
+    // Every page: each header part carries the picture, the footer does not.
+    prepared.design.page.background =
+        background(&wide, Fit::Cover, centre, All);
+    let bytes = write(&prepared, None);
+    for name in ["word/header1.xml", "word/header2.xml"] {
+        assert_eq!(anchors(&part(&bytes, name)).len(), 1, "{name}");
+    }
+    assert!(anchors(&part(&bytes, "word/footer1.xml")).is_empty());
+    assert_eq!(media(&bytes), 2);
+
+    // A slot whose variants agree is split so only page one has the picture.
+    let slot = prepared.design.page.header.as_mut().unwrap();
+    slot.first = slot.rest.clone();
+    prepared.design.page.background =
+        background(&wide, Fit::Cover, centre, First);
+    let bytes = write(&prepared, None);
+    let document = part(&bytes, "word/document.xml");
+    let first_id = reference_id(&document, "header", "first").unwrap();
+    let default_id = reference_id(&document, "header", "default").unwrap();
+    assert_ne!(first_id, default_id);
+    let (first, rest) =
+        (part(&bytes, "word/header1.xml"), part(&bytes, "word/header2.xml"));
+    let found = anchors(&first);
+    assert_eq!(found.len(), 1);
+    assert!(anchors(&rest).is_empty());
+    assert_eq!(first.replace(&found[0], ""), rest);
+
+    // Without a header slot the picture gets a part of its own: page one only
+    // for `first`, every page for `all`; the built-in page number stays.
+    prepared.design.page.header = None;
+    prepared.design.page.footer = None;
+    let bytes = write(&prepared, None);
+    let document = part(&bytes, "word/document.xml");
+    assert!(document.contains("<w:titlePg/>"));
+    assert!(reference_id(&document, "header", "first").is_some());
+    assert_eq!(reference_id(&document, "header", "default"), None);
+    let header = part(&bytes, "word/header1.xml");
+    assert_eq!(anchors(&header).len(), 1);
+    assert!(header.contains(
+        r#"<w:spacing w:before="0" w:after="0" w:line="14" w:lineRule="exact"/>"#
+    ));
+    let footer = reference_id(&document, "footer", "first").unwrap();
+    assert_eq!(reference_id(&document, "footer", "default"), Some(footer));
+    assert!(part(&bytes, "word/footer1.xml").contains(" PAGE "));
+    prepared.design.page.background =
+        background(&wide, Fit::Cover, centre, All);
+    let bytes = write(&prepared, None);
+    let document = part(&bytes, "word/document.xml");
+    assert!(!document.contains("<w:titlePg/>"));
+    assert!(reference_id(&document, "header", "default").is_some());
+    assert_eq!(reference_id(&document, "header", "first"), None);
+    assert!(part(&bytes, "word/footer1.xml").contains(" PAGE "));
+
+    // `cover` crops the overflow on the aligned side, `contain` shrinks the
+    // extent and offsets it, `stretch` fills the page of the design paper.
+    for (path, fit, align, paper, expected) in [
+        (
+            &wide,
+            Fit::Cover,
+            (Align::Left, VerticalAlign::Center),
+            None,
+            vec![r#"<a:srcRect l="0" r="52861"/>"#],
+        ),
+        (
+            &tall,
+            Fit::Cover,
+            (Align::Center, VerticalAlign::Top),
+            None,
+            vec![r#"<a:srcRect t="0" b="52859"/>"#],
+        ),
+        (
+            &wide,
+            Fit::Contain,
+            (Align::Center, VerticalAlign::Bottom),
+            None,
+            vec![
+                r#"<wp:extent cx="7560310" cy="5040207"/>"#,
+                r#"<wp:positionV relativeFrom="page"><wp:posOffset>5651923</wp:posOffset>"#,
+                r#"<wp:positionH relativeFrom="page"><wp:posOffset>0</wp:posOffset>"#,
+            ],
+        ),
+        (
+            &tall,
+            Fit::Contain,
+            (Align::Right, VerticalAlign::Center),
+            None,
+            vec![
+                r#"<wp:extent cx="3564043" cy="10692130"/>"#,
+                r#"<wp:positionH relativeFrom="page"><wp:posOffset>3996267</wp:posOffset>"#,
+            ],
+        ),
+        (
+            &tall,
+            Fit::Stretch,
+            (Align::Right, VerticalAlign::Top),
+            Some("us-letter"),
+            vec![r#"<wp:extent cx="7772400" cy="10058400"/>"#],
+        ),
+    ] {
+        prepared.design.page.paper = paper.map(Into::into);
+        prepared.design.page.background = background(path, fit, align, First);
+        let bytes = write(&prepared, None);
+        let found = anchors(&part(&bytes, "word/header1.xml"));
+        assert_eq!(found.len(), 1);
+        for expected in expected {
+            assert!(found[0].contains(expected), "{expected} in {}", found[0]);
+        }
+        assert_eq!(
+            found[0].contains("a:srcRect"),
+            fit == Fit::Cover,
+            "{fit:?}"
+        );
+    }
 }

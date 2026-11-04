@@ -29,7 +29,7 @@ pub fn absolutise_paths(
         }
     }
     if let Some(page) = table.get_mut("page").and_then(Value::as_object_mut) {
-        for slot in ["header", "footer"] {
+        for slot in ["header", "footer", "background"] {
             if let Some(value) = page.get_mut(slot) {
                 furniture_paths(value, base_dir, origin)?;
             }
@@ -105,7 +105,8 @@ fn absolute(path: &Path) -> Result<PathBuf> {
 }
 
 /// The merged raw table, with source-relative paths already made absolute.
-/// An explicitly empty furniture slot replaces an inherited slot.
+/// An explicitly empty furniture slot or page background replaces an
+/// inherited one.
 pub fn merged_table(layers: &[Layer<'_>]) -> Result<Map<String, Value>> {
     collect(layers).map(|(table, _)| table)
 }
@@ -153,6 +154,13 @@ fn clear_empty_furniture(
     else {
         return;
     };
+    if over_page
+        .get("background")
+        .and_then(Value::as_object)
+        .is_some_and(Map::is_empty)
+    {
+        base_page.remove("background");
+    }
     for slot in ["header", "footer"] {
         let Some(over_slot) = over_page.get(slot).and_then(Value::as_object)
         else {

@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use serde_json::json;
-use writer::design::{Layer, Origin, PathMode, merge};
+use writer::design::{
+    Align, BackgroundPages, Fit, Layer, Origin, PathMode, VerticalAlign, merge,
+};
 use writer::pipeline::{self, BuildOptions, ChangeKind, InputRole};
 
 fn layer(value: serde_json::Value, base: &Path) -> Layer<'_> {
@@ -228,4 +230,96 @@ fn unavailable_theme_warns_only_for_non_html_targets() {
     assert!(
         pdf.diagnostics.iter().any(|d| d.code == "design-theme-unavailable")
     );
+}
+
+#[test]
+fn page_background_resolves_shorthand_fit_align_and_pages() {
+    let root = tempfile::tempdir().unwrap();
+    let canonical = std::fs::canonicalize(root.path()).unwrap();
+    let base = canonical.as_path();
+    let cover = json!({"page":{"background":{"image":"cover.jpg"}}});
+    // A path alone is a centred cover on the first page.
+    let design = merge(&[layer(cover.clone(), base)]).unwrap();
+    assert_eq!(
+        design.to_json(PathMode::Real)["page"]["background"],
+        json!({
+            "image": {
+                "path": base.join("cover.jpg"),
+                "fit": "cover",
+                "align": {"horizontal": "center", "vertical": "center"},
+            },
+            "pages": "first",
+        })
+    );
+    assert!(design.referenced_files().contains(&base.join("cover.jpg")));
+    for (align, horizontal, vertical) in [
+        ("bottom right", Align::Right, VerticalAlign::Bottom),
+        ("right bottom", Align::Right, VerticalAlign::Bottom),
+        ("left", Align::Left, VerticalAlign::Center),
+        ("top", Align::Center, VerticalAlign::Top),
+        ("center left", Align::Left, VerticalAlign::Center),
+    ] {
+        let design = merge(&[layer(
+            json!({"page":{"background":{
+                "image":{"src":"cover.jpg","fit":"contain","align":align},
+                "pages":"all",
+            }}}),
+            base,
+        )])
+        .unwrap();
+        let background = design.page.background.unwrap();
+        assert_eq!(background.image.path, base.join("cover.jpg"));
+        assert_eq!(background.image.fit, Fit::Contain);
+        assert_eq!(background.image.align.horizontal, horizontal, "{align}");
+        assert_eq!(background.image.align.vertical, vertical, "{align}");
+        assert_eq!(background.pages, BackgroundPages::All);
+    }
+    // An empty table removes an inherited background, as an empty slot does.
+    let design = merge(&[
+        layer(cover, base),
+        layer(json!({"page":{"background":{}}}), base),
+    ])
+    .unwrap();
+    assert!(design.page.background.is_none());
+    assert!(design.referenced_files().is_empty());
+    for (background, expected) in [
+        (
+            json!({"image":{"src":"c.jpg","fit":"fill"}}),
+            "design.page.background.image.fit: expected cover, contain or stretch, got \"fill\"",
+        ),
+        (
+            json!({"image":"c.jpg","pages":"odd"}),
+            "design.page.background.pages: expected first or all, got \"odd\"",
+        ),
+        (
+            json!({"image":{"src":"c.jpg","align":"left right"}}),
+            "design.page.background.image.align: expected one or two of top, bottom, left, right, center, got \"left right\"",
+        ),
+        (
+            json!({"image":{"src":"c.jpg","align":"middle"}}),
+            "design.page.background.image.align: expected one or two of",
+        ),
+        (
+            json!({"pages":"all"}),
+            "design.page.background.image: expected an image path or table",
+        ),
+        (
+            json!({"image":{"fit":"cover"}}),
+            "design.page.background.image.src: expected an image path",
+        ),
+        (
+            json!({"image":"c.jpg","opacity":0.5}),
+            "design.page.background.opacity: unknown key",
+        ),
+        (
+            json!({"image":{"path":"c.jpg"}}),
+            "design.page.background.image.path: unknown key",
+        ),
+    ] {
+        let error =
+            merge(&[layer(json!({"page":{"background":background}}), base)])
+                .unwrap_err()
+                .to_string();
+        assert!(error.contains(expected), "{error}");
+    }
 }

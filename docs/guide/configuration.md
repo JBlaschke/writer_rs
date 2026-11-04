@@ -366,6 +366,7 @@ title styles.
 | `page.header_offset` | Length from page top | Unset: PDF 30% of top margin, Word 0.5 in; HTML uses its print layout |
 | `page.footer_offset` | Length from page bottom | Unset: PDF 30% of bottom margin, Word 0.5 in; HTML uses its print layout |
 | `page.print` | `"margin-boxes"` or `"fixed"` | `"margin-boxes"`; HTML print behavior |
+| `page.background` | Background table | Unset: no page background |
 | `page.header` | Furniture table | Unset: retain backend header |
 | `page.footer` | Furniture table | Unset: retain backend footer/page numbering |
 
@@ -374,6 +375,30 @@ Word recognizes A4, A5, US Letter and US Legal and falls back to A4 for other
 names. PDF accepts the Typst paper names. Declaring either Typst furniture
 slot disables the package's built-in page numbering; include `{page}` in your
 footer when you want it.
+
+### Page background
+
+`[design.page.background]` paints one image behind everything on the page, for
+photo covers and preprinted stationery. A string image is shorthand for
+`{ src = "path" }`. An empty table removes an inherited background; a
+non-empty table must name an image.
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `page.background.image` | Path string or image table | Required; the picture |
+| `page.background.image.src` | File path | Required in an image table |
+| `page.background.image.fit` | `"cover"`, `"contain"` or `"stretch"` | `"cover"` fills the page and crops; `contain` fits inside it; `stretch` ignores the aspect ratio |
+| `page.background.image.align` | One or two of `top`, `bottom`, `left`, `right`, `center` | `"center"`; the part `cover` keeps, or where `contain` places the picture |
+| `page.background.pages` | `"first"` or `"all"` | `"first"`: page one only |
+
+PDF places the picture at full page size before the header and footer. Word
+anchors it behind the text in the first-page header, enabling a different
+first page, or in every header for `"all"`. HTML paints the first paper height
+of the screen page behind the content; printing paints the first page, or
+every page, inside the `@page` margins, because browsers do not support
+`background` on `@page :first`. A theme that needs a bleed to the paper edge
+sets `@page { margin: 0 }` in its print CSS and pads the content itself. A
+background declares no furniture slot, so built-in page numbering stays.
 
 ### Furniture contents and variants
 

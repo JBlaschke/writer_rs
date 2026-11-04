@@ -6,7 +6,8 @@ use std::path::Path;
 use writer::assets::emit::OutputMode;
 use writer::assets::registry::AssetRegistry;
 use writer::html::design::{
-    FurnitureSlot, FurnitureVariant, furniture_css, furniture_html,
+    FurnitureSlot, FurnitureVariant, background_css, furniture_css,
+    furniture_html,
 };
 use writer::html::styles::Targets;
 use writer::html::{self, BuildInfo, RenderInput, RenderedDocument};
@@ -448,4 +449,92 @@ print(String(data: data, encoding: .utf8)!)
             Err(error) => panic!("could not inspect printed PDF: {error}"),
         }
     }
+}
+
+#[test]
+fn page_background_paints_the_first_sheet_and_prints_once_or_fixed() {
+    let root = tempfile::tempdir().unwrap();
+    fs::write(root.path().join("document.md"), "Body.\n").unwrap();
+    fs::write(root.path().join("cover.jpg"), b"\xff\xd8\xff\xe0cover").unwrap();
+    for (page, rules) in [
+        (
+            serde_json::json!({"background": {"image": "cover.jpg"}}),
+            [
+                "height:841.89pt;margin-bottom:-841.89pt;",
+                "no-repeat center center/cover;",
+                "@media print{body::before{position:absolute;top:0;left:0;width:100%;height:100%;margin:0}}",
+            ],
+        ),
+        (
+            serde_json::json!({
+                "paper": "a5",
+                "background": {
+                    "image": {"src": "cover.jpg", "fit": "contain", "align": "top left"},
+                    "pages": "all",
+                },
+            }),
+            [
+                "height:595.276pt;margin-bottom:-595.276pt;",
+                "no-repeat left top/contain;",
+                "@media print{body::before{position:fixed;",
+            ],
+        ),
+        (
+            serde_json::json!({
+                "background": {
+                    "image": {"src": "cover.jpg", "fit": "stretch", "align": "bottom"},
+                },
+            }),
+            [
+                "body::before{content:\"\";display:block;",
+                "no-repeat center bottom/100% 100%;print-color-adjust:exact;-webkit-print-color-adjust:exact}",
+                "position:absolute;",
+            ],
+        ),
+    ] {
+        fs::write(
+            root.path().join("writer.toml"),
+            toml::to_string(&serde_json::json!({"design": {"page": page}}))
+                .unwrap(),
+        )
+        .unwrap();
+        let opts = BuildOptions::new(root.path().join("document.md"));
+        let prepared = pipeline::prepare(&opts).unwrap();
+        let mut registry = AssetRegistry::new();
+        let css = background_css(
+            &prepared.design,
+            &mut Targets::Placeholders(&mut registry),
+        )
+        .unwrap();
+        assert!(
+            stable_assets(&css).contains("background:url(asset:LOGO) "),
+            "{css}"
+        );
+        for rule in rules {
+            assert!(css.contains(rule), "{rule} missing from {css}");
+        }
+        assert!(!registry.is_empty());
+        let output = render(&prepared, &opts).unwrap();
+        assert!(output.html.contains("body::before{content:\"\""));
+        assert!(output.html.contains("data:image/jpeg"));
+        assert!(!output.html.contains("asset:"));
+    }
+    // Neither a design without a background nor an undeclared one adds CSS.
+    let (_root, _opts, prepared) = project(serde_json::json!({
+        "page": {"header": {"lines": ["Header"]}},
+    }));
+    let mut registry = AssetRegistry::new();
+    let mut targets = Targets::Placeholders(&mut registry);
+    assert!(background_css(&prepared.design, &mut targets).unwrap().is_empty());
+    let mut design = writer::design::Design::default();
+    design.page.background = Some(writer::design::Background {
+        image: writer::design::BackgroundImage {
+            path: root.path().join("cover.jpg"),
+            fit: Default::default(),
+            align: Default::default(),
+        },
+        pages: Default::default(),
+    });
+    assert!(background_css(&design, &mut targets).unwrap().is_empty());
+    assert!(registry.is_empty());
 }

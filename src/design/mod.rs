@@ -51,8 +51,14 @@ spec!(ColorsSpec {
 spec!(PageSpec {
     paper: Option<String>, margin: Option<MarginSpec>,
     header_offset: Option<String>, footer_offset: Option<String>,
-    print: Option<PrintMode>, header: Option<FurnitureSpec>,
-    footer: Option<FurnitureSpec>,
+    print: Option<PrintMode>, background: Option<BackgroundSpec>,
+    header: Option<FurnitureSpec>, footer: Option<FurnitureSpec>,
+});
+spec!(BackgroundSpec {
+    image: Option<BackgroundImageSpec>, pages: Option<BackgroundPages>,
+});
+spec!(BackgroundImageDetailsSpec {
+    src: String, fit: Option<Fit>, align: Option<String>,
 });
 spec!(MarginSidesSpec {
     top: Option<String>, right: Option<String>,
@@ -130,6 +136,16 @@ pub enum ImageSpec {
     Path(String),
     /// Source path and optional geometry.
     Details(ImageDetailsSpec),
+}
+
+/// A page background image's path or table with fit and alignment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum BackgroundImageSpec {
+    /// A source path covering the page.
+    Path(String),
+    /// Source path and optional fit and alignment.
+    Details(BackgroundImageDetailsSpec),
 }
 
 /// Plain furniture text or text with typography overrides.
@@ -266,6 +282,8 @@ pub struct Page {
     pub footer_offset: Option<Pt>,
     /// HTML print strategy.
     pub print: PrintMode,
+    /// Full-page image behind the body and furniture.
+    pub background: Option<Background>,
     /// Declared header, including an explicitly empty slot.
     pub header: Option<Slot>,
     /// Declared footer, including an explicitly empty slot.
@@ -296,6 +314,82 @@ pub enum PrintMode {
     MarginBoxes,
     /// Fixed-position furniture.
     Fixed,
+}
+
+/// A full-page image behind the body and the furniture.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Background {
+    /// The picture and how it fills the page.
+    pub image: BackgroundImage,
+    /// Which pages show it.
+    pub pages: BackgroundPages,
+}
+
+/// A page background image whose source has been resolved against its layer.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BackgroundImage {
+    /// Absolute image source.
+    pub path: PathBuf,
+    /// How the picture fills the page.
+    pub fit: Fit,
+    /// The part `cover` keeps, or where `contain` places the picture.
+    pub align: BackgroundAlign,
+}
+
+/// How a page background image fills the page.
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum Fit {
+    /// Scale to fill the page and crop the overflow.
+    #[default]
+    Cover,
+    /// Scale to fit inside the page.
+    Contain,
+    /// Fill the page, ignoring the aspect ratio.
+    Stretch,
+}
+
+/// Which pages show the page background.
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum BackgroundPages {
+    /// Page one only.
+    #[default]
+    First,
+    /// Every page.
+    All,
+}
+
+/// Two-dimensional alignment of a page background image.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct BackgroundAlign {
+    /// Left, centre or right.
+    pub horizontal: Align,
+    /// Top, centre or bottom.
+    pub vertical: VerticalAlign,
+}
+
+impl Default for BackgroundAlign {
+    fn default() -> Self {
+        Self { horizontal: Align::Center, vertical: VerticalAlign::Center }
+    }
+}
+
+/// Vertical alignment of a page background image.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum VerticalAlign {
+    /// Flush with the top edge.
+    Top,
+    /// Centred.
+    #[default]
+    Center,
+    /// Flush with the bottom edge.
+    Bottom,
 }
 
 /// Furniture for the first and subsequent pages; `None` means empty.
@@ -457,19 +551,30 @@ pub enum Segment {
 }
 
 impl Design {
-    /// Referenced font files and furniture images, sorted and deduplicated.
+    /// Referenced font files and furniture and background images, sorted and
+    /// deduplicated.
     pub fn referenced_files(&self) -> Vec<PathBuf> {
         let mut files: BTreeSet<PathBuf> =
             self.font_files().into_iter().collect();
-        for slot in [&self.page.header, &self.page.footer].into_iter().flatten()
-        {
-            for furniture in [&slot.first, &slot.rest].into_iter().flatten() {
-                if let Some(image) = &furniture.image {
-                    files.insert(image.path.clone());
-                }
-            }
-        }
+        files.extend(self.images().cloned());
         files.into_iter().collect()
+    }
+
+    /// Furniture images in slot order, then the page background image.
+    fn images(&self) -> impl Iterator<Item = &PathBuf> {
+        [&self.page.header, &self.page.footer]
+            .into_iter()
+            .flatten()
+            .flat_map(|slot| [&slot.first, &slot.rest])
+            .flatten()
+            .filter_map(|furniture| furniture.image.as_ref())
+            .map(|image| &image.path)
+            .chain(
+                self.page
+                    .background
+                    .as_ref()
+                    .map(|background| &background.image.path),
+            )
     }
 
     /// Font files in role/declaration order, with duplicates omitted.
@@ -494,15 +599,11 @@ impl Design {
         }
     }
 
-    /// Registers furniture images so virtual JSON and the World share IDs.
+    /// Registers furniture and background images so virtual JSON and the
+    /// World share IDs.
     pub fn register_images(&self, registry: &mut AssetRegistry) {
-        for slot in [&self.page.header, &self.page.footer].into_iter().flatten()
-        {
-            for furniture in [&slot.first, &slot.rest].into_iter().flatten() {
-                if let Some(image) = &furniture.image {
-                    registry.register_file(&image.path);
-                }
-            }
+        for path in self.images() {
+            registry.register_file(path);
         }
     }
 }

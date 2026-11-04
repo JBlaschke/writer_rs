@@ -492,24 +492,41 @@ impl InlineDrawing<'_> {
                 "<wp:extent cx=\"{width}\" cy=\"{height}\"/><wp:effectExtent l=\"0\" t=\"0\" r=\"0\" b=\"0\"/>",
                 "<wp:docPr id=\"{id}\" name=\"Picture {id}\" descr=\"{alt}\"{title}/>",
                 "<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect=\"1\"/></wp:cNvGraphicFramePr>",
-                "<a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><pic:pic>",
-                "<pic:nvPicPr><pic:cNvPr id=\"0\" name=\"{name}\"/><pic:cNvPicPr><a:picLocks noChangeAspect=\"1\" noChangeArrowheads=\"1\"/></pic:cNvPicPr></pic:nvPicPr>",
-                "<pic:blipFill><a:blip r:embed=\"{rel}\">{svg}</a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill>",
-                "<pic:spPr bwMode=\"auto\"><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{width}\" cy=\"{height}\"/></a:xfrm>",
-                "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/><a:ln w=\"9525\"><a:noFill/><a:headEnd/><a:tailEnd/></a:ln></pic:spPr>",
-                "</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>",
+                "{graphic}</wp:inline></w:drawing></w:r>",
             ),
             props = props,
             width = width,
             height = height,
             id = id,
             title = title,
-            svg = svg,
             alt = xml::escape(alt),
-            name = xml::escape(name),
-            rel = xml::escape(rel)
+            graphic = picture_graphic(name, rel, svg, *width, *height, ""),
         )
     }
+}
+
+/// The DrawingML picture shared by inline and anchored drawings; `source_rect`
+/// is an optional `a:srcRect` crop.
+pub(crate) fn picture_graphic(
+    name: &str, rel: &str, svg: &str, width: u64, height: u64,
+    source_rect: &str,
+) -> String {
+    format!(
+        concat!(
+            "<a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><pic:pic>",
+            "<pic:nvPicPr><pic:cNvPr id=\"0\" name=\"{name}\"/><pic:cNvPicPr><a:picLocks noChangeAspect=\"1\" noChangeArrowheads=\"1\"/></pic:cNvPicPr></pic:nvPicPr>",
+            "<pic:blipFill><a:blip r:embed=\"{rel}\">{svg}</a:blip>{source_rect}<a:stretch><a:fillRect/></a:stretch></pic:blipFill>",
+            "<pic:spPr bwMode=\"auto\"><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{width}\" cy=\"{height}\"/></a:xfrm>",
+            "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/><a:ln w=\"9525\"><a:noFill/><a:headEnd/><a:tailEnd/></a:ln></pic:spPr>",
+            "</pic:pic></a:graphicData></a:graphic>",
+        ),
+        name = xml::escape(name),
+        rel = xml::escape(rel),
+        svg = svg,
+        source_rect = source_rect,
+        width = width,
+        height = height,
+    )
 }
 
 #[cfg(test)]

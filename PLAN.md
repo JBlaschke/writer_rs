@@ -498,6 +498,7 @@ presenter_rs per R8 §10.
 | T87 | DOCX page furniture: generated header/footer parts, media, `titlePg`, fields | M | T85 |
 | T88 | Typst page furniture: `writer-furniture`, `page(background:)` placement, counters | M | T85 |
 | T89 | Guide sections (customization, configuration, outputs, typst) and `examples/letter/` | M | T86, T87, T88 |
+| T91 | Page background image `[design.page.background]` behind the body in HTML (`body::before`), Typst (`page(background:)`) and DOCX (anchored `behindDoc` picture) (added 2026-11-02) | M | T86, T87, T88 |
 | T92 | Design styles named after §2.3 Word styles restyle the built-in definition in place; `design-style-unused` exempts them (added 2026-11-02) | S | T85, T89 |
 | T90 | Furniture image `gap`: the space between a furniture image and its lines in HTML, Typst and DOCX, the paragraph spacing by default | S | T89 |
 
@@ -535,7 +536,7 @@ w10 T80 ─► T81, T82, T83, T84
 w11 T81 ─► T85        T82 ─► T84        T83 ─► T85
 w12 T84 ─► T85
 w13 T85 ─► T86, T87, T88
-w14 T86 ─► T89        T87 ─► T89        T88 ─► T89
+w14 T86 ─► T89, T91   T87 ─► T89, T91   T88 ─► T89, T91
 w15 T89 ─► T92
 w15 T89 ─► T90
 ```
@@ -559,7 +560,7 @@ w15 T89 ─► T90
 | 12 | T84 | 1 |
 | 13 | T85 | 1 |
 | 14 | T86, T87, T88 | 3 |
-| 15 | T89 | 1 |
+| 15 | T89, T91 | 2 |
 | 16 | T92 | 1 |
 | 16 | T90 | 1 |
 

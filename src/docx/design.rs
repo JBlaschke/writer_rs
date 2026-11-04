@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::design::{Design, LineHeight, Pt};
+use crate::design::{BackgroundPages, Design, LineHeight, Pt};
 
 use super::validate::{XmlNode, parse_xml};
 use super::xml::{PPR, Props, RPR, escape};
@@ -301,18 +301,35 @@ fn fragment(source: &str) -> XmlNode {
     root.children.into_iter().next().expect("one style fragment")
 }
 
+/// Page size in twips: the design paper, else the configured paper; A4 for
+/// names the Word output does not know.
+pub(crate) fn page_size(design: &Design, paper: &str) -> (u32, u32) {
+    match design.page.paper.as_deref().unwrap_or(paper) {
+        "a5" => (8391, 11906),
+        "us-letter" => (12240, 15840),
+        "us-legal" => (12240, 20160),
+        _ => (11906, 16838),
+    }
+}
+
+/// Whether page one needs furniture references of its own (`w:titlePg`):
+/// a slot whose variants differ, or a first-page-only background picture.
+pub(crate) fn first_page(design: &Design) -> bool {
+    [&design.page.header, &design.page.footer]
+        .into_iter()
+        .flatten()
+        .any(|slot| slot.first != slot.rest)
+        || design.page.background.as_ref().is_some_and(|background| {
+            background.pages == BackgroundPages::First
+        })
+}
+
 /// Generates page geometry with references to the planned furniture parts.
 pub fn section(
     design: &Design, paper: &str, header_refs: &[(&str, String)],
     footer_refs: &[(&str, String)],
 ) -> String {
-    let paper = design.page.paper.as_deref().unwrap_or(paper);
-    let (width, height) = match paper {
-        "a5" => (8391, 11906),
-        "us-letter" => (12240, 15840),
-        "us-legal" => (12240, 20160),
-        _ => (11906, 16838),
-    };
+    let (width, height) = page_size(design, paper);
     let mut refs = String::new();
     for (kind, values) in [("header", header_refs), ("footer", footer_refs)] {
         for (page, id) in values {
@@ -330,11 +347,11 @@ pub fn section(
     let left = margins.left.map(twips).unwrap_or(1440);
     let header = design.page.header_offset.map(twips).unwrap_or(720);
     let footer = design.page.footer_offset.map(twips).unwrap_or(720);
-    let first = [&design.page.header, &design.page.footer]
-        .iter()
-        .filter_map(|slot| slot.as_ref())
-        .any(|slot| slot.first != slot.rest);
-    let title = if first { "<w:titlePg/>" } else { "" };
+    let title = if first_page(design) {
+        "<w:titlePg/>"
+    } else {
+        ""
+    };
     format!(
         "<w:sectPr>{refs}<w:footnotePr><w:numRestart w:val=\"eachSect\"/></w:footnotePr><w:pgSz w:w=\"{width}\" w:h=\"{height}\"/><w:pgMar w:top=\"{top}\" w:right=\"{right}\" w:bottom=\"{bottom}\" w:left=\"{left}\" w:header=\"{header}\" w:footer=\"{footer}\" w:gutter=\"0\"/><w:cols w:space=\"720\"/>{title}</w:sectPr>"
     )

@@ -549,8 +549,9 @@ fn config_default_cells_compare_values_without_layout_assumptions() {
 #[test]
 fn design_reference_covers_the_serialized_schema_shapes() {
     use writer::design::{
-        DesignSpec, FontDetailsSpec, FurnitureSpec, ImageDetailsSpec,
-        LineDetailsSpec, MarginSidesSpec, RuleDetailsSpec, StyleSpec,
+        BackgroundImageDetailsSpec, BackgroundSpec, DesignSpec,
+        FontDetailsSpec, FurnitureSpec, ImageDetailsSpec, LineDetailsSpec,
+        MarginSidesSpec, RuleDetailsSpec, StyleSpec,
     };
     fn keys(
         value: &serde_json::Value, prefix: &str, into: &mut BTreeSet<String>,
@@ -580,6 +581,15 @@ fn design_reference_covers_the_serialized_schema_shapes() {
         (
             "page.margin",
             serde_json::to_value(MarginSidesSpec::default()).unwrap(),
+        ),
+        (
+            "page.background",
+            serde_json::to_value(BackgroundSpec::default()).unwrap(),
+        ),
+        (
+            "page.background.image",
+            serde_json::to_value(BackgroundImageDetailsSpec::default())
+                .unwrap(),
         ),
         (
             "page.<slot>",

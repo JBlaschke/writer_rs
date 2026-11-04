@@ -249,8 +249,37 @@
     ]
 }
 
+// The page background image at full page size. Typst centres a fitted image;
+// an off-centre alignment scales the measured image to cover or fit the page
+// and places it at the aligned offset inside a clipping box.
+#let background-image(spec) = {
+    let centred = (
+        spec.align.horizontal == "center" and spec.align.vertical == "center"
+    )
+    if spec.fit == "stretch" or centred {
+        image(spec.path, width: 100%, height: 100%, fit: spec.fit)
+    } else {
+        let factor = (left: 0, top: 0, center: 0.5, right: 1, bottom: 1)
+        let natural = measure(image(spec.path))
+        let ratios = (page.width / natural.width, page.height / natural.height)
+        let scale = if spec.fit == "cover" { calc.max(..ratios) }
+            else { calc.min(..ratios) }
+        let width = natural.width * scale
+        let height = natural.height * scale
+        box(width: 100%, height: 100%, clip: true, place(top + left,
+            dx: (page.width - width) * factor.at(spec.align.horizontal),
+            dy: (page.height - height) * factor.at(spec.align.vertical),
+            image(spec.path, width: width, height: height)))
+    }
+}
+
 #let furniture-background(settings) = context {
     let first = counter(page).get().first() == 1
+    let background = from-design("page.background", none)
+    if background != none and (background.pages == "all" or first) {
+        place(top + left, box(width: page.width, height: page.height,
+            background-image(background.image)))
+    }
     let side(key, axis) = {
         let value = settings.margin
         if type(value) == dictionary {
@@ -295,6 +324,10 @@
             header: none, footer: none, numbering: none,
             background: furniture-background(settings),
         )
+        reference-layout(meta, settings, body)
+    } else if from-design("page.background", none) != none {
+        // A background alone keeps the built-in header, footer and numbering.
+        set page(background: furniture-background(settings))
         reference-layout(meta, settings, body)
     } else { reference-layout(meta, settings, body) }
 }
