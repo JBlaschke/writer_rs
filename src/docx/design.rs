@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use crate::design::{BackgroundPages, Design, LineHeight, Pt};
 
+use super::lines::WordLines;
 use super::validate::{XmlNode, parse_xml};
 use super::xml::{PPR, Props, RPR, escape};
 
@@ -138,7 +139,9 @@ fn run_props(
     props.to_xml()
 }
 
-fn paragraph_defaults(node: &XmlNode, design: &Design) -> String {
+fn paragraph_defaults(
+    node: &XmlNode, design: &Design, line: Option<(u32, &str)>,
+) -> String {
     let mut props = seeded("w:pPr", PPR, Some(node));
     if design.text.line_height.is_some()
         || design.text.paragraph_spacing.is_some()
@@ -152,11 +155,7 @@ fn paragraph_defaults(node: &XmlNode, design: &Design) -> String {
         if let Some(after) = design.text.paragraph_spacing {
             attrs.insert("w:after".into(), twips(after).to_string());
         }
-        if let Some(height) = design.text.line_height {
-            let (line, rule) = match height {
-                LineHeight::Multiple(n) => ((n * 240.0).round() as u32, "auto"),
-                LineHeight::Exact(pt) => (twips(pt), "exact"),
-            };
+        if let Some((line, rule)) = line {
             attrs.insert("w:line".into(), line.to_string());
             attrs.insert("w:lineRule".into(), rule.into());
         }
@@ -190,13 +189,15 @@ fn paragraph_defaults(node: &XmlNode, design: &Design) -> String {
     props.to_xml()
 }
 
-/// Body Text's paragraph properties under `text.paragraph_spacing`.
+/// Paragraph properties with no space before and `after` twips after.
 ///
-/// Its built-in 6 pt before and after would override the document defaults,
-/// so body paragraphs (and First Paragraph, based on it) take the spacing
-/// here: after the paragraph only, as HTML's `margin-block: 0 <spacing>` and
-/// Typst's paragraph spacing separate paragraphs.
-fn body_text_paragraph(node: &XmlNode, spacing: Pt) -> String {
+/// Body Text's built-in 6 pt before and after would override the document
+/// defaults, so under `text.paragraph_spacing` body paragraphs (and First
+/// Paragraph, based on it) take that spacing after the paragraph only, as
+/// HTML's `margin-block: 0 <spacing>` and Typst's paragraph spacing separate
+/// paragraphs. The page furniture's footer lines take none, so they sit one
+/// line apart as in the PDF and HTML rather than a paragraph apart.
+fn spaced_paragraph(node: &XmlNode, after: u32) -> String {
     let mut props = seeded("w:pPr", PPR, Some(node));
     let mut attrs = node
         .children
@@ -205,21 +206,21 @@ fn body_text_paragraph(node: &XmlNode, spacing: Pt) -> String {
         .map(|n| n.attrs.clone())
         .unwrap_or_default();
     attrs.insert("w:before".into(), "0".into());
-    attrs.insert("w:after".into(), twips(spacing).to_string());
+    attrs.insert("w:after".into(), after.to_string());
     props.set("w:spacing", property("w:spacing", &spacing_attrs(&attrs)));
     props.to_xml()
 }
 
 fn rewrite(
-    node: &XmlNode, design: &Design, parent: &str, hyperlink: bool,
-    scale: bool, heading: bool,
+    node: &XmlNode, design: &Design, line: Option<(u32, &str)>, parent: &str,
+    hyperlink: bool, scale: bool, heading: bool,
 ) -> String {
     let hyperlink = hyperlink
         || (node.name == "w:style"
             && node.children.iter().any(|n| {
                 n.name == "w:name" && n.attr("w:val") == Some("Hyperlink")
             }));
-    let mut body_text = None;
+    let mut spaced = None;
     let (scale, heading) = if node.name == "w:style" {
         let name = node
             .children
@@ -229,7 +230,9 @@ fn rewrite(
             .unwrap_or("")
             .to_ascii_lowercase();
         if name == "body text" {
-            body_text = design.text.paragraph_spacing;
+            spaced = design.text.paragraph_spacing.map(twips);
+        } else if name == "footer" {
+            spaced = Some(0);
         }
         // Heading levels three onward and some linked character styles use
         // Calibri rather than Calibri Light in the asset. Select by role,
@@ -271,7 +274,7 @@ fn rewrite(
         return result;
     }
     if node.name == "w:pPr" && parent == "w:pPrDefault" {
-        return paragraph_defaults(node, design);
+        return paragraph_defaults(node, design, line);
     }
     let attrs = node
         .attrs
@@ -283,11 +286,11 @@ fn rewrite(
         escape(&node.text),
         node.children
             .iter()
-            .map(|n| match body_text {
-                Some(spacing) if n.name == "w:pPr" => {
-                    body_text_paragraph(n, spacing)
-                }
-                _ => rewrite(n, design, &node.name, hyperlink, scale, heading),
+            .map(|n| match spaced {
+                Some(after) if n.name == "w:pPr" => spaced_paragraph(n, after),
+                _ => rewrite(
+                    n, design, line, &node.name, hyperlink, scale, heading,
+                ),
             })
             .collect::<String>()
     );
@@ -303,7 +306,12 @@ fn hex(color: crate::design::Color) -> String {
 }
 
 /// Applies declared tokens to parsed writer style definitions, retaining order.
-pub fn apply_tokens(styles_xml: &str, design: &Design) -> String {
+///
+/// `lines` converts a `line_height` multiple for Word's `auto` rule, in the
+/// body font or, without one, the font the document defaults name.
+pub fn apply_tokens(
+    styles_xml: &str, design: &Design, lines: &WordLines,
+) -> String {
     if !design.declared {
         return styles_xml.to_owned();
     }
@@ -318,7 +326,39 @@ pub fn apply_tokens(styles_xml: &str, design: &Design) -> String {
             (tree, prefix)
         }
     };
-    format!("{prefix}{}", rewrite(&tree, design, "", false, false, false))
+    let family = design
+        .fonts
+        .body
+        .as_ref()
+        .map(|font| font.family.as_str())
+        .or_else(|| default_family(&tree));
+    let line =
+        design.text.line_height.map(|height| word_line(height, lines, family));
+    format!("{prefix}{}", rewrite(&tree, design, line, "", false, false, false))
+}
+
+/// The `w:ascii` family of the document defaults' run properties.
+fn default_family(tree: &XmlNode) -> Option<&str> {
+    ["w:docDefaults", "w:rPrDefault", "w:rPr", "w:rFonts"]
+        .iter()
+        .try_fold(tree, |node, name| {
+            node.children.iter().find(|child| child.name == *name)
+        })
+        .and_then(|fonts| fonts.attr("w:ascii"))
+}
+
+/// A line height as `w:spacing`'s `w:line` and `w:lineRule`.
+///
+/// A multiple uses the `auto` rule, which Word multiplies by the font's
+/// single line rather than its size, so the value is divided by `family`'s
+/// single line (see [`WordLines`]). An exact height is in twips.
+pub(crate) fn word_line(
+    height: LineHeight, lines: &WordLines, family: Option<&str>,
+) -> (u32, &'static str) {
+    match height {
+        LineHeight::Multiple(n) => (lines.auto_line(n, family), "auto"),
+        LineHeight::Exact(pt) => (twips(pt), "exact"),
+    }
 }
 
 // A style/rPr extracted from the asset relies on its root's w namespace.
@@ -441,11 +481,24 @@ pub fn style_xml(
     if let Some(space) = style.space_after {
         spacing.insert("w:after".into(), twips(space).to_string());
     }
+    let family = match &style.font {
+        Some(FontRef::Family(family)) => Some(family.as_str()),
+        Some(role) => design.font_for(role).map(|font| font.family.as_str()),
+        None => None,
+    };
     if let Some(height) = style.line_height {
-        let (line, rule) = match height {
-            LineHeight::Multiple(n) => ((n * 240.0).round() as u32, "auto"),
-            LineHeight::Exact(pt) => (twips(pt), "exact"),
-        };
+        // The style's own font, else the one its definition names, else
+        // the body's.
+        let family = family
+            .or_else(|| {
+                child("w:rPr")
+                    .and_then(|run| {
+                        run.children.iter().find(|n| n.name == "w:rFonts")
+                    })
+                    .and_then(|fonts| fonts.attr("w:ascii"))
+            })
+            .or_else(|| design.fonts.body.as_ref().map(|f| f.family.as_str()));
+        let (line, rule) = word_line(height, ids.lines(), family);
         spacing.insert("w:line".into(), line.to_string());
         spacing.insert("w:lineRule".into(), rule.into());
     }
@@ -476,24 +529,20 @@ pub fn style_xml(
     }
     definition.set("w:pPr", paragraph.to_xml());
     let mut run = seeded("w:rPr", RPR, child("w:rPr"));
-    if let Some(font) = &style.font {
-        let family = match font {
-            FontRef::Family(family) => Some(family.as_str()),
-            role => design.font_for(role).map(|font| font.family.as_str()),
-        };
-        if let Some(family) = family {
-            run.set(
+    if style.font.is_some()
+        && let Some(family) = family
+    {
+        run.set(
+            "w:rFonts",
+            property(
                 "w:rFonts",
-                property(
-                    "w:rFonts",
-                    &[
-                        ("w:ascii", family.into()),
-                        ("w:hAnsi", family.into()),
-                        ("w:cs", family.into()),
-                    ],
-                ),
-            );
-        }
+                &[
+                    ("w:ascii", family.into()),
+                    ("w:hAnsi", family.into()),
+                    ("w:cs", family.into()),
+                ],
+            ),
+        );
     }
     if let Some(weight) = style.weight {
         for tag in ["w:b", "w:bCs"] {
@@ -569,7 +618,9 @@ mod tests {
     #[test]
     fn tokens_edit_defaults_and_relative_vocabulary_styles() {
         let source = crate::vendor::get_str("docx/styles.xml").unwrap();
-        let tree = parse_xml(&apply_tokens(&source, &design())).unwrap();
+        let tree =
+            parse_xml(&apply_tokens(&source, &design(), &WordLines::default()))
+                .unwrap();
         let defaults = descendant(&tree, &["w:docDefaults"]);
         let font = descendant(defaults, &["w:rPrDefault", "w:rPr", "w:rFonts"]);
         assert_eq!(font.attr("w:ascii"), Some("Body Family"));
@@ -578,9 +629,12 @@ mod tests {
                 .attr("w:val"),
             Some("24")
         );
+        // 1.35 lines in Calibri's single line, which stands in for the
+        // unread Body Family: 1.35 × 240 / 1.2207.
         let spacing =
             descendant(defaults, &["w:pPrDefault", "w:pPr", "w:spacing"]);
-        assert_eq!(spacing.attr("w:line"), Some("324"));
+        assert_eq!(spacing.attr("w:line"), Some("265"));
+        assert_eq!(spacing.attr("w:lineRule"), Some("auto"));
         assert_eq!(spacing.attr("w:after"), Some("204"));
         let heading = tree
             .children
@@ -646,11 +700,135 @@ mod tests {
         // Without the token Body Text keeps its built-in spacing.
         let mut unset = design();
         unset.text.paragraph_spacing = None;
-        let tree = parse_xml(&apply_tokens(&source, &unset)).unwrap();
+        let tree =
+            parse_xml(&apply_tokens(&source, &unset, &WordLines::default()))
+                .unwrap();
         let body = style(&tree, "BodyText");
         let spacing = descendant(&body, &["w:pPr", "w:spacing"]);
         assert_eq!(spacing.attr("w:before"), Some("120"));
         assert_eq!(spacing.attr("w:after"), Some("120"));
+    }
+
+    #[test]
+    fn line_multiples_divide_by_the_single_line_of_the_body_font() {
+        let source = crate::vendor::get_str("docx/styles.xml").unwrap();
+        let line = |design: &Design, lines: &WordLines| {
+            let tree =
+                parse_xml(&apply_tokens(&source, design, lines)).unwrap();
+            descendant(
+                &tree,
+                &["w:docDefaults", "w:pPrDefault", "w:pPr", "w:spacing"],
+            )
+            .attr("w:line")
+            .map(str::to_owned)
+        };
+        let lines =
+            WordLines::default().with("Body Family", 1.5).with("Calibri", 1.25);
+        // 1.35 × 240 / 1.5.
+        assert_eq!(line(&design(), &lines).as_deref(), Some("216"));
+        // Without a body font, the family the document defaults name.
+        let mut unset = design();
+        unset.fonts.body = None;
+        assert_eq!(line(&unset, &lines).as_deref(), Some("259"));
+        unset.text.line_height = Some(LineHeight::Exact(Pt(15.0)));
+        assert_eq!(line(&unset, &lines).as_deref(), Some("300"));
+    }
+
+    #[test]
+    fn style_lines_use_their_font_and_furniture_lines_sit_together() {
+        use crate::design::{FontRef, Style};
+        use crate::docx::{StyleKind, StyleTable};
+        let lines = WordLines::default()
+            .with("Body Family", 1.5)
+            .with("Heading Family", 1.2)
+            .with("Display Face", 1.6);
+        let mut design = design();
+        let multiple = |n| Some(LineHeight::Multiple(n));
+        design.styles = [
+            (
+                "Heading 2",
+                Style { line_height: multiple(1.2), ..Style::default() },
+            ),
+            (
+                "Pull Quote",
+                Style {
+                    font: Some(FontRef::Family("Display Face".into())),
+                    line_height: multiple(1.5),
+                    ..Style::default()
+                },
+            ),
+            (
+                "Postscript",
+                Style { line_height: multiple(1.5), ..Style::default() },
+            ),
+            (
+                "Signature",
+                Style {
+                    line_height: Some(LineHeight::Exact(Pt(12.1))),
+                    ..Style::default()
+                },
+            ),
+        ]
+        .into_iter()
+        .map(|(name, style)| (name.to_owned(), style))
+        .collect();
+        let mut table =
+            StyleTable::generated_with_lines(&design, lines.clone());
+        table.ensure("footer", StyleKind::Paragraph);
+        table.ensure(super::super::styles::HEADER, StyleKind::Paragraph);
+        let tree = parse_xml(&table.to_xml()).unwrap();
+        let spacing = |id: &str| {
+            let style = tree
+                .children
+                .iter()
+                .find(|n| n.attr("w:styleId") == Some(id))
+                .unwrap_or_else(|| panic!("missing style {id}"));
+            let spacing = descendant(style, &["w:pPr", "w:spacing"]);
+            ["w:before", "w:after", "w:line", "w:lineRule"]
+                .map(|key| spacing.attr(key).map(str::to_owned))
+        };
+        let some = |value: &str| Some(value.to_owned());
+        // The heading's own font (the heading role), an explicit family,
+        // the body font, and an exact height in twips.
+        assert_eq!(spacing("Heading2")[2..], [some("240"), some("auto")]);
+        assert_eq!(spacing("PullQuote")[2..], [some("225"), some("auto")]);
+        assert_eq!(spacing("Postscript")[2..], [some("240"), some("auto")]);
+        assert_eq!(spacing("Signature")[2..], [some("242"), some("exact")]);
+        // Furniture lines take neither the document defaults' paragraph
+        // spacing nor Body Text's, and inherit the line height.
+        assert_eq!(spacing("Footer"), [some("0"), some("0"), None, None]);
+        assert_eq!(spacing("Header"), [some("0"), some("0"), None, None]);
+
+        // A theme's Header and footer keys still win, key by key.
+        design.styles = [
+            (
+                "footer",
+                Style { space_after: Some(Pt(2.0)), ..Style::default() },
+            ),
+            (
+                "Header",
+                Style { space_before: Some(Pt(3.0)), ..Style::default() },
+            ),
+        ]
+        .into_iter()
+        .map(|(name, style)| (name.to_owned(), style))
+        .collect();
+        let tree = parse_xml(
+            &StyleTable::generated_with_lines(&design, lines).to_xml(),
+        )
+        .unwrap();
+        let spacing = |id: &str| {
+            let style = tree
+                .children
+                .iter()
+                .find(|n| n.attr("w:styleId") == Some(id))
+                .unwrap_or_else(|| panic!("missing style {id}"));
+            let spacing = descendant(style, &["w:pPr", "w:spacing"]);
+            ["w:before", "w:after"]
+                .map(|key| spacing.attr(key).map(str::to_owned))
+        };
+        assert_eq!(spacing("Footer"), [some("0"), some("40")]);
+        assert_eq!(spacing("Header"), [some("60"), some("0")]);
     }
 
     #[test]
@@ -812,7 +990,7 @@ mod tests {
     #[test]
     fn bare_vocabulary_fragments_keep_their_enclosing_namespace_contract() {
         let source = "<w:style w:type=\"character\" w:styleId=\"Hyperlink\"><w:name w:val=\"Hyperlink\"/><w:rPr><w:color w:val=\"0000FF\"/></w:rPr></w:style>";
-        let xml = apply_tokens(source, &design());
+        let xml = apply_tokens(source, &design(), &WordLines::default());
         assert!(!xml.contains("xmlns:"));
         let root = fragment(&xml);
         assert_eq!(root.name, "w:style");

@@ -8,6 +8,7 @@ use std::sync::LazyLock;
 use crate::design::Design;
 use crate::error::{Diagnostics, Error, Result};
 
+use super::lines::WordLines;
 use super::validate::{XmlNode, parse_xml};
 use super::xml::{NS_W, Props, RPR, STYLE, XML_HEAD, escape};
 
@@ -279,6 +280,7 @@ static BUILTIN: LazyLock<Builtin> = LazyLock::new(|| {
 #[derive(Debug, Clone)]
 pub struct StyleTable {
     design: Design,
+    lines: WordLines,
     source: String,
     append_at: usize,
     appended: Vec<String>,
@@ -296,7 +298,17 @@ impl StyleTable {
 
     /// Starts with design defaults, appending vocabulary styles as needed.
     /// An undeclared design preserves the original lazy asset selection.
+    ///
+    /// Line height multiples assume [`DEFAULT_SINGLE_LINE`] for every font;
+    /// [`Self::generated_with_lines`] takes the fonts' own.
+    ///
+    /// [`DEFAULT_SINGLE_LINE`]: super::lines::DEFAULT_SINGLE_LINE
     pub fn generated(design: &Design) -> Self {
+        Self::generated_with_lines(design, WordLines::default())
+    }
+
+    /// [`Self::generated`] with Word's single line of the design's fonts.
+    pub fn generated_with_lines(design: &Design, lines: WordLines) -> Self {
         // Both the source and its selected definitions are repository assets.
         let tree = style_root(&BUILTIN.source)
             .expect("checked built-in styles have a styles root");
@@ -316,10 +328,11 @@ impl StyleTable {
             }
         }
         source.push_str("</w:styles>");
-        let source = super::design::apply_tokens(&source, design);
+        let source = super::design::apply_tokens(&source, design, &lines);
         let mut table =
             Self::read(&source).expect("selected built-in styles are valid");
         table.design = design.clone();
+        table.lines = lines;
         table.install_design_styles(&BTreeSet::new());
         table
     }
@@ -337,7 +350,20 @@ impl StyleTable {
     pub fn from_reference_with_design(
         styles_xml: &str, design: &Design,
     ) -> Result<Self> {
+        Self::from_reference_with_lines(
+            styles_xml,
+            design,
+            WordLines::default(),
+        )
+    }
+
+    /// [`Self::from_reference_with_design`] with Word's single line of the
+    /// design's fonts.
+    pub fn from_reference_with_lines(
+        styles_xml: &str, design: &Design, lines: WordLines,
+    ) -> Result<Self> {
         let mut table = Self::read(styles_xml)?;
+        table.lines = lines;
         let reference_names = table
             .names
             .keys()
@@ -375,6 +401,11 @@ impl StyleTable {
         }
         table.install_design_styles(&reference_names);
         Ok(table)
+    }
+
+    /// Word's single line of the design's fonts.
+    pub(crate) fn lines(&self) -> &WordLines {
+        &self.lines
     }
 
     /// Returns a preserved or appended style definition by its reserved id.
@@ -468,6 +499,7 @@ impl StyleTable {
         }
         let mut table = Self {
             design: Design::default(),
+            lines: WordLines::default(),
             append_at: source
                 .rfind("</w:styles>")
                 .expect("a normalized styles root has a closing tag"),
@@ -565,7 +597,7 @@ impl StyleTable {
                 );
             }
         }
-        let raw = super::design::apply_tokens(&raw, &self.design);
+        let raw = super::design::apply_tokens(&raw, &self.design, &self.lines);
         self.appended.push(raw);
         id
     }
@@ -610,6 +642,17 @@ impl StyleTable {
             "w:basedOn",
             format!("<w:basedOn w:val=\"{}\"/>", escape(&base)),
         );
+        if self.design.declared
+            && kind == StyleKind::Paragraph
+            && name.eq_ignore_ascii_case(HEADER)
+        {
+            // Header lines sit one line apart, as the footer's do, rather
+            // than taking Body Text's paragraph spacing.
+            props.set(
+                "w:pPr",
+                "<w:pPr><w:spacing w:before=\"0\" w:after=\"0\"/></w:pPr>",
+            );
+        }
         self.appended.push(props.to_xml());
         id
     }

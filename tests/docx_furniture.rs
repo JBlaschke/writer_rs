@@ -189,6 +189,22 @@ fn first_header_shared_footer_and_media_are_valid_parts() {
     )));
     assert!(footer.contains("w:pos=\"9412\""));
     assert!(!footer.contains(" PAGE "));
+    // The furniture styles keep the lines a line apart rather than a
+    // paragraph (the letter's 3.6 mm paragraph spacing) apart.
+    let styles = part(&bytes, "word/styles.xml");
+    for id in ["Header", "Footer"] {
+        let style = styles
+            .split_once(&format!("w:styleId=\"{id}\""))
+            .unwrap()
+            .1
+            .split_once("</w:style>")
+            .unwrap()
+            .0;
+        assert!(
+            style.contains("<w:spacing w:before=\"0\" w:after=\"0\"/>"),
+            "{id}: {style}"
+        );
+    }
     assert!(document.contains("<w:titlePg/>"));
     assert!(document.contains("<w:headerReference w:type=\"first\""));
     assert!(document.contains("<w:footerReference w:type=\"first\""));
