@@ -343,6 +343,15 @@ title styles.
 | `text.paragraph_spacing` | Length | Unset: HTML theme, PDF 1.2 em, Word 6 pt before and after body paragraphs; set: the space after each body paragraph, with none before |
 | `text.justify` | Boolean | Unset: HTML theme, PDF true, Word false |
 
+A `text.line_height` multiple is the line pitch as a multiple of the font size
+in every format. Word's own line spacing multiplies the font's single line
+instead: Calibri's is 1.22 times its size and Source Sans 3's is 1.42. writer
+therefore divides the value by the single line of the font it applies to. It
+reads that line from the declared font files, `[pdf] font_paths`, writer's
+embedded fonts and, when `[pdf] system_fonts` is true, the installed fonts.
+A family it cannot find is assumed to have Calibri's single line. Declare the
+font files, or enable system fonts, for Word lines as high as HTML's.
+
 In Word, `text.paragraph_spacing` becomes the space after Body Text and First
 Paragraph and the document's default space after. Other Word styles keep their
 own spacing, such as Compact in tight lists and table cells or the headings;
@@ -432,7 +441,10 @@ explicitly clears the slot or variant. Variants cannot contain more variants.
 | `page.<slot>.rest` | Furniture table | Base slot on subsequent pages |
 
 Text is plain text. `{page}` and `{pages}` are counters in PDF, Word and
-printed HTML; screen HTML uses `1`. Unknown braces stay literal. HTML margin
+printed HTML; screen HTML uses `1`. In Word, consecutive lines are one line
+apart, the line height at the slot's size, rather than a paragraph apart;
+`space_before` and `space_after` of `Header` and `footer` add space around
+the whole block. Unknown braces stay literal. HTML margin
 boxes use the slot's styling for all lines; individual line styling remains
 available on screen, in fixed HTML furniture, in PDF and in Word.
 

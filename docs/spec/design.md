@@ -118,7 +118,7 @@ mono    = "Source Code Pro"    # same shape; default unset (HTML: theme; PDF: De
 
 [design.text]
 size              = "11pt"     # Length; default unset (HTML: theme; PDF 11pt; DOCX 11pt)
-line_height       = 1.35       # LineHeight; default unset (HTML: theme; PDF: leading 0.65em; DOCX: 1.1 = line 264)
+line_height       = 1.35       # LineHeight; default unset (HTML: theme; PDF: leading 0.65em; DOCX: the asset's line 264, 1.1 Calibri single lines)
 paragraph_spacing = "3.6mm"    # Length between paragraphs; default unset (HTML: theme; PDF: par spacing 1.2em; DOCX: 0)
 justify           = false      # bool; default unset (HTML: theme, i.e. off; PDF: true; DOCX: off)
 
@@ -362,7 +362,7 @@ docx-reference` are unchanged (the template delegates to `writer-doc`, which rea
 |---|---|
 | HTML | one `@font-face` per file, `src: url(..)` through the asset pipeline (§5.2); weight and style read from the file (`typst::text::FontInfo`) |
 | PDF | each file is loaded into the World's font book (§6.5); the family is selected by name |
-| DOCX | by name only (`w:rFonts`); the file is not embedded (open point 1) |
+| DOCX | by name (`w:rFonts`); the file is not embedded (open point 1). Its metrics size `line_height` multiples (§7.4) |
 | LaTeX | ignored (latex-output.md is unchanged by this spec) |
 A declared file that does not exist is a build error (`Error::Config`/`Error::Theme`, "design font
 file not found: <path>"), because the HTML asset copy and the Typst font load would fail later with
@@ -587,8 +587,8 @@ the generator rewrites these elements of the asset's XML (docx-output.md §2.2�
 | `fonts.heading` | Heading 1–9, Title, Subtitle and their linked character styles = family (the asset uses both `Calibri Light` and `Calibri`) |
 | `fonts.mono` | every `w:rFonts` naming `Consolas` (Source Code, Verbatim Char, …) = family |
 | `text.size` | `rPrDefault` `w:sz`/`w:szCs` = half-points; styles whose `w:sz` is relative to the body in §2.3 (headings, Title, captions, footnotes, code) are scaled by `new/22` and rounded to even half-points |
-| `text.line_height` | `pPrDefault/w:spacing` `w:line` = `round(n × 240)` `w:lineRule="auto"`, or twips with `w:lineRule="exact"` |
-| `text.paragraph_spacing` | `pPrDefault/w:spacing` `w:after` = twips, and Body Text's `w:spacing` becomes `w:before="0"` `w:after` = twips (its §2.3 `sp 120/120` would otherwise override the default); First Paragraph, based on Body Text, inherits it. Body paragraphs are therefore the spacing apart, with none before them, as HTML's `margin-block: 0 <spacing>` and Typst's `par(spacing:)` set them. Every other §2.3 style keeps its own `sp b/a` values (Compact, Block Text, captions, headings, …); one without them inherits the default `w:after` |
+| `text.line_height` | `pPrDefault/w:spacing` `w:line` = `round(240 × n / s)` with `w:lineRule="auto"`, or twips with `w:lineRule="exact"`. Word's `auto` rule multiplies the font's single line, not its size; `s` is that line in ems (§7.4) for the body font, else for the family the document defaults' `w:rFonts w:ascii` names. A Word line is then `n × size` as in HTML, and still scales with each paragraph's size. For 1.35 in Source Sans 3 (single line 1.424) `w:line` is 228; `round(1.35 × 240)` = 324 drew 7.5 mm lines at 11 pt |
+| `text.paragraph_spacing` | `pPrDefault/w:spacing` `w:after` = twips, and Body Text's `w:spacing` becomes `w:before="0"` `w:after` = twips (its §2.3 `sp 120/120` would otherwise override the default); First Paragraph, based on Body Text, inherits it. Body paragraphs are therefore the spacing apart, with none before them, as HTML's `margin-block: 0 <spacing>` and Typst's `par(spacing:)` set them. Every other §2.3 style keeps its own `sp b/a` values (Compact, Block Text, captions, headings, …); one without them inherits the default `w:after`, except `footer`, whose lines sit together (§9.5) |
 | `text.justify` | `pPrDefault/w:jc` `both` when true (`left` when false) |
 | `colors.text` | `rPrDefault/w:color` (inserted) = hex without `#` |
 | `colors.link` | Hyperlink style `w:color` = hex |
@@ -626,6 +626,28 @@ A reference with styles but **no** body-level `sectPr` gets the generated sectio
 Names only: `w:rFonts` with the family in `ascii`, `hAnsi` and `cs`; no `fontTable.xml` entry and
 no embedding (open point 1). Word substitutes a missing font on the reader's machine as it does for
 any document.
+
+**Single lines** (`src/docx/lines.rs`). Word's `w:lineRule="auto"` spacing is a multiple of the
+font's *single line*: OS/2 `usWinAscent + usWinDescent` plus the external leading, the part of
+the `hhea` `lineGap` that exceeds `(usWinAscent + usWinDescent) − (hhea ascender − descender)`,
+per em; a font without OS/2 uses `hhea` ascender − descender + `lineGap`. Calibri's is
+2500/2048 = 1.2207 and Arial's and Times New Roman's are about 1.15. Source Sans 3's is 1.424: its
+Windows ascent and descent (934 + 288) are 202 units short of its `hhea` ones (1024 + 400). When a
+`line_height` multiple is set (`text.line_height` or a style's), writer reads the single line of
+every family the design names (the three roles and explicit `styles.*.font` families) from the
+PDF's font sources, nearest first: the role's `files`, `[pdf] font_paths`, the embedded fonts and,
+only with `[pdf] system_fonts`, the system's fonts (scanned once per process). The DOCX is
+therefore as reproducible as the PDF. The family's regular face is read. A family found nowhere,
+such as Calibri and the asset's other Office fonts, which writer does not ship, counts as
+Calibri's 1.2207, the single line of writer's generated styles. A reader whose copy of the font has
+another single line `s'` sees lines of `n × size × s' / 1.2207`, and a paragraph in a font other
+than the one the value was computed for scales by the ratio of the two single lines (a heading
+in another family inheriting the document default). Measured with Word for Mac 16.114.3 (4 Nov
+2026), the §11 letter at 11 pt gave these line pitches:
+- 14.9 pt with Source Sans 3 readable (`w:line="228"`; CSS 14.85 pt);
+- 17.4 pt with the Calibri assumption (`265`, the letter as shipped, without font files or
+  system fonts);
+- 21.1 pt from `round(1.35 × 240)`.
 
 ## 8. Named paragraph styles (T85; `writer-div` in T84's package)
 
@@ -722,7 +744,10 @@ definition, so a custom style carries the design's keys alone. A set key replace
 same name in that definition's `w:pPr`/`w:rPr` (`keepNext`, `keepLines`, `contextualSpacing`,
 `jc`, `rFonts`, `b`/`bCs`, `i`/`iCs`, `color`, `sz`/`szCs`); `w:spacing` merges attribute by
 attribute (`before`, `after`, `line` with `lineRule`), so `toc 2` with `space_after` alone keeps
-its `before="0"`; every other child (`outlineLvl`, `ind`, `tabs`, `pBdr`, `shd`, …) is kept.
+its `before="0"`; every other child (`outlineLvl`, `ind`, `tabs`, `pBdr`, `shd`, …) is kept. A
+`line_height` multiple becomes `w:line` as in §7.1, with the single line (§7.4) of the style's
+`font`, else of the family its definition's `w:rFonts` names (a heading's role font), else of the
+body font.
 `keep_with_next` and `keep_together` are booleans: true adds the element, false (the default)
 leaves the built-in's alone. `w:contextualSpacing` makes consecutive paragraphs of the same
 style omit the gap between them. It is added only to a **block style**, one whose paragraphs
@@ -876,7 +901,16 @@ one-point paragraph mark, `w:rPr/w:sz w:val="2"`. Part body, in order:
   by extension as docx-output.md §4.16 does for figures);
 - lines: one `w:p` per line of `lines`, `w:pStyle` Header / Footer (`ensure`d; `footer` is a §2.3
   name, `Header` is a custom style based on Body Text unless the design, §8.1, or a reference defines it),
-  `w:jc` from `align`; with `right_lines`, line *i* of `lines` is followed by `<w:r><w:tab/></w:r>`
+  `w:jc` from `align`. The definitions writer generates, `footer` with §7.1's edits and the custom
+  `Header`, carry `w:spacing w:before="0" w:after="0"`. Without it the lines would be a paragraph
+  apart: `footer`, based on Normal, would inherit `text.paragraph_spacing` from the document
+  defaults, and `Header` would inherit Body Text's spacing. With it they are a line apart,
+  `text.line_height` at the line's size (§7.1), as the PDF and HTML set them.
+  `[design.styles.footer]` and `[design.styles.Header]` keys merge over this attribute by attribute
+  (§8.5), and a reference's definition wins entirely (§7.3). In the §11 letter, Word put the
+  footer lines 8.75 mm apart before. Now they are 3.57 mm apart with Source Sans 3 readable and
+  4.2 mm with the Calibri assumption of §7.4, against 3.2 mm in the PDF and 3.57 mm in HTML
+  (measured 4 Nov 2026); with `right_lines`, line *i* of `lines` is followed by `<w:r><w:tab/></w:r>`
   and the runs of line *i* of `right_lines`, with `w:pPr/w:tabs/w:tab w:val="right" w:pos="<text
   width twips>"` (the reference document's layout); extra right lines get paragraphs of their own
   with the tab only. Runs carry `w:rFonts` (furniture font = body font when set), `w:sz`, `w:color`,

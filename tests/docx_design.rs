@@ -77,13 +77,34 @@ fn letter_tokens_and_section_are_generated_and_readable() {
             .0
     );
     assert!(styles.contains("Source Sans 3"));
-    assert!(styles.contains("w:line=\"324\""));
+    // The fixture reads no Source Sans 3 (no files, no system fonts), so
+    // 1.35 lines assume Calibri's single line: 1.35 × 240 / 1.2207.
+    assert!(styles.contains("w:line=\"265\" w:lineRule=\"auto\""));
     assert!(styles.contains("w:after=\"204\""));
     assert!(document.contains("w:top=\"2835\""));
     assert!(document.contains("w:header=\"964\""));
     assert!(document.contains("w:footer=\"567\""));
     assert!(writer::docx::validate(&bytes, &Default::default()).is_empty());
     assert!(common_docx::read_back(&bytes).paragraphs > 0);
+}
+
+#[test]
+fn word_line_multiples_use_the_single_line_of_a_readable_body_font() {
+    let input = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/design/letter/letter.md");
+    let mut prepared = pipeline::prepare(&BuildOptions::new(input)).unwrap();
+    // One of writer's embedded fonts, read without system fonts: Windows
+    // ascent and descent 1901 + 483 per 2048 units, a 1.164 em single line.
+    prepared.design.fonts.body.as_mut().unwrap().family =
+        "DejaVu Sans Mono".into();
+    let bytes =
+        write(&prepared.document, &prepared.design, &prepared.config, None);
+    let styles = part(&bytes, "word/styles.xml");
+    // 1.35 × 240 / 1.164: Word's 1.164 em single line times 278/240 is
+    // 1.35 em, as in HTML.
+    assert!(styles.contains(
+        "<w:spacing w:after=\"204\" w:line=\"278\" w:lineRule=\"auto\"/>"
+    ));
 }
 
 #[test]

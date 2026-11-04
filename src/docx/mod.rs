@@ -9,6 +9,7 @@ pub mod footnotes;
 mod furniture;
 pub mod images;
 pub mod inline;
+pub mod lines;
 pub mod math;
 pub mod numbering;
 pub mod package;
@@ -285,14 +286,17 @@ fn prepare_emitter<'a>(
     renderer: &'a mut dyn Renderer, opts: &DocxOptions<'a>,
     reference: Option<&reference::Reference>, language: &str, has_notes: bool,
 ) -> Result<Emitter<'a>> {
+    let lines = lines::WordLines::load(
+        opts.design, &opts.config.pdf.font_paths, opts.config.pdf.system_fonts,
+    );
     let mut styles = match reference {
         Some(reference) => reference_result(
-            StyleTable::from_reference_with_design(
-                &reference.styles_xml, opts.design,
+            StyleTable::from_reference_with_lines(
+                &reference.styles_xml, opts.design, lines,
             ),
             opts.reference,
         )?,
-        None => StyleTable::generated(opts.design),
+        None => StyleTable::generated_with_lines(opts.design, lines),
     };
     styles.set_lang(language);
     let numbering = reference_result(
