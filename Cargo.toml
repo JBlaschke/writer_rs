@@ -102,3 +102,10 @@ opt-level     = 3
 lto           = "thin"
 codegen-units = 1
 strip         = true
+
+# The archived release executable (docs/dev/release.md): release with fat LTO,
+# about 5% smaller, to bring x86_64 Windows under the 64 MiB gate. Tests stay
+# on `release`, where thin LTO links the test binaries much faster.
+[profile.dist]
+inherits = "release"
+lto      = "fat"

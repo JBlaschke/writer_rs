@@ -412,7 +412,7 @@ wired by T72) writes `DIR/preview/mitex/0.2.7/<p>` for every `p` in
 | two-face 0.5.2 syntaxes + themes | ≈ +1.0 MiB (measured +1,073,456 B with syntect's dumps also linked) | always |
 | `assets/vendor/**` | 1,425,604 B | always (embedded) |
 | `assets/licenses/**` | ≈ 385 KB (two-face.md 200,481 B, two-face-0.4.md 143,398 B) | always |
-| **whole release binary** | expected 52–58 MiB; **ceiling 64 MiB** (67,108,864 B) | T75 fails a release build above it |
+| **whole release binary** (`dist` profile, fat LTO) | 54.9–65.8 MiB per target with thin LTO (first hosted dry run, 2026-11-04), about 5% less with fat LTO; **ceiling 64 MiB** (67,108,864 B) | T75 fails a release build above it |
 
 Standalone HTML additions from vendored files (html-output.md owns the base budget, ≈ 45–60 KB;
 rows add up, e.g. LaTeX and typst equations under the defaults get the first two):
@@ -489,7 +489,8 @@ minimum at the verified version. `Cargo.lock` is committed and CI builds with `-
 docx-output.md §7.2), `two-face-04 = { package = "two-face", version
 = "=0.4.5", default-features = false, features = ["syntect-fancy"] }` (§3.2; equals typst-library's).
 `[features]`: `browser-tests = []` (T25). Profiles: `[profile.dev.package."*"] opt-level = 2`;
-`[profile.release]` `opt-level = 3`, `lto = "thin"`, `codegen-units = 1`, `strip = true`.
+`[profile.release]` `opt-level = 3`, `lto = "thin"`, `codegen-units = 1`, `strip = true`;
+`[profile.dist]` `inherits = "release"`, `lto = "fat"` (the archived executable, §6).
 `clippy.toml`: presenter's `too-many-arguments-threshold = 8` plus §3.3's `disallowed-methods`.
 
 Not dependencies (decided): `comemo`, `ecow` (use `typst::comemo`, `typst::ecow`; a direct `ecow` would

@@ -35,7 +35,9 @@ fixed commit. If publishing itself fails, re-run the failed job.
 Expect a release to take about three hours. Each native job runs the release
 tests first, and thin LTO links each of the roughly 90 test binaries: CI's
 `cargo test --release` took up to 90 min on Linux, 130 on macOS and 174 on
-Windows in November 2026. The build job allows 350 min and the test step
+Windows in November 2026, and 156 min on the Intel macOS runner in the first
+release dry run. The job then builds the archived executable again with the
+`dist` profile's fat LTO. The build job allows 350 min and the test step
 300, below GitHub's 360-minute limit for a hosted job.
 
 ## Native build matrix
@@ -78,8 +80,14 @@ different version's history.
 
 The workflow uses the existing stable Rust toolchain and locked Cargo inputs,
 plus stdlib Python 3.13 for packaging (helpers require Python >=3.11). Native
-release tests run before the executable is archived. The profile stays opt3,
-thin LTO, codegen-units1 and strip=true. Both Windows targets keep the static
+release tests run before the executable is archived. They use the `release`
+profile: opt-level 3, thin LTO, codegen-units 1 and strip. The archived
+executable uses the `dist` profile, which inherits `release` and switches to
+fat LTO. On main `2161bc1` (4 November 2026) fat LTO made the executable 5.6%
+smaller on arm64 macOS and 4.7% on x86_64 macOS, and both design templates
+rendered byte for byte the same; the x86_64 Windows executable needs it to
+get under the size gate below. Keep fat LTO out of `release`, or the test
+step applies it to every test binary. Both Windows targets keep the static
 CRT configuration in `.cargo/config.toml`; do not replace its flags through
 `RUSTFLAGS`/`CARGO_ENCODED_RUSTFLAGS` overrides.
 
@@ -112,7 +120,12 @@ writer-v<version>-<target>/
 ```
 
 The uncompressed executable must be at most 67,108,864 bytes (64 MiB). This is
-a hard per-target build gate, not a compressed-size threshold.
+a hard per-target build gate, not a compressed-size threshold. The first
+hosted dry run (4 November 2026, run 41812146321) still built with thin LTO:
+x86_64 Windows failed the gate at 68,976,128 bytes, and x86_64 Linux reached
+65,711,440. The `dist` profile's fat LTO (4.7-5.6% smaller on the macOS
+targets) is expected to bring x86_64 Windows under the gate and give x86_64
+Linux more headroom; the next hosted dry run confirms it.
 
 `EMBEDDED.txt` is exact `--licenses` output from the executable being archived.
 All embedded notice paths are copied byte for byte under `assets/`, including
@@ -247,8 +260,9 @@ remains unexplained; no deadline/assertion changed. The complete release
 suite passes 1,953 cases in one run, with three intentional ignores per mode.
 The task brief records the exact debug/final-source boundary.
 
-The six-native manual workflow is still pending on every hosted runner;
-this local arm64 result does not establish a hosted matrix result or an
-aggregate six-archive SHA256SUMS. No workflow was dispatched, tag/release
-created, site deployed, binary signed or package published. The site is a
+The first six-native hosted dry run (4 November 2026, run 41812146321)
+failed the size gate on x86_64 Windows, so no hosted run has yet produced
+all six archives; this local arm64 result does not establish a hosted matrix
+result or an aggregate six-archive SHA256SUMS. No tag/release was created,
+site deployed, binary signed or package published. The site is a
 portable artifact with no assumed hostname or release-download URL.

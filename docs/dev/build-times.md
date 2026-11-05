@@ -1558,3 +1558,33 @@ Detailed local reports and inventories are retained under ignored
 native target, not the six hosted jobs or an aggregate checksum set. No manual
 workflow dispatch, tag/release creation, deployment, signing or publication
 was performed. Stretch milestones remain outside this completed core run.
+
+
+## Release executable size: thin and fat LTO (2026-11-04)
+
+The first hosted release dry run (run 41812146321, `9f6d37a`, thin LTO) built
+x86_64-pc-windows-msvc at 68,976,128 bytes, over the 67,108,864-byte gate.
+The other uncompressed executables were x86_64-unknown-linux-gnu 65,711,440,
+x86_64-apple-darwin 61,167,576, aarch64-pc-windows-msvc 61,112,320,
+aarch64-unknown-linux-gnu 59,781,984 and aarch64-apple-darwin 57,603,040 bytes.
+Cold builds of `2161bc1` on an M4 Max (macOS 26.7), each in an unused target
+directory, compared thin LTO with fat LTO (the `dist` profile's setting,
+passed as `--config 'profile.release.lto="fat"'`). The x86_64 binaries were
+cross-built and run under Rosetta. Thin and fat builds rendered both design
+templates (HTML, PDF and DOCX, fixed `SOURCE_DATE_EPOCH`) byte for byte the
+same, with identical `--version` and `--licenses` output.
+
+| date | commit | machine | rustc | measurement | value |
+|---|---|---|---|---|---|
+| 2026-11-04 | 2161bc1 | macOS arm64 | 1.99.1 (Homebrew) | `cargo build --release --locked --target aarch64-apple-darwin`, thin | 137 s wall; 57,553,472 bytes |
+| 2026-11-04 | 2161bc1 | macOS arm64 | 1.99.1 (Homebrew) | the same, fat | 220 s wall; 54,343,984 bytes (-5.6%) |
+| 2026-11-04 | 2161bc1 | macOS arm64 | 1.99.0 (rustup) | `cargo build --release --locked --target x86_64-apple-darwin`, thin | 123 s wall; 61,214,448 bytes |
+| 2026-11-04 | 2161bc1 | macOS arm64 | 1.99.0 (rustup) | the same, fat | 242 s wall; 58,327,992 bytes (-4.7%) |
+
+Fat LTO about doubled the largest process's peak memory on arm64 (6.48 GB
+against 3.04 GB). A cold `cargo build --profile dist --locked --target
+aarch64-apple-darwin --bin writer` of `5688684` built 54,377,056 bytes and
+peaked at 7.02 GB; its 801 s wall time is not comparable, because other builds
+shared the machine. That executable passed the archive gate, the
+byte-identical repeat and the smoke test. The Windows saving is not measured locally; the next hosted
+dry run, the first with the `dist` profile, measures it.

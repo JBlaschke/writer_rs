@@ -361,7 +361,7 @@ writer_rs/                                                                    ow
 | Watcher | `notify` 9.0.0-rc.7 (exact pin) with presenter's own debouncer | 8.2 was chosen because 9 was only a release candidate (R6), but 8.2.1's Windows backend can rearm a stopped watch on a closed handle that another thread has reused, which hung a Windows CI run; rc.5 and rc.7 fix that (notify-rs/notify#958, #1051). Move to 9.0.0 when it is released. |
 | Front matter | YAML via `serde_norway` | As presenter. |
 | Embedding | `rust-embed` 8 (disk in debug builds) | As presenter. |
-| Build profiles | `dev`: no LTO, `[profile.dev.package."*"] opt-level = 2`; `release`: presenter's (`opt-level = 3`, thin LTO, `codegen-units = 1`, strip) | Unoptimised typst is 8–60× slower; tests render equations and pages (R4 §5 note). |
+| Build profiles | `dev`: no LTO, `[profile.dev.package."*"] opt-level = 2`; `release`: presenter's (`opt-level = 3`, thin LTO, `codegen-units = 1`, strip); `dist`: `release` with fat LTO, for the archived release executable only (x86_64 Windows exceeded the 64 MiB gate with thin LTO; tests stay on `release`) | Unoptimised typst is 8–60× slower; tests render equations and pages (R4 §5 note). |
 
 ---
 
