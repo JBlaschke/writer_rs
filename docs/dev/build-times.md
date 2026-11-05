@@ -1586,5 +1586,22 @@ against 3.04 GB). A cold `cargo build --profile dist --locked --target
 aarch64-apple-darwin --bin writer` of `5688684` built 54,377,056 bytes and
 peaked at 7.02 GB; its 801 s wall time is not comparable, because other builds
 shared the machine. That executable passed the archive gate, the
-byte-identical repeat and the smoke test. The Windows saving is not measured locally; the next hosted
-dry run, the first with the `dist` profile, measures it.
+byte-identical repeat and the smoke test.
+
+The second hosted dry run (run 41908189568, `cf9dcf5`) built the archived
+executable with the `dist` profile and passed on all six targets. The dist
+build step ran after the release tests, from scratch, because the two profiles
+share no artifacts.
+
+| target | thin LTO (run 41812146321) | fat LTO (run 41908189568) | saving | under the gate | release tests | dist build |
+|---|---|---|---|---|---|---|
+| x86_64-pc-windows-msvc | 68,976,128 bytes | 66,987,008 bytes | 2.88% | 121,856 bytes | 181.8 min | 17.5 min |
+| x86_64-unknown-linux-gnu | 65,711,440 bytes | 62,725,376 bytes | 4.54% | 4,383,488 bytes | 95.0 min | 9.8 min |
+| x86_64-apple-darwin | 61,167,576 bytes | 58,315,464 bytes | 4.66% | 8,793,400 bytes | 232.0 min | 25.5 min |
+| aarch64-pc-windows-msvc | 61,112,320 bytes | 59,049,984 bytes | 3.37% | 8,058,880 bytes | 99.1 min | 13.4 min |
+| aarch64-unknown-linux-gnu | 59,781,984 bytes | 56,767,304 bytes | 5.04% | 10,341,560 bytes | 64.5 min | 8.6 min |
+| aarch64-apple-darwin | 57,603,040 bytes | 54,344,032 bytes | 5.66% | 12,764,832 bytes | 138.6 min | 14.2 min |
+
+MSVC gained least from fat LTO, so x86_64 Windows stays the binding target.
+The Intel macOS job took 260 min of its 350-minute limit; its release tests
+took 156 min in the first dry run and 232 in the second.
