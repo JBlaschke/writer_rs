@@ -412,7 +412,7 @@ wired by T72) writes `DIR/preview/mitex/0.2.7/<p>` for every `p` in
 | two-face 0.5.2 syntaxes + themes | ≈ +1.0 MiB (measured +1,073,456 B with syntect's dumps also linked) | always |
 | `assets/vendor/**` | 1,425,604 B | always (embedded) |
 | `assets/licenses/**` | ≈ 385 KB (two-face.md 200,481 B, two-face-0.4.md 143,398 B) | always |
-| **whole release binary** (`dist` profile, fat LTO) | 54.9–65.8 MiB per target with thin LTO (first hosted dry run, 2026-11-04), about 5% less with fat LTO; **ceiling 64 MiB** (67,108,864 B) | T75 fails a release build above it |
+| **whole release binary** (`dist` profile, fat LTO) | 51.8–63.9 MiB per target (second hosted dry run, 2026-11-04; thin LTO built 54.9–65.8 MiB); x86_64 Windows is 66,987,008 B, 121,856 B under the ceiling; **ceiling 64 MiB** (67,108,864 B) | T75 fails a release build above it |
 
 Standalone HTML additions from vendored files (html-output.md owns the base budget, ≈ 45–60 KB;
 rows add up, e.g. LaTeX and typst equations under the defaults get the first two):

@@ -117,13 +117,11 @@ jobs:
         # The release tests dominate: CI's `cargo test --release` took
         # 57-90 min on ubuntu-latest, 99-130 on macos-latest and 120-174 on
         # windows-latest (2-4 Nov 2026; thin LTO links each of about 90 test
-        # binaries); in the first full dry run (4 Nov 2026) they took 61-156
-        # min per runner (whole jobs 64-165), longest on Intel macOS. The
-        # archived executable is then built again from scratch with the dist
-        # profile's fat LTO: about 4 min cold on an M4 Max, unmeasured on
-        # hosted runners, where the dry run's thin release build of only the
-        # binary and a few crates already took 2.5-6 min. GitHub ends any
-        # hosted job at 360 min.
+        # binaries); in the two dry runs (4 Nov 2026) they took 61-232 min
+        # per runner, longest on Intel macOS (156, then 232). The archived
+        # executable is then built again from scratch with the dist profile's
+        # fat LTO, which took 9-26 min; the Intel macOS job took 260 min in
+        # all. GitHub ends any hosted job at 360 min.
         timeout-minutes: 350
         strategy:
             fail-fast: false
@@ -158,6 +156,19 @@ jobs:
             - uses: actions/checkout@v7
               with:
                   ref: ${{ needs.label.outputs.revision }}
+            # GitHub has also run ubuntu jobs on AWS since 28 Oct 2026. Both
+            # CI jobs whose log header said "Cloud: AWS" (runs 41716015029 and
+            # 42001929664) died while linking test binaries: rust-lld, which
+            # collect2 calls "ld", got SIGBUS, which is how a full disk shows
+            # up for its mmap'd output. No Azure job failed. Removing unused
+            # SDKs frees tens of GB; the df lines record what each runner had.
+            - name: Free disk space (Linux)
+              if: runner.os == 'Linux'
+              run: |
+                  df -h /
+                  sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+                      /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+                  df -h /
             - uses: dtolnay/rust-toolchain@stable
               with:
                   targets: ${{ matrix.target }}

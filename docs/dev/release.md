@@ -32,13 +32,16 @@ If a build fails, nothing is published: fix the problem on `main`, delete the
 tag (`git push --delete origin v0.1.0` and `git tag -d v0.1.0`) and tag the
 fixed commit. If publishing itself fails, re-run the failed job.
 
-Expect a release to take about three hours. Each native job runs the release
+Expect a release to take three to four and a half hours (the second dry run
+took 4 h 21 min, gated by Intel macOS). Each native job runs the release
 tests first, and thin LTO links each of the roughly 90 test binaries: CI's
 `cargo test --release` took up to 90 min on Linux, 130 on macOS and 174 on
-Windows in November 2026, and 156 min on the Intel macOS runner in the first
-release dry run. The job then builds the archived executable again with the
-`dist` profile's fat LTO. The build job allows 350 min and the test step
-300, below GitHub's 360-minute limit for a hosted job.
+Windows in November 2026. In the two release dry runs the Intel macOS
+runner took 156 and then 232 min, the longest of the six. The job then builds
+the archived executable again from scratch with the `dist` profile's fat LTO,
+which took 9-26 min on the hosted runners (longest on Intel macOS, whose job
+took 260 min in all). The build job allows 350 min and the test step 300,
+below GitHub's 360-minute limit for a hosted job.
 
 ## Native build matrix
 
@@ -123,9 +126,13 @@ The uncompressed executable must be at most 67,108,864 bytes (64 MiB). This is
 a hard per-target build gate, not a compressed-size threshold. The first
 hosted dry run (4 November 2026, run 41812146321) still built with thin LTO:
 x86_64 Windows failed the gate at 68,976,128 bytes, and x86_64 Linux reached
-65,711,440. The `dist` profile's fat LTO (4.7-5.6% smaller on the macOS
-targets) is expected to bring x86_64 Windows under the gate and give x86_64
-Linux more headroom; the next hosted dry run confirms it.
+65,711,440. The second dry run (run 41908189568, `cf9dcf5`) built the
+archived executable with the `dist` profile's fat LTO and passed on all six
+targets. Fat LTO saved 2.9% on x86_64 Windows, which now sits at 66,987,008
+bytes, only 121,856 bytes under the gate; the other targets saved 3.4-5.7%
+and keep 4.4-12.8 MB of headroom. Anything that grows the x86_64 Windows
+executable by more than about 119 KiB fails a release, so check its size
+before adding dependencies or embedded assets.
 
 `EMBEDDED.txt` is exact `--licenses` output from the executable being archived.
 All embedded notice paths are copied byte for byte under `assets/`, including
@@ -261,8 +268,8 @@ suite passes 1,953 cases in one run, with three intentional ignores per mode.
 The task brief records the exact debug/final-source boundary.
 
 The first six-native hosted dry run (4 November 2026, run 41812146321)
-failed the size gate on x86_64 Windows, so no hosted run has yet produced
-all six archives; this local arm64 result does not establish a hosted matrix
-result or an aggregate six-archive SHA256SUMS. No tag/release was created,
-site deployed, binary signed or package published. The site is a
+failed the size gate on x86_64 Windows. The second (run 41908189568, `cf9dcf5`,
+`dist` profile) built, smoke-tested and verified all six archives and their
+SHA256SUMS. No tag/release was created, site deployed, binary signed or
+package published. The site is a
 portable artifact with no assumed hostname or release-download URL.
