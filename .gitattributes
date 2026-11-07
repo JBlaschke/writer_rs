@@ -1,5 +1,7 @@
 * text=auto eol=lf
 assets/vendor/** -text -whitespace linguist-vendored
+# cargo vendor checksums cover the upstream bytes; never normalize them.
+vendor/** -text -whitespace linguist-vendored
 *.woff2 binary
 *.wasm binary
 assets/licenses/two-face*.md -text -whitespace linguist-generated
