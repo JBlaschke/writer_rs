@@ -77,8 +77,8 @@ jobs:
                   GH_TOKEN: ${{ github.token }}
               run: |
                   # The download table shows the latest published release
-                  # (drafts and pre-releases are not "latest"). Before the
-                  # first release the API answers 404, and the page says so.
+                  # (drafts and pre-releases are not "latest"). Without the
+                  # document the page links to the releases page instead.
                   if gh api "repos/$GITHUB_REPOSITORY/releases/latest" \
                           > "$RUNNER_TEMP/release.json" 2> "$RUNNER_TEMP/release.err"; then
                       jq -r '"latest release: " + .tag_name + " (" + (.assets | length | tostring) + " assets)"' \
