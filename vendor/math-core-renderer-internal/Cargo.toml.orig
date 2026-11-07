@@ -1,0 +1,42 @@
+[package]
+name = "math-core-renderer-internal"
+authors = [
+    "Hiromu Sugiura <h.sugiura0705@outlook.com>",
+    "Thomas MK <tmke8@posteo.net>",
+]
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+resolver = "2"
+
+description = "Internal crate used by math-core"
+readme = "README.md"
+license = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+stable-arena = { version = "0.3.0", default-features = false }
+serde = { version = "1.0.228", optional = true, default-features = false, features = ["derive", "alloc"] }
+dtoa = { version = "1.0" }
+strum = { version = "0.28.0", default-features = false }
+strum_macros = { workspace = true }
+static_assertions = { workspace = true }
+bitflags = "2.13.0"
+rustc-hash = { workspace = true }
+hashbrown = { version = "0.17", default-features = false }
+kstring = { workspace = true }
+percent-encoding = { version = "2.3.2", default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+
+[features]
+default = ["std"]
+std = [
+    "percent-encoding/std",
+    "strum/std",
+    "serde?/std",
+]
+serde = ["dep:serde", "bitflags/serde"]
+
+[lints]
+workspace = true

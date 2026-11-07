@@ -1,0 +1,54 @@
+[workspace]
+members = ["app", "wasm", "app/accelerate", "speedtest", "pic-scale-js"]
+exclude = ["picscale", "fuzz", "pic-scale-py"]
+
+[package]
+name = "pic-scale"
+version = "0.7.12"
+edition = "2024"
+description = "High performance image scaling"
+readme = "README.md"
+keywords = ["scale", "resize", "image-resize"]
+license = "BSD-3-Clause OR Apache-2.0"
+authors = ["Radzivon Bartoshyk"]
+documentation = "https://github.com/awxkee/pic-scale"
+categories = ["multimedia::images", "multimedia::video"]
+homepage = "https://github.com/awxkee/pic-scale"
+repository = "https://github.com/awxkee/pic-scale"
+exclude = ["*.jpg", "/assets", "*.png", "*.sh", "/assets/*", "/.github"]
+rust-version = "1.89.0"
+
+[dependencies]
+colorutils-rs = { version = "0.8.0", optional = true }
+num-traits = { version = "0.2", features = ["std"] }
+novtb = { version = "0.1.13", optional = true }
+pxfm = "^0.1.23"
+
+[features]
+default = ["neon", "rdm", "sse", "avx", "threading"]
+colorspaces = ["dep:colorutils-rs"]
+# Allows to use x86_64 AVX-512 when available
+avx512 = ["avx"]
+# Allows to use x86_64 AVX-512FP16 when available
+nightly_avx512fp16 = ["avx512"]
+# Allows to scale nightly `f16` type
+nightly_f16 = []
+# Allows to use ARM NEON when available
+neon = []
+# Allows to use ARM RDM when available
+rdm = ["neon"]
+# Allows to use x86_64 AVX2 when available
+avx = []
+# Allows to use x86/x86_64 SSE4.1 when available
+sse = []
+# Allows to use ARM i8mm when available
+nightly_i8mm = ["neon"]
+# Allows use nightly SVE2
+sve = []
+threading = ["dep:novtb"]
+
+[package.metadata.docs.rs]
+# To build locally:
+# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --no-deps --open
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

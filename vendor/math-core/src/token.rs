@@ -1,0 +1,823 @@
+use core::ops::Range;
+
+use strum_macros::IntoStaticStr;
+
+use mathml_renderer::{
+    ast::Node,
+    symbol::{self, BMPOperator, Bin, MathMLOperator, Op, OrdLike, Punct, Rel},
+    table::ColumnAlignment,
+};
+use mathml_renderer::{
+    attribute::{FracAttr, HtmlTextSize, HtmlTextStyle, Notation, OpAttrs, OpRoles, Size, Style},
+    super_char::SuperChar,
+};
+use mathml_renderer::{length::Length, super_char::OverlayChar, table::LineType};
+
+use crate::character_class::{Class, MathVariant, ParenType};
+use crate::custom_cmds::CmdSource;
+use crate::environments::Env;
+use crate::string_pool::InternedStr;
+
+/// A token produced by the lexer.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Token {
+    /// End of input.
+    Eoi,
+    /// The beginning of an environment, e.g. `\begin{matrix}`.
+    Begin(Env),
+    /// The end of an environment, e.g. `\end{matrix}`.
+    End(Env),
+    /// A new column in an array or matrix, e.g. `&` in `\begin{matrix} a & b\\c & d \end{matrix}`.
+    NewColumn,
+    /// A new line in an array or matrix, e.g. `\\` in `\begin{matrix} a & b\\c & d \end{matrix}`.
+    NewLine,
+    /// A horizontal rule in an array or matrix, i.e. `\hline` (solid) or `\hdashline` (dashed).
+    /// Only legal directly after a `\\` or at the very beginning of such an environment.
+    HLine(LineType),
+    Shove(ColumnAlignment),
+    /// `\nonumber`/`\notag`, suppresses numbering for the current equation.
+    NoNumber,
+    /// `\tag`/`\tag*`, tag for the current equation.
+    /// `parenthesized` is `false` for the starred variant, which omits the parentheses.
+    Tag {
+        parenthesized: bool,
+    },
+    /// `\label`, label for the current equation.
+    Label,
+    /// `\eqref`, equation reference to a label.
+    EqRef,
+    /// A left delimiter, e.g. `\left(`.
+    Left,
+    /// A right delimiter, e.g. `\right)`.
+    Right,
+    /// A middle delimiter, e.g. `\middle|`.
+    Middle,
+    /// The character `[`. It has its own token because we need to
+    /// distinguish it from `\lbrack` after, e.g., `\sqrt`.
+    SquareBracketOpen,
+    /// The character `]`. It has its own token because we often need to search for it.
+    /// Additionally, it's useful to distinguish this from `\rbrack`.
+    SquareBracketClose,
+    /// The character `{`.
+    GroupBegin,
+    /// The character `}`.
+    GroupEnd,
+    /// The character `$`, which in LaTeX switches between math mode and text mode. We don't
+    /// support that yet, so this token is always an error; it only exists to say so with a
+    /// better message than "unknown character". The escaped `\$`, which is a literal dollar
+    /// sign rather than a mode switch, is a [`Token::Letter`] and stays valid.
+    Dollar,
+    /// A token for `\frac` and `\cfrac`, `\dfrac` and `\tfrac`. The `Option<FracAttr>` is `None`
+    /// for `\frac` and, for example, `Some(FracAttr::DisplayStyleTrue)` for `\dfrac`.
+    Frac(Option<FracAttr>),
+    /// A token for `\over`, `\atop`, `\choose`, `\brace` and `\brack`.
+    InfixGenFrac {
+        with_line: bool,
+        delim: Option<InfixDelim>,
+    },
+    /// `\genfrac`
+    Genfrac,
+    /// The character `_` for subscripts.
+    Underscore,
+    /// The character `^` for superscripts.
+    Circumflex,
+    /// `\prescript`
+    Prescript,
+    /// `\sideset`
+    Sideset,
+    /// A token for `\binom`, `\dbinom` and `\tbinom`. The `Option<FracAttr>` is `None` for
+    /// `\binom` and, for example, `Some(FracAttr::DisplayStyleTrue)` for `\dbinom`.
+    Binom(Option<FracAttr>),
+    /// `\overset`
+    Overset,
+    /// `\underset`
+    Underset,
+    /// `\overbrace` and `\underbrace`. The `bool` is `true` for overbraces and `false` for
+    /// underbraces.
+    OverUnderBrace(OrdLike, bool),
+    /// `\sqrt` and `\sqrt[n]{...}`
+    Sqrt,
+    /// `\limits`
+    Limits(LimitsKind),
+    /// Fixed-length spaces, e.g. `\,`, `\;`, `\quad`, etc.
+    Space(Length),
+    /// A custom space specified by the user, e.g. `\hspace{1em}`.
+    CustomSpace(UnitKind),
+    /// `\kern`, `\mkern`, `\hskip`, and `\mskip`, e.g. `\kern1em`.
+    KernOrSkip(UnitKind),
+    /// A non-breaking space, e.g. `~`.
+    NonBreakingSpace,
+    /// A whitespace character, e.g. ` `.
+    Whitespace,
+    /// A token for transforming to a specific math variant, e.g. `\mathbf`.
+    Transform(MathVariant),
+    /// A token for switching the math variant, e.g. `\bf`.
+    TransformSwitch(MathVariant),
+    /// A sized parenthesis, e.g. `\bigl(`, `\Biggr)`.
+    Big(Size, Option<ParenType>),
+    /// Stretchy and non-stretchy accents, e.g. `\hat`, `\widehat`, `\bar`, `\overline`, etc.
+    /// The `bool` is `true` for over-accents and `false` for under-accents.
+    Accent(BMPOperator, bool, OpAttrs),
+    /// A token corresponding to LaTeX's "mathord" character class (class 0).
+    Ord(OrdLike),
+    /// A token corresponding to LaTeX's "mathop" character class (class 1).
+    Op(Op),
+    /// A token corresponding to LaTeX's "mathbin" character class (class 2).
+    BinaryOp(Bin),
+    /// A token corresponding to LaTeX's "mathrel" character class (class 3).
+    Relation(Rel),
+    /// A token corresponding to LaTeX's "mathopen" character class (class 4).
+    Open(OrdLike),
+    /// A token corresponding to LaTeX's "mathclose" character class (class 5).
+    Close(OrdLike),
+    /// A token corresponding to LaTeX's "mathpunct" character class (class 6).
+    Punctuation(Punct),
+    /// A token corresponding to LaTeX's "mathinner" character class (class I).
+    Inner(Op),
+    /// ', ′, ″, ‴, ‵, ‶, ‷, or ⁗ (in math mode)
+    Prime(PrimeKind),
+    /// `\dots` (in math mode) dynamically switches between … and ⋯
+    Dots,
+    /// A token to force an operator to have `\mathord` spacing (all spacing forced to zero).
+    /// This is, for example, needed for `⟋` and `⟍` produced by `\diagup` and `\diagdown`,
+    /// which in MathML Core would otherwise have operator spacing.
+    ForceOrd(MathMLOperator),
+    /// A token to force an operator to behave like a binary operator (mathbin).
+    /// This is, for example, needed for `×`, which in LaTeX is a binary operator,
+    /// but in MathML Core is a "big operator" (mathop).
+    ForceBinaryOp(MathMLOperator),
+    /// A token to force an operator to behave like a relation (mathrel).
+    /// This is, for example, needed for `:`, which in LaTeX is a relation,
+    /// but in MathML Core is a separator (punctuation).
+    ForceRelation(MathMLOperator),
+    /// A token to force an operator to behave like an opening symbol (mathopen).
+    ForceOpen(MathMLOperator, ForceStretchy),
+    /// A token to force an operator to behave like a closing symbol (mathclose).
+    /// This is, for example, needed for `!`, which in LaTeX is a closing symbol,
+    /// but in MathML Core is an ordinary operator.
+    ForceClose(MathMLOperator, ForceStretchy),
+    /// A token to force an operator to behave like punctuation (mathpunct).
+    ForcePunctuation(MathMLOperator),
+    /// A token to force an operator to behave like an inner atom (mathinner).
+    /// This is, for example, needed for the midline horizontal ellipsis `⋯` produced by `\cdots`
+    /// under conventional Unicode substitution, which needs inner spacing.
+    ForceMathInner(MathMLOperator),
+    /// Force an operator to behave like `\mathop`.
+    /// This is, for example, needed for `⅀`.
+    /// We assume `movablelimitss`.
+    /// The flag says whether the operator is also a *large* operator, i.e. whether it is
+    /// rendered with `largeop` and centred on the math axis; `⨟`, for example, takes
+    /// operator spacing but has no large form.
+    ForceOp(MathMLOperator, bool),
+    /// Math atom class-changing commands like`\mathord` and `\mathbin`.
+    MathClass(MathClassKind),
+    /// A token for the extensible arrow commands `\xrightarrow`, `\xleftarrow`, etc.
+    /// The `Rel` is the stretchy arrow operator to render.
+    XArrow(Rel),
+    /// An ordinary letter, e.g. `a`, `b`, `c`.
+    Letter(SuperChar, Mode),
+    /// A letter for which we need `mathvariant="normal"`.
+    /// For example, upper-case greek letter like `\Gamma`, which should be rendered upright.
+    UprightLetter(SuperChar),
+    /// A digit, e.g. `0`, `1`, `2`.
+    Digit(char),
+    /// Text-based operators without limits.
+    /// For example, `\log`, `\exp`, `\sin`, `\cos`, `\tan`.
+    PseudoOperator(&'static str),
+    /// Text-based operators with limits.
+    /// For example, `\lim`, `\sup`, `\inf`, `\max`, `\min`.
+    PseudoOperatorLimits(&'static str),
+    /// A token for enclosing notations, e.g. `\cancel`, `\xcancel`.
+    Enclose(Notation),
+    /// `\operatorname` and `\operatorname*`. The `bool` is `true` for `\operatorname*` and `false`
+    /// for `\operatorname`.
+    OperatorName {
+        with_limits: bool,
+    },
+    /// A combining overlay. `\not` uses U+0338, `\vertoverlay` uses U+20D2
+    Overlay(OverlayChar),
+    /// A token for text, e.g. `\text{...}`, `\textit{...}`.
+    Text(Option<HtmlTextStyle>),
+    /// `\displaystyle`, `\textstyle`, `\scriptstyle` and `\scriptscriptstyle`.
+    Style(Style),
+    /// `\cramped`.
+    Cramped,
+    /// A token for math color, e.g. `\color{red}`.
+    Color,
+    /// `\phantom`, `\hphantom`, or `\vphantom`
+    Phantom(PhantomKind),
+    /// A token used in custom commands defined by the user. The `u8` is the index of the argument,
+    /// going from 0 to 8. For example, `\#1` corresponds to `CustomCmdArg(0)`.
+    CustomCmdArg(u8),
+    /// A token referencing a predefined stream of tokens. The `u8` is the number of arguments
+    /// that the command takes.
+    CustomCmd(u8, &'static [Token]),
+    /// A token for `#1`, `#2`, etc. in a custom command definition. The `u8` is the index of the
+    /// argument, going from 0 to 8. For example, `#1` corresponds to `CustomCmdArgInput(0)`.
+    CustomCmdArgInput(u8),
+    /// A token referencing a stream of tokens defined by the user, either in the configuration
+    /// or in the document with `\newcommand`. The `u8` is the number of arguments that the
+    /// command takes, the `Option<Class>` is the character class of the body, and the two
+    /// indices delimit the body within the [`CustomCmds`](crate::custom_cmds::CustomCmds) store
+    /// identified by the [`CmdSource`].
+    CustomCmdRef(CmdSource, u8, Option<Class>, usize, usize),
+    /// `\newcommand`, `\providecommand` or `\renewcommand`; the mode says which one.
+    NewCommand(DefineMode),
+    /// `\let`, which gives a name the meaning another name has at that point. Unlike the body
+    /// of a `\newcommand`, that meaning does not follow a later redefinition of the name it
+    /// was taken from.
+    Let,
+    /// `\def` (`false`) or `\gdef` (`true`), which define a command the way `\newcommand` does,
+    /// but with TeX's syntax and without ever complaining about a name which already means
+    /// something. The `bool` says whether the definition is global, as it is with `\gdef`.
+    /// Delimited parameters are not supported.
+    Def(bool),
+    /// `\global`, the prefix which makes the definition that follows it outlive the snippet
+    /// even when the conversion doesn't run in the global group. Only `\let` and `\def` may
+    /// follow it.
+    Global,
+    /// A token for commands that are only valid in text mode, e.g. `\O`.
+    TextMode(TextToken),
+    /// A token for commands that can be used in both math mode and text mode, e.g. `\{`. The `char`
+    /// is the character that the command produces, e.g. `{` for `\{`.
+    MathOrTextMode(&'static Token, char),
+    /// A character from a Unicode block that is dedicated to math symbols, but which we don't
+    /// know how to render as math. It is still allowed in text mode.
+    UnsupportedUnicodeMath(char),
+    /// A token which changes the meaning of the character `|` for the rest of the
+    /// surrounding sequence. This is how `\set`, `\Set` and `\Braket` "redefine" `|`.
+    VerticalLineDef(Option<VerticalLineDef>),
+    /// A command that hasn't been resolved yet, either because nothing of that name is defined
+    /// (yet) or because it comes from the body of a custom command, where names are deliberately
+    /// left to be resolved every time the command is expanded. The `InternedStr` is an index into
+    /// the one [`StringPool`](crate::string_pool::StringPool), which belongs to the token queue;
+    /// it can be resolved with
+    /// [`TokenQueue::cmd_name`](crate::token_queue::TokenQueue::cmd_name).
+    UnresolvedCommand(InternedStr),
+    /// This token is intended to be used in predefined token streams.
+    /// It is equivalent to `{abc}`, but has a much more compact representation.
+    InternalStringLiteral(&'static str),
+    /// `\relax`, which does nothing at all: it produces no output and doesn't touch any of
+    /// the parser state. Besides the command itself, this is what a custom command with an
+    /// empty body expands to, so that such a command still has a token to expand to.
+    Relax,
+    /// `\raisebox{length}{text}` produces a text block with a vertical offset.
+    RaiseBox,
+    /// `\mathchoice{display}{text}{script}{scriptscript}`, which expands to whichever of its
+    /// four arguments matches the style which is current where the command appears.
+    /// Unlike in LaTeX, the three other arguments are not typeset at all.
+    MathChoice,
+    /// This token is intended to be used in predefined token streams.
+    /// It is a restricted version of LaTeX's `\mathchoice`: it expands to one of the four
+    /// tokens in the [`MathChoice`], depending on the style which is current where the token
+    /// appears. The restrictions are that every alternative consists of a *single* token, and
+    /// that all four alternatives must have the same character class, because the class has to
+    /// be known before the style is (see [`Token::class`]). That class is stored alongside;
+    /// a debug assertion checks that it agrees with the alternatives.
+    MathChoiceInternal(Option<Class>, &'static MathChoice),
+}
+
+/// The four alternatives of a [`Token::MathChoiceInternal`], one for each style.
+#[derive(Debug, PartialEq)]
+pub struct MathChoice {
+    pub display: Token,
+    pub text: Token,
+    pub script: Token,
+    pub scriptscript: Token,
+}
+
+impl MathChoice {
+    /// The alternative which applies in the given style.
+    pub const fn select(&self, style: Style) -> Token {
+        match style {
+            Style::Display => self.display,
+            Style::Text => self.text,
+            Style::Script => self.script,
+            Style::ScriptScript => self.scriptscript,
+        }
+    }
+
+    /// All four alternatives, for checking that they agree with each other.
+    fn all(&self) -> [Token; 4] {
+        [self.display, self.text, self.script, self.scriptscript]
+    }
+}
+
+/// How a command definition deals with a name which is already defined.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DefineMode {
+    /// `\newcommand`: the name must not be defined yet.
+    New,
+    /// `\providecommand`: if the name is already defined, the existing definition is kept and
+    /// the new one is discarded.
+    Provide,
+    /// `\renewcommand`: the name must already be defined, and its definition is replaced.
+    Renew,
+}
+
+/// The current meaning of the character `|`.
+///
+/// Some commands (`\set`, `\Set`, `\Braket`) locally redefine `|` to be a separator with
+/// extra spacing around it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VerticalLineDef {
+    /// `\;|\;`, as in `\set`.
+    RelSpacing = 1,
+    /// `\;\middle|\;`, as in `\Set`.
+    RelSpacingStretchy,
+    /// `\,\middle|\,`, as in `\Braket`.
+    OpSpacingStretchy,
+}
+
+/// The character class assigned by `\mathord` / `\mathbin` / `\mathopen` / `\mathclose`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MathClassKind {
+    /// `\mathord`: ordinary character class, with all spacing forced to zero.
+    Ord,
+    /// `\mathop`: operator character class.
+    Op,
+    /// `\mathbin`: binary operator character class.
+    Bin,
+    /// `\mathrel`: relation character class.
+    Rel,
+    /// `\mathopen`: opening delimiter character class, with all spacing forced to zero.
+    Open,
+    /// `\mathclose`: closing delimiter character class, with all spacing forced to zero.
+    Close,
+    /// `\mathpunct`: punctuation character class.
+    Punct,
+    /// `\mathinner`: inner character class.
+    Inner,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextToken {
+    Accent(char),
+    Letter(char),
+    Style(HtmlTextStyle),
+    Size(HtmlTextSize),
+}
+
+/// The delimiter pair that surrounds the result of an infix fraction-like command.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InfixDelim {
+    /// Parentheses: `(` and `)` (`\choose`).
+    Paren,
+    /// Curly brackets: `{` and `}` (`\brace`).
+    Brace,
+    /// Square brackets: `[` and `]` (`\brack`).
+    Brack,
+}
+
+/// For [`Token::ForceOpen`] and [`Token::ForceClose`]:
+/// whether to force this token to be stretchy
+/// (when combined with [`Token::Left`]/[`Token::Right`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ForceStretchy {
+    /// Never apply `stretchy="true"`, and don't allow
+    /// combining with `\left`/`\right`
+    No,
+    /// Allow combining with `\left`/`\right`,
+    /// but don't actually use `stretchy="true"`.
+    /// Used for the corner brackets
+    Pretend,
+    /// Allow combining with `\left`/`\right`,
+    /// applying `stretchy="true"`
+    Yes,
+}
+
+/// The kind of length units accepted by [`Token::KernOrSkip`] and
+/// [`Token::CustomSpace`] commands.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UnitKind {
+    /// `\kern`, `\hskip`, `\hspace` — text units (pt, em, ex, ...)
+    TextUnits,
+    /// `\mkern`, `\mskip`, `\mspace` — math units (mu)
+    MathUnits,
+}
+
+/// Disambiguates `\phantom`, `\hphantom`, and `\vphantom`
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PhantomKind {
+    /// `\phantom`
+    Full,
+    /// `\hphantom`
+    H,
+    /// `\vphantom`
+    V,
+}
+
+/// Disambiguates `\limits`, `\nolimits`, and `\displaylimits`
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LimitsKind {
+    /// `\limits`
+    Always,
+    /// `\nolimits`
+    Never,
+    /// `\displaylimits`
+    Display,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PrimeKind {
+    Single,
+    Double,
+    Triple,
+    Quadruple,
+    Reversed,
+    ReversedDouble,
+    ReversedTriple,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PrimeDirection {
+    Forward,
+    Reversed,
+}
+
+impl PrimeKind {
+    pub fn direction(self) -> PrimeDirection {
+        match self {
+            PrimeKind::Single | PrimeKind::Double | PrimeKind::Triple | PrimeKind::Quadruple => {
+                PrimeDirection::Forward
+            }
+            PrimeKind::Reversed | PrimeKind::ReversedDouble | PrimeKind::ReversedTriple => {
+                PrimeDirection::Reversed
+            }
+        }
+    }
+
+    pub fn count(self) -> usize {
+        match self {
+            PrimeKind::Single | PrimeKind::Reversed => 1,
+            PrimeKind::Double | PrimeKind::ReversedDouble => 2,
+            PrimeKind::Triple | PrimeKind::ReversedTriple => 3,
+            PrimeKind::Quadruple => 4,
+        }
+    }
+
+    pub const fn to_ord(self) -> OrdLike {
+        match self {
+            PrimeKind::Single => symbol::PRIME,
+            PrimeKind::Double => symbol::DOUBLE_PRIME,
+            PrimeKind::Triple => symbol::TRIPLE_PRIME,
+            PrimeKind::Quadruple => symbol::QUADRUPLE_PRIME,
+            PrimeKind::Reversed => symbol::REVERSED_PRIME,
+            PrimeKind::ReversedDouble => symbol::REVERSED_DOUBLE_PRIME,
+            PrimeKind::ReversedTriple => symbol::REVERSED_TRIPLE_PRIME,
+        }
+    }
+
+    pub const fn to_node(self) -> &'static Node<'static> {
+        match self {
+            PrimeKind::Single => {
+                &const {
+                    Node::Operator {
+                        op: symbol::PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+            PrimeKind::Double => {
+                &const {
+                    Node::Operator {
+                        op: symbol::DOUBLE_PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+            PrimeKind::Triple => {
+                &const {
+                    Node::Operator {
+                        op: symbol::TRIPLE_PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+            PrimeKind::Quadruple => {
+                &const {
+                    Node::Operator {
+                        op: symbol::QUADRUPLE_PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+            PrimeKind::Reversed => {
+                &const {
+                    Node::Operator {
+                        op: symbol::REVERSED_PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+            PrimeKind::ReversedDouble => {
+                &const {
+                    Node::Operator {
+                        op: symbol::REVERSED_DOUBLE_PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+            PrimeKind::ReversedTriple => {
+                &const {
+                    Node::Operator {
+                        op: symbol::REVERSED_TRIPLE_PRIME.as_op(),
+                        attrs: OpAttrs::empty(),
+                        roles: OpRoles::empty(),
+                        left: None,
+                        right: None,
+                        size: None,
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+static_assertions::assert_eq_size!(Token, [usize; 3]);
+#[cfg(target_arch = "wasm32")]
+static_assertions::assert_eq_size!(Result<Token, &'static i32>, [usize; 3]);
+
+impl Token {
+    /// Returns the character class of this token.
+    pub(super) fn class(&self) -> Option<Class> {
+        use Token::*;
+        match self.unwrap_math_ref() {
+            Relation(_) | ForceRelation(_) | XArrow(_) => Some(Class::Relation),
+            Punctuation(_) | ForcePunctuation(_) => Some(Class::Punctuation),
+            Begin(env) if env.delimiters().is_some() => Some(Class::Inner),
+            Open(_) | SquareBracketOpen | ForceOpen(..) | Begin(_) | GroupBegin => {
+                Some(Class::Open)
+            }
+            Close(_) | SquareBracketClose | ForceClose(..) | Right | Middle => Some(Class::Close),
+            BinaryOp(_) | ForceBinaryOp(_) => Some(Class::BinaryOp),
+            Op(_)
+            | ForceOp(..)
+            | PseudoOperator(_)
+            | PseudoOperatorLimits(_)
+            | OperatorName { .. } => Some(Class::Operator),
+            End(_) | NewLine | NewColumn | GroupEnd | Eoi => Some(Class::End),
+            Inner(_) | ForceMathInner(_) | Dots | Left => Some(Class::Inner),
+            Big(_, Some(paren_type)) => Some(match paren_type {
+                ParenType::Left => Class::Open,
+                ParenType::Right => Class::Close,
+                ParenType::Middle => Class::Relation,
+            }),
+            MathClass(kind) => Some(match kind {
+                MathClassKind::Ord => Class::Default,
+                MathClassKind::Op => Class::Operator,
+                MathClassKind::Bin => Class::BinaryOp,
+                MathClassKind::Open => Class::Open,
+                MathClassKind::Close => Class::Close,
+                MathClassKind::Rel => Class::Relation,
+                MathClassKind::Punct => Class::Punctuation,
+                MathClassKind::Inner => Class::Inner,
+            }),
+            CustomCmd(_, toks) => toks.iter().find_map(Token::class),
+            MathChoiceInternal(class, choice) => {
+                debug_assert!(
+                    choice.all().iter().all(|tok| tok.class() == *class),
+                    "all alternatives of a `MathChoice` must have the class stored in the token",
+                );
+                *class
+            }
+            // We cannot look into the store here, so the class was computed when the
+            // command was defined.
+            CustomCmdRef(_, _, class, _, _) => *class,
+            // The class of `\mathchoice` would be the class of one of its arguments, which we
+            // can't look at from here, so it has no class of its own either.
+            MathChoice
+            | Relax
+            | Whitespace
+            | Space(_)
+            | Overlay(_)
+            | TransformSwitch(_)
+            | NoNumber
+            | Tag { .. }
+            | CustomSpace(_)
+            | KernOrSkip(_)
+            | Limits(_)
+            | NonBreakingSpace
+            | Label
+            | EqRef
+            | HLine(_)
+            | Shove(_)
+            | NewCommand(_)
+            | Let
+            | Def(_)
+            | Global
+            | VerticalLineDef(_)
+            | CustomCmdArgInput(_) => None,
+            CustomCmdArg(_)  => {
+                if cfg!(debug_assertions) {
+                    panic!("`{self:?}` should never appear in the token queue.");
+                }
+                None
+            }
+            Letter(_, _)
+            | UprightLetter(_)
+            | Digit(_)
+            | Big(_, None)
+            | Frac(_)
+            | InfixGenFrac { .. }
+            | Genfrac
+            | Underscore
+            | Circumflex
+            | Prescript
+            | Sideset
+            | Binom(_)
+            | Overset
+            | Underset
+            | OverUnderBrace(_, _)
+            | Sqrt
+            | Transform(_)
+            | Ord(_)
+            | Prime(_)
+            | Enclose(_)
+            | Text(_)
+            | RaiseBox
+            | Style(_)
+            | Cramped
+            | Color
+            | Phantom(_)
+            | TextMode(_)
+            | MathOrTextMode(_, _)
+            | UnsupportedUnicodeMath(_)
+            | UnresolvedCommand(_)
+            | InternalStringLiteral(_)
+            | ForceOrd(_)
+            // `Dollar` is always an error, so its class is never really used; a dollar sign
+            // would be an ordinary atom if we did support it.
+            | Dollar
+            | Accent(_, _, _) => Some(Class::Default),
+        }
+    }
+
+    /// If this token is `MathOrTextMode`, returns the inner token. Otherwise, returns `self`.
+    #[inline]
+    pub(crate) fn unwrap_math_ref(&self) -> &Self {
+        if let Token::MathOrTextMode(tok, _) = self {
+            tok
+        } else {
+            self
+        }
+    }
+    #[inline]
+    pub(crate) fn unwrap_math(self) -> Self {
+        if let Token::MathOrTextMode(tok, _) = self {
+            *tok
+        } else {
+            self
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Mode {
+    #[default]
+    Math,
+    MathOrText,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Span {
+    start: usize,
+    end: usize,
+}
+
+impl Span {
+    #[inline]
+    pub const fn new(start: usize, end: usize) -> Self {
+        Span { start, end }
+    }
+
+    #[inline]
+    pub const fn zero_width(at: usize) -> Self {
+        Span { start: at, end: at }
+    }
+
+    #[inline]
+    pub const fn start(&self) -> usize {
+        self.start
+    }
+
+    #[inline]
+    pub const fn end(&self) -> usize {
+        self.end
+    }
+
+    /// Returns a new `Span` with the same start position as `self`, but with the end position set
+    /// to `self.start + length`.
+    #[inline]
+    pub const fn with_length(self, length: usize) -> Self {
+        Span {
+            start: self.start,
+            end: self.start + length,
+        }
+    }
+}
+
+impl From<Span> for Range<usize> {
+    #[inline]
+    fn from(span: Span) -> Self {
+        span.start..span.end
+    }
+}
+
+/// A token together with its span in the input string.
+#[derive(Clone, Copy, Debug)]
+pub struct TokSpan(Token, Span);
+
+#[cfg(target_arch = "wasm32")]
+static_assertions::assert_eq_size!(TokSpan, [usize; 5]);
+
+impl TokSpan {
+    #[inline]
+    pub const fn new(token: Token, span: Span) -> Self {
+        TokSpan(token, span)
+    }
+
+    #[inline]
+    pub fn token(&self) -> &Token {
+        &self.0
+    }
+
+    #[inline]
+    pub fn into_token(self) -> Token {
+        self.0
+    }
+
+    #[inline]
+    pub fn into_parts(self) -> (Token, Span) {
+        (self.0, self.1)
+    }
+
+    // #[inline]
+    // pub fn token_mut(&mut self) -> &mut Token {
+    //     &mut self.0
+    // }
+
+    #[inline]
+    pub fn span(&self) -> Span {
+        self.1
+    }
+}
+
+impl From<Token> for TokSpan {
+    #[inline]
+    fn from(token: Token) -> Self {
+        TokSpan(token, Span::default())
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, IntoStaticStr)]
+pub enum EndToken {
+    #[strum(serialize = r"\end{...}")]
+    End,
+    #[strum(serialize = r"}")]
+    GroupClose,
+    #[strum(serialize = r"\right")]
+    Right,
+    #[strum(serialize = r"]")]
+    SquareBracketClose,
+    #[strum(serialize = r"end of input")]
+    Eoi,
+}
+
+impl EndToken {
+    pub fn matches(self, other: &Token) -> bool {
+        matches!(
+            (self, other),
+            (EndToken::End, Token::End(_))
+                | (EndToken::GroupClose, Token::GroupEnd)
+                | (EndToken::Right, Token::Right)
+                | (EndToken::SquareBracketClose, Token::SquareBracketClose)
+                | (EndToken::Eoi, Token::Eoi)
+        )
+    }
+}

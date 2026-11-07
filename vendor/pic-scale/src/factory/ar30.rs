@@ -1,0 +1,120 @@
+/*
+ * Copyright (c) Radzivon Bartoshyk. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2.  Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3.  Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#![forbid(unsafe_code)]
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) enum Rgb30 {
+    Ar30 = 0,
+    Ra30 = 1,
+}
+
+impl From<usize> for Rgb30 {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Rgb30::Ar30,
+            1 => Rgb30::Ra30,
+            _ => {
+                unimplemented!("Rgb30 is not implemented for value {}", value)
+            }
+        }
+    }
+}
+
+/// Converts a value from host byte order to network byte order.
+#[inline]
+const fn htonl(hostlong: u32) -> u32 {
+    hostlong.to_be()
+}
+
+/// Converts a value from network byte order to host byte order.
+#[inline]
+const fn ntohl(netlong: u32) -> u32 {
+    u32::from_be(netlong)
+}
+
+impl Rgb30 {
+    /// Packs three 10-bit color channels, forcing alpha opaque.
+    ///
+    /// The whole AR30 pipeline is color-only: [`unpack`](Self::unpack) discards the
+    /// source alpha and the AVX2 kernels only ever de-interleave three channels, so
+    /// there is nothing to carry here. The `a` parameter is kept for signature
+    /// symmetry and deliberately ignored — see `Scaler::plan_ar30_resampling`, which
+    /// documents the limitation for callers.
+    #[inline]
+    pub(crate) const fn pack_w_a<const STORE: usize>(self, r: i32, g: i32, b: i32, _: i32) -> u32 {
+        let value: u32 = match self {
+            Rgb30::Ar30 => ((3u32 << 30u32) | ((b as u32) << 20)) | (((g as u32) << 10) | r as u32),
+            Rgb30::Ra30 => (((r as u32) << 22) | ((g as u32) << 12)) | (((b as u32) << 2) | 3),
+        };
+        if STORE == 0 { value } else { htonl(value) }
+    }
+
+    /// Unpacks the three 10-bit color channels; the returned alpha is always `3`.
+    ///
+    /// The source alpha is intentionally dropped — see [`pack_w_a`](Self::pack_w_a).
+    #[inline(always)]
+    pub(crate) const fn unpack<const STORE: usize>(self, value: u32) -> (u32, u32, u32, u32) {
+        let pixel = if STORE == 0 { value } else { ntohl(value) };
+        match self {
+            Rgb30::Ar30 => {
+                let r10 = pixel & 0x3ff;
+                let g10 = (pixel >> 10) & 0x3ff;
+                let b10 = (pixel >> 20) & 0x3ff;
+                (r10, g10, b10, 3)
+            }
+            Rgb30::Ra30 => {
+                let r10 = (pixel >> 22) & 0x3ff;
+                let g10 = (pixel >> 12) & 0x3ff;
+                let b10 = (pixel >> 2) & 0x3ff;
+                (r10, g10, b10, 3)
+            }
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+/// Defines storage byte order for RGBA1010102 or RGBA2101010
+///
+/// Some systems require to be bytes in network byte order instead of host.
+pub enum Ar30ByteOrder {
+    Host = 0,
+    Network = 1,
+}
+
+impl From<usize> for Ar30ByteOrder {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Ar30ByteOrder::Host,
+            1 => Ar30ByteOrder::Network,
+            _ => {
+                unimplemented!("Rgb30ByteOrder is not implemented for value {}", value)
+            }
+        }
+    }
+}

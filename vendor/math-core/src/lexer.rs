@@ -1,0 +1,513 @@
+use alloc::boxed::Box;
+use core::mem;
+use core::ops::Range;
+use core::str::CharIndices;
+
+use kstring::KString;
+use mathml_renderer::symbol;
+
+use crate::commands::{get_operator_from_unicode, is_math_symbol_block};
+use crate::environments::Env;
+use crate::error::{GetUnwrap, LatexErrKind, LatexError};
+use crate::token::{EndToken, Mode, PrimeKind, Span, TokSpan, Token};
+
+/// Lexer
+///
+/// The lexer does not give commands a meaning: every command other than `\begin` and `\end`
+/// becomes a [`Token::CommandName`], which the token queue then resolves. (`\begin` and `\end`
+/// have to be handled here, because their environment name is part of the input which has to
+/// be consumed; the price is that they cannot be redefined.)
+pub(crate) struct Lexer<'source> {
+    input: CharIndices<'source>,
+    peek: (usize, Option<char>),
+    input_string: &'source str,
+    input_length: usize,
+}
+
+impl<'source> Lexer<'source> {
+    /// Receive the input source code and generate a LEXER instance.
+    pub(crate) fn new(input: &'source str) -> Self {
+        let mut lexer = Lexer {
+            input: input.char_indices(),
+            peek: (0, None),
+            input_string: input,
+            input_length: input.len(),
+        };
+        lexer.read_char(); // Initialize `peek`.
+        lexer
+    }
+
+    #[inline]
+    pub(super) fn input_length(&self) -> usize {
+        self.input_length
+    }
+
+    /// One character progresses.
+    fn read_char(&mut self) -> (usize, Option<char>) {
+        mem::replace(
+            &mut self.peek,
+            self.input
+                .next()
+                .map_or((self.input_length, None), |(idx, ch)| (idx, Some(ch))),
+        )
+    }
+
+    /// Skip whitespace characters.
+    ///
+    /// Returns the span of the first skipped whitespace character, or `None` if there are no
+    /// whitespace characters to skip.
+    fn skip_whitespace(&mut self) -> Option<Span> {
+        let mut span: Option<Span> = None;
+        while let (loc, Some(ch)) = self.peek
+            && ch.is_ascii_whitespace()
+        {
+            self.read_char(); // Discard the whitespace character.
+            if span.is_none() {
+                span = Some(Span::new(loc, loc + ch.len_utf8()));
+            }
+        }
+        span
+    }
+
+    /// Read one command.
+    #[inline]
+    fn read_command(&mut self) -> (&'source str, usize) {
+        let start = self.peek.0;
+
+        // Read in all ASCII alphabetic characters.
+        while self.peek.1.is_some_and(|ch| ch.is_ascii_alphabetic()) {
+            self.read_char();
+        }
+
+        // Commands may end with a "*".
+        if self.peek.1 == Some('*') {
+            self.read_char();
+        }
+
+        if start == self.peek.0 {
+            // Always read at least one character.
+            self.read_char();
+        }
+
+        // To get the end of the command, we take the index of the next character.
+        let end = self.peek.0;
+        // SAFETY: we got `start` and `end` from `CharIndices`, so they are valid bounds.
+        (self.input_string.get_unwrap(start..end), end)
+    }
+
+    /// Read an environment name.
+    ///
+    /// Reads ASCII alphanumeric characters (and a few others) until the next `}`.
+    /// On success, returns the environment name and the index of the character after the `}`.
+    ///
+    /// Returns `Err` if there are any disallowed characters before the `}`.
+    /// The `Err` contains the span and value of the first disallowed character.
+    /// If the end of the input is reached before finding a `}`, the `Err` contains
+    /// the span and `None`.
+    #[inline]
+    fn read_env_name(&mut self) -> Result<(&'source str, usize), CharSpan> {
+        // If the first character is not `{`, we read a single character.
+        let (loc, first) = self.read_char();
+        if first != Some('{') {
+            return if first.is_some_and(|ch| ch.is_ascii_alphabetic() || matches!(ch, '*')) {
+                // SAFETY: we got `start` and `end` from `CharIndices`, so they are valid bounds.
+                Ok((self.input_string.get_unwrap(loc..self.peek.0), self.peek.0))
+            } else {
+                Err((first, loc..(loc + first.map_or(0, char::len_utf8))))
+            };
+        }
+        let start = self.peek.0;
+
+        while self.peek.1.is_some_and(|ch| {
+            ch.is_ascii_alphabetic() || ch.is_ascii_whitespace() || matches!(ch, '*')
+        }) {
+            self.read_char();
+        }
+
+        // Verify that the environment name is followed by a `}`.
+        let (loc, closing) = self.read_char();
+        if closing == Some('}') {
+            let end = loc;
+            // SAFETY: we got `start` and `end` from `CharIndices`, so they are valid bounds.
+            Ok((self.input_string.get_unwrap(start..end), end + 1))
+        } else {
+            Err((closing, loc..(loc + closing.map_or(0, char::len_utf8))))
+        }
+    }
+
+    /// Produce the next token.
+    ///
+    /// Commands are *not* given a meaning here; they are returned as [`Token::CommandName`],
+    /// and it is up to the caller to resolve them.
+    pub(crate) fn next_token(&mut self) -> Result<LexerOutput<'source>, Box<LatexError>> {
+        if let Some(span) = self.skip_whitespace() {
+            return Ok(LexerOutput::Token(TokSpan::new(Token::Whitespace, span)));
+        }
+
+        let (loc, ch) = self.read_char();
+        let Some(ch) = ch else {
+            return Ok(LexerOutput::Token(TokSpan::new(
+                Token::Eoi,
+                Span::zero_width(loc),
+            )));
+        };
+        if ch == '%' {
+            // Skip comments.
+            while self.peek.1 != Some('\n') && self.peek.1.is_some() {
+                self.read_char();
+            }
+            self.read_char(); // Consume the newline character.
+            // TeX skips whitespace on the line after a comment.
+            // This also prevents two whitespace tokens following each other.
+            self.skip_whitespace();
+            // FIXME: use `become` here when stabilized.
+            return self.next_token();
+        }
+        let mut span = Span::new(loc, loc + ch.len_utf8());
+        let tok = match ch {
+            '\u{0}' => {
+                return Err(Box::new(LatexError(
+                    loc..(loc + 1),
+                    LatexErrKind::DisallowedChar(ch),
+                )));
+            }
+            ' ' => Token::Letter(symbol::NO_BREAK_SPACE.into(), Mode::MathOrText),
+            '"' => Token::Letter(symbol::RIGHT_DOUBLE_QUOTATION_MARK.into(), Mode::MathOrText),
+            // In a custom command, `#` is used to denote a parameter. We always lex it as such
+            // and leave it to the consumer of the tokens to decide whether a parameter is
+            // allowed in that position.
+            '#' => {
+                if let Some(next) = self.peek.1
+                    && next.is_ascii_digit()
+                {
+                    let param_num = (next as u32).wrapping_sub('1' as u32);
+                    let param_num = if let Ok(param_num) = u8::try_from(param_num)
+                        && (0..=8).contains(&param_num)
+                    {
+                        param_num
+                    } else {
+                        return Err(Box::new(LatexError(
+                            (loc + 1)..(loc + 2),
+                            LatexErrKind::InvalidParameterNumber,
+                        )));
+                    };
+                    // Discard the digit after `#`.
+                    self.read_char();
+                    span = span.with_length(2);
+                    Token::CustomCmdArgInput(param_num)
+                } else {
+                    let (loc, ch) = self.read_char();
+                    if let Some(ch) = ch {
+                        return Err(Box::new(LatexError(
+                            loc..(loc + ch.len_utf8()),
+                            LatexErrKind::InvalidParameterNumber,
+                        )));
+                    }
+                    return Err(Box::new(LatexError(
+                        loc..loc,
+                        LatexErrKind::ExpectedParamNumberGotEOI,
+                    )));
+                }
+            }
+            '$' => Token::Dollar,
+            '&' => Token::NewColumn,
+            '\'' => Token::MathOrTextMode(&Token::Prime(PrimeKind::Single), '’'),
+            '<' => Token::MathOrTextMode(&Token::Relation(symbol::LESS_THAN_SIGN), '<'),
+            '>' => Token::MathOrTextMode(&Token::Relation(symbol::GREATER_THAN_SIGN), '>'),
+            '[' => Token::SquareBracketOpen,
+            ']' => Token::SquareBracketClose,
+            '^' => Token::Circumflex,
+            '_' => Token::Underscore,
+            '`' => Token::Letter(symbol::LEFT_SINGLE_QUOTATION_MARK.into(), Mode::MathOrText),
+            '{' => Token::GroupBegin,
+            '}' => Token::GroupEnd,
+            '~' => Token::NonBreakingSpace,
+            '!' => Token::MathOrTextMode(&Token::Close(symbol::EXCLAMATION_MARK), '!'),
+            '(' => Token::MathOrTextMode(&Token::Open(symbol::LEFT_PARENTHESIS), '('),
+            ')' => Token::MathOrTextMode(&Token::Close(symbol::RIGHT_PARENTHESIS), ')'),
+            '*' => Token::MathOrTextMode(
+                &const { Token::ForceBinaryOp(symbol::ASTERISK_OPERATOR.as_op()) },
+                '*',
+            ),
+            '+' => Token::MathOrTextMode(&Token::BinaryOp(symbol::PLUS_SIGN), '+'),
+            ',' => Token::MathOrTextMode(&Token::Punctuation(symbol::COMMA), ','),
+            '-' => Token::MathOrTextMode(&Token::BinaryOp(symbol::MINUS_SIGN), '-'),
+            '/' => Token::MathOrTextMode(&Token::Ord(symbol::SOLIDUS), '/'),
+            ':' => {
+                Token::MathOrTextMode(&const { Token::ForceRelation(symbol::COLON.as_op()) }, ':')
+            }
+            ';' => Token::MathOrTextMode(&Token::Punctuation(symbol::SEMICOLON), ';'),
+            '=' => Token::MathOrTextMode(&Token::Relation(symbol::EQUALS_SIGN), '='),
+            '|' => Token::MathOrTextMode(&Token::Ord(symbol::VERTICAL_LINE), '|'),
+            '\\' => {
+                let (cmd_string, end) = self.read_command();
+                let span = Span::new(loc, end);
+                // After a command, all whitespace is skipped, even in text mode.
+                self.skip_whitespace();
+                return self.parse_env_marker(span, cmd_string);
+            }
+            c if c.is_ascii_digit() => Token::Digit(c),
+            // fast path to avoid expensive lookup below
+            c if c.is_ascii_alphabetic() => Token::Letter(c.into(), Mode::MathOrText),
+            c if let Some(tok) = get_operator_from_unicode(c) => tok,
+            // Characters from the Unicode blocks that are dedicated to math symbols are only
+            // accepted if we know how to handle them; the rest is valid in text mode only.
+            c if is_math_symbol_block(c) => Token::UnsupportedUnicodeMath(c),
+            c => Token::Letter(c.into(), Mode::MathOrText),
+        };
+        Ok(LexerOutput::Token(TokSpan::new(tok, span)))
+    }
+
+    fn parse_env_marker(
+        &mut self,
+        span: Span,
+        cmd_string: &'source str,
+    ) -> Result<LexerOutput<'source>, Box<LatexError>> {
+        let env_marker = match cmd_string {
+            "begin" => EnvMarker::Begin,
+            "end" => EnvMarker::End,
+            // Everything else is resolved by the token queue, which finds the name at the
+            // span of the token.
+            _ => return Ok(LexerOutput::CommandName(cmd_string, span)),
+        };
+        let tok: Result<(Token, Span), LatexError> = 'env_name: {
+            // First skip any whitespace.
+            self.skip_whitespace();
+            let group_loc = self.peek.0;
+            // Read the environment name.
+            let (name, end) = match self.read_env_name() {
+                Ok(lit) => lit,
+                Err((ch, span)) => match ch {
+                    None => {
+                        break 'env_name Err(LatexError(
+                            span,
+                            LatexErrKind::UnclosedGroup(EndToken::GroupClose),
+                        ));
+                    }
+                    Some(ch) => {
+                        break 'env_name Err(LatexError(span, LatexErrKind::DisallowedChar(ch)));
+                    }
+                },
+            };
+            // Convert the environment name to the `Env` enum.
+            let Some(env) = Env::from_str(name) else {
+                break 'env_name Err(LatexError(
+                    group_loc..end,
+                    LatexErrKind::UnknownEnvironment(KString::from_ref(name)),
+                ));
+            };
+            let span = Span::new(span.start(), end);
+            Ok((
+                match env_marker {
+                    EnvMarker::Begin => Token::Begin(env),
+                    EnvMarker::End => Token::End(env),
+                },
+                span,
+            ))
+        };
+        match tok {
+            Ok((tok, span)) => Ok(LexerOutput::Token(TokSpan::new(tok, span))),
+            Err(err) => Err(Box::new(err)),
+        }
+    }
+}
+
+type CharSpan = (Option<char>, Range<usize>);
+
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum LexerOutput<'source> {
+    Token(TokSpan),
+    CommandName(&'source str, Span),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EnvMarker {
+    Begin = 1,
+    End = 2,
+}
+
+pub(crate) fn recover_limited_ascii(tok: Token) -> Option<char> {
+    match tok {
+        Token::Letter(ch, _)
+            if let Some(c) = ch.try_as_char()
+                && (c.is_ascii_alphabetic() || matches!(c, '.' | '?' | '@')) =>
+        {
+            Some(c)
+        }
+        Token::Digit(ch) | Token::MathOrTextMode(_, ch)
+            if ch.is_ascii() && !matches!(ch, '&' | '{' | '}') =>
+        {
+            Some(ch)
+        }
+        Token::Whitespace => Some(' '),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fmt::Write;
+
+    use insta::assert_snapshot;
+
+    use super::super::token::Token;
+    use super::*;
+
+    #[test]
+    fn lexer_test() {
+        let problems = [
+            ("simple_number", r"3"),
+            ("number_with_dot", r"3.14"),
+            ("number_with_dot_at_end", r"3.14."),
+            ("number_with_two_inner_dots", r"3..14"),
+            ("lower_case_latin", r"x"),
+            ("lower_case_greek", r"\pi"),
+            ("assigment_with_space", r"x = 3.14"),
+            ("simple_expression", r"x+y"),
+            ("space_and_number", r"\ 1"),
+            ("space_in_text", r"\text{  x   y z}"),
+            ("comment", "ab%hello\ncd"),
+            ("comment_before_indented_line", "ab%hello\n  cd"),
+            (
+                "comment_after_whitespace_before_indented",
+                "ab %hello\n  cd",
+            ),
+            ("custom_space", r"{x\hspace{2em}}"),
+            ("hspace_whitespace_in_between", r"\hspace {  4  em } x"),
+            ("color", r"{x\color{red} y}"),
+            ("color_whitespace", r"{x\color     {red} y}"),
+            ("color_newline", "{x\\color\n{red} y}"),
+            ("color_one_letter", "{x\\color r y}"),
+            ("genfrac_with_parens", r"\genfrac(]{0pt}{2}{a+b}{c+d}"),
+            (
+                "genfrac_with_one_sided_parens",
+                r"\genfrac{}]{0pt}{2}{a+b}{c+d}",
+            ),
+            ("genfrac_without_parens", r"\genfrac{}{}{0pt}{2}{a+b}{c+d}"),
+            ("begin_array", r"\begin{array}{c|c}"),
+            ("end_array", r"\end{array}{c|c}"),
+        ];
+
+        for (name, problem) in problems.into_iter() {
+            let mut lexer = Lexer::new(problem);
+            // Call `lexer.next_token()` until we get `Token::EOI`.
+            let mut tokens = String::new();
+            loop {
+                let lexer_output = lexer.next_token().unwrap();
+                match lexer_output {
+                    LexerOutput::Token(tokloc) => {
+                        if matches!(tokloc.token(), Token::Eoi) {
+                            break;
+                        }
+                        let (tok, span) = tokloc.into_parts();
+                        writeln!(tokens, "{}:{}: {:?}", span.start(), span.end(), tok).unwrap();
+                    }
+                    LexerOutput::CommandName(cmd, span) => {
+                        writeln!(
+                            tokens,
+                            "{}:{}: CommandName(\"{}\")",
+                            span.start(),
+                            span.end(),
+                            cmd
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+            assert_snapshot!(name, &tokens, problem);
+        }
+    }
+
+    #[test]
+    fn test_lexer_errors() {
+        let problems = [
+            ("missing_brace", r"\begin x + y"),
+            ("disallowed_chars", r"\begin{matrix x + y}"),
+            (
+                "unknown_environment",
+                r"\begin{unknownenv} x + y \end{unknownenv}",
+            ),
+            ("null_character_in_input", "x + \u{0} + y"),
+            ("null_character_in_string_literal", "\\text{\u{0}}"),
+        ];
+        for (name, problem) in problems.into_iter() {
+            let mut lexer = Lexer::new(problem);
+            let err = loop {
+                match lexer.next_token() {
+                    Ok(lexer_output) => {
+                        let LexerOutput::Token(tokspan) = lexer_output else {
+                            continue;
+                        };
+                        if matches!(tokspan.token(), Token::Eoi) {
+                            break None;
+                        }
+                    }
+                    Err(err) => {
+                        break Some(err);
+                    }
+                }
+            };
+            let Some(error) = err else {
+                panic!("Expected an error in problem: {}", problem);
+            };
+            let report = error.to_report("<input>", false);
+            let mut buf = Vec::new();
+            report
+                .write(("<input>", ariadne::Source::from(problem)), &mut buf)
+                .expect("failed to write report");
+            let output = String::from_utf8(buf).expect("report should be valid UTF-8");
+            assert_snapshot!(name, &output, problem);
+        }
+    }
+
+    #[test]
+    fn test_parsing_custom_commands() {
+        let problem = r"\frac{#1}{#2} + \sqrt{#3}";
+        let mut lexer = Lexer::new(problem);
+        let mut tokens = String::new();
+        loop {
+            let lexer_output = lexer.next_token().unwrap();
+            match lexer_output {
+                LexerOutput::Token(tokloc) => {
+                    if matches!(tokloc.token(), Token::Eoi) {
+                        break;
+                    }
+                    let (tok, span) = tokloc.into_parts();
+                    writeln!(tokens, "{}..{}: {:?}", span.start(), span.end(), tok).unwrap();
+                }
+                LexerOutput::CommandName(cmd, span) => {
+                    writeln!(
+                        tokens,
+                        "{}..{}: CommandName(\"{}\")",
+                        span.start(),
+                        span.end(),
+                        cmd
+                    )
+                    .unwrap();
+                }
+            }
+        }
+        assert_snapshot!("parsing_custom_commands", tokens, problem);
+    }
+
+    #[test]
+    fn test_recover_limited_ascii() {
+        let input = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-*:| ";
+        let mut lexer = Lexer::new(input);
+
+        let mut output = String::new();
+        while let Ok(lexer_output) = lexer.next_token() {
+            let LexerOutput::Token(tokspan) = lexer_output else {
+                break;
+            };
+            let tok = tokspan.into_token();
+            if let Some(ch) = recover_limited_ascii(tok) {
+                output.push(ch);
+            }
+            if matches!(tok, Token::Eoi) {
+                break;
+            }
+        }
+        assert_eq!(input, output);
+    }
+}

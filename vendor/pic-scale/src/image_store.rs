@@ -1,0 +1,1159 @@
+/*
+ * Copyright (c) Radzivon Bartoshyk. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2.  Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3.  Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+use crate::alpha_check::has_non_constant_cap_alpha_rgba_f32;
+#[cfg(feature = "nightly_f16")]
+use crate::alpha_handle_f16::{premultiply_alpha_rgba_f16, unpremultiply_alpha_rgba_f16};
+use crate::alpha_handle_f32::{premultiply_alpha_rgba_f32, unpremultiply_alpha_rgba_f32};
+use crate::alpha_handle_u8::{premultiply_alpha_rgba, unpremultiply_alpha_rgba};
+use crate::alpha_handle_u16::{premultiply_alpha_rgba_u16, unpremultiply_alpha_rgba_u16};
+use crate::support::{check_image_size_overflow, check_image_size_overflow_with_stride};
+use crate::threading_policy::ScalingPool;
+use crate::validation::{PicScaleBufferMismatch, PicScaleError, try_vec};
+use crate::{ImageSize, WorkloadStrategy};
+#[cfg(feature = "nightly_f16")]
+use core::f16;
+use std::fmt::Debug;
+
+/// Holds an image
+///
+/// # Arguments
+/// `N` - count of channels
+///
+/// # Examples
+/// ImageStore<u8, 4> - represents RGBA
+/// ImageStore<u8, 3> - represents RGB
+/// ImageStore<f32, 3> - represents RGB in f32 and etc
+#[derive(Clone)]
+pub struct ImageStore<'a, T, const N: usize>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
+    pub buffer: std::borrow::Cow<'a, [T]>,
+    /// Channels in the image
+    pub channels: usize,
+    /// Image width
+    pub width: usize,
+    /// Image height
+    pub height: usize,
+    /// Image stride, if stride is zero then it considered to be `width * N`
+    pub stride: usize,
+    /// This is private field, currently used only for u16, will be automatically passed from upper func
+    pub bit_depth: usize,
+}
+
+/// Holds an image
+///
+/// # Arguments
+/// `N` - count of channels
+///
+/// # Examples
+/// ImageStore<u8, 4> - represents RGBA
+/// ImageStore<u8, 3> - represents RGB
+/// ImageStore<f32, 3> - represents RGB in f32 and etc
+pub struct ImageStoreMut<'a, T, const N: usize> {
+    pub buffer: BufferStore<'a, T>,
+    /// Channels in the image
+    pub channels: usize,
+    /// Image width
+    pub width: usize,
+    /// Image height
+    pub height: usize,
+    /// Image stride, if stride is zero then it considered to be `width * N`
+    pub stride: usize,
+    /// Required for `u16` images
+    pub bit_depth: usize,
+}
+
+pub(crate) trait CheckStoreDensity {
+    fn should_have_bit_depth(&self) -> bool;
+}
+
+/// Structure for mutable target buffer
+pub enum BufferStore<'a, T> {
+    Borrowed(&'a mut [T]),
+    Owned(Vec<T>),
+}
+
+impl<T> BufferStore<'_, T> {
+    #[allow(clippy::should_implement_trait)]
+    /// Borrowing immutable slice
+    pub fn borrow(&self) -> &[T] {
+        match self {
+            Self::Borrowed(p_ref) => p_ref,
+            Self::Owned(vec) => vec,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    /// Borrowing mutable slice
+    pub fn borrow_mut(&mut self) -> &mut [T] {
+        match self {
+            Self::Borrowed(p_ref) => p_ref,
+            Self::Owned(vec) => vec,
+        }
+    }
+}
+
+impl<'a, T, const N: usize> ImageStore<'a, T, N>
+where
+    T: Clone + Copy + Debug + Default,
+{
+    /// Creates new store
+    pub fn new(
+        slice_ref: Vec<T>,
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStore<'a, T, N>, PicScaleError> {
+        let expected_size = width * height * N;
+        if slice_ref.len() < width * height * N {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: expected_size,
+                width,
+                height,
+                channels: N,
+                slice_len: slice_ref.len(),
+            }));
+        }
+        Ok(ImageStore::<T, N> {
+            buffer: std::borrow::Cow::Owned(slice_ref),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+
+    /// Borrows immutable slice as new image store
+    pub fn borrow(
+        slice_ref: &'a [T],
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStore<'a, T, N>, PicScaleError> {
+        let expected_size = width * height * N;
+        if slice_ref.len() < width * height * N {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: expected_size,
+                width,
+                height,
+                channels: N,
+                slice_len: slice_ref.len(),
+            }));
+        }
+        Ok(ImageStore::<T, N> {
+            buffer: std::borrow::Cow::Borrowed(slice_ref),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+
+    /// Allocates new owned image store
+    pub fn alloc(width: usize, height: usize) -> ImageStore<'a, T, N> {
+        let vc = vec![T::default(); width * N * height];
+        ImageStore::<T, N> {
+            buffer: std::borrow::Cow::Owned(vc),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        }
+    }
+}
+
+impl<const N: usize> CheckStoreDensity for ImageStoreMut<'_, u8, N> {
+    fn should_have_bit_depth(&self) -> bool {
+        false
+    }
+}
+
+impl<const N: usize> CheckStoreDensity for ImageStoreMut<'_, f32, N> {
+    fn should_have_bit_depth(&self) -> bool {
+        false
+    }
+}
+
+#[cfg(feature = "nightly_f16")]
+impl<const N: usize> CheckStoreDensity for ImageStoreMut<'_, f16, N> {
+    fn should_have_bit_depth(&self) -> bool {
+        false
+    }
+}
+
+impl<const N: usize> CheckStoreDensity for ImageStoreMut<'_, u16, N> {
+    fn should_have_bit_depth(&self) -> bool {
+        true
+    }
+}
+
+impl<const N: usize> CheckStoreDensity for ImageStoreMut<'_, i16, N> {
+    fn should_have_bit_depth(&self) -> bool {
+        true
+    }
+}
+
+impl<T, const N: usize> ImageStoreMut<'_, T, N> {
+    pub(crate) fn validate(&self) -> Result<(), PicScaleError> {
+        if self.width == 0 || self.height == 0 {
+            return Err(PicScaleError::ZeroImageDimensions);
+        }
+
+        if check_image_size_overflow(
+            self.width,
+            self.height,
+            self.channels,
+            size_of::<T>() as isize,
+        ) {
+            return Err(PicScaleError::SourceImageIsTooLarge);
+        }
+
+        if check_image_size_overflow_with_stride(
+            self.width,
+            self.height,
+            self.stride(),
+            self.channels,
+            size_of::<T>() as isize,
+        ) {
+            return Err(PicScaleError::SourceImageIsTooLarge);
+        }
+
+        let valid_size = self.stride() * (self.height - 1) + self.width * N;
+
+        if self.stride() < self.width * N {
+            return Err(PicScaleError::InvalidStride(self.width * N, self.stride));
+        }
+
+        if self.buffer.borrow().len() < valid_size {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: valid_size,
+                width: self.width,
+                height: self.height,
+                channels: N,
+                slice_len: self.buffer.borrow().len(),
+            }));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn projected(&mut self) -> &mut [T] {
+        let valid_size = self.stride() * (self.height - 1) + self.width * N;
+        &mut self.buffer.borrow_mut()[..valid_size]
+    }
+}
+
+impl<T, const N: usize> ImageStore<'_, T, N>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
+    pub(crate) fn validate(&self) -> Result<(), PicScaleError> {
+        if self.width == 0 || self.height == 0 {
+            return Err(PicScaleError::ZeroImageDimensions);
+        }
+
+        if check_image_size_overflow(
+            self.width,
+            self.height,
+            self.channels,
+            size_of::<T>() as isize,
+        ) {
+            return Err(PicScaleError::DestinationImageIsTooLarge);
+        }
+
+        if check_image_size_overflow_with_stride(
+            self.width,
+            self.height,
+            self.stride(),
+            self.channels,
+            size_of::<T>() as isize,
+        ) {
+            return Err(PicScaleError::DestinationImageIsTooLarge);
+        }
+
+        let valid_size = self.stride() * (self.height - 1) + self.width * N;
+
+        if self.stride() < self.width * N {
+            return Err(PicScaleError::InvalidStride(self.width * N, self.stride));
+        }
+
+        if self.buffer.as_ref().len() < valid_size {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: valid_size,
+                width: self.width,
+                height: self.height,
+                channels: N,
+                slice_len: self.buffer.as_ref().len(),
+            }));
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn projected(&self) -> &[T] {
+        let valid_size = self.stride() * (self.height - 1) + self.width * N;
+        &self.buffer[..valid_size]
+    }
+}
+
+impl<'a, T, const N: usize> ImageStoreMut<'a, T, N>
+where
+    T: Clone + Copy + Debug + Default,
+{
+    /// Creates new mutable storage from vector
+    ///
+    /// Always sets bit-depth to `0`
+    pub fn new(
+        slice_ref: Vec<T>,
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStoreMut<'a, T, N>, PicScaleError> {
+        let expected_size = width * height * N;
+        if slice_ref.len() < width * height * N {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: expected_size,
+                width,
+                height,
+                channels: N,
+                slice_len: slice_ref.len(),
+            }));
+        }
+        Ok(ImageStoreMut::<T, N> {
+            buffer: BufferStore::Owned(slice_ref),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+
+    /// Creates new mutable storage from slice
+    ///
+    /// Always sets bit-depth to `0`
+    pub fn borrow(
+        slice_ref: &'a mut [T],
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStoreMut<'a, T, N>, PicScaleError> {
+        let expected_size = width * height * N;
+        if slice_ref.len() < width * height * N {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: expected_size,
+                width,
+                height,
+                channels: N,
+                slice_len: slice_ref.len(),
+            }));
+        }
+        Ok(ImageStoreMut::<T, N> {
+            buffer: BufferStore::Borrowed(slice_ref),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+
+    /// Allocates new mutable image storage
+    ///
+    /// Always sets bit depth to `0`
+    pub fn alloc(width: usize, height: usize) -> ImageStoreMut<'a, T, N> {
+        let vc = vec![T::default(); width * N * height];
+        ImageStoreMut::<T, N> {
+            buffer: BufferStore::Owned(vc),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        }
+    }
+
+    /// Tries to allocate new mutable image storage
+    ///
+    /// Always sets bit depth to `0`
+    pub fn try_alloc(
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStoreMut<'a, T, N>, PicScaleError> {
+        let vc = try_vec![T::default(); width * N * height];
+        Ok(ImageStoreMut::<T, N> {
+            buffer: BufferStore::Owned(vc),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+
+    /// Allocates new mutable image storage with required bit-depth
+    pub fn alloc_with_depth(
+        width: usize,
+        height: usize,
+        bit_depth: usize,
+    ) -> ImageStoreMut<'a, T, N> {
+        let vc = vec![T::default(); width * N * height];
+        ImageStoreMut::<T, N> {
+            buffer: BufferStore::Owned(vc),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth,
+        }
+    }
+
+    /// Tries to allocate new mutable image storage with required bit-depth
+    pub fn try_alloc_with_depth(
+        width: usize,
+        height: usize,
+        bit_depth: usize,
+    ) -> Result<ImageStoreMut<'a, T, N>, PicScaleError> {
+        let vc = try_vec![T::default(); width * N * height];
+        Ok(ImageStoreMut::<T, N> {
+            buffer: BufferStore::Owned(vc),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth,
+        })
+    }
+}
+
+impl<T, const N: usize> ImageStoreMut<'_, T, N> {
+    /// Returns safe stride
+    ///
+    /// If stride set to 0 then returns `width * N`
+    #[inline]
+    pub fn stride(&self) -> usize {
+        if self.stride == 0 {
+            return self.width * N;
+        }
+        self.stride
+    }
+}
+
+impl<'a, T, const N: usize> ImageStore<'a, T, N>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
+    /// Returns safe stride
+    ///
+    /// If stride set to 0 then returns `width * N`
+    #[inline]
+    pub fn stride(&self) -> usize {
+        if self.stride == 0 {
+            return self.width * N;
+        }
+        self.stride
+    }
+
+    pub fn crop(
+        &'a self,
+        x: usize,
+        y: usize,
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStore<'a, T, N>, PicScaleError> {
+        self.validate()?;
+        if x + width > self.width || y + height > self.height {
+            return Err(PicScaleError::CropOutOfBounds {
+                x,
+                y,
+                width,
+                height,
+                image_width: self.width,
+                image_height: self.height,
+            });
+        }
+
+        let stride = self.stride();
+        let offset = y * stride + x * N;
+
+        Ok(ImageStore {
+            buffer: std::borrow::Cow::Borrowed(&self.buffer[offset..]),
+            channels: self.channels,
+            width,
+            height,
+            stride,
+            bit_depth: self.bit_depth,
+        })
+    }
+}
+
+impl<'a, T: Default + Clone + Copy, const N: usize> ImageStore<'a, T, N>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
+    pub fn crop_with_copy(
+        &self,
+        x: usize,
+        y: usize,
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStore<'static, T, N>, PicScaleError> {
+        self.validate()?;
+        if x + width > self.width || y + height > self.height {
+            return Err(PicScaleError::CropOutOfBounds {
+                x,
+                y,
+                width,
+                height,
+                image_width: self.width,
+                image_height: self.height,
+            });
+        }
+
+        let src_stride = self.stride();
+        let dst_stride = width * N;
+        let mut buffer = try_vec![T::default(); height * dst_stride];
+
+        buffer
+            .chunks_exact_mut(dst_stride)
+            .zip(self.buffer[y * src_stride + x * N..].chunks_exact(src_stride))
+            .for_each(|(dst, src)| dst.copy_from_slice(&src[..dst_stride]));
+
+        Ok(ImageStore {
+            buffer: std::borrow::Cow::Owned(buffer),
+            channels: self.channels,
+            width,
+            height,
+            stride: dst_stride,
+            bit_depth: self.bit_depth,
+        })
+    }
+}
+
+impl<'a, T, const N: usize> ImageStore<'a, T, N>
+where
+    T: Clone + Copy + Debug,
+{
+    /// Returns bounded image size
+    pub fn size(&self) -> ImageSize {
+        ImageSize::new(self.width, self.height)
+    }
+
+    /// Returns current image store as immutable slice
+    pub fn as_bytes(&self) -> &[T] {
+        match &self.buffer {
+            std::borrow::Cow::Borrowed(br) => br,
+            std::borrow::Cow::Owned(v) => v.as_ref(),
+        }
+    }
+
+    /// Borrows immutable slice int oa new image store
+    pub fn from_slice(
+        slice_ref: &'a [T],
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStore<'a, T, N>, PicScaleError> {
+        let expected_size = width * height * N;
+        if slice_ref.len() < width * height * N {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: expected_size,
+                width,
+                height,
+                channels: N,
+                slice_len: slice_ref.len(),
+            }));
+        }
+        Ok(ImageStore::<T, N> {
+            buffer: std::borrow::Cow::Borrowed(slice_ref),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+
+    /// Deep copy immutable image store into a new immutable store
+    pub fn copied<'b>(&self) -> ImageStore<'b, T, N> {
+        ImageStore::<T, N> {
+            buffer: std::borrow::Cow::Owned(self.buffer.as_ref().to_vec()),
+            channels: N,
+            width: self.width,
+            height: self.height,
+            stride: self.stride(),
+            bit_depth: self.bit_depth,
+        }
+    }
+
+    /// Deep copy immutable image into mutable
+    pub fn copied_to_mut(&self, into: &mut ImageStoreMut<T, N>) {
+        let into_stride = into.stride();
+        let dst_buffer = into.projected();
+        for (src_row, dst_row) in self
+            .projected()
+            .chunks(self.stride())
+            .zip(dst_buffer.chunks_mut(into_stride))
+        {
+            for (&src, dst) in src_row.iter().zip(dst_row.iter_mut()) {
+                *dst = src;
+            }
+        }
+    }
+}
+
+impl<'a, T, const N: usize> ImageStoreMut<'a, T, N> {
+    /// Returns bounded image size
+    pub fn size(&self) -> ImageSize {
+        ImageSize::new(self.width, self.height)
+    }
+
+    /// Returns current image as immutable slice
+    pub fn as_bytes(&self) -> &[T] {
+        match &self.buffer {
+            BufferStore::Borrowed(p) => p,
+            BufferStore::Owned(v) => v,
+        }
+    }
+
+    /// Borrows mutable slice as new image store
+    pub fn from_slice(
+        slice_ref: &'a mut [T],
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStoreMut<'a, T, N>, PicScaleError> {
+        let expected_size = width * height * N;
+        if slice_ref.len() < width * height * N {
+            return Err(PicScaleError::BufferMismatch(PicScaleBufferMismatch {
+                expected: expected_size,
+                width,
+                height,
+                channels: N,
+                slice_len: slice_ref.len(),
+            }));
+        }
+        Ok(ImageStoreMut::<T, N> {
+            buffer: BufferStore::Borrowed(slice_ref),
+            channels: N,
+            width,
+            height,
+            stride: width * N,
+            bit_depth: 0,
+        })
+    }
+}
+
+impl<'a, T, const N: usize> ImageStoreMut<'a, T, N>
+where
+    T: Clone,
+{
+    /// Performs deep copy into a new mutable image
+    pub fn copied<'b>(&self) -> ImageStoreMut<'b, T, N> {
+        ImageStoreMut::<T, N> {
+            buffer: BufferStore::Owned(self.buffer.borrow().to_vec()),
+            channels: N,
+            width: self.width,
+            height: self.height,
+            stride: self.stride(),
+            bit_depth: self.bit_depth,
+        }
+    }
+
+    /// Performs deep copy into a new immutable image
+    pub fn to_immutable(&self) -> ImageStore<'_, T, N> {
+        ImageStore::<T, N> {
+            buffer: std::borrow::Cow::Borrowed(self.buffer.borrow()),
+            channels: N,
+            width: self.width,
+            height: self.height,
+            stride: self.stride(),
+            bit_depth: self.bit_depth,
+        }
+    }
+
+    pub fn crop(
+        &'a mut self,
+        x: usize,
+        y: usize,
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStoreMut<'a, T, N>, PicScaleError> {
+        self.validate()?;
+        if x + width > self.width || y + height > self.height {
+            return Err(PicScaleError::CropOutOfBounds {
+                x,
+                y,
+                width,
+                height,
+                image_width: self.width,
+                image_height: self.height,
+            });
+        }
+
+        let stride = self.stride();
+        let offset = y * stride + x * N;
+
+        Ok(ImageStoreMut {
+            buffer: BufferStore::Borrowed(&mut self.buffer.borrow_mut()[offset..]),
+            channels: self.channels,
+            width,
+            height,
+            stride,
+            bit_depth: self.bit_depth,
+        })
+    }
+}
+
+impl<'a, T: Clone + Default + Copy, const N: usize> ImageStoreMut<'a, T, N> {
+    pub fn crop_with_copy(
+        &self,
+        x: usize,
+        y: usize,
+        width: usize,
+        height: usize,
+    ) -> Result<ImageStoreMut<'static, T, N>, PicScaleError> {
+        self.validate()?;
+        if x + width > self.width || y + height > self.height {
+            return Err(PicScaleError::CropOutOfBounds {
+                x,
+                y,
+                width,
+                height,
+                image_width: self.width,
+                image_height: self.height,
+            });
+        }
+
+        let src_stride = self.stride();
+        let dst_stride = width * N;
+        let mut buffer = try_vec![T::default(); height * dst_stride];
+
+        buffer
+            .chunks_exact_mut(dst_stride)
+            .zip(self.buffer.borrow()[y * src_stride + x * N..].chunks_exact(src_stride))
+            .for_each(|(dst, src)| dst.copy_from_slice(&src[..dst_stride]));
+
+        Ok(ImageStoreMut {
+            buffer: BufferStore::Owned(buffer),
+            channels: self.channels,
+            width,
+            height,
+            stride: dst_stride,
+            bit_depth: self.bit_depth,
+        })
+    }
+}
+
+pub(crate) trait AssociateAlpha<T: Clone + Copy + Debug, const N: usize> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, T, N>, pool: &ScalingPool);
+    fn is_alpha_premultiplication_needed(&self) -> bool;
+}
+
+pub(crate) trait UnassociateAlpha<T: Clone + Copy + Debug, const N: usize> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, workload_strategy: WorkloadStrategy);
+}
+
+impl AssociateAlpha<u8, 2> for ImageStore<'_, u8, 2> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, u8, 2>, pool: &ScalingPool) {
+        let dst_stride = into.stride();
+        let dst = into.projected();
+        let src = self.projected();
+        use crate::alpha_handle_u8::premultiply_alpha_gray_alpha;
+        premultiply_alpha_gray_alpha(
+            dst,
+            dst_stride,
+            src,
+            self.width,
+            self.height,
+            self.stride(),
+            pool,
+        );
+    }
+
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_gray_alpha8;
+        has_non_constant_cap_alpha_gray_alpha8(self.projected(), self.width, self.stride())
+    }
+}
+
+impl AssociateAlpha<u16, 2> for ImageStore<'_, u16, 2> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, u16, 2>, pool: &ScalingPool) {
+        let dst_stride = into.stride();
+        let dst = into.projected();
+        let src = self.projected();
+        let bit_depth = self.bit_depth;
+        use crate::alpha_handle_u16::premultiply_alpha_gray_alpha_u16;
+        premultiply_alpha_gray_alpha_u16(
+            dst,
+            dst_stride,
+            src,
+            self.width,
+            self.height,
+            self.stride(),
+            bit_depth,
+            pool,
+        );
+    }
+
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_gray_alpha16;
+        has_non_constant_cap_alpha_gray_alpha16(self.projected(), self.width, self.stride())
+    }
+}
+
+impl AssociateAlpha<f32, 2> for ImageStore<'_, f32, 2> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, f32, 2>, pool: &ScalingPool) {
+        let dst_stride = into.stride();
+        let dst = into.projected();
+        let src = self.projected();
+        use crate::alpha_handle_f32::premultiply_alpha_gray_alpha_f32;
+        premultiply_alpha_gray_alpha_f32(
+            dst,
+            dst_stride,
+            src,
+            self.stride(),
+            self.width,
+            self.height,
+            pool,
+        );
+    }
+
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_gray_alpha_f32;
+        has_non_constant_cap_alpha_gray_alpha_f32(self.projected(), self.width, self.stride())
+    }
+}
+
+impl AssociateAlpha<u8, 4> for ImageStore<'_, u8, 4> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, u8, 4>, pool: &ScalingPool) {
+        let dst_stride = into.stride();
+        let dst = into.projected();
+        let src = self.projected();
+        premultiply_alpha_rgba(
+            dst,
+            dst_stride,
+            src,
+            self.width,
+            self.height,
+            self.stride(),
+            pool,
+        );
+    }
+
+    #[cfg(not(any(
+        any(target_arch = "x86_64", target_arch = "x86"),
+        all(target_arch = "aarch64", feature = "neon")
+    )))]
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_rgba8;
+        has_non_constant_cap_alpha_rgba8(self.projected(), self.width, self.stride())
+    }
+
+    #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::neon::neon_has_non_constant_cap_alpha_rgba8;
+        neon_has_non_constant_cap_alpha_rgba8(self.projected(), self.width, self.stride())
+    }
+
+    #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_rgba8;
+        #[cfg(feature = "sse")]
+        use crate::sse::sse_has_non_constant_cap_alpha_rgba8;
+        #[cfg(all(target_arch = "x86_64", feature = "avx512"))]
+        if std::arch::is_x86_feature_detected!("avx512bw") {
+            use crate::avx512::avx512_has_non_constant_cap_alpha_rgba8;
+            return avx512_has_non_constant_cap_alpha_rgba8(
+                self.projected(),
+                self.width,
+                self.stride(),
+            );
+        }
+        #[cfg(all(target_arch = "x86_64", feature = "avx"))]
+        if std::arch::is_x86_feature_detected!("avx2") {
+            use crate::avx2::avx_has_non_constant_cap_alpha_rgba8;
+            return avx_has_non_constant_cap_alpha_rgba8(
+                self.projected(),
+                self.width,
+                self.stride(),
+            );
+        }
+        #[cfg(feature = "sse")]
+        if std::arch::is_x86_feature_detected!("sse4.1") {
+            return sse_has_non_constant_cap_alpha_rgba8(
+                self.projected(),
+                self.width,
+                self.stride(),
+            );
+        }
+        has_non_constant_cap_alpha_rgba8(self.projected(), self.width, self.stride())
+    }
+}
+
+impl UnassociateAlpha<u8, 4> for ImageStoreMut<'_, u8, 4> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, workload_strategy: WorkloadStrategy) {
+        let src_stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = self.projected();
+        unpremultiply_alpha_rgba(dst, width, height, src_stride, pool, workload_strategy);
+    }
+}
+
+impl UnassociateAlpha<u8, 2> for ImageStoreMut<'_, u8, 2> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, workload_strategy: WorkloadStrategy) {
+        let src_stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = self.projected();
+        use crate::alpha_handle_u8::unpremultiply_alpha_gray_alpha;
+        unpremultiply_alpha_gray_alpha(dst, width, height, src_stride, pool, workload_strategy);
+    }
+}
+
+impl UnassociateAlpha<f32, 2> for ImageStoreMut<'_, f32, 2> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, _: WorkloadStrategy) {
+        let src_stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = self.projected();
+        use crate::alpha_handle_f32::unpremultiply_alpha_gray_alpha_f32;
+        unpremultiply_alpha_gray_alpha_f32(dst, src_stride, width, height, pool);
+    }
+}
+
+impl UnassociateAlpha<u16, 2> for ImageStoreMut<'_, u16, 2> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, _: WorkloadStrategy) {
+        let src_stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let bit_depth = self.bit_depth;
+        let dst = self.projected();
+        use crate::alpha_handle_u16::unpremultiply_alpha_gray_alpha_u16;
+        unpremultiply_alpha_gray_alpha_u16(dst, src_stride, width, height, bit_depth, pool);
+    }
+}
+
+impl AssociateAlpha<u16, 4> for ImageStore<'_, u16, 4> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, u16, 4>, pool: &ScalingPool) {
+        let dst_stride = into.stride();
+        let bit_depth = into.bit_depth;
+        let dst = into.projected();
+        let src = self.projected();
+        premultiply_alpha_rgba_u16(
+            dst,
+            dst_stride,
+            src,
+            self.width,
+            self.height,
+            self.stride(),
+            bit_depth,
+            pool,
+        );
+    }
+
+    #[cfg(not(any(
+        any(target_arch = "x86_64", target_arch = "x86"),
+        all(target_arch = "aarch64", feature = "neon")
+    )))]
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_rgba16;
+        has_non_constant_cap_alpha_rgba16(self.projected(), self.width, self.stride())
+    }
+
+    #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::neon::neon_has_non_constant_cap_alpha_rgba16;
+        neon_has_non_constant_cap_alpha_rgba16(self.projected(), self.width, self.stride())
+    }
+
+    #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        use crate::alpha_check::has_non_constant_cap_alpha_rgba16;
+        #[cfg(feature = "sse")]
+        use crate::sse::sse_has_non_constant_cap_alpha_rgba16;
+        #[cfg(all(target_arch = "x86_64", feature = "avx"))]
+        if std::arch::is_x86_feature_detected!("avx2") {
+            use crate::avx2::avx_has_non_constant_cap_alpha_rgba16;
+            return avx_has_non_constant_cap_alpha_rgba16(
+                self.projected(),
+                self.width,
+                self.stride(),
+            );
+        }
+        #[cfg(feature = "sse")]
+        if std::arch::is_x86_feature_detected!("sse4.1") {
+            return sse_has_non_constant_cap_alpha_rgba16(
+                self.projected(),
+                self.width,
+                self.stride(),
+            );
+        }
+        has_non_constant_cap_alpha_rgba16(self.projected(), self.width, self.stride())
+    }
+}
+
+impl AssociateAlpha<f32, 4> for ImageStore<'_, f32, 4> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, f32, 4>, pool: &ScalingPool) {
+        let src_stride = self.stride();
+        let dst_stride = into.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = into.projected();
+        let src = self.projected();
+        premultiply_alpha_rgba_f32(dst, dst_stride, src, src_stride, width, height, pool);
+    }
+
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        has_non_constant_cap_alpha_rgba_f32(self.projected(), self.width, self.stride())
+    }
+}
+
+#[cfg(feature = "nightly_f16")]
+impl AssociateAlpha<f16, 4> for ImageStore<'_, f16, 4> {
+    fn premultiply_alpha(&self, into: &mut ImageStoreMut<'_, f16, 4>, pool: &ScalingPool) {
+        let src_stride = self.stride();
+        let dst_stride = into.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = into.projected();
+        let src = self.projected();
+        premultiply_alpha_rgba_f16(dst, dst_stride, src, src_stride, width, height, pool);
+    }
+
+    fn is_alpha_premultiplication_needed(&self) -> bool {
+        true
+    }
+}
+
+impl UnassociateAlpha<u16, 4> for ImageStoreMut<'_, u16, 4> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, _: WorkloadStrategy) {
+        let src_stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let bit_depth = self.bit_depth;
+        let in_place = self.projected();
+        unpremultiply_alpha_rgba_u16(in_place, src_stride, width, height, bit_depth, pool);
+    }
+}
+
+impl UnassociateAlpha<f32, 4> for ImageStoreMut<'_, f32, 4> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, _: WorkloadStrategy) {
+        let stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = self.projected();
+        unpremultiply_alpha_rgba_f32(dst, stride, width, height, pool);
+    }
+}
+
+#[cfg(feature = "nightly_f16")]
+impl UnassociateAlpha<f16, 4> for ImageStoreMut<'_, f16, 4> {
+    fn unpremultiply_alpha(&mut self, pool: &ScalingPool, _: WorkloadStrategy) {
+        let stride = self.stride();
+        let width = self.width;
+        let height = self.height;
+        let dst = self.projected();
+        unpremultiply_alpha_rgba_f16(dst, stride, width, height, pool);
+    }
+}
+
+pub type Planar8ImageStore<'a> = ImageStore<'a, u8, 1>;
+pub type Planar8ImageStoreMut<'a> = ImageStoreMut<'a, u8, 1>;
+pub type CbCr8ImageStore<'a> = ImageStore<'a, u8, 2>;
+pub type CbCr8ImageStoreMut<'a> = ImageStoreMut<'a, u8, 2>;
+pub type GrayAlpha8ImageStore<'a> = ImageStore<'a, u8, 2>;
+pub type GrayAlpha8ImageStoreMut<'a> = ImageStoreMut<'a, u8, 2>;
+pub type Rgba8ImageStore<'a> = ImageStore<'a, u8, 4>;
+pub type Rgba8ImageStoreMut<'a> = ImageStoreMut<'a, u8, 4>;
+pub type Rgb8ImageStore<'a> = ImageStore<'a, u8, 3>;
+pub type Rgb8ImageStoreMut<'a> = ImageStoreMut<'a, u8, 3>;
+
+pub type PlanarS16ImageStore<'a> = ImageStore<'a, i16, 1>;
+pub type PlanarS16ImageStoreMut<'a> = ImageStoreMut<'a, i16, 1>;
+pub type Planar16ImageStore<'a> = ImageStore<'a, u16, 1>;
+pub type Planar16ImageStoreMut<'a> = ImageStoreMut<'a, u16, 1>;
+pub type CbCr16ImageStore<'a> = ImageStore<'a, u16, 2>;
+pub type CbCr16ImageStoreMut<'a> = ImageStoreMut<'a, u16, 2>;
+pub type GrayAlpha16ImageStore<'a> = ImageStore<'a, u16, 2>;
+pub type GrayAlpha16ImageStoreMut<'a> = ImageStoreMut<'a, u16, 2>;
+pub type Rgba16ImageStore<'a> = ImageStore<'a, u16, 4>;
+pub type Rgba16ImageStoreMut<'a> = ImageStoreMut<'a, u16, 4>;
+pub type Rgb16ImageStore<'a> = ImageStore<'a, u16, 3>;
+pub type Rgb16ImageStoreMut<'a> = ImageStoreMut<'a, u16, 3>;
+
+#[cfg(feature = "nightly_f16")]
+pub type PlanarF16ImageStore<'a> = ImageStore<'a, f16, 1>;
+#[cfg(feature = "nightly_f16")]
+pub type PlanarF16ImageStoreMut<'a> = ImageStoreMut<'a, f16, 1>;
+#[cfg(feature = "nightly_f16")]
+pub type CbCrF16ImageStore<'a> = ImageStore<'a, f16, 2>;
+#[cfg(feature = "nightly_f16")]
+pub type CbCrF16ImageStoreMut<'a> = ImageStoreMut<'a, f16, 2>;
+#[cfg(feature = "nightly_f16")]
+pub type RgbaF16ImageStore<'a> = ImageStore<'a, f16, 4>;
+#[cfg(feature = "nightly_f16")]
+pub type RgbaF16ImageStoreMut<'a> = ImageStoreMut<'a, f16, 4>;
+#[cfg(feature = "nightly_f16")]
+pub type RgbF16ImageStore<'a> = ImageStore<'a, f16, 3>;
+#[cfg(feature = "nightly_f16")]
+pub type RgbF16ImageStoreMut<'a> = ImageStoreMut<'a, f16, 3>;
+
+pub type PlanarF32ImageStore<'a> = ImageStore<'a, f32, 1>;
+pub type PlanarF32ImageStoreMut<'a> = ImageStoreMut<'a, f32, 1>;
+pub type CbCrF32ImageStore<'a> = ImageStore<'a, f32, 2>;
+pub type CbCrF32ImageStoreMut<'a> = ImageStoreMut<'a, f32, 2>;
+pub type GrayAlphaF32ImageStore<'a> = ImageStore<'a, f32, 2>;
+pub type GrayAlphaF32ImageStoreMut<'a> = ImageStoreMut<'a, f32, 2>;
+pub type RgbaF32ImageStore<'a> = ImageStore<'a, f32, 4>;
+pub type RgbaF32ImageStoreMut<'a> = ImageStoreMut<'a, f32, 4>;
+pub type RgbF32ImageStore<'a> = ImageStore<'a, f32, 3>;
+pub type RgbF32ImageStoreMut<'a> = ImageStoreMut<'a, f32, 3>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn image_store_alpha_test_rgba8() {
+        let image_size = 256usize;
+        let mut image = vec![0u8; image_size * image_size * 4];
+        image[3 + 150 * 4] = 75;
+        let store = ImageStore::<u8, 4>::from_slice(&image, image_size, image_size).unwrap();
+        let has_alpha = store.is_alpha_premultiplication_needed();
+        assert_eq!(true, has_alpha);
+    }
+
+    #[test]
+    fn check_alpha_not_exists_rgba8() {
+        let image_size = 256usize;
+        let image = vec![255u8; image_size * image_size * 4];
+        let store = ImageStore::<u8, 4>::from_slice(&image, image_size, image_size).unwrap();
+        let has_alpha = store.is_alpha_premultiplication_needed();
+        assert_eq!(false, has_alpha);
+    }
+}

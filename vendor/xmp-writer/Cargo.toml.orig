@@ -1,0 +1,15 @@
+[package]
+name = "xmp-writer"
+version = "0.3.3"
+authors = ["Martin Haug <mhaug@live.de>"]
+edition = "2021"
+description = "Write XMP metadata, step by step."
+repository = "https://github.com/typst/xmp-writer"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+categories = ["encoding"]
+keywords = ["metadata", "xmp", "rdf", "writer", "serialization"]
+
+[features]
+default = ["pdfa"]
+pdfa = []

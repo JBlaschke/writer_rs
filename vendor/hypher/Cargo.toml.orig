@@ -1,0 +1,121 @@
+[package]
+name = "hypher"
+version = "0.1.8"
+rust-version = "1.64" # also change in ci.yml
+authors = ["Laurenz <laurmaedje@gmail.com>"]
+edition = "2021"
+description = "hypher separates words into syllables."
+repository = "https://github.com/typst/hypher"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+categories = ["text-processing", "internationalization", "no-std"]
+keywords = ["hyphenation", "syllables"]
+exclude = ["patterns/*"]
+
+[features]
+default = ["alloc", "full"]
+alloc = []
+full = [
+    "afrikaans",
+    "albanian",
+    "assamese",
+    "bengali",
+    "belarusian",
+    "bulgarian",
+    "catalan",
+    "croatian",
+    "czech",
+    "danish",
+    "dutch",
+    "english",
+    "estonian",
+    "finnish",
+    "french",
+    "galician",
+    "georgian",
+    "german",
+    "greek",
+    "gujarati",
+    "hindi",
+    "hungarian",
+    "icelandic",
+    "italian",
+    "kannada",
+    "kurmanji",
+    "latin",
+    "lithuanian",
+    "malayalam",
+    "marathi",
+    "mongolian",
+    "norwegian",
+    "oriya",
+    "panjabi",
+    "polish",
+    "portuguese",
+    "russian",
+    "sanskrit",
+    "serbian",
+    "slovak",
+    "slovenian",
+    "spanish",
+    "swedish",
+    "tamil",
+    "telugu",
+    "turkish",
+    "turkmen",
+    "ukrainian",
+]
+afrikaans = []
+albanian = []
+assamese = []
+bengali = []
+belarusian = []
+bulgarian = []
+catalan = []
+croatian = []
+czech = []
+danish = []
+dutch = []
+english = []
+estonian = []
+finnish = []
+french = []
+galician = []
+georgian = []
+german = []
+greek = []
+gujarati = []
+hindi = []
+hungarian = []
+icelandic = []
+italian = []
+kannada = []
+kurmanji = []
+latin = []
+lithuanian = []
+malayalam = []
+marathi = []
+mongolian = []
+norwegian = []
+oriya = []
+panjabi = []
+polish = []
+portuguese = []
+russian = []
+sanskrit = []
+serbian = []
+slovak = []
+slovenian = []
+spanish = []
+swedish = []
+tamil = []
+telugu = []
+turkish = []
+turkmen = []
+ukrainian = []
+
+[workspace]
+members = ["bench"]
+
+[profile.dev.build-override]
+opt-level = 1

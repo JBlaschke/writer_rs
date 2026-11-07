@@ -1,0 +1,291 @@
+use insta::assert_snapshot;
+use math_core::{LatexToMathML, MathCoreConfig, MathDisplay, PrettyPrint};
+
+#[test]
+fn main() {
+    let problems = [
+        ("end_without_open", r"\end{matrix}"),
+        ("curly_close_without_open", r"}"),
+        ("unsupported_command", r"\asdf"),
+        ("unsupported_command_peeked", r"9\asdf"),
+        (
+            "unsupported_environment",
+            r"\begin{xmatrix} 1 \end{xmatrix}",
+        ),
+        ("incorrect_bracket", r"\operatorname[lim}"),
+        ("unclosed_bracket", r"\sqrt[lim"),
+        ("mismatched_begin_end", r"\begin{matrix} 1 \end{bmatrix}"),
+        (
+            "spaces_in_env_name",
+            r"\begin{  pmatrix   } x \\ y \end{pmatrix}",
+        ),
+        (
+            "incorrect_bracket_in_begin",
+            r"\begin{matrix] 1 \end{matrix}",
+        ),
+        ("incomplete_sqrt", r"\sqrt  "),
+        ("sqrt_closed", r"{\sqrt}"),
+        ("incomplete_mathchoice", r"\mathchoice{a}{b}"),
+        ("math_command_in_fbox", r"\fbox{\alpha}"),
+        ("dollar_in_math_mode", r"a$b"),
+        ("dollar_delimiters_around_input", r"$x^2$"),
+        ("dollar_in_text_mode", r"\text{if $y$}"),
+        ("dollar_in_operatorname", r"\operatorname{a$b}"),
+        ("incomplete_sup", r"x^"),
+        ("sup_closed", r"{x^}"),
+        ("invalid_sup", r"x^^"),
+        ("invalid_sub_sup", r"x^_"),
+        ("double_sub", r"x__3"),
+        ("int_double_sub", r"\int__3 x dx"),
+        ("unicode_command", r"\éx"),
+        ("unsupported_unicode_symbol", r"\sqrt2 + √2"),
+        ("unsupported_unicode_arrow", r"x ⇫ y"),
+        (
+            "unsupported_unicode_symbol_in_operatorname",
+            r"\operatorname{⇫}",
+        ),
+        ("wrong_opening_paren", r"\begin[matrix} x \end{matrix}"),
+        ("unclosed_brace", r"{"),
+        ("unclosed_left", r"\left( x"),
+        ("unclosed_env", r"\begin{matrix} x"),
+        ("unclosed_begin", r"\begin{matrix"),
+        ("unclosed_text", r"\text{hello"),
+        ("unexpected_limits", r"\text{hello}\limits_0^1"),
+        ("limits_in_bad_spot", r"\int^\limits a"),
+        ("limits_in_bad_spot_2", r"\int_\limits a"),
+        ("limits_in_bad_spot_3", r"\int_'\limits^a"),
+        ("unsupported_not", r"\not\text{hello}"),
+        ("text_with_unclosed_group", r"\text{x{}"),
+        ("text_in_group", r"{\text}"),
+        ("text_with_math_command", r"\text{\max}"),
+        ("text_at_eof", r"\sum\text"),
+        ("text_command_in_math_mode", r"\ae"),
+        ("sout_in_math_mode", r"\sout{abc}"),
+        ("size_command_in_math_mode", r"\large x"),
+        ("operatorname_with_end", r"\operatorname{\end{matrix}}"),
+        (
+            "operatorname_with_end_after_begin",
+            r"\begin{matrix}\operatorname{\end{matrix}}",
+        ),
+        ("operatorname_with_begin", r"\operatorname{\begin{matrix}}"),
+        ("operatorname_with_text_command", r"\operatorname{\ae}"),
+        (
+            "operatorname_left_right",
+            r"\left(\operatorname{hello\right)",
+        ),
+        ("super_then_prime", "f^2'"),
+        ("sub_super_then_prime", "f_5^2'"),
+        ("double_prime_and_sub_super", r"f''_3^2"),
+        ("sup_sup", "x^2^3 y"),
+        ("sub_sub", "x_2_3 y"),
+        ("sub_sup_sub", "x_2^4_3 y"),
+        ("sup_sub_sup", "x^2_4^3 y"),
+        ("space_prime", "x' ^2"),
+        ("space_prime_2", "x' '"),
+        ("no_rbrack_instead_of_bracket", r"\sqrt[3\rbrack{1}"),
+        ("genfrac_wrong_unit", r"\genfrac(]{1pg}{2}{a+b}{c+d}"),
+        ("two_over", r"{a^n - \sin(\theta+\eta) \over x \over y}"),
+        ("hspace_empty", r"\hspace{  }"),
+        ("hspace_unknown_unit", r"\hspace{2ly}"),
+        ("hspace_non_digits", r"\hspace{2b2cm}"),
+        ("hspace_non_ascii", r"\hspace{22öm}"),
+        ("kern_math_unit", r"x\kern1mu y"),
+        ("mkern_text_unit", r"x\mkern1em y"),
+        ("hspace_math_unit", r"x\hspace{1mu} y"),
+        ("mspace_text_unit", r"x\mspace{1em} y"),
+        ("kern_unknown_unit", r"x\kern2ly y"),
+        ("kern_missing_number", r"x\kern em y"),
+        ("kern_two_dots", r"x\kern1.2.3em y"),
+        ("kern_space_in_number", r"x\kern1 1em y"),
+        ("kern_space_in_unit", r"x\kern1e m y"),
+        ("kern_eoi", r"x\kern"),
+        ("kern_eoi_in_unit", r"x\kern1e"),
+        ("ampersand_outside_array", r"x & y"),
+        (
+            "ampersand_in_group_in_matrix",
+            r"\begin{matrix}\color{red} a {&} b\end{matrix}",
+        ),
+        (
+            "newline_in_group_in_matrix",
+            r"\begin{matrix}\color{red} a {\\} b\end{matrix}",
+        ),
+        (
+            "ampersand_in_left_right_in_matrix",
+            r"\begin{matrix}\left( a & b \right)\end{matrix}",
+        ),
+        (
+            "ampersand_in_sqrt_degree_in_matrix",
+            r"\begin{matrix}\sqrt[a & b]{c}\end{matrix}",
+        ),
+        (
+            "ampersand_as_sup_in_matrix",
+            r"\begin{matrix}a^& b\end{matrix}",
+        ),
+        (
+            "newline_as_arg_in_matrix",
+            r"\begin{matrix}\frac\\ b\end{matrix}",
+        ),
+        (
+            "newline_in_group_in_align",
+            r"\begin{align}{a \\ b}\end{align}",
+        ),
+        (
+            "hline_in_wrong_position",
+            r"\begin{array}{cc} 1 & \hline 2 \end{array}",
+        ),
+        (
+            "hline_in_non_array_env",
+            r"\begin{cases} 1 \\ \hline 2 \end{cases}",
+        ),
+        ("hash_outside_macro_definition", r"x # y"),
+        ("macro_parameter_outside_macro", r"x #1 y"),
+        (
+            "macro_parameter_after_macro_definition",
+            r"\newcommand{\a}{1}#1",
+        ),
+        ("newcommand_redefines_builtin", r"\newcommand{\frac}[2]{x}"),
+        (
+            "newcommand_redefines_newcommand",
+            r"\newcommand{\zzz}{1}\newcommand{\zzz}{2}",
+        ),
+        ("newcommand_without_command", r"\newcommand{x}{y}"),
+        (
+            "newcommand_unknown_cmd_in_body",
+            r"\newcommand{\zzz}{\asdf}\zzz",
+        ),
+        (
+            "newcommand_parameter_out_of_range",
+            r"\newcommand{\zzz}[1]{#2}",
+        ),
+        ("newcommand_unclosed_body", r"\newcommand{\zzz}{1"),
+        ("newcommand_as_argument", r"\sqrt\newcommand{\zzz}{1}"),
+        (
+            "newcommand_nested",
+            r"\newcommand{\zzz}{\newcommand{\yyy}{1}}",
+        ),
+        ("newcommand_body_without_braces2", r"1.\newcommand\zzz#1"),
+        ("newcommand_body_without_braces1", r"\newcommand\zzz#1"),
+        ("providecommand_without_command", r"\providecommand{x}{y}"),
+        (
+            "providecommand_as_argument",
+            r"\sqrt\providecommand{\zzz}{1}",
+        ),
+        (
+            "providecommand_unclosed_discarded_body",
+            r"\providecommand{\frac}{1",
+        ),
+        ("renewcommand_undefined", r"\renewcommand{\zzz}{1}"),
+        ("renewcommand_undefined_unbraced", r"\renewcommand\zzz{1}"),
+        ("renewcommand_without_command", r"\renewcommand{x}{y}"),
+        ("renewcommand_as_argument", r"\sqrt\renewcommand{\frac}{1}"),
+        (
+            "renewcommand_parameter_out_of_range",
+            r"\renewcommand{\frac}[1]{#2}",
+        ),
+        ("let_undefined_source", r"\let\zzz\asdf"),
+        ("let_without_command", r"\let x"),
+        ("let_without_source", r"\let\zzz"),
+        ("let_as_argument", r"\sqrt\let\zzz\alpha"),
+        ("let_nested", r"\newcommand{\zzz}{\let\yyy\alpha}"),
+        // Only `\let` and `\def` may follow `\global`.
+        ("global_without_let", r"\global x"),
+        ("global_newcommand", r"\global\newcommand{\zzz}{1}"),
+        ("global_at_end", r"\global"),
+        ("global_as_argument", r"\sqrt\global\let\zzz\alpha"),
+        ("global_nested", r"\newcommand{\zzz}{\global\let\yyy\alpha}"),
+        // The name of a `\def` is never braced, so this is not a command name.
+        ("def_without_command", r"\def x{y}"),
+        ("def_braced_name", r"\def{\zzz}{y}"),
+        ("def_at_end", r"\def"),
+        ("def_name_only", r"\def\zzz"),
+        // Delimited parameters are not supported.
+        ("def_delimited_parameters", r"\def\zzz#1.#2{1}"),
+        ("def_delimiter_instead_of_params", r"\def\zzz x{1}"),
+        ("def_delimiter_after_params", r"\def\zzz#1x{1}"),
+        // Whitespace within the parameter text is a delimiter too.
+        ("def_space_before_body", r"\def\zzz#1 {1}"),
+        ("def_space_between_params", r"\def\zzz#1 #2{1}"),
+        // The parameters must be numbered consecutively, starting at 1.
+        ("def_parameter_out_of_order", r"\def\zzz#2{1}"),
+        ("def_parameter_repeated", r"\def\zzz#1#1{1}"),
+        ("def_parameter_out_of_range", r"\def\zzz#1{#2}"),
+        ("def_unclosed_body", r"\def\zzz{1"),
+        ("def_unknown_cmd_in_body", r"\def\zzz{\asdf}\zzz"),
+        ("def_as_argument", r"\sqrt\def\zzz{1}"),
+        ("gdef_as_argument", r"\sqrt\gdef\zzz{1}"),
+        ("global_def_as_argument", r"\sqrt\global\def\zzz{1}"),
+        ("def_nested", r"\def\zzz{\def\yyy{1}}"),
+        ("newcommand_nested_def", r"\newcommand{\zzz}{\gdef\yyy{1}}"),
+        ("sqrt_unknown_cmd", r"\sqrt[3]\asdf 3"),
+        ("mathrm_unknown_cmd", r"\mathrm{ab\asdf}"),
+        ("digits_unknown_cmd", r"1.1\asdf"),
+        ("tag_with_underscore", r"\begin{align}\tag{a_b}1\end{align}"),
+        ("tag_in_aligned", r#"\begin{aligned}\tag{32}1\end{aligned}"#),
+        (
+            "tag_star_in_aligned",
+            r#"\begin{aligned}\tag*{32}1\end{aligned}"#,
+        ),
+        (
+            "duplicate_label",
+            r#"\begin{align}\label{a}1\label{b}\end{align}"#,
+        ),
+        (
+            "ampersand_in_multline",
+            r#"\begin{multline}1&1\end{multline}"#,
+        ),
+        ("shove_in_align", r"\begin{align}\shoveleft 1\end{align}"),
+        (
+            "shove_not_at_beginning",
+            r"\begin{multline}1\shoveleft 2\end{multline}",
+        ),
+        ("ampersand_in_gather", r#"\begin{gather}1&1\\1\end{gather}"#),
+        ("left_with_non_delimiter", r"\left x 1 \right)"),
+        ("right_with_non_delimiter", r"\left( 1 \right x"),
+        ("middle_with_non_delimiter", r"\left( 1 \middle x \right)"),
+        ("bigl_with_non_delimiter", r"\bigl x 1 \bigr)"),
+        ("stretchy_force_fail", r"\left( \frac{x}{y} \right!"),
+        ("math_variant_switch_in_arg", r"\sqrt\bf"),
+        ("math_variant_switch_in_subscript", r"{x_\bf x}"),
+        ("color_switch_in_arg", r"\sqrt\color{blue} x"),
+        ("color_switch_in_subscript", r"{x_\color{blue} x}"),
+        ("displaystyle_in_arg", r"\sqrt\displaystyle x"),
+        ("displaystyle_in_subscript", r"{x_\displaystyle x}"),
+        ("array_in_arg", r"\sqrt\begin{array}{|c|}a\end{array}"),
+        ("array_in_subscript", r"{x_\begin{array}{|c|}a\end{array}}"),
+        ("sideset_not_mathop", r"\sideset{}{}{a}"),
+        ("sideset_not_mathop_2", r"\sideset{}{}{+}"),
+        ("sideset_not_mathop_3", r"\sideset{}{}{ a \sum}"),
+        ("sideset_not_mathop_4", r"\sideset{}{}{\int a}"),
+        ("sideset_not_mathop_5", r"\sideset{}{}{\sum \sum}"),
+        ("genfrac_too_many_numbers", r"\genfrac[]{0pt}{00}{a}{b}"),
+        ("cramped_bad_arg", r"\cramped[1]{x}"),
+        (
+            "cramped_too_many_arg",
+            r"\cramped[\scriptstyle\scriptstyle]{x}",
+        ),
+        ("unknown_color", r"{\color{foobar} x}"),
+        ("unknown_color_no_braces", r"{\color - x}"),
+        ("unsupported_color_html_short", r"{\color[HTML]{f0a}x^2}"),
+    ];
+
+    let config = MathCoreConfig {
+        pretty_print: PrettyPrint::Never,
+        ..Default::default()
+    };
+    let converter = LatexToMathML::new(config, vec![]).unwrap();
+    for (name, problem) in problems.into_iter() {
+        let Err(error) = converter
+            .convert_with_local_state(problem, MathDisplay::Inline)
+            .map_err(|e| *e)
+        else {
+            panic!("problem `{}` did not return an error", problem);
+        };
+        let report = error.to_report("<input>", false);
+        let mut buf = Vec::new();
+        report
+            .write(("<input>", ariadne::Source::from(problem)), &mut buf)
+            .expect("failed to write report");
+        let output = String::from_utf8(buf).expect("report should be valid UTF-8");
+        assert_snapshot!(name, &output, problem);
+    }
+}

@@ -1,0 +1,28 @@
+[package]
+name = "lipsum"
+version = "0.9.1"
+authors = ["Martin Geisler <martin@geisler.net>"]
+description = """
+Lipsum is a lorem ipsum text generation library. It generates
+pseudo-random Latin text. Use this if you need filler or dummy text
+for your application.
+
+The text is generated using a simple Markov chain, which you can
+instantiate to generate your own pieces of pseudo-random text.
+"""
+documentation = "https://docs.rs/lipsum/"
+repository = "https://github.com/mgeisler/lipsum/"
+readme = "README.md"
+keywords = ["random", "text", "markov", "typography"]
+categories = ["text-processing"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.56"
+
+[dependencies]
+rand = {version = "0.8.5", default-features = false, features = ["alloc"]}
+rand_chacha = "0.3.1"
+
+[dev-dependencies]
+version-sync = "0.9.4"
+rand = "0.8.5"

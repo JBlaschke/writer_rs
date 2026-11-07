@@ -1,0 +1,22 @@
+[package]
+name = "ecow"
+version = "0.2.6"
+rust-version = "1.73" # also change in ci.yml
+authors = ["Laurenz <laurmaedje@gmail.com>"]
+edition = "2021"
+description = "Compact, clone-on-write vector and string."
+repository = "https://github.com/typst/ecow"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+categories = ["data-structures", "no-std"]
+keywords = ["string", "vector", "sso", "cow"]
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+serde = { version = "1.0", optional = true, default-features = false }
+
+[target.'cfg(loom)'.dependencies]
+loom = { version = "0.7", optional = true }

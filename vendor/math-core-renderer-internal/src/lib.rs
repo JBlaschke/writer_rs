@@ -1,0 +1,58 @@
+//! Internal library for the `math-core` crate for rendering MathML.
+//!
+//! This library allows you to construct an AST representing MathML and then render it to a string.
+//!
+//! # Example
+//!
+//! ```rust
+//! use hashbrown::HashMap as FxHashMap;
+//!
+//! use math_core_renderer_internal::ast::{CssClassNames, Emitter, Indentation, Node};
+//! use math_core_renderer_internal::symbol;
+//! use math_core_renderer_internal::attribute::{MathSpacing, LetterAttr, OpAttrs, OpRoles, RowAttrs};
+//!
+//! let ast = Node::Row {
+//!     nodes: &[
+//!         &Node::Under {
+//!             target: &Node::Operator {
+//!                 op: symbol::N_ARY_SUMMATION.as_op(),
+//!                 attrs: OpAttrs::empty(),
+//!                 roles: OpRoles::empty(),
+//!                 left: Some(MathSpacing::Zero),
+//!                 right: None,
+//!                 size: None,
+//!             },
+//!             symbol: &Node::IdentifierChar('i'.into(), LetterAttr::Default),
+//!         },
+//!         &Node::IdentifierChar('i'.into(), LetterAttr::Default),
+//!      ],
+//!      attrs: RowAttrs::DEFAULT,
+//! };
+//!
+//! let label_map = FxHashMap::default();
+//! let css_classes = CssClassNames::default();
+//! let mut emitter = Emitter::new(String::new(), &label_map, &css_classes, Indentation::default(), "");
+//! emitter.emit(&ast, 0).unwrap();
+//! let output = emitter.into_string();
+//! assert_eq!(
+//!     output,
+//!     "<mrow><munder><mo lspace=\"0\">∑</mo><mi>i</mi></munder><mi>i</mi></mrow>"
+//! );
+//! ```
+#![cfg_attr(not(any(feature = "std", test)), no_std)]
+
+extern crate alloc;
+
+/// Hash map with a fast, non-cryptographic hasher, backed by `hashbrown` so it works in `no_std`.
+pub(crate) type FxHashMap<K, V> = hashbrown::HashMap<K, V, rustc_hash::FxBuildHasher>;
+
+pub mod arena;
+pub mod ast;
+pub mod attribute;
+mod escaping;
+pub mod fmt;
+mod itoa;
+pub mod length;
+pub mod super_char;
+pub mod symbol;
+pub mod table;

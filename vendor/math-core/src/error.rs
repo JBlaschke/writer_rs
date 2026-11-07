@@ -1,0 +1,514 @@
+use alloc::string::String;
+use core::fmt::{self, Write};
+use core::ops::Range;
+
+use kstring::KString;
+use strum_macros::IntoStaticStr;
+
+use crate::environments::Env;
+use crate::html_utils::{escape_double_quoted_html_attribute, escape_html_content};
+use crate::token::EndToken;
+use crate::{MathDisplay, token::LimitsKind};
+
+/// Represents an error that occurred during LaTeX parsing.
+#[derive(Debug, Clone)]
+pub struct LatexError(pub Range<usize>, pub(crate) LatexErrKind);
+
+#[derive(Debug, Clone)]
+pub(crate) enum LatexErrKind {
+    UnclosedGroup(EndToken),
+    UnmatchedClose(EndToken),
+    ExpectedArgumentGotClose,
+    ExpectedArgumentGotEOI,
+    ExpectedDelimiter(DelimiterModifier),
+    DisallowedChar(char),
+    UnsupportedUnicodeMath(char),
+    UnknownEnvironment(KString),
+    UnknownCommand(KString),
+    UnknownColor(KString),
+    MismatchedEnvironment {
+        expected: Env,
+        got: Env,
+    },
+    CannotBeUsedHere {
+        got: LimitedUsabilityToken,
+        correct_place: Place,
+    },
+    ExpectedRelation,
+    ExpectedLargeOp,
+    ExpectedAtMostOneToken,
+    ExpectedExactlyOneToken,
+    BoundFollowedByBound,
+    DuplicateSubOrSup,
+    CannotBeUsedAsArgument,
+    ExpectedAscii,
+    ExpectedLength(KString),
+    IllegalUnit {
+        unit: KString,
+        math_unit_expected: bool,
+    },
+    InvalidUnit(KString),
+    ExpectedColSpec(KString),
+    ExpectedStyle,
+    NotValidInTextMode,
+    NotValidInMathMode,
+    /// A `$` in text mode, which would switch back to math mode.
+    NestedMathModeUnimplemented,
+    /// A `$` in math mode, where there is no mode to switch to.
+    UnexpectedDollar,
+    CouldNotExtractText,
+    MoreThanOneLabel,
+    MoreThanOneInfixCmd,
+    InvalidMacroName(String),
+    /// `\newcommand` was given something which is not a command name.
+    ExpectedCommandName,
+    /// `\newcommand` was given a name which is already taken.
+    CommandAlreadyDefined,
+    /// `\renewcommand` was given a name which isn't defined yet.
+    CommandNotDefined,
+    InvalidParameterNumber,
+    ParameterNumberOutOfRange {
+        n: u8,
+        actual: u8,
+    },
+    /// The parameter text of a `\def` contains something other than `#1`, `#2`, ...
+    DelimitedParameters,
+    /// The parameters of a `\def` are not numbered consecutively, starting at 1.
+    UnexpectedParameterNumber {
+        expected: u8,
+        actual: u8,
+    },
+    MacroParameterOutsideCustomCommand,
+    ExpectedParamNumberGotEOI,
+    HardLimitExceeded,
+    TooManyExpansions,
+    Internal,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, IntoStaticStr)]
+pub enum DelimiterModifier {
+    #[strum(serialize = r"\left")]
+    Left,
+    #[strum(serialize = r"\right")]
+    Right,
+    #[strum(serialize = r"\middle")]
+    Middle,
+    #[strum(serialize = r"\big, \Big, ...")]
+    Big,
+    #[strum(serialize = r"\genfrac")]
+    Genfrac,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, IntoStaticStr)]
+#[repr(u32)] // A different value here somehow increases code size on WASM enormously.
+pub enum Place {
+    #[strum(serialize = r"after \int, \sum, ...")]
+    AfterBigOp,
+    #[strum(serialize = r"in a table-like environment")]
+    TableEnv,
+    #[strum(serialize = r"at the top level of a table-like environment")]
+    TableEnvTopLevel,
+    #[strum(serialize = r"in a numbered equation environment")]
+    NumberedEnv,
+    #[strum(serialize = r"directly after a `\\` or at the beginning of an array or matrix")]
+    ArrayRowStart,
+    #[strum(serialize = r"directly after a `\\` or at the beginning of a multline environment")]
+    MultlineRowStart,
+    #[strum(serialize = r"directly before \let or \def")]
+    BeforeDefinition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, IntoStaticStr)]
+pub enum LimitedUsabilityToken {
+    #[strum(serialize = "&")]
+    Ampersand,
+    #[strum(serialize = r"\\")]
+    NewLine,
+    #[strum(serialize = r"\tag[*]")]
+    Tag,
+    #[strum(serialize = r"\label")]
+    Label,
+    #[strum(serialize = r"\limits")]
+    Limits,
+    #[strum(serialize = r"\nolimits")]
+    NoLimits,
+    #[strum(serialize = r"\displaylimits")]
+    DisplayLimits,
+    #[strum(serialize = r"\h[dash]line")]
+    HLine,
+    #[strum(serialize = r"\global")]
+    Global,
+    #[strum(serialize = r"\shove(left|right)")]
+    Shove,
+}
+
+impl From<LimitsKind> for LimitedUsabilityToken {
+    fn from(kind: LimitsKind) -> Self {
+        match kind {
+            LimitsKind::Always => LimitedUsabilityToken::Limits,
+            LimitsKind::Never => LimitedUsabilityToken::NoLimits,
+            LimitsKind::Display => LimitedUsabilityToken::DisplayLimits,
+        }
+    }
+}
+
+impl LatexErrKind {
+    /// Returns the error message as a string.
+    fn write_msg(&self, s: &mut String) -> core::fmt::Result {
+        match self {
+            LatexErrKind::UnclosedGroup(expected) => {
+                write!(
+                    s,
+                    "Expected closing token \"{}\", but reached end of input.",
+                    <&str>::from(expected)
+                )?;
+            }
+            LatexErrKind::UnmatchedClose(got) => {
+                write!(s, "Unmatched closing token: \"{}\".", <&str>::from(got))?;
+            }
+            LatexErrKind::ExpectedArgumentGotClose => {
+                write!(
+                    s,
+                    r"Expected argument but got closing token (`}}`, `\end`, `\right`)."
+                )?;
+            }
+            LatexErrKind::ExpectedArgumentGotEOI => {
+                write!(s, "Expected argument but reached end of input.")?;
+            }
+            LatexErrKind::ExpectedDelimiter(location) => {
+                write!(
+                    s,
+                    "There must be a parenthesis after \"{}\", but not found.",
+                    <&str>::from(*location)
+                )?;
+            }
+            LatexErrKind::ExpectedStyle => {
+                write!(
+                    s,
+                    r"Expected one of `\displaystyle`, `\textstyle`, `\scriptstyle`, or `\scriptscriptstyle`"
+                )?;
+            }
+            LatexErrKind::DisallowedChar(got) => {
+                write!(s, "Disallowed character in text group: '{got}'.")?;
+            }
+            LatexErrKind::UnsupportedUnicodeMath(got) => {
+                write!(
+                    s,
+                    "Direct Unicode input is not supported for this symbol yet: '{got}'."
+                )?;
+            }
+            LatexErrKind::UnknownEnvironment(environment) => {
+                write!(s, "Unknown environment \"{environment}\".")?;
+            }
+            LatexErrKind::UnknownCommand(cmd) => {
+                write!(s, "Unknown command \"\\{cmd}\".")?;
+            }
+            LatexErrKind::UnknownColor(color) => {
+                write!(s, "Unknown color \"{color}\".")?;
+            }
+            LatexErrKind::MismatchedEnvironment { expected, got } => {
+                write!(
+                    s,
+                    "Expected \"\\end{{{}}}\", but found \"\\end{{{}}}\".",
+                    expected.as_str(),
+                    got.as_str()
+                )?;
+            }
+            LatexErrKind::CannotBeUsedHere { got, correct_place } => {
+                write!(
+                    s,
+                    "Found \"{}\", which may only appear {}.",
+                    <&str>::from(got),
+                    <&str>::from(correct_place)
+                )?;
+            }
+            LatexErrKind::ExpectedRelation => {
+                write!(s, "Expected a relation after \\not.")?;
+            }
+            LatexErrKind::ExpectedLargeOp => {
+                write!(s, "Expected a large operator.")?;
+            }
+            LatexErrKind::ExpectedAtMostOneToken => {
+                write!(s, "Expected at most one token as argument.")?;
+            }
+            LatexErrKind::ExpectedExactlyOneToken => {
+                write!(s, "Expected exactly one token as argument.")?;
+            }
+            LatexErrKind::BoundFollowedByBound => {
+                write!(s, "'^' or '_' directly followed by '^', '_' or prime.")?;
+            }
+            LatexErrKind::DuplicateSubOrSup => {
+                write!(s, "Duplicate subscript or superscript.")?;
+            }
+            LatexErrKind::CannotBeUsedAsArgument => {
+                write!(s, "Switch-like commands cannot be used as arguments.")?;
+            }
+            LatexErrKind::ExpectedAscii => {
+                write!(
+                    s,
+                    "Expected non-special ASCII characters in string literal."
+                )?;
+            }
+            LatexErrKind::ExpectedLength(got) => {
+                write!(s, "Expected length with units, found \"{got}\".")?;
+            }
+            LatexErrKind::IllegalUnit {
+                unit,
+                math_unit_expected,
+            } => {
+                if *math_unit_expected {
+                    write!(
+                        s,
+                        "Text unit \"{unit}\" cannot be used with \\mkern/\\mskip/\\mspace."
+                    )?;
+                } else {
+                    write!(
+                        s,
+                        "Math unit \"{unit}\" cannot be used with \\kern/\\hskip/\\hspace."
+                    )?;
+                }
+            }
+            LatexErrKind::InvalidUnit(unit) => {
+                write!(s, "Found invalid unit \"{unit}\".")?;
+            }
+            LatexErrKind::ExpectedColSpec(got) => {
+                write!(s, "Expected column specification, found \"{got}\".")?;
+            }
+            LatexErrKind::NotValidInTextMode => {
+                write!(s, "Not valid in text mode.")?;
+            }
+            LatexErrKind::NotValidInMathMode => {
+                write!(s, "Not valid in math mode.")?;
+            }
+            LatexErrKind::NestedMathModeUnimplemented => {
+                write!(s, "Math mode within text mode is not implemented yet.")?;
+            }
+            LatexErrKind::UnexpectedDollar => {
+                write!(s, "Unexpected \"$\".")?;
+            }
+            LatexErrKind::CouldNotExtractText => {
+                write!(s, "Could not extract text from the given macro.")?;
+            }
+            LatexErrKind::MoreThanOneLabel => {
+                write!(s, "Found more than one label in a row.")?;
+            }
+            LatexErrKind::MoreThanOneInfixCmd => {
+                write!(s, "Found more than one infix fraction in a group.")?;
+            }
+            LatexErrKind::InvalidMacroName(name) => {
+                write!(s, "Invalid macro name: \"\\{name}\".")?;
+            }
+            LatexErrKind::ExpectedCommandName => {
+                write!(s, "Expected the name of a command.")?;
+            }
+            LatexErrKind::CommandAlreadyDefined => {
+                write!(s, "This command is already defined.")?;
+            }
+            LatexErrKind::CommandNotDefined => {
+                write!(s, "This command is not defined.")?;
+            }
+            LatexErrKind::InvalidParameterNumber => {
+                write!(s, "Invalid parameter number. Must be 1-9.")?;
+            }
+            LatexErrKind::ParameterNumberOutOfRange { n, actual } => {
+                write!(
+                    s,
+                    "Parameter number {actual} is out of range. Expected a number of at most {n}."
+                )?;
+            }
+            LatexErrKind::DelimitedParameters => {
+                write!(
+                    s,
+                    "Delimited parameters are not supported. Expected \"#n\" or \"{{\" here."
+                )?;
+            }
+            LatexErrKind::UnexpectedParameterNumber { expected, actual } => {
+                write!(
+                    s,
+                    "Expected parameter #{expected}, found #{actual}. Parameters must be numbered consecutively, starting at 1."
+                )?;
+            }
+            LatexErrKind::MacroParameterOutsideCustomCommand => {
+                write!(
+                    s,
+                    "Macro parameter found outside of custom command definition."
+                )?;
+            }
+            LatexErrKind::ExpectedParamNumberGotEOI => {
+                write!(
+                    s,
+                    "Expected parameter number after '#', but reached end of input."
+                )?;
+            }
+            LatexErrKind::HardLimitExceeded => {
+                write!(s, "Hard limit exceeded. Please simplify your equation.")?;
+            }
+            LatexErrKind::TooManyExpansions => {
+                write!(
+                    s,
+                    "Too many expansions of custom commands. A command may be expanding to itself."
+                )?;
+            }
+            LatexErrKind::Internal => {
+                write!(
+                    s,
+                    "Internal parser error. Please report this bug at https://github.com/tmke8/math-core/issues"
+                )?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl LatexError {
+    /// Format a LaTeX error as an HTML snippet.
+    ///
+    /// # Arguments
+    /// - `latex`: The original LaTeX input that caused the error.
+    /// - `display`: The display mode of the equation (inline or block).
+    /// - `css_class`: An optional CSS class to apply to the error element. If `None`,
+    ///   defaults to `"math-core-error"`.
+    pub fn to_html(&self, latex: &str, display: MathDisplay, css_class: Option<&str>) -> String {
+        let mut output = String::new();
+        let tag = if matches!(display, MathDisplay::Block) {
+            "p"
+        } else {
+            "span"
+        };
+        let css_class = css_class.unwrap_or("math-core-error");
+        let _ = write!(output, r#"<{tag} class="{css_class}" title=""#);
+        let mut err_msg = String::new();
+        self.to_message(&mut err_msg, latex);
+        escape_double_quoted_html_attribute(&mut output, &err_msg);
+        output.push_str(r#""><code>"#);
+        escape_html_content(&mut output, latex);
+        let _ = write!(output, "</code></{tag}>");
+        output
+    }
+
+    /// Returns only the error message itself as a string.
+    pub fn error_message(&self) -> String {
+        let mut s = String::new();
+        let _ = self.1.write_msg(&mut s);
+        s
+    }
+
+    /// Format a LaTeX error as a plain text message, including the source name and position.
+    ///
+    /// # Arguments
+    /// - `s`: The string to write the message into.
+    /// - `input`: The original LaTeX input that caused the error; used to
+    ///   calculate the character offset for the error position.
+    pub fn to_message(&self, s: &mut String, input: &str) {
+        let loc = input.floor_char_boundary(self.0.start);
+        let codepoint_offset = input[..loc].chars().count();
+        let _ = write!(s, "{codepoint_offset}: ");
+        let _ = self.1.write_msg(s);
+    }
+
+    /// Returns a short label for the main error location.
+    pub fn label(&self) -> &'static str {
+        match &self.1 {
+            LatexErrKind::UnclosedGroup(_) => "a group was never closed",
+            LatexErrKind::UnmatchedClose(_) => "no matching opening for this",
+            LatexErrKind::ExpectedArgumentGotClose | LatexErrKind::ExpectedArgumentGotEOI => {
+                "expected an argument here"
+            }
+            LatexErrKind::ExpectedDelimiter(_) => "expected a delimiter here",
+            LatexErrKind::DisallowedChar(_) => "disallowed character",
+            LatexErrKind::UnsupportedUnicodeMath(_) => "unsupported math symbol",
+            LatexErrKind::UnknownEnvironment(_) => "unknown environment",
+            LatexErrKind::UnknownCommand(_) => "unknown command",
+            LatexErrKind::UnknownColor(_) => "unknown color",
+            LatexErrKind::MismatchedEnvironment { .. } => {
+                "expected a different environment name here"
+            }
+            LatexErrKind::CannotBeUsedHere { .. } => "cannot be used here",
+            LatexErrKind::ExpectedRelation => "expected a relation",
+            LatexErrKind::ExpectedLargeOp => "expected a large operator",
+            LatexErrKind::ExpectedStyle => "expected a style",
+            LatexErrKind::ExpectedAtMostOneToken => "expected at most one token here",
+            LatexErrKind::ExpectedExactlyOneToken => "expected exactly one token here",
+            LatexErrKind::BoundFollowedByBound => "unexpected bound",
+            LatexErrKind::DuplicateSubOrSup => "duplicate",
+            LatexErrKind::CannotBeUsedAsArgument => "used as argument",
+            LatexErrKind::ExpectedAscii => "special or not ASCII",
+            LatexErrKind::ExpectedLength(_) => "expected length here",
+            LatexErrKind::IllegalUnit { .. } => "illegal unit here",
+            LatexErrKind::InvalidUnit(_) => "invalid unit here",
+            LatexErrKind::ExpectedColSpec(_) => "expected a column spec here",
+            LatexErrKind::NotValidInTextMode => "this is not valid in text mode",
+            LatexErrKind::NotValidInMathMode => "this is not valid in math mode",
+            LatexErrKind::NestedMathModeUnimplemented => "cannot switch to math mode here",
+            LatexErrKind::UnexpectedDollar => "unexpected dollar sign",
+            LatexErrKind::CouldNotExtractText => "could not extract text from this",
+            LatexErrKind::MoreThanOneLabel => "duplicate label",
+            LatexErrKind::MoreThanOneInfixCmd => "duplicate infix frac",
+            LatexErrKind::InvalidMacroName(_) => "invalid name here",
+            LatexErrKind::ExpectedCommandName => "expected a command name here",
+            LatexErrKind::CommandAlreadyDefined => "already defined",
+            LatexErrKind::CommandNotDefined => "not defined",
+            LatexErrKind::InvalidParameterNumber => "must be 1-9",
+            LatexErrKind::ParameterNumberOutOfRange { .. } => "parameter number out of range",
+            LatexErrKind::DelimitedParameters => "unsupported delimiter",
+            LatexErrKind::UnexpectedParameterNumber { .. } => "unexpected parameter number",
+            LatexErrKind::MacroParameterOutsideCustomCommand => "unexpected macro parameter",
+            LatexErrKind::ExpectedParamNumberGotEOI => "expected parameter number",
+            LatexErrKind::HardLimitExceeded => "limit exceeded",
+            LatexErrKind::TooManyExpansions => "expansion limit exceeded",
+            LatexErrKind::Internal => "internal error",
+        }
+    }
+}
+
+#[cfg(feature = "ariadne")]
+impl LatexError {
+    /// Convert this error into an [`ariadne::Report`] for pretty-printing.
+    pub fn to_report<'name>(
+        &self,
+        source_name: &'name str,
+        with_color: bool,
+    ) -> ariadne::Report<'static, (&'name str, Range<usize>)> {
+        use ariadne::{Label, Report, ReportKind};
+
+        let label_msg = self.label();
+
+        let mut config = ariadne::Config::default().with_index_type(ariadne::IndexType::Byte);
+        if !with_color {
+            config = config.with_color(false);
+        }
+        Report::build(ReportKind::Error, (source_name, self.0.start..self.0.start))
+            .with_config(config)
+            .with_message(self.error_message())
+            .with_label(Label::new((source_name, self.0.clone())).with_message(label_msg))
+            .finish()
+    }
+}
+
+impl fmt::Display for LatexError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.error_message())
+    }
+}
+
+impl core::error::Error for LatexError {}
+
+pub trait GetUnwrap {
+    /// `str::get` with `Option::unwrap`.
+    fn get_unwrap(&self, range: core::ops::Range<usize>) -> &str;
+}
+
+impl GetUnwrap for str {
+    #[cfg(target_arch = "wasm32")]
+    #[inline]
+    fn get_unwrap(&self, range: core::ops::Range<usize>) -> &str {
+        // On WASM, panics are really expensive in terms of code size,
+        // so we use an unchecked get here.
+        unsafe { self.get_unchecked(range) }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    #[inline]
+    fn get_unwrap(&self, range: core::ops::Range<usize>) -> &str {
+        self.get(range).expect("valid range")
+    }
+}

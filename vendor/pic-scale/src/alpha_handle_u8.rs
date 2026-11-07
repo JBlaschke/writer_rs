@@ -1,0 +1,291 @@
+/*
+ * Copyright (c) Radzivon Bartoshyk. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2.  Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3.  Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#![forbid(unsafe_code)]
+
+use crate::WorkloadStrategy;
+#[cfg(all(target_arch = "x86_64", feature = "avx"))]
+use crate::avx2::{avx_premultiply_alpha_rgba, avx_unpremultiply_alpha_rgba};
+#[cfg(all(target_arch = "aarch64", feature = "neon"))]
+use crate::neon::{neon_premultiply_alpha_rgba, neon_unpremultiply_alpha_rgba};
+#[cfg(all(any(target_arch = "x86_64", target_arch = "x86"), feature = "sse"))]
+use crate::sse::*;
+use crate::threading_policy::ScalingPool;
+#[cfg(all(target_arch = "wasm32", target_feature = "simd128",))]
+use crate::wasm32::{wasm_premultiply_alpha_rgba, wasm_unpremultiply_alpha_rgba};
+#[cfg(feature = "threading")]
+use novtb::{ParallelZonedIterator, TbSliceMut};
+use std::sync::OnceLock;
+
+#[inline]
+/// Divides value by 255 with rounding to nearest
+pub(crate) fn div_by_255(v: u16) -> u8 {
+    ((((v + 0x80) >> 8) + v + 0x80) >> 8) as u8
+}
+
+pub(crate) fn premultiply_alpha_rgba_row_impl(dst: &mut [u8], src: &[u8]) {
+    for (dst, src) in dst
+        .as_chunks_mut::<4>()
+        .0
+        .iter_mut()
+        .zip(src.as_chunks::<4>().0.iter())
+    {
+        let a = src[3] as u16;
+        dst[0] = div_by_255(src[0] as u16 * a);
+        dst[1] = div_by_255(src[1] as u16 * a);
+        dst[2] = div_by_255(src[2] as u16 * a);
+        dst[3] = div_by_255(255 * a);
+    }
+}
+
+pub(crate) fn premultiply_alpha_gray_alpha_row_impl(dst: &mut [u8], src: &[u8]) {
+    for (dst, src) in dst
+        .as_chunks_mut::<2>()
+        .0
+        .iter_mut()
+        .zip(src.as_chunks::<2>().0.iter())
+    {
+        let a = src[1] as u16;
+        dst[0] = div_by_255(src[0] as u16 * a);
+        dst[1] = div_by_255(255 * a);
+    }
+}
+
+fn premultiply_alpha_rgba_impl(dst: &mut [u8], src: &[u8]) {
+    premultiply_alpha_rgba_row_impl(dst, src);
+}
+
+fn premultiply_alpha_gray_alpha_impl(
+    dst: &mut [u8],
+    dst_stride: usize,
+    src: &[u8],
+    _: usize,
+    _: usize,
+    stride: usize,
+    _pool: &ScalingPool,
+) {
+    #[cfg(feature = "threading")]
+    {
+        dst.tb_par_chunks_mut(dst_stride)
+            .zip(src.chunks(stride))
+            .for_each(_pool, |(dst, src)| {
+                premultiply_alpha_gray_alpha_row_impl(dst, src);
+            });
+    }
+    #[cfg(not(feature = "threading"))]
+    {
+        dst.chunks_mut(dst_stride)
+            .zip(src.chunks(stride))
+            .for_each(|(dst, src)| {
+                premultiply_alpha_gray_alpha_row_impl(dst, src);
+            });
+    }
+}
+
+static UNPREMULTIPLICATION_TABLE: OnceLock<Box<[u8; 65536]>> = OnceLock::new();
+
+#[inline(always)]
+pub(crate) const fn unpremultiply_index(alpha: u8, pixel: u8) -> usize {
+    ((alpha as usize) << 8) | pixel as usize
+}
+
+pub(crate) fn unpremultiplication_table() -> &'static [u8; 65536] {
+    UNPREMULTIPLICATION_TABLE.get_or_init(|| {
+        let mut buf = Box::new([0u8; 65536]);
+        for alpha in 0..256usize {
+            for pixel in 0..256usize {
+                let idx = (alpha << 8) | pixel;
+                #[allow(clippy::manual_checked_ops)]
+                if alpha == 0 {
+                    buf[idx] = 0;
+                } else {
+                    let value = (pixel * 255 + alpha / 2) / alpha;
+                    buf[idx] = if value > 255 { 255 } else { value as u8 };
+                }
+            }
+        }
+        buf
+    })
+}
+
+#[inline]
+pub(crate) fn unpremultiply_alpha_rgba_row_impl(in_place: &mut [u8]) {
+    let table = unpremultiplication_table();
+    for dst in in_place.as_chunks_mut::<4>().0.iter_mut() {
+        let a = dst[3];
+        dst[0] = table[unpremultiply_index(a, dst[0])];
+        dst[1] = table[unpremultiply_index(a, dst[1])];
+        dst[2] = table[unpremultiply_index(a, dst[2])];
+    }
+}
+
+#[inline]
+pub(crate) fn unpremultiply_alpha_gray_alpha_row_impl(in_place: &mut [u8]) {
+    let table = unpremultiplication_table();
+    for dst in in_place.as_chunks_mut::<2>().0.iter_mut() {
+        let a = dst[1];
+        dst[0] = table[unpremultiply_index(a, dst[0])];
+    }
+}
+
+fn unpremultiply_alpha_rgba_impl(in_place: &mut [u8], _: WorkloadStrategy) {
+    unpremultiply_alpha_rgba_row_impl(in_place);
+}
+
+pub(crate) fn premultiply_alpha_rgba(
+    dst: &mut [u8],
+    dst_stride: usize,
+    src: &[u8],
+    width: usize,
+    _: usize,
+    src_stride: usize,
+    _pool: &ScalingPool,
+) {
+    let mut _dispatcher: fn(&mut [u8], &[u8]) = premultiply_alpha_rgba_impl;
+    #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+    {
+        _dispatcher = neon_premultiply_alpha_rgba;
+    }
+    #[cfg(all(any(target_arch = "x86_64", target_arch = "x86"), feature = "sse"))]
+    {
+        if std::arch::is_x86_feature_detected!("sse4.1") {
+            _dispatcher = sse_premultiply_alpha_rgba;
+        }
+    }
+    #[cfg(all(target_arch = "x86_64", feature = "avx"))]
+    {
+        if std::arch::is_x86_feature_detected!("avx2") {
+            _dispatcher = avx_premultiply_alpha_rgba;
+        }
+    }
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+    {
+        _dispatcher = wasm_premultiply_alpha_rgba;
+    }
+    #[cfg(feature = "threading")]
+    {
+        dst.tb_par_chunks_mut(dst_stride)
+            .zip(src.chunks(src_stride))
+            .for_each(_pool, |(dst, src)| {
+                _dispatcher(&mut dst[..width * 4], &src[..width * 4]);
+            });
+    }
+    #[cfg(not(feature = "threading"))]
+    {
+        dst.chunks_mut(dst_stride)
+            .zip(src.chunks(src_stride))
+            .for_each(|(dst, src)| {
+                _dispatcher(&mut dst[..width * 4], &src[..width * 4]);
+            });
+    }
+}
+
+pub(crate) fn premultiply_alpha_gray_alpha(
+    dst: &mut [u8],
+    dst_stride: usize,
+    src: &[u8],
+    width: usize,
+    height: usize,
+    src_stride: usize,
+    pool: &ScalingPool,
+) {
+    #[allow(clippy::type_complexity)]
+    let mut _dispatcher: fn(&mut [u8], usize, &[u8], usize, usize, usize, &ScalingPool) =
+        premultiply_alpha_gray_alpha_impl;
+    _dispatcher(dst, dst_stride, src, width, height, src_stride, pool);
+}
+
+pub(crate) fn unpremultiply_alpha_rgba(
+    in_place: &mut [u8],
+    width: usize,
+    _: usize,
+    stride: usize,
+    _pool: &ScalingPool,
+    workload_strategy: WorkloadStrategy,
+) {
+    let mut _dispatcher: fn(&mut [u8], WorkloadStrategy) = unpremultiply_alpha_rgba_impl;
+    #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+    {
+        _dispatcher = neon_unpremultiply_alpha_rgba;
+    }
+    #[cfg(all(any(target_arch = "x86_64", target_arch = "x86"), feature = "sse"))]
+    {
+        if std::arch::is_x86_feature_detected!("sse4.1") {
+            _dispatcher = sse_unpremultiply_alpha_rgba;
+        }
+    }
+    #[cfg(all(target_arch = "x86_64", feature = "avx"))]
+    {
+        if std::arch::is_x86_feature_detected!("avx2") {
+            _dispatcher = avx_unpremultiply_alpha_rgba;
+        }
+    }
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+    {
+        _dispatcher = wasm_unpremultiply_alpha_rgba;
+    }
+    #[cfg(feature = "threading")]
+    in_place.tb_par_chunks_mut(stride).for_each(_pool, |row| {
+        _dispatcher(&mut row[..width * 4], workload_strategy);
+    });
+    #[cfg(not(feature = "threading"))]
+    in_place.chunks_mut(stride).for_each(|row| {
+        _dispatcher(&mut row[..width * 4], workload_strategy);
+    });
+}
+
+fn unpremultiply_alpha_gray_alpha_impl(
+    in_place: &mut [u8],
+    width: usize,
+    _: usize,
+    stride: usize,
+    _pool: &ScalingPool,
+    _: WorkloadStrategy,
+) {
+    #[cfg(feature = "threading")]
+    in_place.tb_par_chunks_mut(stride).for_each(_pool, |row| {
+        unpremultiply_alpha_gray_alpha_row_impl(&mut row[..width * 2]);
+    });
+    #[cfg(not(feature = "threading"))]
+    in_place.chunks_mut(stride).for_each(|row| {
+        unpremultiply_alpha_gray_alpha_row_impl(&mut row[..width * 2]);
+    });
+}
+
+pub(crate) fn unpremultiply_alpha_gray_alpha(
+    in_place: &mut [u8],
+    width: usize,
+    height: usize,
+    stride: usize,
+    pool: &ScalingPool,
+    workload_strategy: WorkloadStrategy,
+) {
+    let mut _dispatcher: fn(&mut [u8], usize, usize, usize, &ScalingPool, WorkloadStrategy) =
+        unpremultiply_alpha_gray_alpha_impl;
+    _dispatcher(in_place, width, height, stride, pool, workload_strategy);
+}

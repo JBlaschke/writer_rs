@@ -1,0 +1,21 @@
+#[target.x86_64-pc-windows-msvc]
+##rustflags = ["-C", "target-feature=+f16c,+sse4.1"]
+#rustflags = ["-Ctarget-cpu=native"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "target-feature=-fp16"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "target-feature=+sse4.1"]
+
+[target.riscv64gc-unknown-linux-gnu]
+rustflags = ["-Ctarget-feature=+rvv", "-Ctarget-cpu=native"]
+#linker = "/opt/homebrew/Cellar/riscv-gnu-toolchain/main/bin/riscv64-unknown-elf-gcc"
+#ar = "/opt/homebrew/Cellar/riscv-gnu-toolchain/main/bin/riscv64-unknown-elf-ar"
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]
+
+#[target.aarch64-unknown-linux-gnu]
+#runner = "qemu-aarch64 -cpu neoverse-n2 -L /usr/aarch64-linux-gnu"
+#linker = "aarch64-linux-gnu-gcc"

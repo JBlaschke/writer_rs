@@ -1,0 +1,170 @@
+/*
+ * Copyright (c) Radzivon Bartoshyk 3/2026. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2.  Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3.  Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#![forbid(unsafe_code)]
+
+use crate::convolution::{
+    ColumnFilter, ConvolutionOptions, HorizontalFilterPass, RowFilter, VerticalConvolutionPass,
+};
+use crate::factory::rgb_u8::vertical_strategy_u8;
+use crate::filter_weights::*;
+use crate::handler_provider::{handle_fixed_row_u8, handle_fixed_rows_4_u8};
+#[cfg(all(target_arch = "aarch64", feature = "neon",))]
+use crate::neon::*;
+use crate::plan::HorizontalFiltering;
+#[cfg(all(any(target_arch = "x86_64", target_arch = "x86"), feature = "sse"))]
+use crate::sse::{convolve_horizontal_rgba_sse_rows_4, convolve_horizontal_rgba_sse_rows_one};
+use crate::{ImageStore, ThreadingPolicy};
+#[allow(dead_code)]
+use num_traits::AsPrimitive;
+use std::sync::Arc;
+
+#[allow(dead_code)]
+#[derive(Default)]
+pub(crate) struct DefaultWeightsConverterQ7 {}
+
+#[allow(dead_code)]
+impl WeightsConverter<i8> for DefaultWeightsConverterQ7
+where
+    f64: AsPrimitive<i8>,
+{
+    fn prepare_weights(&self, weights: &FilterWeights<f32>) -> FilterWeights<i8> {
+        weights.numerical_approximation_q0_7(0)
+    }
+}
+
+impl HorizontalFilterPass<u8, f32, 4> for ImageStore<'_, u8, 4> {
+    fn horizontal_plan(
+        filter_weights: FilterWeights<f32>,
+        threading_policy: ThreadingPolicy,
+        _options: ConvolutionOptions,
+    ) -> Arc<dyn RowFilter<u8, 4> + Send + Sync> {
+        let _scale_factor = _options.src_size.width as f32 / _options.dst_size.width as f32;
+        #[allow(clippy::type_complexity)]
+        let mut _dispatcher_4_rows: Option<
+            fn(&[u8], usize, &mut [u8], usize, &FilterWeights<i16>, u32),
+        > = Some(handle_fixed_rows_4_u8::<4>);
+        #[allow(clippy::type_complexity)]
+        let mut _dispatcher_1_row: fn(&[u8], &mut [u8], &FilterWeights<i16>, u32) =
+            handle_fixed_row_u8::<4>;
+        #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+        {
+            match _options.workload_strategy {
+                crate::WorkloadStrategy::PreferQuality => {
+                    _dispatcher_4_rows = Some(convolve_horizontal_rgba_neon_rows_4_u8);
+                    _dispatcher_1_row = convolve_horizontal_rgba_neon_row;
+                }
+                crate::WorkloadStrategy::PreferSpeed => {
+                    #[cfg(feature = "rdm")]
+                    if _scale_factor < 8. && std::arch::is_aarch64_feature_detected!("rdm") {
+                        _dispatcher_4_rows = Some(convolve_horizontal_rgba_neon_rows_4_u8_i16);
+                        _dispatcher_1_row = convolve_horizontal_rgba_neon_row_i16;
+                    } else {
+                        _dispatcher_4_rows = Some(convolve_horizontal_rgba_neon_rows_4_u8);
+                        _dispatcher_1_row = convolve_horizontal_rgba_neon_row;
+                    }
+                    #[cfg(not(feature = "rdm"))]
+                    {
+                        _dispatcher_4_rows = Some(convolve_horizontal_rgba_neon_rows_4_u8);
+                        _dispatcher_1_row = convolve_horizontal_rgba_neon_row;
+                    }
+                    #[cfg(feature = "nightly_i8mm")]
+                    if _scale_factor < 10. && std::arch::is_aarch64_feature_detected!("i8mm") {
+                        let _dispatcher_4_rows: Option<
+                            fn(&[u8], usize, &mut [u8], usize, &FilterWeights<i8>, u32),
+                        > = Some(convolve_horizontal_rgba_neon_rows_4_u8_dot);
+                        let _dispatcher_1_row = convolve_horizontal_rgba_neon_row_dot;
+                        let i_weights = filter_weights.numerical_approximation_q0_7(0);
+                        return Arc::new(HorizontalFiltering {
+                            filter_weights: i_weights,
+                            filter_4_rows: _dispatcher_4_rows,
+                            filter_row: _dispatcher_1_row,
+                            _threading_policy: threading_policy,
+                        });
+                    }
+                }
+            }
+        }
+        #[cfg(all(any(target_arch = "x86_64", target_arch = "x86"), feature = "sse"))]
+        {
+            if std::arch::is_x86_feature_detected!("sse4.1") {
+                _dispatcher_4_rows = Some(convolve_horizontal_rgba_sse_rows_4);
+                _dispatcher_1_row = convolve_horizontal_rgba_sse_rows_one;
+            }
+        }
+        #[cfg(all(target_arch = "x86_64", feature = "avx"))]
+        {
+            let has_avx = std::arch::is_x86_feature_detected!("avx2");
+            if has_avx {
+                use crate::avx2::{
+                    convolve_horizontal_rgba_avx_row_1, convolve_horizontal_rgba_row_4,
+                };
+                _dispatcher_4_rows = Some(convolve_horizontal_rgba_row_4);
+                _dispatcher_1_row = convolve_horizontal_rgba_avx_row_1;
+            }
+        }
+        #[cfg(all(feature = "avx512", target_arch = "x86_64"))]
+        {
+            if std::arch::is_x86_feature_detected!("avxvnni")
+                && _options.workload_strategy != crate::WorkloadStrategy::PreferSpeed
+            {
+                use crate::avx512::{
+                    convolve_horizontal_rgba_vnni_row_1, convolve_horizontal_rgba_vnni_row_4,
+                };
+                _dispatcher_4_rows = Some(convolve_horizontal_rgba_vnni_row_4);
+                _dispatcher_1_row = convolve_horizontal_rgba_vnni_row_1;
+            }
+        }
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        {
+            use crate::wasm32::{
+                convolve_horizontal_rgba_wasm_row, convolve_horizontal_rgba_wasm_rows_4_u8,
+            };
+            _dispatcher_4_rows = Some(convolve_horizontal_rgba_wasm_rows_4_u8);
+            _dispatcher_1_row = convolve_horizontal_rgba_wasm_row;
+        }
+        use crate::support::PRECISION;
+        let i_weights = filter_weights.numerical_approximation::<i16, PRECISION>(0);
+        Arc::new(HorizontalFiltering {
+            filter_weights: i_weights,
+            filter_4_rows: _dispatcher_4_rows,
+            filter_row: _dispatcher_1_row,
+            _threading_policy: threading_policy,
+        })
+    }
+}
+
+impl VerticalConvolutionPass<u8, f32, 4> for ImageStore<'_, u8, 4> {
+    fn vertical_plan(
+        filter_weights: FilterWeights<f32>,
+        threading_policy: ThreadingPolicy,
+        options: ConvolutionOptions,
+    ) -> Arc<dyn ColumnFilter<u8, 4> + Send + Sync> {
+        vertical_strategy_u8(filter_weights, threading_policy, options)
+    }
+}

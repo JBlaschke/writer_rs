@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) Radzivon Bartoshyk 05/2024. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2.  Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3.  Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#![deny(deprecated)]
+// #![deny(unreachable_code, unused)]
+#![allow(stable_features, clippy::incompatible_msrv, unused_features)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::manual_clamp,
+    clippy::type_complexity
+)]
+#![cfg_attr(
+    all(feature = "nightly_i8mm", target_arch = "aarch64"),
+    feature(stdarch_neon_i8mm)
+)]
+#![cfg_attr(
+    all(feature = "nightly_avx512fp16", target_arch = "x86_64"),
+    feature(stdarch_x86_avx512_f16)
+)]
+#![cfg_attr(feature = "nightly_f16", feature(f16))]
+#![cfg_attr(
+    all(feature = "nightly_f16", target_arch = "aarch64"),
+    feature(stdarch_neon_f16)
+)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(
+    all(feature = "sve", target_arch = "aarch64"),
+    feature(stdarch_aarch64_sve)
+)]
+
+mod alpha_check;
+#[cfg(feature = "nightly_f16")]
+mod alpha_handle_f16;
+mod alpha_handle_f32;
+mod alpha_handle_u16;
+mod alpha_handle_u8;
+#[cfg(all(target_arch = "x86_64", feature = "avx"))]
+mod avx2;
+#[cfg(all(target_arch = "x86_64", feature = "avx512"))]
+mod avx512;
+mod color_group;
+#[cfg(feature = "colorspaces")]
+mod colors;
+mod convolution;
+mod convolve_naive_f32;
+#[cfg(feature = "nightly_f16")]
+mod f16;
+mod factory;
+mod filter_weights;
+mod fixed_point_horizontal;
+mod fixed_point_vertical;
+mod floating_point_horizontal;
+mod floating_point_vertical;
+mod handler_provider;
+mod image_size;
+mod image_store;
+mod math;
+mod mixed_storage;
+mod mlaf;
+#[cfg(all(target_arch = "aarch64", feature = "neon"))]
+mod neon;
+mod plan;
+mod sampler;
+mod saturate_narrow;
+mod scaler;
+#[cfg(feature = "nightly_f16")]
+#[cfg_attr(docsrs, doc(cfg(feature = "nightly_f16")))]
+mod scaler_f16;
+#[cfg(all(any(target_arch = "x86_64", target_arch = "x86"), feature = "sse"))]
+mod sse;
+mod support;
+#[cfg(all(target_arch = "aarch64", feature = "sve"))]
+mod sve2;
+mod threading_policy;
+mod validation;
+#[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+mod wasm32;
+
+#[cfg(feature = "colorspaces")]
+pub use colors::*;
+#[cfg(feature = "colorspaces")]
+pub use colorutils_rs::TransferFunction;
+pub use factory::Ar30ByteOrder;
+pub use image_size::ImageSize;
+pub use image_store::{
+    BufferStore, CbCr8ImageStore, CbCr8ImageStoreMut, CbCr16ImageStore, CbCr16ImageStoreMut,
+    CbCrF32ImageStore, CbCrF32ImageStoreMut, GrayAlpha8ImageStore, GrayAlpha8ImageStoreMut,
+    GrayAlpha16ImageStore, GrayAlpha16ImageStoreMut, GrayAlphaF32ImageStore,
+    GrayAlphaF32ImageStoreMut, ImageStore, ImageStoreMut, Planar8ImageStore, Planar8ImageStoreMut,
+    Planar16ImageStore, Planar16ImageStoreMut, PlanarF32ImageStore, PlanarF32ImageStoreMut,
+    PlanarS16ImageStore, PlanarS16ImageStoreMut, Rgb8ImageStore, Rgb8ImageStoreMut,
+    Rgb16ImageStore, Rgb16ImageStoreMut, RgbF32ImageStore, RgbF32ImageStoreMut, Rgba8ImageStore,
+    Rgba8ImageStoreMut, Rgba16ImageStore, Rgba16ImageStoreMut, RgbaF32ImageStore,
+    RgbaF32ImageStoreMut,
+};
+#[cfg(feature = "nightly_f16")]
+#[cfg_attr(docsrs, doc(cfg(feature = "nightly_f16")))]
+pub use image_store::{
+    CbCrF16ImageStore, CbCrF16ImageStoreMut, PlanarF16ImageStore, PlanarF16ImageStoreMut,
+    RgbF16ImageStore, RgbF16ImageStoreMut, RgbaF16ImageStore, RgbaF16ImageStoreMut,
+};
+pub(crate) use math::*;
+pub use plan::{Resampling, ResamplingPlan};
+pub use sampler::*;
+pub use scaler::{ImageStoreScaling, Scaler, ScalingOptions, WorkloadStrategy};
+pub use threading_policy::ThreadingPolicy;
+pub use validation::{PicScaleBufferMismatch, PicScaleError};
