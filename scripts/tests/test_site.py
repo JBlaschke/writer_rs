@@ -480,7 +480,9 @@ class SiteTests(unittest.TestCase):
         for missing in (None, {"tag_name": "v0.2.0", "assets": []}):
             with self.subTest(release=missing):
                 text = site.download_section(missing, REPO)
-                self.assertIn("No release has been published yet", text)
+                self.assertNotIn("<table", text)
+                self.assertNotIn("No release", text)
+                self.assertIn("Download the archive for your platform", text)
                 self.assertIn(f'href="{REPO}/releases"', text)
 
     def test_landing_template_fills_and_validates_with_example_outputs(self):
@@ -545,7 +547,7 @@ class SiteTests(unittest.TestCase):
         self.assertIn("&lt;Basic&gt;", text)
         self.assertIn("3 pages, 50.8 kB", text)
         self.assertIn("document &amp; title", text)
-        self.assertIn("No release has been published yet", text)
+        self.assertIn("Download the archive for your platform", text)
         site.write_page(self.output, mapper, all_pages[0], text)
         result = (self.output / "index.html").read_text(encoding="utf-8")
         self.assertNotIn('="writer-site:', result)

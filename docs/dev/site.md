@@ -39,8 +39,10 @@ token published. Pull requests that touch the site's inputs only build it;
 download the run's `github-pages` artifact to look at the result.
 
 The download table comes from the GitHub API's `releases/latest`, which skips
-drafts and pre-releases. Before the first release the page says that no
-release is published yet.
+drafts and pre-releases; the first release, v0.1.0, was published on
+2026-11-07. A build without that document (the API call failed, or a local
+build without `--release-json`) links to the releases page instead of showing
+a table, so the page never claims that nothing is released.
 
 One-time setup: Settings → Pages → Build and deployment → Source: "GitHub
 Actions". Until then the Configure Pages step fails with a message that says

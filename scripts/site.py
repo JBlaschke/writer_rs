@@ -914,9 +914,11 @@ def guide_section(root: Path) -> str:
 def download_section(release: dict | None, repo: str) -> str:
     releases = html.escape(repo + "/releases")
     if not release or not release.get("assets"):
+        # A build without the releases/latest document still points at
+        # the downloads; it never claims that nothing is released.
         return (
-            "<p class=\"release\">No release has been published yet. "
-            "Releases will appear on the "
+            '<p class="release">Download the archive for your platform, '
+            "and its <code>SHA256SUMS</code>, from the "
             f'<a href="{releases}">releases page</a>.</p>'
         )
     tag = release["tag_name"]
