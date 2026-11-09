@@ -384,3 +384,51 @@ fn listing_fonts_use_design_defaults_and_explicit_mono_font_overrides() {
         }
     }
 }
+
+#[test]
+fn an_explicit_design_argument_beats_the_input_and_none_keeps_the_defaults() {
+    let directory = tempfile::tempdir().unwrap();
+    let declared =
+        design(serde_json::json!({"text": {"size": "14pt"}}), directory.path());
+    assert!(declared.declared);
+    let mut config = Config::default();
+    config.pdf.system_fonts = false;
+    for (argument, expected) in
+        [("auto", 14.0), ("none", 11.0), ("(text: (size: 20,))", 20.0)]
+    {
+        let input = directory.path().join("native.typ");
+        std::fs::write(
+            &input,
+            format!(
+                concat!(
+                    "#import \"@writer/doc:{}\": writer-doc\n",
+                    "#show: writer-doc.with(design: {})\n",
+                    "#context [#metadata(text.size.pt()) <size>]\nSized.\n",
+                ),
+                writer::typst::WRITER_DOC_VERSION,
+                argument
+            ),
+        )
+        .unwrap();
+        let mut world = WriterWorld::from_config_design(
+            &config,
+            &declared,
+            &AssetRegistry::new(),
+            directory.path(),
+            MainFile::Path(input),
+            Datetime::from_ymd(2026, 11, 9).unwrap(),
+        )
+        .unwrap();
+        let (document, _) = compile_document(&mut world).into_result().unwrap();
+        let content = document
+            .introspector()
+            .query_label(Label::new(PicoStr::intern("size")).unwrap())
+            .unwrap();
+        let metadata = content.to_packed::<MetadataElem>().unwrap();
+        assert_eq!(
+            metadata.value,
+            Value::Float(expected),
+            "design: {argument}"
+        );
+    }
+}

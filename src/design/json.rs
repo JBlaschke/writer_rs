@@ -1,11 +1,12 @@
 //! Stable JSON shared by dumps, templates, and Typst inputs.
 
-use std::path::Path;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
 use serde::{Serialize, Serializer};
-use serde_json::Value;
+use serde_json::{Map, Value};
 
-use super::{AssetData, AssetRegistry, Color, Design, FontRef, Pt};
+use super::{AssetRegistry, Color, Design, FontRef, Pt};
 
 /// Whether image paths name real files or registered Typst virtual assets.
 #[derive(Clone, Copy)]
@@ -14,6 +15,17 @@ pub enum PathMode<'a> {
     Real,
     /// Typst `/__assets/` paths for registered furniture images.
     Virtual(&'a AssetRegistry),
+    /// Paths inside a Typst source export, relative to its main file.
+    Export(&'a ExportPaths),
+}
+
+/// Where a source export copied a design's images and font files.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct ExportPaths {
+    /// Furniture and background images, keyed as the design holds them.
+    pub images: BTreeMap<PathBuf, String>,
+    /// Font files, keyed as the design holds them.
+    pub fonts: BTreeMap<PathBuf, String>,
 }
 
 impl Serialize for Pt {
@@ -67,44 +79,68 @@ impl Design {
             .as_object_mut()
             .expect("design is an object")
             .shift_remove("declared");
-        if let PathMode::Virtual(registry) = paths {
-            for slot in ["header", "footer"] {
-                for variant in ["first", "rest"] {
-                    virtualise(
-                        &mut value,
-                        &["page", slot, variant, "image"],
-                        registry,
-                    );
-                }
+        match paths {
+            PathMode::Real => {}
+            PathMode::Virtual(registry) => {
+                rewrite_images(&mut value, self, &|path| {
+                    virtual_path(path, registry)
+                });
             }
-            virtualise(&mut value, &["page", "background", "image"], registry);
+            PathMode::Export(export) => {
+                rewrite_images(&mut value, self, &|path| {
+                    export
+                        .images
+                        .get(path)
+                        .cloned()
+                        .unwrap_or_else(|| path.to_string_lossy().into_owned())
+                });
+                rewrite_fonts(&mut value, &export.fonts);
+            }
         }
         value
     }
 }
 
-/// Rewrites the `path` of the image object at `keys`, when there is one.
-fn virtualise(value: &mut Value, keys: &[&str], registry: &AssetRegistry) {
+/// The object at a dotted key path, when every key exists.
+fn object_at<'v>(
+    value: &'v mut Value, dotted: &str,
+) -> Option<&'v mut Map<String, Value>> {
     let mut node = value;
-    for key in keys {
-        let Some(next) = node.get_mut(*key) else {
-            return;
-        };
-        node = next;
+    for key in dotted.split('.') {
+        node = node.get_mut(key)?;
     }
-    if let Some(image) = node.as_object_mut()
-        && let Some(path) = image.get("path").and_then(Value::as_str)
-    {
-        let path = virtual_path(Path::new(path), registry);
-        image.insert("path".into(), Value::String(path));
+    node.as_object_mut()
+}
+
+/// Rewrites the `path` of every declared image with `rewrite(source)`.
+fn rewrite_images(
+    value: &mut Value, design: &Design, rewrite: &dyn Fn(&Path) -> String,
+) {
+    for (slot, source) in design.image_slots() {
+        if let Some(image) = object_at(value, slot) {
+            image.insert("path".into(), Value::String(rewrite(source)));
+        }
+    }
+}
+
+/// Rewrites every font file that `fonts` maps; others keep their real path.
+fn rewrite_fonts(value: &mut Value, fonts: &BTreeMap<PathBuf, String>) {
+    for role in ["body", "heading", "mono"] {
+        let files = object_at(value, &format!("fonts.{role}"))
+            .and_then(|font| font.get_mut("files"))
+            .and_then(Value::as_array_mut);
+        for file in files.into_iter().flatten() {
+            if let Some(path) = file.as_str()
+                && let Some(exported) = fonts.get(Path::new(path))
+            {
+                *file = Value::String(exported.clone());
+            }
+        }
     }
 }
 
 fn virtual_path(path: &Path, registry: &AssetRegistry) -> String {
-    let path = crate::assets::registry::resolve_path(path);
-    if let Some(asset) = registry.iter().find(
-        |asset| matches!(&asset.data, AssetData::File(file) if file == &path),
-    ) {
+    if let Some(asset) = registry.find_file(path) {
         let extension = match asset.mime.as_str() {
             "image/png" => "png",
             "image/jpeg" => "jpg",
@@ -118,7 +154,7 @@ fn virtual_path(path: &Path, registry: &AssetRegistry) -> String {
     }
     // Consumers register furniture first; retaining the real path makes a
     // missed registration diagnosable rather than inventing an unknown ID.
-    path.to_string_lossy().into_owned()
+    crate::assets::registry::resolve_path(path).to_string_lossy().into_owned()
 }
 
 #[cfg(test)]

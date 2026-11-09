@@ -8,6 +8,7 @@ use crate::assets::registry::{Asset, AssetData, AssetRegistry, resolve_path};
 use crate::config::{
     Config, EquationNumbering, FigureNumbering, HeadingNumbering,
 };
+use crate::design::Design;
 use crate::error::{Diagnostic, Diagnostics, Error, Result};
 use crate::ir::{
     self, Align, Attrs, Block, Cell, CiteItem, CiteMode, Document, FigureKind,
@@ -27,7 +28,7 @@ pub struct EmitOptions<'a> {
     /// Effective configuration, after front matter and command-line overrides.
     pub config: &'a Config,
     /// Resolved design supplied to the compiler input.
-    pub design: &'a crate::design::Design,
+    pub design: &'a Design,
     /// How registered assets are named in the generated source.
     pub assets: AssetPaths,
     /// Optional import path of a custom `writer-doc` template.
@@ -88,7 +89,7 @@ pub fn emit(
     document: &Document, assets: &AssetRegistry, opts: &EmitOptions<'_>,
 ) -> Result<Emitted> {
     let notes = NoteLabels::collect(document, &opts.footnote_prefix);
-    let paths = asset_paths(document, assets, &opts.assets);
+    let paths = asset_paths(document, assets, opts);
     let mut emitter = Emitter::new(document, assets, opts, &notes, &paths);
     emitter.header(!opts.fragment)?;
     emitter.blocks(&document.blocks, 0)?;
@@ -105,7 +106,7 @@ pub fn emit_split(
 ) -> Result<(Emitted, Vec<Emitted>)> {
     validate_runs(runs, document.blocks.len())?;
     let notes = NoteLabels::collect(document, &opts.footnote_prefix);
-    let paths = asset_paths(document, assets, &opts.assets);
+    let paths = asset_paths(document, assets, opts);
     let mut main = Emitter::new(document, assets, opts, &notes, &paths);
     main.header(!opts.fragment)?;
     let mut parts = Vec::with_capacity(runs.len());
@@ -171,12 +172,30 @@ impl Output {
     }
 }
 
+/// Paths written into the generated source.
+#[derive(Debug, Default)]
+struct Paths {
+    /// Registered asset id to its path in the source.
+    assets: BTreeMap<String, String>,
+    /// Where a source export finds its declared design.
+    design: Option<DesignPaths>,
+}
+
+/// An exported design, relative to the export's main file.
+#[derive(Debug)]
+struct DesignPaths {
+    /// The resolved design JSON.
+    json: String,
+    /// Dotted image key, asset id and path of each copied design image.
+    images: Vec<(&'static str, String, String)>,
+}
+
 struct Emitter<'a> {
     document: &'a Document,
     registry: &'a AssetRegistry,
     opts: &'a EmitOptions<'a>,
     notes: &'a NoteLabels,
-    paths: &'a BTreeMap<String, String>,
+    paths: &'a Paths,
     macros: BTreeMap<String, String>,
     output: Output,
     span: Option<SourceSpan>,
@@ -188,8 +207,7 @@ struct Emitter<'a> {
 impl<'a> Emitter<'a> {
     fn new(
         document: &'a Document, registry: &'a AssetRegistry,
-        opts: &'a EmitOptions<'a>, notes: &'a NoteLabels,
-        paths: &'a BTreeMap<String, String>,
+        opts: &'a EmitOptions<'a>, notes: &'a NoteLabels, paths: &'a Paths,
     ) -> Self {
         Self {
             document,
@@ -333,6 +351,10 @@ impl<'a> Emitter<'a> {
             string(&self.opts.config.pdf.paper)
         };
         self.argument("paper", &paper);
+        let paths = self.paths;
+        if let Some(design) = &paths.design {
+            self.design_argument(design);
+        }
         self.argument("toc", "false");
         if !self.opts.config.references.locale.is_empty() {
             self.argument(
@@ -346,6 +368,26 @@ impl<'a> Emitter<'a> {
 
     fn argument(&mut self, key: &str, value: &str) {
         self.write(&format!("  {key}: {value},\n"));
+    }
+
+    /// Passes an exported design from the document side: the JSON beside the
+    /// main file, each copied image replaced by a `path` the main file
+    /// resolves, so the package never resolves a project path itself.
+    fn design_argument(&mut self, design: &DesignPaths) {
+        let json = format!("json({})", string(&design.json));
+        if design.images.is_empty() {
+            self.argument("design", &json);
+            return;
+        }
+        self.write(&format!("  design: {{\n    let design = {json}\n"));
+        for (slot, id, path) in &design.images {
+            self.write(&format!(
+                "    design.{slot}.path = path({})\n",
+                string(path)
+            ));
+            self.assets.insert(id.clone(), path.clone());
+        }
+        self.write("    design\n  },\n");
     }
 
     fn blocks(&mut self, blocks: &[Block], indent: usize) -> Result<()> {
@@ -1390,7 +1432,7 @@ impl<'a> Emitter<'a> {
                 "unregistered asset placeholder `asset:{id}`"
             )));
         }
-        let path = self.paths[id].clone();
+        let path = self.paths.assets[id].clone();
         self.assets.insert(id.into(), path.clone());
         Ok(path)
     }
@@ -1639,15 +1681,33 @@ fn edge(inline: &Inline, first: bool) -> Option<char> {
     }
 }
 
-/// Reserves the same referenced asset names used by complete and split exports.
-pub(crate) fn export_asset_paths(
-    document: &Document, registry: &AssetRegistry, dir: &str,
-) -> BTreeMap<String, String> {
-    crate::assets::export::assets(document, registry)
+/// Reserves the referenced asset names shared by complete and split exports,
+/// then a declared design's JSON and images, exactly as the export pipeline
+/// reserves them.
+fn export_paths(
+    document: &Document, registry: &AssetRegistry, design: &Design, dir: &str,
+) -> Paths {
+    let dir = dir.trim_end_matches('/');
+    let mut plan = crate::assets::export::assets(document, registry);
+    let names = crate::assets::export::design(&mut plan, design, registry);
+    let assets = plan
         .typst
         .into_iter()
-        .map(|(id, name)| (id, format!("{}/{name}", dir.trim_end_matches('/'))))
-        .collect()
+        .map(|(id, name)| (id, format!("{dir}/{name}")))
+        .collect();
+    let design = names.map(|names| DesignPaths {
+        json: format!("{dir}/{}", names.json),
+        images: design
+            .image_slots()
+            .into_iter()
+            .filter_map(|(slot, source)| {
+                let asset = registry.find_file(source)?;
+                let name = names.images.get(&asset.id)?;
+                Some((slot, asset.id.clone(), format!("{dir}/{name}")))
+            })
+            .collect(),
+    });
+    Paths { assets, design }
 }
 
 /// Allocates a portable resource basename; occupied keys are ASCII-lowercase.
@@ -1658,10 +1718,11 @@ pub(crate) fn export_name(
 }
 
 fn asset_paths(
-    document: &Document, registry: &AssetRegistry, mode: &AssetPaths,
-) -> BTreeMap<String, String> {
+    document: &Document, registry: &AssetRegistry, opts: &EmitOptions<'_>,
+) -> Paths {
+    let mode = &opts.assets;
     if let AssetPaths::Export { dir } = mode {
-        return export_asset_paths(document, registry, dir);
+        return export_paths(document, registry, opts.design, dir);
     }
     let mut referenced = BTreeSet::new();
     visit_rendered(document, &mut |_| {}, &mut |inline| {
@@ -1691,7 +1752,7 @@ fn asset_paths(
         };
         paths.insert(asset.id.clone(), path);
     }
-    paths
+    Paths { assets: paths, design: None }
 }
 
 fn virtual_path(asset: &Asset) -> String {

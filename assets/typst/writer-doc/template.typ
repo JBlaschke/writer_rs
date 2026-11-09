@@ -3,7 +3,9 @@
 // description, lang. Layout: toc, toc-title, abstract-title,
 // reference-section-title, numbering, paper. Typography: font, heading-font,
 // mono-font, size, leading, spacing, justify, margin, text-fill, link-fill,
-// background. References: bibliography,
+// background. Design: design (auto reads the writer-design input, none keeps
+// the package defaults, a dictionary replaces the input; exported sources pass
+// their copied design here). References: bibliography,
 // cite-style/csl, cite-locale. Config maps: markdown, math, references, html,
 // pdf, docx, latex, typst, notebook. Ignored routing options: theme, template,
 // reference-doc, latex-template. Other named arguments are accepted as extras.
@@ -11,7 +13,7 @@
 // let design = if "writer-design" in sys.inputs {
 //     json(bytes(sys.inputs.at("writer-design")))
 // } else { (:) }
-#import "@writer/doc:0.2.0" as base
+#import "@writer/doc:0.3.0" as base
 
 #let writer-doc(..args, body) = {
     show heading: set text(fill: rgb("#1a3a8a"))

@@ -519,6 +519,13 @@ unchanged. `world_inputs` stays the only producer. Furniture images are register
 | `colors.accent`, `colors.muted`, `fonts.*.files`, `header_offset`, `footer_offset`, `print` | read by furniture (§9.4) or not used by Typst (`files`: §6.5; `print`: HTML only) |
 
 The package exposes `writer-design` (the decoded dictionary or `(:)`) for templates and documents.
+`writer-doc(design:)` names the design it applies: `auto` (the default) is the `writer-design`
+input, `none` ignores the input and keeps the built-in defaults, and a dictionary in the §3.3 shape
+replaces the input (§6.7's exports pass one). Explicit arguments keep winning over all three. The
+applied design is also recorded in a `state("writer-design")`, which `writer-div` reads in a
+`context` block (falling back to the input when no `writer-doc` recorded one), so an exported
+body's divs see the exported design. Package version `0.3.0` (2026-11-09) added the argument; an
+ejected `0.2.0` would swallow it silently through `..extra`.
 
 ### 6.3 BYO template and explicit arguments
 A `[pdf] template` that delegates (`base.writer-doc(..args, body)`, typst-dialect.md §4.6) inherits
@@ -568,10 +575,37 @@ design) and `@writer/doc`'s `writer-design` dictionary, and only a `#show: write
 defaults up. `writer check` applies no design lint to native input except the file checks of §10.
 
 ### 6.7 Exports (`--format typ`, `dump --typst`, typst-dialect.md §10)
-The exported source is unchanged (it reads `sys.inputs`). A standalone `typst compile` without the
-input compiles with the package's built-in defaults, as it does for `writer-config` today; `typst
-compile --input writer-design="$(writer dump --design DOC)"` restores the design when the fonts are
-on the compiler's font path. The exported tree does not copy design fonts or images (open point 5).
+`dump --typst` is unchanged: it reads `sys.inputs`, which writer's own compile supplies. A
+`--format typ` export of a project that declares a design carries the design itself
+(2026-11-09), so the tree compiles with the plain Typst CLI and no `--input`:
+- `<stem>_assets/writer-design.json` is the §3.3 JSON (`PathMode::Export`, pretty-printed, one
+  trailing newline) with every registered furniture and background image and every
+  `fonts.*.files` entry rewritten to its path inside the tree, relative to the main file;
+- the furniture and background images are copied into `<stem>_assets/` under typst-dialect.md
+  §10's export names (an image the body also shows keeps its one copy), and the declared font
+  files into `<stem>_assets/fonts/` (basenames; first six content-hash characters on a clash);
+- the main file's `#show: writer-doc.with(..)` gains `design:` after `paper`: `design:
+  json("<stem>_assets/writer-design.json")`, or, when images are registered, a code block that
+  loads the JSON, replaces each image's `path` with a document-side
+  `path("<stem>_assets/<name>")` and returns the dictionary. A `str` path used inside a package
+  resolves against the package root (typst-dialect.md §3), so the main file turns every image
+  into a `path` value and the package never resolves a project path itself.
+
+The names `writer-design.json` and `fonts` join the §10 namespace after the body's assets and
+before the bibliography, CSL and template copies (`-design` suffix on a clash). An undeclared
+design reserves nothing and leaves the export byte-identical to its previous form. Font files
+travel, but typst's CLI reads font files only through `--font-path`, so the documented command is
+`typst compile --font-path <out>/<stem>_assets/fonts --package-path <eject typst-package dir>
+<out>/<stem>.typ`; without `--font-path` the declared families fall back like any unavailable
+font. The CLI also scans the system's fonts unless `--ignore-system-fonts` is given, the counterpart
+of `[pdf] system_fonts = false` (§6.5): a project that disables system fonts reproduces writer's PDF
+only with that flag (checked 2026-11-09 with `examples/letter`, whose declared Source Sans 3 the CLI
+otherwise took from the machine). Precedence is unchanged: an explicit `writer-doc` argument wins
+over `design:`, which wins
+over `sys.inputs.writer-design`, which wins over the package defaults, so a `--input` given as well
+loses to the export's own design. A template that reads `sys.inputs` itself (§6.3) still needs
+`--input writer-design="$(writer dump --design DOC)"` outside writer. The frontend's structured
+readback skips `design` like the other typography arguments (typst-dialect.md §3).
 
 ## 7. DOCX (`src/docx/{styles,reference,mod}.rs`, `src/docx/design.rs` new; T83, T85, T87)
 
@@ -872,7 +906,9 @@ Rules: `line(length: 100%, stroke: width * 1pt + rgb(color))`; `{page}`/`{pages}
 → `align(..)` inside the block. Rules occupy a separate block with a 0.3em
 clearance from adjacent text. Image paths are the virtual `/__assets/…` paths
 of §3.3. The World mounts those reserved paths for both project code and
-`@writer/doc`, whose image calls otherwise retain the package root.
+`@writer/doc`, whose image calls otherwise retain the package root. In a
+`--format typ` export (§6.7) the main file replaces them with `path(..)`
+values, which `image()` resolves against the main file.
 
 ### 9.5 DOCX (`src/docx/design.rs`, `reference.rs`; T87)
 Generated parts: `word/header<k>.xml` and `word/footer<k>.xml` with k the smallest free index
@@ -1162,8 +1198,9 @@ so an edit elsewhere keeps the Libraries.
    `w:displayBackgroundShape` in settings and prints oddly); HTML and PDF apply it.
 4. **Last-paragraph margin inside a styled div (HTML).** Recommended: `[data-style] > p:last-child
    { margin-bottom: 0 }` is *not* generated; themes add it where wanted.
-5. **Exports and design files.** Recommended: `--format typ` copies design fonts and images into the
-   export tree and writes `writer-design.json` beside `main.typ` in a later task; until then §6.7.
+5. **Exports and design files.** Resolved (2026-11-09, §6.7): `--format typ` copies design fonts
+   and images into the export tree and writes `<stem>_assets/writer-design.json`, which the main
+   file passes as `writer-doc(design:)`.
 6. **Inline markup in furniture lines.** Recommended: plain text now; a later task may parse lines
    as Markdown inlines when a `markdown = true` key is set on the furniture.
 7. **Furniture `line_height`.** Recommended: add `line_height` (LineHeight) to the furniture table

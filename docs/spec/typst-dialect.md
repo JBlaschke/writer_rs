@@ -270,6 +270,7 @@ literals (`E-TYP-TEMPLATE-ARG` otherwise); `auto` means "not given".
 | `cite-style` / `csl` | str (style name) \| `path(..)` (.csl) | `"ieee"` | `[references] style` | `bibliography(style:)` |
 | `cite-locale` | str | `auto` (→ `writer-config` `"cite_locale"`) | `[references] locale` (as `vars.cite_locale`: the generic `-` → `_` rule of this section, read by `Config::merge_front_matter`, config.md §3) | locale rules (references.md §3) |
 | `paper` | str | `"a4"` | `[pdf] paper` | `set page(paper:)` |
+| `design` | `auto` \| none \| dict (design.md §3.3 shape) | `auto` (→ `sys.inputs.writer-design`) | skipped, like the typography arguments | the design `writer-doc` applies (design.md §6.2); exports pass their copied design (design.md §6.7) |
 | `toc-title`, `abstract-title`, `reference-section-title` | str \| content (plain text) | `auto` | `DocMeta.vars` under that name (pandoc's variables: html-output.md §1.3, §1.10, §1.12; docx-output.md §4.4, §4.13, §4.14) | titles of the outline, the abstract and the bibliography (§4.2) |
 | `theme`, `template`, `reference-doc`, `latex-template` | str | — | config.md §3 | ignored |
 | `markdown`, `math`, `references`, `html`, `pdf`, `docx`, `latex`, `typst`, `notebook` | dict | (:) | the same tables | uses `pdf.paper` |
@@ -331,6 +332,13 @@ citation-locale `title:` of the bibliography the package places.
 > (design.md §8.4) and `writer-furniture(spec, text-width)` (design.md §9.4). The mapping of design
 > keys to `set`/`show` rules is design.md §6.2; a declared furniture slot sets `page(header: none,
 > footer: none, numbering: none)` and places the furniture through `page(background:)` (T82, T85, T88).
+
+> **Contract change (2026-11-09, package `0.3.0`):** `writer-doc` gains `design: auto`, the design
+> it applies: `auto` → `sys.inputs.writer-design`, `none` → the built-in defaults, a dictionary in
+> design.md §3.3's shape → that design; explicit arguments still win over all three.
+> `writer-furniture` gains `line-height: none` (the design's `text.line_height`); `writer-div` reads
+> the applied design from `state("writer-design")`, which `writer-doc` records, and falls back to
+> the input. `WRITER_DOC_VERSION` becomes `0.3.0`.
 
 ### 4.3 Callouts, numbering, figures
 - `callout(kind: "note", title: auto, body)`: `title: auto` → the dictionary word for the kind
@@ -942,10 +950,16 @@ by the main file. The tree compiles with `typst compile --package-path <eject ty
 `FsPackages::system_data()`, R1 §3). An existing version
 directory → exit 2, nothing written. `eject typst-template FILE` writes `template.typ` (§4.6).
 
-> **Contract change (coordinator, 2026-11-01):** exports are unchanged by the design layer: the
-> exported source reads `sys.inputs`, a standalone `typst compile` falls back to the package
-> defaults, and `--input writer-design="$(writer dump --design DOC)"` restores the design
-> (design.md §6.7, open point 5).
+> **Contract change (2026-11-09; replaces the 2026-11-01 note):** an export of a project that
+> declares a design carries it (design.md §6.7): `<stem>_assets/writer-design.json` with
+> tree-relative image and font paths, the furniture and background images beside the body's
+> assets, the declared font files under `<stem>_assets/fonts/`, and `design:` in the main file's
+> show rule, which loads the JSON and turns each image path into a `path(..)` value. The names
+> `writer-design.json` and `fonts` are reserved after the body's assets and before the
+> bibliography, CSL and template copies. The tree compiles with `typst compile --font-path
+> <out>/<stem>_assets/fonts --package-path <eject typst-package dir> <out>/<stem>.typ` (plus
+> `--ignore-system-fonts` where `[pdf] system_fonts = false`); `dump --typst` and exports of
+> undeclared designs are unchanged. The package version is `0.3.0`.
 
 ## 11. Verified API hints
 

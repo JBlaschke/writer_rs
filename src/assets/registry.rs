@@ -115,6 +115,15 @@ impl AssetRegistry {
         self.assets.get(id)
     }
 
+    /// The file asset registered for `path`, resolved as `register_file`
+    /// resolves it.
+    pub fn find_file(&self, path: &Path) -> Option<&Asset> {
+        let path = resolve_path(path);
+        self.iter().find(
+            |asset| matches!(&asset.data, AssetData::File(file) if file == &path),
+        )
+    }
+
     /// All assets, ordered by id.
     pub fn iter(&self) -> impl Iterator<Item = &Asset> {
         self.assets.values()

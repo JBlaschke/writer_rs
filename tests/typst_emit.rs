@@ -210,7 +210,7 @@ fn sample_build_is_deterministic_and_does_not_mutate_the_ir() {
         .map(|(index, line)| (index + 1, format!("{line:?}")))
         .collect();
     assert!(trailing.is_empty(), "trailing spaces: {trailing:?}");
-    assert!(emitted.text.contains("#import \"@writer/doc:0.2.0\": *"));
+    assert!(emitted.text.contains("#import \"@writer/doc:0.3.0\": *"));
     assert!(
         emitted.text.contains("#import \"@preview/mitex:0.2.7\": mi, mitex")
     );
@@ -860,7 +860,7 @@ fn unresolved_documents_use_placeholders_but_fragments_keep_syntax() {
     opts.fragment = true;
     let fragment = emit(&doc, &AssetRegistry::new(), &opts).unwrap();
     assert!(!fragment.text.contains("#show"));
-    assert!(fragment.text.contains("#import \"@writer/doc:0.2.0\": *"));
+    assert!(fragment.text.contains("#import \"@writer/doc:0.3.0\": *"));
     assert!(fragment.text.contains("@sec-whole"));
     assert!(fragment.text.contains("@knuth1984"));
     assert!(fragment.text.contains("#link(<sec-whole>)[Whole]"));
@@ -926,7 +926,7 @@ fn unresolved_fragment_compiles_in_the_whole_document_scope() {
     assert!(
         synthesized.text.contains("#footnote(<writer-fn-abcdef12-odd_name_>)")
     );
-    let source = "#import \"@writer/doc:0.2.0\": *\n\
+    let source = "#import \"@writer/doc:0.3.0\": *\n\
         #show: writer-doc.with(numbering: true)\n\
         = Whole <sec-whole>\n\
         #include \"part.md\"\n\

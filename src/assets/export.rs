@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use super::registry::{AssetRegistry, normalize_lexically};
 use crate::config::Config;
+use crate::design::Design;
 use crate::ir::{Block, Document, Inline};
 
 /// Basenames only; each caller supplies its own `<stem>_assets/` prefix.
@@ -25,6 +26,21 @@ enum Owner {
     Asset(String),
     Rendition(String),
     Resource(PathBuf),
+    Design,
+}
+
+/// The preferred basename of an exported design, as `dump --design` prints it.
+pub(crate) const DESIGN_JSON: &str = "writer-design.json";
+
+/// Export basenames of a declared design's JSON and registered images.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct DesignNames {
+    /// The resolved design JSON.
+    pub json: String,
+    /// The directory of copied font files, when the design declares any.
+    pub fonts: Option<String>,
+    /// Registered furniture and background image id to basename.
+    pub images: BTreeMap<String, String>,
 }
 
 /// Ownership lets both targets copy the same resource under its ordinary name.
@@ -109,6 +125,40 @@ pub(crate) fn assets(
         latex.insert(asset.id.clone(), LatexAssetName { name, render });
     }
     ExportAssets { typst, latex, namespace }
+}
+
+/// Reserves a declared design's names after the body assets: the JSON, the
+/// font directory, then each registered image in slot order. An image the
+/// body also shows keeps the body's name. Undeclared designs reserve nothing,
+/// so their exports are named as before.
+pub(crate) fn design(
+    plan: &mut ExportAssets, design: &Design, registry: &AssetRegistry,
+) -> Option<DesignNames> {
+    if !design.declared {
+        return None;
+    }
+    let json = plan.namespace.allocate(DESIGN_JSON, "design", Owner::Design);
+    let fonts = (!design.font_files().is_empty())
+        .then(|| plan.namespace.allocate("fonts", "design", Owner::Design));
+    let mut images = BTreeMap::new();
+    for path in design.images() {
+        let Some(asset) = registry.find_file(path) else {
+            continue;
+        };
+        if images.contains_key(&asset.id) {
+            continue;
+        }
+        let name = match plan.typst.get(&asset.id) {
+            Some(name) => name.clone(),
+            None => plan.namespace.allocate(
+                &asset.file_name_hint,
+                &asset.id[..6],
+                Owner::Asset(asset.id.clone()),
+            ),
+        };
+        images.insert(asset.id.clone(), name);
+    }
+    Some(DesignNames { json, fonts, images })
 }
 
 fn latex_extension(mime: &str) -> Option<(&'static str, bool)> {
