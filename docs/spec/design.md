@@ -505,8 +505,8 @@ unchanged. `world_inputs` stays the only producer. Furniture images are register
 | `fonts.heading.family` | `show heading: set text(font: F)` |
 | `fonts.mono.family` | `show raw: set text(font: F)` (replaces `"DejaVu Sans Mono"`) |
 | `text.size` | `set text(size: S * 1pt)` |
-| `text.line_height` | `set par(leading: L)` with `L = (n − 0.8) × size` for a multiple `n`, `L = exact − 0.8 × size` for an exact length (floored at 0pt). The constant is calibrated on the §11 letter (1.35 ↔ the hand-tuned `0.55em`) and documented as an approximation: Typst's leading is a gap, not a pitch |
-| `text.paragraph_spacing` | `set par(spacing: P * 1pt)` |
+| `text.line_height` | `set par(leading: L)` with `L = pitch − box`, the pitch `n × size` for a multiple `n` or the exact length, floored at 0pt. Typst's leading is the gap between one line's bottom edge and the next line's top edge, and with the default edges (`top-edge: "cap-height"`, `bottom-edge: "baseline"`) a line's box is the font's cap height (OS/2 `sCapHeight`, else its ascender, as `FontMetrics` resolves it), so the baseline pitch then holds exactly, as in HTML and Word. The package measures the box in a `context` block (`line-box(size) = measure(text(size: size)[H]).height`) rather than assuming a constant, so the fonts and edges actually in use decide, a fallback font's box included. `L` is in ems of the size, `(n − box/size) × 1em` or `exact − box/size × 1em`, so a multiple follows a paragraph's own size the way HTML's unitless `line-height` and Word's `auto` lines do. Package `0.3.0`; before it `L = (n − 0.8) × size`, calibrated once on the §11 letter (`0.55em`), drew 13.3 pt lines where HTML and Word drew 14.85 pt |
+| `text.paragraph_spacing` | `set par(spacing: L + P * 1pt)`: Typst measures `spacing` like the leading, from the last baseline to the next line's cap height, so a paragraph break then adds `P` to a full pitch as HTML's `margin-block` and Word's `w:after` do. `P` alone (before `0.3.0`) lost a leading per break: 17.5 pt instead of 25.05 pt in the §11 letter |
 | `text.justify` | `set par(justify: J)` |
 | `colors.text` | `set text(fill: rgb(C))` |
 | `colors.link` | `show link: set text(fill: rgb(C))` |
@@ -525,7 +525,10 @@ replaces the input (§6.7's exports pass one). Explicit arguments keep winning o
 applied design is also recorded in a `state("writer-design")`, which `writer-div` reads in a
 `context` block (falling back to the input when no `writer-doc` recorded one), so an exported
 body's divs see the exported design. Package version `0.3.0` (2026-11-09) added the argument; an
-ejected `0.2.0` would swallow it silently through `..extra`.
+ejected `0.2.0` would swallow it silently through `..extra`. The same version derives the leading
+and paragraph spacing from the measured line box (the `text.line_height` and
+`text.paragraph_spacing` rows above); `writer-div` and `writer-furniture` apply the rule at their
+own sizes (§8.4, §9.4).
 
 ### 6.3 BYO template and explicit arguments
 A `[pdf] template` that delegates (`base.writer-doc(..args, body)`, typst-dialect.md §4.6) inherits
@@ -731,8 +734,9 @@ the theme's paragraph gaps inside; the last paragraph's bottom margin is not rem
     let spec = if style != none { writer-design.at("styles", default: (:)).at(style, default: none) } else { none }
     if spec == none { return body }
     let inner = body
-    // set text(font:, size:, fill:, weight:, style:), set par(leading:, justify:), align(..)
-    // per spec key, then
+    // set text(font:, size:, fill:, weight:, style:), set par(justify:), align(..) per spec
+    // key; with line_height: context { set par(leading: design-leading(line_height,
+    // text.size), spacing: leading + paragraph_spacing) } around the body (§6.2); then
     block(
         above: space_before, below: space_after,   // default auto
         breakable: not keep_together,
@@ -744,7 +748,10 @@ the theme's paragraph gaps inside; the last paragraph's bottom margin is not rem
 ```
 `font: "body"|"heading"|"mono"` → that role's family when the design sets it, else no `set`;
 `align` → `align(left|center|right)(..)` or `set par(justify: true)`; `line_height` uses §6.2's
-leading formula with the style's size (else the design's, else 11pt). `block(sticky: true)` is
+rule with the box of the style's own font and size, measured in a `context` block inside the
+style's `set text` rules, and puts the design's `text.paragraph_spacing` (when set) on top of that
+leading between the div's paragraphs; an unset `line_height` inherits the document's leading,
+which is in ems and so follows the style's `size`. `block(sticky: true)` is
 Typst's keep-with-next (Verified API hints). The function is also what §6.4's emitter calls for styleless
 divs (`spec == none` → `body`).
 
@@ -879,24 +886,29 @@ A declared slot sets `page(header: none, footer: none, numbering: none)` and
 `page(background: context { … })` places both slots (the way the §11 letter's hand-written
 `letterhead.typ` does, which keeps offsets exact):
 ```typst
-#let writer-furniture(spec, text-width, spacing: 1.2em) = {
+#let writer-furniture(spec, text-width, spacing: 1.2em, line-height: none) = {
     // spec: the §3.3 furniture dictionary; returns content: optional rule above,
     // block(below: gap, image(spec.image.path, width:)) with gap = spec.image.gap * 1pt or
-    // `spacing` (the document's paragraph spacing) when null, grid(columns: (1fr, auto)) of
-    // lines / right_lines joined by linebreak(), optional rule below; text(size:, fill:,
-    // weight:, style:) per line.
+    // `spacing` when null, grid(columns: (1fr, auto)) of lines / right_lines joined by
+    // linebreak(), optional rule below; text(size:, fill:, weight:, style:) per line;
+    // set par(leading: design-leading(line-height, size)), so the lines take the design's
+    // `text.line_height` pitch at the furniture's size (§6.2).
 }
 #set page(background: context {
+    // the design's paragraph spacing, else an explicit `writer-doc(spacing:)`, else 1.2em
+    let gap = furniture-gap(settings)
     let first = counter(page).get().first() == 1
     let header = if first { design.page.header.first } else { design.page.header.rest }
     if header != none {
         place(top + left, dx: margin.left, dy: header-offset,
-              block(width: text-width, writer-furniture(header, text-width, spacing: settings.spacing)))
+              block(width: text-width,
+                    writer-furniture(header, text-width, spacing: gap, line-height: settings.line-height)))
     }
     let footer = …
     if footer != none {
         place(bottom + left, dx: margin.left, dy: -footer-offset,
-              block(width: text-width, writer-furniture(footer, text-width, spacing: settings.spacing)))
+              block(width: text-width,
+                    writer-furniture(footer, text-width, spacing: gap, line-height: settings.line-height)))
     }
 })
 ```
@@ -1035,8 +1047,8 @@ The Letters template (an HTML theme with a hand-written `document.html`, `letter
 | quantity | design | pt | twips (DOCX) | source today |
 |---|---|---|---|---|
 | body size | `"11pt"` | 11 | sz 22 | `letter.css` `html { font-size: 11pt }`, Normal sz 22, `text(size: 11pt)` |
-| line height | `1.35` | leading 0.55 em (§6.2) | line 324 auto | `line-height: 1.35`; `par(leading: 0.55em)` |
-| paragraph spacing | `"3.6mm"` | 10.205 | after 204 | `main p { margin: 0 0 3.6mm }` (reference: after 160) |
+| line height | `1.35` | 14.85 pt pitch: leading 7.59 pt = 14.85 − 7.26, Source Sans 3's 0.66 em cap height at 11 pt (§6.2) | line 228 auto (§7.1) | `line-height: 1.35`; `par(leading: 0.55em)`, which drew 13.3 pt lines |
+| paragraph spacing | `"3.6mm"` | 10.205: `par.spacing` 17.8 pt = 7.59 + 10.205, a 25.05 pt baseline step across a break (§6.2) | after 204 | `main p { margin: 0 0 3.6mm }` (reference: after 160) |
 | margins | top `"50mm"`, sides `"22mm"`, bottom `"38mm"` | 141.732 / 62.362 / 107.717 | 2835 / 1247 / 2154 | `@page { margin: 50mm 22mm 38mm }`; `pgMar` of `reference.docx` |
 | header offset | `"17mm"` | 48.189 | header 964 | `.letterhead { top: 17mm }`; `pgMar/@header="964"` |
 | footer offset | `"10mm"` | 28.346 | footer 567 | `.legal-footer { bottom: 10mm }` (reference: 737) |
@@ -1160,7 +1172,8 @@ and `letter.md` keeps its directives: `:::recipient {custom-style="Recipient"}` 
   shrinks to the sheet and `html.main` plus the two helper calls; `letter.css` keeps the sheet
   dimensions and screen padding only.
 - **PDF** (T82, T84, T85, T88): no `[pdf] template`; `writer-doc` sets Source Sans 3 11pt, leading
-  0.55em, spacing 10.205pt, fill `#242424`, A4 with the margins, no page numbering, a `background`
+  7.59pt and spacing 17.8pt (14.85 pt lines and 25.05 pt across a paragraph break, as in HTML and
+  Word; §6.2), fill `#242424`, A4 with the margins, no page numbering, a `background`
   that places the logo and institute line at 17mm on page 1 and the compact line on later pages,
   and the footer block (rule, four left lines, two right lines, 7.5pt, `#575757`) 10mm above the
   bottom edge; `writer-div(style: "Recipient", classes: ("recipient",))[..]` renders a
