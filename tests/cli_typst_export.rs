@@ -40,6 +40,20 @@ fn build(root: &Path, input: &str) -> Command {
     command
 }
 
+fn design(family: &str) -> String {
+    format!(
+        concat!(
+            "[design.fonts]\n",
+            "body = {{ family = '{}', files = ['fonts/body.otf'] }}\n",
+            "[design.page.header.first]\n",
+            "image = {{ src = 'logo.svg', width = '30mm' }}\n",
+            "lines = ['Institute']\n",
+            "[design.styles.Recipient]\nsize = '15pt'\n",
+        ),
+        family
+    )
+}
+
 fn inventory(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     let mut result = BTreeMap::new();
     let mut pending = vec![root.to_owned()];
@@ -359,4 +373,71 @@ fn chosen_non_utf8_output_stem_is_rejected_before_writing() {
         .unwrap();
     assert_eq!(result.status.code(), Some(2));
     assert!(!parent.exists());
+}
+
+#[test]
+fn a_declared_design_exports_its_json_images_and_font_files() {
+    let directory =
+        project("# Letter\n\n:::recipient\nDr Example\n:::\n\nBody.\n");
+    let (font, info) = typst_kit::fonts::embedded().next().unwrap();
+    write(
+        directory.path(),
+        "writer.toml",
+        format!("{CONFIG}{}", design(&info.family)),
+    );
+    write(directory.path(), "logo.svg", SVG);
+    write(directory.path(), "fonts/body.otf", font.data());
+    let output = build(directory.path(), "document.md").output().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert_eq!(stdout.lines().count(), 2, "{stdout}");
+    assert!(stdout.lines().all(|line| line.starts_with("Wrote ")));
+    assert!(stdout.contains("document_assets"), "{stdout}");
+    let out = directory.path().join("out");
+    let files = inventory(&out);
+    assert_eq!(
+        files.keys().collect::<Vec<_>>(),
+        [
+            Path::new("document.typ"),
+            Path::new("document_assets/fonts/body.otf"),
+            Path::new("document_assets/logo.svg"),
+            Path::new("document_assets/writer-design.json"),
+        ]
+    );
+    assert_eq!(
+        files[Path::new("document_assets/fonts/body.otf")],
+        font.data().as_slice()
+    );
+    assert_eq!(files[Path::new("document_assets/logo.svg")], SVG);
+    let design: serde_json::Value = serde_json::from_slice(
+        &files[Path::new("document_assets/writer-design.json")],
+    )
+    .unwrap();
+    assert_eq!(
+        design["fonts"]["body"]["files"],
+        json!(["document_assets/fonts/body.otf"])
+    );
+    assert_eq!(design["fonts"]["body"]["family"], json!(info.family));
+    assert_eq!(
+        design["page"]["header"]["first"]["image"]["path"],
+        json!("document_assets/logo.svg")
+    );
+    let main =
+        String::from_utf8(files[Path::new("document.typ")].clone()).unwrap();
+    assert!(
+        main.contains(concat!(
+            "    let design = json(\"document_assets/writer-design.json\")\n",
+            "    design.page.header.first.image.path = ",
+            "path(\"document_assets/logo.svg\")\n",
+        )),
+        "{main}"
+    );
+    assert!(main.contains("#writer-div(style: \"Recipient\""), "{main}");
+    let repeat = build(directory.path(), "document.md").output().unwrap();
+    assert!(repeat.status.success());
+    assert_eq!(inventory(&out), files, "repeated exports are byte-identical");
 }

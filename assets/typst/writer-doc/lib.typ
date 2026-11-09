@@ -33,14 +33,38 @@
     json(bytes(sys.inputs.at("writer-design")))
 } else { (:) }
 
-#let from-design(key, default) = {
-    let value = writer-design
+// A dotted lookup in one design dictionary; `default` stands in for a missing
+// or `none` value.
+#let design-get(design, key, default) = {
+    let value = design
     for part in key.split(".") {
         if type(value) != dictionary { return default }
         value = value.at(part, default: none)
     }
     if value == none { default } else { value }
 }
+
+#let from-design(key, default) = design-get(writer-design, key, default)
+
+// The design `writer-doc` applies: its explicit `design:` argument wins over
+// the `writer-design` input, which wins over the package defaults. An exported
+// source passes the JSON copied beside its main file here, so a plain compile
+// needs no input; `none` ignores the input and keeps the defaults.
+#let design-value(design) = {
+    if design == auto { writer-design }
+    else if design == none { (:) }
+    else {
+        assert(
+            type(design) == dictionary,
+            message: "writer-doc: design must be auto, none or a dictionary"
+        )
+        design
+    }
+}
+
+// Shares the applied design with `writer-div`, which the body calls outside
+// `writer-doc`'s arguments; `none` until `writer-doc` records it.
+#let design-state = state("writer-design", none)
 
 #let design-leading(pitch, size) = {
     if pitch == none { return 0.65em }
@@ -196,8 +220,11 @@
 }
 
 // `spacing` is the document's paragraph spacing: the default gap between an
-// image and the lines below it (design.md §9.1).
-#let writer-furniture(spec, text-width, spacing: 1.2em) = context {
+// image and the lines below it (design.md §9.1); `line-height` is the
+// design's `text.line_height`, which sets the lines' leading at their size.
+#let writer-furniture(
+            spec, text-width, spacing: 1.2em, line-height: none
+        ) = context {
     if spec == none { return none }
     let size = if spec.size == none { text.size } else { spec.size * 1pt }
     let fill = if spec.color == none { text.fill } else { rgb(spec.color) }
@@ -205,7 +232,7 @@
         style: if spec.italic { "italic" } else { "normal" })
     set par(
         first-line-indent: 0pt, spacing: 0pt, justify: false,
-        leading: design-leading(from-design("text.line_height", none), size),
+        leading: design-leading(line-height, size),
     )
     block(width: text-width, above: 0pt, below: 0pt)[
         #if spec.rule != none and spec.rule.position == "above" {
@@ -275,7 +302,8 @@
 
 #let furniture-background(settings) = context {
     let first = counter(page).get().first() == 1
-    let background = from-design("page.background", none)
+    let design = settings.design
+    let background = design-get(design, "page.background", none)
     if background != none and (background.pages == "all" or first) {
         place(top + left, box(width: page.width, height: page.height,
             background-image(background.image)))
@@ -289,43 +317,47 @@
     let margin = (top: side("top", "y"), right: side("right", "x"),
         bottom: side("bottom", "y"), left: side("left", "x"))
     let text-width = page.width - margin.left - margin.right
-    let header = from-design("page.header", none)
+    let furniture(chosen) = writer-furniture(
+        chosen, text-width,
+        spacing: settings.spacing, line-height: settings.line-height,
+    )
+    let header = design-get(design, "page.header", none)
     if header != none {
         let chosen = if first { header.first } else { header.rest }
         if chosen != none {
-            let offset = from-design("page.header_offset", none)
+            let offset = design-get(design, "page.header_offset", none)
             let offset = if offset == none { margin.top * 0.3 }
                 else { offset * 1pt }
-            place(top + left, dx: margin.left, dy: offset,
-                writer-furniture(chosen, text-width, spacing: settings.spacing))
+            place(top + left, dx: margin.left, dy: offset, furniture(chosen))
         }
     }
-    let footer = from-design("page.footer", none)
+    let footer = design-get(design, "page.footer", none)
     if footer != none {
         let chosen = if first { footer.first } else { footer.rest }
         if chosen != none {
-            let offset = from-design("page.footer_offset", none)
+            let offset = design-get(design, "page.footer_offset", none)
             let offset = if offset == none { margin.bottom * 0.3 }
                 else { offset * 1pt }
             let content = if chosen.size == none {
-                text(size: 0.75em, writer-furniture(chosen, text-width, spacing: settings.spacing))
-            } else { writer-furniture(chosen, text-width, spacing: settings.spacing) }
+                text(size: 0.75em, furniture(chosen))
+            } else { furniture(chosen) }
             place(bottom + left, dx: margin.left, dy: -offset, content)
         }
     }
 }
 
 #let furniture-layout(meta, settings, body) = {
+    let design = settings.design
     if (
-        from-design("page.header", none) != none
-        or from-design("page.footer", none) != none
+        design-get(design, "page.header", none) != none
+        or design-get(design, "page.footer", none) != none
     ) {
         set page(
             header: none, footer: none, numbering: none,
             background: furniture-background(settings),
         )
         reference-layout(meta, settings, body)
-    } else if from-design("page.background", none) != none {
+    } else if design-get(design, "page.background", none) != none {
         // A background alone keeps the built-in header, footer and numbering.
         set page(background: furniture-background(settings))
         reference-layout(meta, settings, body)
@@ -360,6 +392,7 @@
     )
     show std.math.equation: set text(font: "New Computer Modern Math")
     show raw: set text(font: settings.mono-font)
+    design-state.update(settings.design)
     if settings.heading-font != none {
         show heading: set text(font: settings.heading-font)
         design-layout(meta, settings, body)
@@ -374,7 +407,7 @@
             cite-style: auto, csl: auto, cite-locale: auto, paper: auto,
             font: auto, heading-font: auto, mono-font: auto, size: auto,
             leading: auto, spacing: auto, justify: auto, margin: auto,
-            text-fill: auto, link-fill: auto, background: auto,
+            text-fill: auto, link-fill: auto, background: auto, design: auto,
             markdown: (:), math: (:), references: (:), html: (:), pdf: (:),
             docx: (:), latex: (:), typst: (:), notebook: (:), ..extra, body
         ) = {
@@ -400,6 +433,8 @@
         )
     }
     let locale = from-config(cite-locale, config, "cite_locale", "")
+    let design = design-value(design)
+    let from-design(key, default) = design-get(design, key, default)
     let meta = (
         title: title, subtitle: subtitle, authors: author-list(author, authors),
         date: date, abstract: abstract, keywords: keywords,
@@ -452,6 +487,7 @@
         background: if background == auto {
             colour("colors.background", auto)
         } else { background },
+        design: design, line-height: from-design("text.line_height", none),
         lang: language(from-config(lang, config, "lang", "en")),
         toc: from-config(toc, config, "toc", false), toc-title: toc-title,
         numbering: numbers, bibliography: bibliography,
@@ -552,17 +588,16 @@
     }
 }
 
-// Preserve div semantics for templates; named design styles are applied in T85.
-#let writer-div(style: none, classes: (), body) = {
-    let spec = if style != none {
-        from-design("styles", (:)).at(style, default: none)
-    } else { none }
+// A body block in one of `design`'s named styles (design.md §8), or `body`
+// itself when the style is unknown.
+#let writer-styled(design, style, body) = {
+    let spec = design-get(design, "styles", (:)).at(style, default: none)
     if spec == none { return body }
     let text-opts = (:)
     let par-opts = (:)
     if spec.font != none {
         let family = if spec.font in ("body", "heading", "mono") {
-            from-design("fonts." + spec.font + ".family", none)
+            design-get(design, "fonts." + spec.font + ".family", none)
         } else { spec.font }
         if family != none { text-opts.insert("font", family) }
     }
@@ -574,7 +609,7 @@
     }
     if spec.line_height != none {
         let size = if spec.size != none { spec.size }
-            else { from-design("text.size", 11) }
+            else { design-get(design, "text.size", 11) }
         par-opts.insert("leading", design-leading(spec.line_height, size * 1pt))
     }
     if spec.align != none {
@@ -597,4 +632,16 @@
         sticky: spec.keep_with_next,
         width: 100%, inner
     )
+}
+
+// Preserve div semantics for templates; named design styles are applied in T85.
+// The applied design comes from `writer-doc` through `design-state`; a body
+// shown without `writer-doc` reads the `writer-design` input directly.
+#let writer-div(style: none, classes: (), body) = {
+    if style == none { return body }
+    context {
+        let design = design-state.get()
+        if design == none { design = writer-design }
+        writer-styled(design, style, body)
+    }
 }

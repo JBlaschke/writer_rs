@@ -11,10 +11,10 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-use crate::assets::registry::{AssetData, AssetRegistry};
+use crate::assets::registry::AssetRegistry;
 use crate::ir::Attrs;
 
-pub use json::PathMode;
+pub use json::{ExportPaths, PathMode};
 pub use merge::{absolutise_paths, merge, merged_table};
 pub use parse::{parse_align, parse_color, parse_length, parse_weight};
 
@@ -561,20 +561,32 @@ impl Design {
     }
 
     /// Furniture images in slot order, then the page background image.
-    fn images(&self) -> impl Iterator<Item = &PathBuf> {
-        [&self.page.header, &self.page.footer]
+    pub(crate) fn images(&self) -> impl Iterator<Item = &PathBuf> {
+        self.image_slots().into_iter().map(|(_, path)| path)
+    }
+
+    /// Declared images with the dotted key of their image object in the §3.3
+    /// JSON: `page.header.first.image`, …, `page.background.image`.
+    pub fn image_slots(&self) -> Vec<(&'static str, &PathBuf)> {
+        let furniture = [
+            ("page.header.first.image", &self.page.header, true),
+            ("page.header.rest.image", &self.page.header, false),
+            ("page.footer.first.image", &self.page.footer, true),
+            ("page.footer.rest.image", &self.page.footer, false),
+        ];
+        let mut slots: Vec<_> = furniture
             .into_iter()
-            .flatten()
-            .flat_map(|slot| [&slot.first, &slot.rest])
-            .flatten()
-            .filter_map(|furniture| furniture.image.as_ref())
-            .map(|image| &image.path)
-            .chain(
-                self.page
-                    .background
-                    .as_ref()
-                    .map(|background| &background.image.path),
-            )
+            .filter_map(|(key, slot, first)| {
+                let slot = slot.as_ref()?;
+                let variant = if first { &slot.first } else { &slot.rest };
+                let image = variant.as_ref()?.image.as_ref()?;
+                Some((key, &image.path))
+            })
+            .collect();
+        if let Some(background) = &self.page.background {
+            slots.push(("page.background.image", &background.image.path));
+        }
+        slots
     }
 
     /// Font files in role/declaration order, with duplicates omitted.

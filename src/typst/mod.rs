@@ -2,7 +2,7 @@
 //! Owner: T03. Stub created by T00.
 
 /// Version of the bundled `@writer/doc` Typst package.
-pub const WRITER_DOC_VERSION: &str = "0.2.0";
+pub const WRITER_DOC_VERSION: &str = "0.3.0";
 
 pub use crate::vendor::MITEX_VERSION;
 

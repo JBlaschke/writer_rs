@@ -8,8 +8,9 @@ use comrak::nodes::NodeValue;
 use comrak::{Arena, parse_document};
 
 use super::{BuildOptions, Prepared, input_files, write_file};
-use crate::assets::export::{self, ExportNamespace};
+use crate::assets::export::{self, DesignNames, ExportNamespace};
 use crate::assets::registry::content_hash;
+use crate::design::{ExportPaths, PathMode};
 use crate::error::{Diagnostics, Error, Result};
 use crate::ir::{Block, SourceKind};
 use crate::markdown::directives::{colon_prepass, parse_directive_info};
@@ -46,8 +47,9 @@ pub fn build(
         })?;
     let parent = out.parent().unwrap_or(Path::new("."));
     let directory = format!("{stem}_assets");
-    let mut namespace =
-        export::assets(&prepared.document, &prepared.assets).namespace;
+    let mut plan = export::assets(&prepared.document, &prepared.assets);
+    let design = export::design(&mut plan, &prepared.design, &prepared.assets);
+    let mut namespace = plan.namespace;
     export::bibliography(&mut namespace, &prepared.config);
     let mut resources = Resources::new(parent, &directory, namespace);
     let bibliography = prepared
@@ -95,11 +97,16 @@ pub fn build(
         });
     }
     let source_files = files.len();
-    for (id, path) in referenced {
+    for (id, path) in &referenced {
         files.push(File {
             path: parent.join(path),
-            bytes: prepared.assets.read(&id)?,
+            bytes: prepared.assets.read(id)?,
         });
+    }
+    if let Some(names) = &design {
+        files.extend(design_files(
+            prepared, parent, &directory, names, &referenced,
+        )?);
     }
     files.extend(resources.files);
     let assets = (files.len() > source_files).then(|| parent.join(directory));
@@ -111,6 +118,45 @@ pub fn build(
         files.into_iter().take(source_files).map(|file| file.path).collect();
     written.extend(assets);
     Ok((written, diagnostics))
+}
+
+/// The design JSON of a declared design, with every copied image and font
+/// file written as its path inside the export tree, then the font files.
+/// Images come from the emitted source's references; fonts are copied here
+/// under their own names beneath `names.fonts`.
+fn design_files(
+    prepared: &Prepared, parent: &Path, directory: &str, names: &DesignNames,
+    referenced: &BTreeMap<String, String>,
+) -> Result<Vec<File>> {
+    let design = &prepared.design;
+    let mut paths = ExportPaths::default();
+    let mut fonts = Vec::new();
+    if let Some(fonts_dir) = &names.fonts {
+        let fonts_dir = format!("{directory}/{fonts_dir}");
+        let mut resources =
+            Resources::new(parent, &fonts_dir, ExportNamespace::default());
+        for file in design.font_files() {
+            let copied = resources.copy(&file)?;
+            paths.fonts.insert(file, copied);
+        }
+        fonts = resources.files;
+    }
+    for source in design.images() {
+        if let Some(asset) = prepared.assets.find_file(source)
+            && let Some(path) = referenced.get(&asset.id)
+        {
+            paths.images.insert(source.clone(), path.clone());
+        }
+    }
+    let json = design.to_json(PathMode::Export(&paths));
+    let mut bytes = serde_json::to_vec_pretty(&json)?;
+    bytes.push(b'\n');
+    let mut files = vec![File {
+        path: parent.join(format!("{directory}/{}", names.json)),
+        bytes,
+    }];
+    files.extend(fonts);
+    Ok(files)
 }
 
 struct Resources<'a> {

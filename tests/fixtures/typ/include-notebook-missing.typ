@@ -1,4 +1,4 @@
-#import "@writer/doc:0.2.0": *
+#import "@writer/doc:0.3.0": *
 
 #include-notebook(path("include/cells.ipynb"), cells: 99)
 

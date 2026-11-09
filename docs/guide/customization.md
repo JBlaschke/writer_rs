@@ -243,6 +243,19 @@ Configure a local root under `[typst] package_paths`, or pass that root to an
 external Typst compiler's package-path option. Writer already has its own
 copies embedded; ejection is useful for external source compilation.
 
+An exported source tree (`writer build document.md --to typst`) imports the
+package version it was generated with, so eject the packages with the same
+Writer. A project with a `[design]` also ships its font files in the export's
+`fonts/` directory, which Typst only reads through `--font-path`:
+
+```sh
+typst compile --font-path dist/document_assets/fonts --package-path typst-packages dist/document.typ
+```
+
+A project without `[design.fonts]` files has no `fonts/` directory and needs
+no `--font-path`. Typst's command line scans the installed fonts unless you
+pass `--ignore-system-fonts`, the counterpart of `[pdf] system_fonts = false`.
+
 `writer eject typst-package typst-packages --install` selects Typst's platform
 data directory instead of the supplied destination. The directory argument
 is still required by the command syntax. Inspect the printed destination and

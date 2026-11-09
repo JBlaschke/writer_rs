@@ -18,7 +18,7 @@ notebook input and rejects a native Typst source.
 ## Start a document
 
 ```typst
-#import "@writer/doc:0.2.0": *
+#import "@writer/doc:0.3.0": *
 
 #show: writer-doc.with(
     title: [My report],
@@ -94,10 +94,27 @@ The style names come from `[design.styles]`. The helper applies known styles
 and preserves content for an unknown style. Structured output reads the call
 back into a div, including its classes and `custom-style` attribute.
 
-Standalone Typst source exports do not carry the `writer-design` input or
-copy its design-only font/image resources. They use the document package's
-fallbacks unless the external compiler supplies the design input and files.
-Writer's own PDF build supplies both automatically. See
+Standalone Typst source exports carry the project's design. `writer build
+letter.md --to typst` writes `letter_assets/writer-design.json`, copies the
+header, footer and background images next to the body's assets and the
+declared font files into `letter_assets/fonts/`, and passes the design to
+`writer-doc` from the main file: `design:
+json("letter_assets/writer-design.json")`, with each image handed over as a
+`path(..)` value that the main file resolves. An external compile needs the
+package root and the font directory:
+
+```sh
+writer eject typst-package typst-packages
+typst compile --font-path dist/letter_assets/fonts --package-path typst-packages dist/letter.typ
+```
+
+Typst's command line reads font files only through `--font-path`; without it
+the declared families fall back like any font that is not installed. It also
+scans the installed fonts unless you pass `--ignore-system-fonts`, the
+counterpart of `[pdf] system_fonts = false`. A template that reads
+`sys.inputs.writer-design` itself still needs `--input
+writer-design="$(writer dump --design letter.md)"` outside Writer. Writer's
+own PDF build supplies everything automatically. See
 [customization](customization.md#cross-format-design) for the shared design
 workflow and [the letter example](../../examples/letter/README.md).
 

@@ -1,4 +1,4 @@
-#import "@writer/doc:0.2.0": *
+#import "@writer/doc:0.3.0": *
 #import "@preview/mitex:0.2.7": mi, mitex
 #show: writer-doc.with(title: "Subset corpus", bibliography: path("refs.bib"), toc: false, numbering: true, pdf: (system-fonts: false))
 

@@ -6,7 +6,7 @@ expression: diagnostics
   {
     "level": "warning",
     "code": "W-TYP-PACKAGE-VERSION",
-    "message": "imported @writer/doc:9.9.9 differs from embedded version 0.2.0 (col 2)",
+    "message": "imported @writer/doc:9.9.9 differs from embedded version 0.3.0 (col 2)",
     "path": "[typ]/unsupported.typ",
     "span": {
       "start_line": 2,

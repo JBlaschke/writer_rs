@@ -8,8 +8,10 @@ use serde_json::json;
 use typst::World;
 use typst::foundations::Datetime;
 use typst::layout::{Frame, FrameItem};
+use typst::text::{FontStyle, FontWeight};
 use typst_layout::PagedDocument;
 use writer::config::Config;
+use writer::design::{Design, Layer, Origin, merge};
 use writer::error::Diagnostics;
 use writer::ir::{Attrs, Block, Inline};
 use writer::pipeline::{self, BuildOptions, Prepared};
@@ -21,7 +23,7 @@ use writer::typst::world::{MainFile, WriterWorld, world_inputs};
 const SVG: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="12"><rect width="24" height="12" fill="#526d82"/></svg>"##;
 const CONFIG: &str = "[build]\nout_dir='out'\ntargets=['typst']\n[pdf]\nsystem_fonts=false\nallow_packages=false\ntimestamp='2026-10-29T00:00:00Z'\n";
 const TEMPLATE: &str = concat!(
-    "#import \"@writer/doc:0.2.0\" as base\n",
+    "#import \"@writer/doc:0.3.0\" as base\n",
     "#let writer-doc(..args, body) = {\n",
     "  [TEMPLATE-MARKER]\n",
     "  base.writer-doc(..args, body)\n",
@@ -50,9 +52,16 @@ fn prepare(root: &Path, name: &str) -> (BuildOptions, Prepared) {
 }
 
 fn world(root: &Path, main: MainFile) -> WriterWorld {
+    export_world(root, main, &[])
+}
+
+/// A world standing in for the plain Typst CLI: `fonts` are its `--font-path`
+/// directories, relative to the export root.
+fn export_world(root: &Path, main: MainFile, fonts: &[PathBuf]) -> WriterWorld {
     let mut config = Config::default();
     config.pdf.system_fonts = false;
     config.pdf.allow_packages = false;
+    config.pdf.font_paths = fonts.to_vec();
     config.typst.package_paths = vec![root.join("packages")];
     WriterWorld::from_config(
         &config,
@@ -137,10 +146,16 @@ fn contents(document: &PagedDocument) -> (String, usize) {
 }
 
 fn compile_tree(root: &Path, main: &str) -> PagedDocument {
-    package::eject(&root.join("packages")).unwrap();
-    assert!(root.join("packages/writer/doc/0.2.0/typst.toml").is_file());
+    compile_export(root, main, &[])
+}
+
+fn compile_export(root: &Path, main: &str, fonts: &[PathBuf]) -> PagedDocument {
+    if !root.join("packages").exists() {
+        package::eject(&root.join("packages")).unwrap();
+    }
+    assert!(root.join("packages/writer/doc/0.3.0/typst.toml").is_file());
     assert!(root.join("packages/preview/mitex/0.2.7/typst.toml").is_file());
-    let mut world = world(root, MainFile::Path(root.join(main)));
+    let mut world = export_world(root, MainFile::Path(root.join(main)), fonts);
     let mut inputs = world_inputs(
         &Config::default(),
         &Default::default(),
@@ -161,6 +176,80 @@ fn compile_tree(root: &Path, main: &str) -> PagedDocument {
     );
     document
 }
+
+/// Family and size of the first text run containing `marker`.
+fn text_style(frame: &Frame, marker: &str) -> Option<(String, f64)> {
+    for (_, item) in frame.items() {
+        match item {
+            FrameItem::Group(group) => {
+                if let Some(style) = text_style(&group.frame, marker) {
+                    return Some(style);
+                }
+            }
+            FrameItem::Text(run) if run.text.contains(marker) => {
+                return Some((
+                    run.font.info().family.clone(),
+                    run.size.to_pt(),
+                ));
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn utf16(text: &str) -> Vec<u8> {
+    text.encode_utf16().flat_map(u16::to_be_bytes).collect()
+}
+
+fn replace_bytes(data: &[u8], old: &[u8], new: &[u8]) -> Vec<u8> {
+    assert_eq!(old.len(), new.len());
+    let mut result = Vec::with_capacity(data.len());
+    let mut index = 0;
+    while index < data.len() {
+        if data[index..].starts_with(old) {
+            result.extend_from_slice(new);
+            index += old.len();
+        } else {
+            result.push(data[index]);
+            index += 1;
+        }
+    }
+    result
+}
+
+/// The embedded Libertinus Serif Regular face renamed to a family no font
+/// book has unless this very file is loaded: a project's own font file.
+fn renamed_font() -> Vec<u8> {
+    let (font, _) = typst_kit::fonts::embedded()
+        .find(|(_, info)| {
+            info.family == "Libertinus Serif"
+                && info.variant.weight == FontWeight::REGULAR
+                && info.variant.style == FontStyle::Normal
+        })
+        .unwrap();
+    let mut data = font.data().to_vec();
+    for (old, new) in [
+        (b"Libertinus Serif".to_vec(), b"Libertinus Fixme".to_vec()),
+        (utf16("Libertinus Serif"), utf16("Libertinus Fixme")),
+    ] {
+        let replaced = replace_bytes(&data, &old, &new);
+        assert_ne!(replaced, data, "family name not found in the font");
+        data = replaced;
+    }
+    data
+}
+
+const DESIGN: &str = concat!(
+    "[design.fonts]\n",
+    "body = { family = 'Libertinus Fixme', files = ['fonts/fixme.otf'] }\n",
+    "[design.text]\nsize = '12pt'\n",
+    "[design.page]\npaper = 'us-letter'\n",
+    "[design.page.header.first]\n",
+    "image = { src = 'logo.svg', width = '30mm' }\n",
+    "lines = ['INSTITUTEMARK']\n",
+    "[design.styles.Recipient]\nsize = '15pt'\n",
+);
 
 fn assert_portable_sources(root: &Path) {
     for (path, bytes) in inventory(root) {
@@ -913,7 +1002,7 @@ fn unchanged_original_include_fixture_fails_without_an_export_tree() {
 }
 
 #[test]
-fn exported_source_restores_design_paper_when_the_input_is_supplied() {
+fn exported_design_compiles_without_inputs_and_beats_a_differing_input() {
     let source = project("Body only.\n");
     write(
         source.path(),
@@ -924,20 +1013,184 @@ fn exported_source_restores_design_paper_when_the_input_is_supplied() {
     let destination = tempfile::tempdir().unwrap();
     let output = destination.path().join("letter.typ");
     export(&options, &prepared, &output);
-    let compile = |design: &writer::design::Design| {
+    let main = fs::read_to_string(&output).unwrap();
+    assert!(
+        main.contains(
+            "  design: json(\"letter_assets/writer-design.json\"),\n"
+        ),
+        "{main}"
+    );
+    let compile = |design: Option<&Design>| {
         let mut world =
             world(destination.path(), MainFile::Path(output.clone()));
-        world.set_inputs(world_inputs(
-            &prepared.config, design, &prepared.assets,
-        ));
+        if let Some(design) = design {
+            world.set_inputs(world_inputs(
+                &prepared.config, design, &prepared.assets,
+            ));
+        }
         compile_document(&mut world).into_result().unwrap().0
     };
-    let fallback = compile(&Default::default());
+    let us_letter = |document: &PagedDocument| {
+        let page = &document.pages()[0].frame;
+        (page.width().to_pt() - 612.0).abs() < 0.01
+            && (page.height().to_pt() - 792.0).abs() < 0.01
+    };
+    assert!(us_letter(&compile(None)), "the export carries its design");
+    let differing = merge(&[Layer {
+        table: json!({"page": {"paper": "a4"}}).as_object().unwrap().clone(),
+        base_dir: source.path(),
+        origin: Origin::FrontMatter,
+    }])
+    .unwrap();
+    assert!(differing.declared);
     assert!(
-        (fallback.pages()[0].frame.width().to_pt() - 210.0 * 72.0 / 25.4).abs()
-            < 0.01
+        us_letter(&compile(Some(&differing))),
+        "an explicit design argument beats the writer-design input"
     );
-    let restored = compile(&prepared.design);
-    assert!((restored.pages()[0].frame.width().to_pt() - 612.0).abs() < 0.01);
-    assert!((restored.pages()[0].frame.height().to_pt() - 792.0).abs() < 0.01);
+    assert!(
+        fs::read_to_string(
+            destination.path().join("letter_assets/writer-design.json")
+        )
+        .unwrap()
+        .contains("\"us-letter\"")
+    );
+}
+
+#[test]
+fn exported_designs_compile_with_their_copied_images_fonts_and_styles() {
+    let source = project(concat!(
+        "# Letter\n\n:::recipient\nRECIPIENTMARK\n:::\n\n",
+        "BODYMARK follows.\n",
+    ));
+    write(source.path(), "writer.toml", format!("{CONFIG}{DESIGN}"));
+    write(source.path(), "logo.svg", SVG);
+    write(source.path(), "fonts/fixme.otf", renamed_font());
+    let (options, prepared) = prepare(source.path(), "document.md");
+    assert!(prepared.design.declared);
+    let destination = tempfile::tempdir().unwrap();
+    let output = destination.path().join("letter.typ");
+    let (written, _) = export(&options, &prepared, &output);
+    assert_eq!(
+        written,
+        [output.clone(), destination.path().join("letter_assets")]
+    );
+    let files = inventory(destination.path());
+    assert_eq!(
+        files.keys().collect::<Vec<_>>(),
+        [
+            Path::new("letter.typ"),
+            Path::new("letter_assets/fonts/fixme.otf"),
+            Path::new("letter_assets/logo.svg"),
+            Path::new("letter_assets/writer-design.json"),
+        ]
+    );
+    assert_eq!(files[Path::new("letter_assets/logo.svg")], SVG);
+    assert_eq!(
+        files[Path::new("letter_assets/fonts/fixme.otf")],
+        renamed_font()
+    );
+    let text = String::from_utf8(
+        files[Path::new("letter_assets/writer-design.json")].clone(),
+    )
+    .unwrap();
+    assert!(text.ends_with("}\n"), "{text}");
+    assert!(!text.contains("\"/"), "absolute path in {text}");
+    let design: serde_json::Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(
+        design["fonts"]["body"]["files"],
+        json!(["letter_assets/fonts/fixme.otf"])
+    );
+    assert_eq!(
+        design["page"]["header"]["first"]["image"]["path"],
+        json!("letter_assets/logo.svg")
+    );
+    assert_eq!(design["page"]["paper"], json!("us-letter"));
+    assert_eq!(design["styles"]["Recipient"]["size"], json!(15.0));
+    assert!(design.get("declared").is_none());
+    let main =
+        String::from_utf8(files[Path::new("letter.typ")].clone()).unwrap();
+    assert!(
+        main.contains(concat!(
+            "  paper: auto,\n",
+            "  design: {\n",
+            "    let design = json(\"letter_assets/writer-design.json\")\n",
+            "    design.page.header.first.image.path = ",
+            "path(\"letter_assets/logo.svg\")\n",
+            "    design\n",
+            "  },\n",
+            "  toc: false,\n",
+        )),
+        "{main}"
+    );
+    assert_portable_sources(destination.path());
+
+    // The structured readback skips the design like other typography.
+    let other = tempfile::tempdir().unwrap();
+    write(other.path(), "writer.toml", CONFIG);
+    let mut readback = BuildOptions::new(output.clone());
+    readback.config_path = Some(other.path().join("writer.toml"));
+    let parsed = pipeline::prepare(&readback).unwrap();
+    assert!(
+        !parsed.diagnostics.has_errors() && !parsed.diagnostics.has_warnings(),
+        "{:?}",
+        parsed.diagnostics
+    );
+    assert!(!parsed.document.meta.vars.contains_key("design"));
+
+    // A plain compile with the copied fonts on its font path: no mounts, no
+    // inputs, nothing read outside the export.
+    let fonts = PathBuf::from("letter_assets/fonts");
+    let document = compile_export(destination.path(), "letter.typ", &[fonts]);
+    let page = &document.pages()[0].frame;
+    assert!((page.width().to_pt() - 612.0).abs() < 0.01);
+    assert_eq!(contents(&document).1, 1, "the header logo");
+    assert_eq!(
+        text_style(page, "INSTITUTEMARK").map(|(_, size)| size),
+        Some(12.0),
+        "header line at the body size"
+    );
+    assert_eq!(
+        text_style(page, "BODYMARK"),
+        Some(("Libertinus Fixme".into(), 12.0))
+    );
+    assert_eq!(
+        text_style(page, "RECIPIENTMARK"),
+        Some(("Libertinus Fixme".into(), 15.0)),
+        "writer-div reads the exported design"
+    );
+
+    // Without the font path the files in the tree are not read: the family
+    // falls back, everything else still applies.
+    let fallback = compile_export(destination.path(), "letter.typ", &[]);
+    let page = &fallback.pages()[0].frame;
+    let (family, size) = text_style(page, "BODYMARK").unwrap();
+    assert_ne!(family, "Libertinus Fixme");
+    assert_eq!(size, 12.0);
+    assert_eq!(contents(&fallback).1, 1);
+}
+
+#[test]
+fn exports_without_a_declared_design_are_unchanged() {
+    let source =
+        project("# Plain\n\nUndecorated body.\n\n![Picture](image.svg)\n");
+    write(source.path(), "image.svg", SVG);
+    let (options, prepared) = prepare(source.path(), "document.md");
+    assert!(!prepared.design.declared);
+    let destination = tempfile::tempdir().unwrap();
+    let output = destination.path().join("plain.typ");
+    export(&options, &prepared, &output);
+    let files = inventory(destination.path());
+    assert_eq!(
+        files.keys().collect::<Vec<_>>(),
+        [Path::new("plain.typ"), Path::new("plain_assets/image.svg")]
+    );
+    let main =
+        String::from_utf8(files[Path::new("plain.typ")].clone()).unwrap();
+    assert!(!main.contains("design:"), "{main}");
+    assert!(!main.contains("writer-design"), "{main}");
+    insta::with_settings!({filters => vec![
+        (r"@writer/doc:\d+\.\d+\.\d+", "@writer/doc:[version]"),
+    ]}, {
+        insta::assert_snapshot!("typst_export_without_design", main);
+    });
 }

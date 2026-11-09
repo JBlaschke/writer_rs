@@ -46,7 +46,7 @@ fn actual_package_error_uses_outermost_user_call_and_keeps_package_hint() {
     let directory = tempfile::tempdir().unwrap();
     let input = directory.path().join("native.typ");
     let source = concat!(
-        "#import \"@writer/doc:0.2.0\": *\n",
+        "#import \"@writer/doc:0.3.0\": *\n",
         "#let call() = writer-doc(bibliography: \"refs.bib\")[Text]\n",
         "#call()\n",
     );
@@ -62,7 +62,7 @@ fn actual_package_error_uses_outermost_user_call_and_keeps_package_hint() {
     assert!(
         hints
             .iter()
-            .any(|hint| { hint.starts_with("in @writer/doc:0.2.0/lib.typ:") }),
+            .any(|hint| { hint.starts_with("in @writer/doc:0.3.0/lib.typ:") }),
         "{hints:?}"
     );
     let payload = ErrorPayload::for_failure(&stopped, &input);

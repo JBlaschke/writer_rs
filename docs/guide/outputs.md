@@ -156,10 +156,27 @@ notebook include parts. It also copies configured bibliography, path-valued
 CSL and custom template resources as needed by the export. The main file uses
 relative paths into that output bundle.
 
+A project that declares a `[design]` exports it too: the resolved design as
+`<stem>_assets/writer-design.json`, its header, footer and background images
+beside the other assets, and its declared font files under
+`<stem>_assets/fonts/`. The main file passes that JSON to `writer-doc`, so the
+bundle renders the letterhead, colours, margins and named styles without any
+compiler input.
+
 The exported source uses the bundled document package. To use it in an
 external Typst installation, supply the corresponding package files through
-a local package root; see [customization](customization.md). Writer's own PDF
-build already has those packages embedded.
+a local package root, and point Typst at the copied fonts:
+
+```sh
+typst compile --font-path dist/document_assets/fonts --package-path typst-packages dist/document.typ
+```
+
+Typst's command line reads font files only through `--font-path`; leave it
+out and the declared families fall back to whatever is installed. It scans
+the installed fonts by default; `--ignore-system-fonts` is the counterpart of
+`[pdf] system_fonts = false`. See
+[customization](customization.md#portable-typst-packages) for the package
+root. Writer's own PDF build already has those packages and fonts.
 
 `writer dump document.md --typst` prints generated source without exporting
 the bundle. `--to typst` rejects a source that is already Typst; keep that
