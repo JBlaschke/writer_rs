@@ -7,11 +7,13 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import shutil
 import stat
 import subprocess
 import sys
 import tarfile
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch
 
@@ -25,6 +27,10 @@ SPEC.loader.exec_module(NOTICES)
 REVIEWED_PACKAGE_PINS = copy.deepcopy(NOTICES.PINNED_PACKAGES)
 REVIEWED_NOTICE_GROUPS = copy.deepcopy(NOTICES.PINNED_NOTICE_GROUPS)
 REVIEWED_RELEASE_ROOT = Path(NOTICES.RELEASE_NOTICE_ROOT)
+VENDORED_CONFIG = (
+    b'[source.crates-io]\nreplace-with = "vendored-sources"\n\n'
+    b'[source.vendored-sources]\ndirectory = "vendor"\n'
+)
 
 
 def write(path, raw):
@@ -63,6 +69,73 @@ class ReleaseNoticeDataTests(unittest.TestCase):
         self.assertIn(
             "docs/release/notice-sources/typst-0.15.1/NOTICE", checked
         )
+
+    def test_real_vendored_copies_pass_every_locked_reviewed_pin(self):
+        """Run the guard on this checkout's own vendor tree, lock and assets.
+
+        Mocked layouts cannot show that the committed copies still match the
+        pins; a release would only find out after its tests.
+        """
+        root = REVIEWED_RELEASE_ROOT
+        vendor = NOTICES.vendored_directory(root)
+        if vendor is None:
+            self.skipTest("this checkout does not vendor crates.io")
+        locked = {
+            (item["name"], item["version"]) for item in tomllib.loads(
+                (root / "Cargo.lock").read_text(encoding="utf-8")
+            )["package"]
+        }
+        embedded = NOTICES.embedded_notices(root / "assets")
+        for (name, version), pin in sorted(REVIEWED_PACKAGE_PINS.items()):
+            if (name, version) not in locked:
+                continue
+            group = REVIEWED_NOTICE_GROUPS[pin["group"]]
+            with self.subTest(package=f"{name} {version}"):
+                copies = []
+                for directory in (name, f"{name}-{version}"):
+                    manifest = vendor / directory / "Cargo.toml"
+                    if not manifest.is_file():
+                        continue
+                    declared = tomllib.loads(
+                        manifest.read_text(encoding="utf-8")
+                    )["package"]
+                    if (declared["name"], declared["version"]) == (
+                        name, version
+                    ):
+                        copies.append((manifest, declared))
+                self.assertEqual(
+                    len(copies), 1, "locked pin is not vendored exactly once"
+                )
+                manifest, declared = copies[0]
+                # The fields `cargo metadata` reports for this manifest.
+                package = {
+                    "name": name, "version": version,
+                    "source": group["source"], "manifest_path": str(manifest),
+                    "repository": declared.get("repository"),
+                    "license": declared.get("license"),
+                    "license_file": declared.get("license-file"),
+                }
+                notices = NOTICES.pinned_crate_notices(package, embedded, root)
+                self.assertEqual(sorted(notices), sorted(
+                    source["name"] for source in group["files"]
+                ))
+
+    def test_reviewed_record_lists_the_same_pins_as_the_helper(self):
+        record = json.loads((
+            REVIEWED_RELEASE_ROOT / "docs/dev/release-notice-sources.json"
+        ).read_text(encoding="utf-8"))
+        listed = {}
+        for package in record["packages"]:
+            pin = {
+                "group": package["group"], "vcs_path": package["vcs_path"],
+                "checksum": package["crate_sha256"],
+                "vendored_files": package["vendored_files_sha256"],
+            }
+            if "source_url" in package:
+                pin["source_url"] = package["source_url"]
+            listed[(package["name"], package["version"])] = pin
+        self.assertEqual(len(listed), len(record["packages"]))
+        self.assertEqual(listed, REVIEWED_PACKAGE_PINS)
 
 
 class NoticeTests(unittest.TestCase):
@@ -204,6 +277,65 @@ class NoticeTests(unittest.TestCase):
             "mitex", names, "0.2.4", vcs_change=vcs_change, member=member
         )
         return packages, archives, notices["LICENSE"]
+
+    def vendor_record(self, directory, checksum):
+        """Write the record `cargo vendor` leaves; return its table digest."""
+        files = {
+            path.relative_to(directory).as_posix():
+                hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in directory.rglob("*")
+            if path.is_file() and path.name != ".cargo-checksum.json"
+        }
+        write(directory / ".cargo-checksum.json", json.dumps({
+            "$comment": "fixture", "files": files, "package": checksum,
+        }).encode())
+        return NOTICES.vendored_files_digest(files)
+
+    def vendored_fixture(
+                self, names=("mitex",), vcs_change=None,
+                group_name="mitex", version="0.2.4"
+            ):
+        """Re-home a registry fixture as `cargo vendor` does: no archive."""
+        packages, archives, notices = self.pinned_fixture(
+            group_name, names, version, vcs_change=vcs_change
+        )
+        write(self.workspace / ".cargo/config.toml", VENDORED_CONFIG)
+        for package in packages:
+            name = package["name"]
+            directory = self.workspace / "vendor" / name
+            shutil.rmtree(directory, ignore_errors=True)
+            directory.parent.mkdir(parents=True, exist_ok=True)
+            Path(package["manifest_path"]).parent.rename(directory)
+            archives[name].unlink()
+            write(directory / "src/lib.rs", b"// vendored source\r\n")
+            package["manifest_path"] = str(directory / "Cargo.toml")
+            pin = NOTICES.PINNED_PACKAGES[(name, version)]
+            pin["vendored_files"] = self.vendor_record(
+                directory, pin["checksum"]
+            )
+        return packages, notices
+
+    def relist(self, package):
+        """Refresh a vendored record from the bytes on disk; return its digest.
+
+        Cargo builds such a copy again, which is how an in-place patch of a
+        vendored crate is usually made to compile.
+        """
+        pin = NOTICES.PINNED_PACKAGES[(package["name"], package["version"])]
+        return self.vendor_record(
+            Path(package["manifest_path"]).parent, pin["checksum"]
+        )
+
+    def edit_record(self, package, change):
+        path = Path(package["manifest_path"]).parent / ".cargo-checksum.json"
+        record = json.loads(path.read_bytes())
+        change(record)
+        path.write_bytes(json.dumps(record).encode())
+
+    def mitex_guard(self, package, notice):
+        return NOTICES.pinned_crate_notices(
+            package, {NOTICES.MITEX_NOTICE: notice}, self.workspace
+        )
 
     def test_known_binary_encoding_preserves_crlf_final_lf_and_lossy_text(self):
         notices = {
@@ -724,6 +856,342 @@ class NoticeTests(unittest.TestCase):
                     NOTICES.pinned_crate_notices(
                         packages[0], embedded, self.workspace
                     )
+
+    def test_file_table_digest_is_the_path_sorted_sha256sum_listing(self):
+        # Expected value from the shell, in a directory holding these files:
+        # find . -type f | sed 's|^\./||' | LC_ALL=C sort | tr '\n' '\0'
+        #     | xargs -0 shasum -a 256 | shasum -a 256
+        files = {
+            "src/lib.rs": b"// library\r\n", "src-extra/a.rs": b"// extra\n",
+            "Cargo.toml": b"[package]\n",
+            ".cargo_vcs_info.json": b'{"git":{"sha1":"0000"}}',
+        }
+        table = {
+            path: hashlib.sha256(raw).hexdigest() for path, raw in files.items()
+        }
+        expected = "5ad936fae2e1385d46f07a3b0845793e1b72032d4440e9e2ba1c930f6cf7072e"
+        self.assertEqual(NOTICES.vendored_files_digest(table), expected)
+        self.assertEqual(NOTICES.vendored_files_digest(
+            dict(reversed(table.items()))
+        ), expected)
+        dropped = dict(table)
+        del dropped["Cargo.toml"]
+        for changed in (
+            {**table, "Cargo.toml": table["src/lib.rs"]},
+            {**table, "build.rs": table["src/lib.rs"]}, dropped,
+        ):
+            self.assertNotEqual(
+                NOTICES.vendored_files_digest(changed), expected
+            )
+
+    def test_vendored_sources_yield_the_registry_layout_payload(self):
+        groups = {}
+        for (name, version), pin in sorted(REVIEWED_PACKAGE_PINS.items()):
+            groups.setdefault((pin["group"], version), []).append(name)
+        self.assertEqual(sum(len(names) for names in groups.values()), 21)
+        for (group, version), names in groups.items():
+            with self.subTest(group=group):
+                self.pinned_fixture(group, names, version)
+                registry = self.payload()
+                packages, _ = self.vendored_fixture(
+                    names, group_name=group, version=version
+                )
+                for package in packages:
+                    directory = Path(package["manifest_path"]).parent
+                    self.assertEqual(
+                        directory, self.workspace / "vendor" / package["name"]
+                    )
+                self.assertEqual(
+                    list((self.root / "cargo/registry").rglob("*.crate")), []
+                )
+                self.assertEqual(self.payload(), registry)
+                self.assertEqual(
+                    len(registry["crates.txt"].splitlines()), len(names) + 1
+                )
+
+    def test_vendored_directory_is_the_package_name_with_or_without_its_version(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+        directory = Path(package["manifest_path"]).parent
+        for name, message in (
+            ("mitex-0.2.4", None),
+            ("mitex-0.2.5", "unsupported vendored source layout"),
+            ("mitex-parser", "unsupported vendored source layout"),
+        ):
+            with self.subTest(directory=name):
+                renamed = directory.rename(directory.with_name(name))
+                moved = dict(package, manifest_path=str(renamed / "Cargo.toml"))
+                if message is None:
+                    self.assertEqual(
+                        self.mitex_guard(moved, notice), {"LICENSE": notice}
+                    )
+                else:
+                    with self.assertRaisesRegex(NOTICES.NoticeError, message):
+                        self.mitex_guard(moved, notice)
+                directory = renamed
+
+    def test_vendored_crate_checksum_must_be_the_reviewed_and_locked_one(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        checksum = NOTICES.PINNED_PACKAGES[("mitex", "0.2.4")]["checksum"]
+        for change in (
+            lambda record: record.update(package="0" * 64),
+            lambda record: record.pop("package"),
+        ):
+            self.edit_record(package, change)
+            with self.assertRaisesRegex(
+                NOTICES.NoticeError, "vendored crate checksum changed"
+            ):
+                self.mitex_guard(package, notice)
+            self.edit_record(
+                package, lambda record: record.update(package=checksum)
+            )
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+        lock = self.workspace / "Cargo.lock"
+        lock.write_bytes(
+            lock.read_bytes().replace(checksum.encode(), b"0" * 64)
+        )
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "locked checksum changed"
+        ):
+            self.mitex_guard(package, notice)
+
+    def test_vendored_vcs_record_must_be_the_listed_and_reviewed_bytes(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        pin = NOTICES.PINNED_PACKAGES[("mitex", "0.2.4")]
+        vcs = Path(package["manifest_path"]).parent / ".cargo_vcs_info.json"
+        original = vcs.read_bytes()
+        vcs.write_bytes(original + b" ")
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError,
+            r"vendored file checksum changed: \.cargo_vcs_info\.json"
+        ):
+            self.mitex_guard(package, notice)
+        # Cargo accepts the edit once the record lists it; the pin does not.
+        relisted = self.relist(package)
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError,
+            f"vendored file table checksum changed: {relisted}"
+        ):
+            self.mitex_guard(package, notice)
+        vcs.unlink()
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError,
+            r"listed vendored file is missing: \.cargo_vcs_info\.json"
+        ):
+            self.mitex_guard(package, notice)
+        pin["vendored_files"] = self.relist(package)
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "vendored VCS record is missing"
+        ):
+            self.mitex_guard(package, notice)
+        vcs.write_bytes(original)
+        pin["vendored_files"] = self.relist(package)
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+
+    def test_vendored_checksum_record_must_exist_and_be_well_formed(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        record = Path(package["manifest_path"]).parent / ".cargo-checksum.json"
+        original = record.read_bytes()
+        table = json.loads(original)["files"]
+        for raw in (
+            b"{", b"[]", b'{"package": "0"}', b'{"files": []}',
+            json.dumps({"files": {**table, "Cargo.toml": 1}}).encode(),
+            json.dumps({"files": {**table, "a\nb": "0" * 64}}).encode(),
+        ):
+            record.write_bytes(raw)
+            with self.subTest(record=raw[:20]):
+                with self.assertRaisesRegex(
+                    NOTICES.NoticeError, "malformed vendored checksum record"
+                ):
+                    self.mitex_guard(package, notice)
+        record.unlink()
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "vendored checksum record is missing"
+        ):
+            self.mitex_guard(package, notice)
+        outside = self.root / "outside-record"
+        outside.write_bytes(original)
+        try:
+            record.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlink creation unavailable")
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "vendored checksum record is missing or linked"
+        ):
+            self.mitex_guard(package, notice)
+
+    def test_vendored_vcs_revision_path_and_dirty_state_are_independent_guards(self):
+        changes = (
+            (lambda vcs: vcs["git"].update(sha1="0" * 40), "revision changed"),
+            (lambda vcs: vcs.update(path_in_vcs="crates/other"), "path changed"),
+            (lambda vcs: vcs["git"].update(dirty=True), "record is dirty"),
+        )
+        for change, message in changes:
+            with self.subTest(message=message):
+                # The record and its pin agree; only the reviewed VCS facts
+                # differ.
+                packages, notices = self.vendored_fixture(vcs_change=change)
+                with self.assertRaisesRegex(NOTICES.NoticeError, message):
+                    self.mitex_guard(packages[0], notices["LICENSE"])
+
+    def test_vendored_copy_must_hold_exactly_the_reviewed_files(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        directory = Path(package["manifest_path"]).parent
+        source = directory / "src/lib.rs"
+        original = source.read_bytes()
+
+        def fails(message):
+            with self.assertRaisesRegex(NOTICES.NoticeError, message):
+                self.mitex_guard(package, notice)
+
+        # Cargo compiles an unlisted build script without complaint.
+        write(directory / "build.rs", b"fn main() {}\n")
+        fails("vendored file is not listed: build.rs")
+        self.relist(package)
+        fails("vendored file table checksum changed")
+        (directory / "build.rs").unlink()
+        source.write_bytes(original + b"// patched\n")
+        fails("vendored file checksum changed: src/lib.rs")
+        self.relist(package)
+        fails("vendored file table checksum changed")
+        # Emptying the table is the usual way to make Cargo accept a patch.
+        self.edit_record(package, lambda record: record.update(files={}))
+        fails("vendored file is not listed")
+        source.unlink()
+        self.relist(package)
+        fails("vendored file table checksum changed")
+        source.write_bytes(original)
+        fails("vendored file is not listed: src/lib.rs")
+        self.relist(package)
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+        source.unlink()
+        fails("listed vendored file is missing: src/lib.rs")
+
+    def test_vendored_path_with_a_line_break_is_not_two_listing_lines(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        pin = NOTICES.PINNED_PACKAGES[("mitex", "0.2.4")]
+        directory = Path(package["manifest_path"]).parent
+        write(directory / "src/a.rs", b"// a\n")
+        write(directory / "src/b.rs", b"// b\n")
+        pin["vendored_files"] = self.relist(package)
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+
+        def fold(record):
+            table = record["files"]
+            first = table.pop("src/a.rs")
+            second = table.pop("src/b.rs")
+            table[f"src/a.rs\n{second}  src/b.rs"] = first
+
+        # One file at that path would then answer for both listing lines.
+        self.edit_record(package, fold)
+        folded = json.loads(
+            (directory / ".cargo-checksum.json").read_bytes()
+        )["files"]
+        self.assertEqual(len(folded), 4)
+        self.assertEqual(
+            NOTICES.vendored_files_digest(folded), pin["vendored_files"]
+        )
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "malformed vendored checksum record"
+        ):
+            self.mitex_guard(package, notice)
+
+    def test_vendored_pinned_copy_with_a_notice_of_its_own_still_meets_the_guard(self):
+        packages, notices = self.vendored_fixture()
+        package = packages[0]
+        pin = NOTICES.PINNED_PACKAGES[("mitex", "0.2.4")]
+        directory = Path(package["manifest_path"]).parent
+        embedded = {NOTICES.MITEX_NOTICE: notices["LICENSE"]}
+        self.assertEqual(
+            NOTICES.crate_notices(package, embedded, self.workspace),
+            {"LICENSE": notices["LICENSE"]}
+        )
+        # The published crate has no notice. One added to the copy must not
+        # replace the reviewed notices behind the guard's back.
+        write(directory / "LICENSE", b"Another notice\n")
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "vendored file is not listed: LICENSE"
+        ):
+            NOTICES.crate_notices(package, embedded, self.workspace)
+        relisted = self.relist(package)
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "vendored file table checksum changed"
+        ):
+            NOTICES.crate_notices(package, embedded, self.workspace)
+        # A reviewed copy that ships a notice keeps it, like any other crate.
+        pin["vendored_files"] = relisted
+        self.assertEqual(
+            NOTICES.crate_notices(package, embedded, self.workspace),
+            {"LICENSE": b"Another notice\n"}
+        )
+
+    def test_vendored_root_is_only_the_workspace_directory_source(self):
+        packages, notices = self.vendored_fixture()
+        package, notice = packages[0], notices["LICENSE"]
+        directory = Path(package["manifest_path"]).parent
+        config = self.workspace / ".cargo/config.toml"
+        absolute = (
+            '[source.crates-io]\nreplace-with = "local"\n'
+            f"[source.local]\ndirectory = '{directory.parent}'\n"
+        )
+        config.write_bytes(absolute.encode())
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+        for changed in (
+            None,
+            VENDORED_CONFIG.replace(b'"vendor"', b'"elsewhere"'),
+            VENDORED_CONFIG.replace(b"[source.crates-io]", b"[source.mirror]"),
+            VENDORED_CONFIG.replace(b"directory", b"local-registry"),
+            VENDORED_CONFIG.replace(b'"vendored-sources"', b"1"),
+            b"source = 1\n",
+        ):
+            with self.subTest(config=changed):
+                if changed is None:
+                    config.unlink()
+                else:
+                    config.write_bytes(changed)
+                with self.assertRaisesRegex(
+                    NOTICES.NoticeError,
+                    "unsupported registry source/cache layout"
+                ):
+                    self.mitex_guard(package, notice)
+        config.write_bytes(b"[source")
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "unreadable Cargo configuration"
+        ):
+            self.mitex_guard(package, notice)
+        config.write_bytes(VENDORED_CONFIG)
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+        nested = directory.parent / "nested" / directory.name
+        nested.parent.mkdir()
+        directory.rename(nested)
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "unsupported registry source/cache layout"
+        ):
+            self.mitex_guard(
+                dict(package, manifest_path=str(nested / "Cargo.toml")), notice
+            )
+
+    def test_registry_sources_keep_the_archive_guard_in_a_vendoring_workspace(self):
+        packages, archives, notice = self.mitex_fixture()
+        package = packages[0]
+        write(self.workspace / ".cargo/config.toml", VENDORED_CONFIG)
+        self.assertEqual(self.mitex_guard(package, notice), {"LICENSE": notice})
+        # A checksum record does not turn a registry source into a vendored
+        # one: without its archive the source proves nothing.
+        NOTICES.PINNED_PACKAGES[("mitex", "0.2.4")]["vendored_files"] = (
+            self.relist(package)
+        )
+        archives["mitex"].unlink()
+        with self.assertRaisesRegex(
+            NOTICES.NoticeError, "cached crate archive is missing"
+        ):
+            self.mitex_guard(package, notice)
 
     def test_unsupported_source_or_multiline_license_is_explicit_failure(self):
         package = self.dependency()

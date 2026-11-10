@@ -152,7 +152,8 @@ cargo --color never tree --locked --target "$TARGET" -e normal,no-proc-macro \
 Every tree identity must map uniquely into metadata; missing or ambiguous
 entries fail. `crates.txt` is sorted with stable registry URLs/workspace-relative
 paths. Matched LICENSE/COPYING/NOTICE/UNLICENSE files and explicit Cargo
-`license_file` are preserved. Registry source trees are searched recursively;
+`license_file` are preserved. Registry crates' source trees, vendored or
+unpacked, are searched recursively;
 workspace/path crates use their own root notices plus explicit license_file,
 without sweeping build/VCS/recovery trees or duplicating embedded assets.
 A missing notice receives generic LICENSE-MIT only if the parsed Cargo
@@ -176,15 +177,93 @@ The selectors row keeps its normal name/version/MPL expression and sorted
 one-row format, using the pinned full source archive URL in its existing URL
 field; a missing or landing-only URL fails.
 
-The shared guard preserves exact package declarations, Cargo.lock and actual
-cached archive checksums, exact archive/source VCS bytes and clean revision/path.
+The shared guard preserves exact package declarations and the reviewed
+Cargo.lock checksum, then proves the crate source that Cargo built from. The
+proof depends on where `cargo metadata` found the package:
+
+- **Vendored source.** This repository builds from the crates committed under
+  its root `vendor/` directory. The package root must be a direct child of the
+  directory that the workspace's own `.cargo/config.toml` substitutes for
+  crates.io, named `<name>` or `<name>-<version>`. Its `.cargo-checksum.json`
+  must give the reviewed checksum as `package`, the directory must hold
+  exactly the files that record lists, each with its listed SHA-256, and the
+  SHA-256 of that file table must equal the pin's `vendored_files`. This
+  proves that every file of the copy is the one reviewed when the pin was
+  made.
+- **Registry source.** In a checkout that does not vendor, the root is
+  `<registry>/src/<index>/<name>-<version>`. The cached
+  `<name>-<version>.crate` must hash to the reviewed checksum, and its one
+  regular VCS record must equal the unpacked one. This proves the published
+  archive and the VCS record taken from it; the other unpacked files are not
+  compared.
+
+A root in any other place fails. In both layouts the proven VCS record must
+name the reviewed clean revision and package path.
+
+A vendored tree keeps no archive, and its checksum record cannot stand in for
+one. Cargo (checked with 1.99.1) compares `package` with Cargo.lock and each
+listed file with its listed hash, but it accepts unlisted files, an emptied
+`files` table, and a file edited together with its listed hash: a copy changed
+along with its record still builds. The guard therefore takes nothing in the
+committed record on trust. It checks the record against the bytes on disk and
+against the pin, so a vendored copy of a pinned crate that differs from the
+reviewed copy in any file fails the release until `VENDORED_FILES` in
+`scripts/release-notices.py` changes too, as a changed archive fails until its
+checksum pin changes. This holds even when the copy gains a notice file of its
+own: the published crate has none, so the guard still runs. Unlike the
+registry proof, the vendored one hashes no published archive during the
+release. It rests on the comparison made when the pin was reviewed.
+
+The 21 `vendored_files` values were reviewed on 2026-11-10. For each crate the
+archive in the local Cargo cache had the reviewed checksum, every vendored
+file equalled the archive member of the same path, and a fresh `cargo vendor`
+of those archives wrote the same checksum records. The only archive member
+without a vendored file is `assets/artifacts/.gitattributes` in mitex-spec-gen
+0.2.4, because `cargo vendor` leaves out `.gitattributes` and `.gitignore`
+files.
+
+`vendored_files` is the SHA-256 of the file table as a `sha256sum` listing:
+one `<sha256>  <path>` line per file, sorted by path, without
+`.cargo-checksum.json`. To compute it from a vendored directory:
+
+```sh
+cd vendor/<name>
+find . -type f ! -path ./.cargo-checksum.json | sed 's|^\./||' | LC_ALL=C sort \
+    | tr '\n' '\0' | xargs -0 shasum -a 256 | shasum -a 256
+```
+
+A failing guard prints the value it computed. The table depends on which files
+`cargo vendor` keeps, so vendoring again with another Cargo version can change
+it although the crate is the same. Pin a new value only after comparing the
+copy with the published archive: download
+`https://static.crates.io/crates/<name>/<name>-<version>.crate`, check that
+its SHA-256 is the reviewed checksum, unpack it and compare the two trees.
+Only `.cargo-checksum.json` and the files `cargo vendor` leaves out may
+differ. Then change `VENDORED_FILES` and the row's `vendored_files_sha256` in
+release-notice-sources.json; a helper test keeps the two equal.
+
+The helper tests also run the guard on this checkout's own `vendor/`,
+`Cargo.lock` and assets for every locked pin. They are the first job of every
+release and dry run, and they run on pull requests and pushes to main that
+touch the helpers, `vendor/`, `Cargo.lock` or `.cargo/config.toml`. A copy
+that drifts from its pin therefore fails before the release tests start, not
+after them.
+
+The guard covers the 21 pinned crates only. The notice files of the other
+linked crates are copied from the source tree Cargo reports, as before. In a
+vendored tree those are the committed bytes: Cargo checks them against the
+committed record, and nothing compares them with the published archives.
+
 Every notice's runtime hash is checked before copying. Release-only sources are
 canonically confined beneath the helper checkout's docs/release/notice-sources,
-while metadata's workspace root supplies lock/cache evidence. Sources are never
+while metadata's workspace root supplies the lock, the vendoring configuration
+and the crate sources. Sources are never
 fetched at runtime. Each selected crate keeps its own notice subtree, and
 unselected pins add nothing. Other missing source/notice evidence fails.
 The release-only legal files use -text -whitespace attributes so upstream CRLF,
 trailing spaces and final bytes survive checkout without entering --licenses.
+`vendor/**` has the same attributes, so the bytes behind the pins survive
+checkout on every runner.
 
 Packaging sorts member paths, normalizes uid/gid/names/modes/timestamps, omits
 host metadata and fixes gzip/ZIP header inputs. The native job packs the same
