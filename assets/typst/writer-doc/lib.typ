@@ -66,13 +66,37 @@
 // `writer-doc`'s arguments; `none` until `writer-doc` records it.
 #let design-state = state("writer-design", none)
 
+// The line box Typst lays text of `size` out with: with the default
+// `top-edge: "cap-height"` and `bottom-edge: "baseline"`, the cap height of
+// the font in effect (its OS/2 `sCapHeight`, else its ascender; a fallback
+// font's when the family is missing). Measured rather than assumed, so the
+// fonts and edges actually in use decide. Needs context.
+#let line-box(size) = measure(text(size: size)[H]).height
+
+// `par.leading` for a design pitch (design.md §6.2). Typst's leading is the
+// gap between one line's bottom edge and the next line's top edge, so a
+// baseline pitch needs `pitch − line box`; HTML's `line-height` and Word's
+// lines then agree with the PDF. The result is in ems of `size`, so that a
+// multiple follows a paragraph's own size as HTML's unitless `line-height`
+// and Word's `auto` lines do, and an exact pitch holds at any size. Needs
+// context, except for the `0.65em` default of an unset pitch.
 #let design-leading(pitch, size) = {
     if pitch == none { return 0.65em }
-    // Typst's leading is a gap rather than a baseline pitch. The 0.8 factor
-    // approximates font ascent/descent and matches the calibrated letter.
-    calc.max(0pt, if "multiple" in pitch {
-        (pitch.multiple - 0.8) * size
-    } else { pitch.exact * 1pt - 0.8 * size })
+    let box = line-box(size)
+    let target = if "multiple" in pitch { pitch.multiple * size }
+        else { pitch.exact * 1pt }
+    if target <= box { return 0pt }
+    if "multiple" in pitch { (pitch.multiple - box / size) * 1em }
+    else { target - box / size * 1em }
+}
+
+// `par.spacing` for a design paragraph spacing: Typst measures it like the
+// leading, from the last baseline to the next line's cap height, so a
+// paragraph break adds `spacing` to a full line pitch, as HTML's
+// `margin-block` and Word's `w:after` do, only as `leading + spacing`.
+// `none` keeps Typst's `1.2em`.
+#let design-spacing(leading, spacing) = {
+    if spacing == none { 1.2em } else { leading + spacing * 1pt }
 }
 
 #let document-date(date) = {
@@ -300,6 +324,14 @@
     }
 }
 
+// The gap between a furniture image and its lines when the image sets none
+// (design.md §9.1): the design's paragraph spacing, else an explicit
+// `spacing` argument, else Typst's `1.2em` of the furniture text.
+#let furniture-gap(settings) = {
+    if settings.paragraph-spacing != none { settings.paragraph-spacing * 1pt }
+    else if settings.spacing != auto { settings.spacing } else { 1.2em }
+}
+
 #let furniture-background(settings) = context {
     let first = counter(page).get().first() == 1
     let design = settings.design
@@ -319,7 +351,7 @@
     let text-width = page.width - margin.left - margin.right
     let furniture(chosen) = writer-furniture(
         chosen, text-width,
-        spacing: settings.spacing, line-height: settings.line-height,
+        spacing: furniture-gap(settings), line-height: settings.line-height,
     )
     let header = design-get(design, "page.header", none)
     if header != none {
@@ -346,6 +378,23 @@
     }
 }
 
+// Leading and paragraph spacing (design.md §6.2): explicit arguments as
+// given, the design's through `design-leading`, which measures the body
+// font's line box and so needs a context block. The page set-up of `layout`
+// and `furniture-layout` stays outside it.
+#let paragraph-layout(meta, settings, body) = context {
+    let leading = if settings.leading == auto {
+        design-leading(settings.line-height, text.size)
+    } else { settings.leading }
+    set par(
+        leading: leading,
+        spacing: if settings.spacing == auto {
+            design-spacing(leading, settings.paragraph-spacing)
+        } else { settings.spacing },
+    )
+    reference-layout(meta, settings, body)
+}
+
 #let furniture-layout(meta, settings, body) = {
     let design = settings.design
     if (
@@ -356,12 +405,12 @@
             header: none, footer: none, numbering: none,
             background: furniture-background(settings),
         )
-        reference-layout(meta, settings, body)
+        paragraph-layout(meta, settings, body)
     } else if design-get(design, "page.background", none) != none {
         // A background alone keeps the built-in header, footer and numbering.
         set page(background: furniture-background(settings))
-        reference-layout(meta, settings, body)
-    } else { reference-layout(meta, settings, body) }
+        paragraph-layout(meta, settings, body)
+    } else { paragraph-layout(meta, settings, body) }
 }
 
 #let design-layout(meta, settings, body) = {
@@ -386,10 +435,7 @@
         font: settings.font, size: settings.size, fill: settings.text-fill,
         lang: settings.lang.lang, region: settings.lang.region
     )
-    set par(
-        justify: settings.justify, leading: settings.leading,
-        spacing: settings.spacing,
-    )
+    set par(justify: settings.justify)
     show std.math.equation: set text(font: "New Computer Modern Math")
     show raw: set text(font: settings.mono-font)
     design-state.update(settings.design)
@@ -467,13 +513,11 @@
             from-design("fonts.mono.family", "DejaVu Sans Mono")
         } else { mono-font },
         size: body-size,
-        leading: if leading == auto {
-            design-leading(from-design("text.line_height", none), body-size)
-        } else { leading },
-        spacing: if spacing == auto {
-            let value = from-design("text.paragraph_spacing", none)
-            if value == none { 1.2em } else { value * 1pt }
-        } else { spacing },
+        // `auto` leaves the leading and spacing to `paragraph-layout`, which
+        // derives them from `line-height` and `paragraph-spacing` (§6.2).
+        leading: leading, spacing: spacing,
+        line-height: from-design("text.line_height", none),
+        paragraph-spacing: from-design("text.paragraph_spacing", none),
         justify: if justify == auto {
             from-design("text.justify", true)
         } else { justify },
@@ -487,7 +531,7 @@
         background: if background == auto {
             colour("colors.background", auto)
         } else { background },
-        design: design, line-height: from-design("text.line_height", none),
+        design: design,
         lang: language(from-config(lang, config, "lang", "en")),
         toc: from-config(toc, config, "toc", false), toc-title: toc-title,
         numbering: numbers, bibliography: bibliography,
@@ -607,21 +651,27 @@
     if spec.italic != none {
         text-opts.insert("style", if spec.italic { "italic" } else { "normal" })
     }
-    if spec.line_height != none {
-        let size = if spec.size != none { spec.size }
-            else { design-get(design, "text.size", 11) }
-        par-opts.insert("leading", design-leading(spec.line_height, size * 1pt))
-    }
     if spec.align != none {
         par-opts.insert("justify", spec.align == "justify")
     }
+    let aligned = if spec.align in ("left", "center", "right") {
+        align((left: left, center: center, right: right).at(spec.align), body)
+    } else { body }
     let inner = {
         set text(..text-opts)
         set par(..par-opts)
-        if spec.align in ("left", "center", "right") {
-            let position = (left: left, center: center, right: right).at(spec.align)
-            align(position, body)
-        } else { body }
+        if spec.line_height == none { aligned } else {
+            // The style's pitch, measured on its own font and size (§6.2),
+            // with the design's paragraph spacing on top of it between the
+            // block's paragraphs; an unset spacing stays inherited.
+            context {
+                let leading = design-leading(spec.line_height, text.size)
+                let spacing = design-get(design, "text.paragraph_spacing", none)
+                set par(leading: leading, ..if spacing == none { (:) }
+                    else { (spacing: design-spacing(leading, spacing)) })
+                aligned
+            }
+        }
     }
     block(
         above: if spec.space_before != none { spec.space_before * 1pt }

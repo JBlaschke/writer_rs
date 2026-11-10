@@ -352,6 +352,16 @@ embedded fonts and, when `[pdf] system_fonts` is true, the installed fonts.
 A family it cannot find is assumed to have Calibri's single line. Declare the
 font files, or enable system fonts, for Word lines as high as HTML's.
 
+The PDF keeps the same geometry. Typst's own leading is the gap between one
+line's bottom edge and the next line's top edge, which sits at the cap
+height, so `writer-doc` measures the body font's cap height and sets the
+leading to the pitch less that box, and the paragraph spacing to the leading
+plus `text.paragraph_spacing`. Lines are then the multiple of the size apart
+and a paragraph break adds exactly the spacing, in all three formats; named
+styles and furniture lines follow the same rule at their own size. A Typst
+template that delegates to `writer-doc` inherits this, and one that sets
+`par(leading:)` itself overrides it.
+
 In Word, `text.paragraph_spacing` becomes the space after Body Text and First
 Paragraph and the document's default space after. Other Word styles keep their
 own spacing, such as Compact in tight lists and table cells or the headings;

@@ -4,7 +4,10 @@ use std::path::Path;
 
 use typst::foundations::{Datetime, Label, Value};
 use typst::introspection::{Introspector, MetadataElem};
-use typst::layout::{Frame, FrameItem, Point, Transform};
+use typst::layout::{Abs, Frame, FrameItem, Point, Transform};
+use typst::text::{
+    FontStretch, FontStyle, FontVariant, FontVariations, FontWeight,
+};
 use typst::utils::PicoStr;
 use typst_layout::PagedDocument;
 use writer::assets::registry::AssetRegistry;
@@ -93,7 +96,7 @@ fn recipient_uses_exact_leading_and_six_mm_of_following_space() {
     let directory = tempfile::tempdir().unwrap();
     let design = letter_styles(directory.path());
     let body = r#"#writer-div(style: "Recipient")[
-#context [#metadata(par.leading.pt()) <recipient-leading>]
+#context [#metadata(par.leading.to-absolute().pt()) <recipient-leading>]
 RECIPIENTFIRST\
 RECIPIENTLAST
 ]
@@ -108,7 +111,23 @@ AFTERRECIPIENT
     let Value::Float(leading) = &metadata.value else {
         panic!("expected resolved leading metadata")
     };
-    assert!((leading - 3.3).abs() < 0.001);
+    // The exact 12.1pt pitch less the line box of the default body font
+    // (design.md §6.2): Libertinus Serif's cap height at 11pt.
+    let (font, _) = typst_kit::fonts::embedded()
+        .find(|(_, info)| info.family == "Libertinus Serif")
+        .unwrap();
+    let regular = FontVariant::new(
+        FontStyle::Normal,
+        FontWeight::REGULAR,
+        FontStretch::NORMAL,
+    );
+    let instance =
+        font.instantiate(regular, Abs::pt(11.0), &FontVariations::default());
+    let expected = 12.1 - instance.metrics().cap_height.get() * 11.0;
+    assert!(
+        (leading - expected).abs() < 0.001,
+        "leading {leading}, expected {expected}"
+    );
     let mut no_spacing = design.clone();
     no_spacing.styles.get_mut("Recipient").unwrap().space_after = Some(Pt(0.0));
     let without_spacing = compile(directory.path(), &no_spacing, body);

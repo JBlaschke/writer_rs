@@ -338,7 +338,11 @@ citation-locale `title:` of the bibliography the package places.
 > design.md §3.3's shape → that design; explicit arguments still win over all three.
 > `writer-furniture` gains `line-height: none` (the design's `text.line_height`); `writer-div` reads
 > the applied design from `state("writer-design")`, which `writer-doc` records, and falls back to
-> the input. `WRITER_DOC_VERSION` becomes `0.3.0`.
+> the input. `writer-doc` derives `par.leading` and `par.spacing` from the design's
+> `text.line_height` and `text.paragraph_spacing` as `pitch − line box` and `leading + spacing`,
+> measuring the body font's cap-height box in a `context` block (design.md §6.2), so the PDF's
+> line pitch and paragraph gaps match HTML's and Word's; `writer-div` and `writer-furniture`
+> apply the same rule at their own sizes. `WRITER_DOC_VERSION` becomes `0.3.0`.
 
 ### 4.3 Callouts, numbering, figures
 - `callout(kind: "note", title: auto, body)`: `title: auto` → the dictionary word for the kind
