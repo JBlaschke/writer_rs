@@ -574,11 +574,20 @@ the following additional reviewed notices when published source notices are abse
 
 One shared guard requires exact package source/repository/license declarations
 and absent license_file, unique Cargo.lock identity and reviewed checksum,
-actual cached archive SHA-256, one regular archive VCS record identical to
-extracted source bytes, and exact clean revision/package path. Each reused
+proof of the crate source, and exact clean revision/package path in its VCS
+record. A crate vendored under the repository's root `vendor/` (a direct child
+of the directory that the workspace's `.cargo/config.toml` substitutes for
+crates.io) must give the reviewed checksum in `.cargo-checksum.json`, hold
+exactly the listed files with their listed SHA-256, and have the reviewed
+SHA-256 of that file table. Cargo's record alone proves nothing, since Cargo
+builds a copy edited together with it, and the guard runs for such a crate
+even if its copy holds a notice. A registry source needs the actual cached
+archive SHA-256 and one regular archive VCS record identical to extracted
+source bytes. Each reused
 notice must match its reviewed runtime SHA-256. Release-only copies live under
 `docs/release/notice-sources/<project-version>/`, canonically confined beneath
-the helper checkout; metadata's workspace root still owns lock/cache guards.
+the helper checkout; metadata's workspace root still owns the lock, vendoring
+configuration and crate source guards.
 They remain outside embedded assets, with `-text -whitespace` preserving their
 exact legal bytes. There is no runtime notice download or broad non-MIT
 generation. Each linked crate retains its own declared expression/attribution;

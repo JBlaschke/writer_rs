@@ -69,6 +69,33 @@ TYPST_CHECKSUMS = {
     ("typst-timing", "0.15.1"): "ab6ee5110f671a23164c61caa85dbc476043d503103dedd36f16d93f970f3f59",
     ("typst-utils", "0.15.1"): "b33ad1675497b45ae9d960a16e95207c35c2c46330d1a6249a9a977670c8c160",
 }
+VENDORED_RECORD = ".cargo-checksum.json"
+# vendored_files_digest() of each pinned package's reviewed vendored copy,
+# pinned after every file was compared with the member of the crates.io
+# archive that has the package's pinned checksum.
+VENDORED_FILES = {
+    ("mitex", "0.2.4"): "67bfffc03d9dbf22f8234f21cd71132b73ceae5899b038f010acb6a3fb4aaa66",
+    ("mitex-glob", "0.2.4"): "053765d2c8e2c3df76a07fefbe1ac784975ae3b942149b262f87d6c2ea281e7d",
+    ("mitex-lexer", "0.2.4"): "082153a16359ce446755169e099813043e7c1298065a540e20d08b8b4f22d25e",
+    ("mitex-parser", "0.2.4"): "828d2d70e6e1fb4243734b5ad064f87030b4f45c7c682ab573a025403da5aecd",
+    ("mitex-spec", "0.2.4"): "3bb0264518e1ca3cd363cb801cd1fcf1285b3c30bdf14ffdffd403714627cd82",
+    ("mitex-spec-gen", "0.2.4"): "364534e6a9746b5dd635febbf968c4bc2b1739ea50de968290c9082976d3c301",
+    ("roman-numerals-rs", "3.1.0"): "1431c50126e3778f4506cb5fe77a702fa39261390e1f58081cfd8633c4557bd9",
+    ("selectors", "0.41.0"): "24ee4c6b360708b6d1d6162c00544094fd942b3f5858bbdabe831ff45ff13885",
+    ("typst", "0.15.1"): "ca9156be7505c12aa58b2029b1b4c3131efdcb6d1a99eb20697205670eaf9204",
+    ("typst-eval", "0.15.1"): "dcef98e7b9681d98c171b34da19c29b3a46ead789939aee3847001e6d03546f3",
+    ("typst-html", "0.15.1"): "4f3a7b437d58eb53078f6d4c4d66626dacb086c983418cae8050fe695bf15ae5",
+    ("typst-kit", "0.15.1"): "14ad7611f1fdc38342f3d1a03c3a5579b5ee11a60c86837004a3f5015b3d5583",
+    ("typst-layout", "0.15.1"): "7d492ab334b7992d42a823685a7942b40b9033a1010664fabcb850a325c37526",
+    ("typst-library", "0.15.1"): "ca0b080c82f78e498ba37741697872a3f0503a78362066ed581296e83113ddd4",
+    ("typst-pdf", "0.15.1"): "f5ee8998bf23a979afa0ccdc565eaf4a6e29ce5a229136b60424e14e7b49b697",
+    ("typst-realize", "0.15.1"): "a45aef746ef153819404cd0684a12453e1ca9697ea02088bfb2d8cbc22291c47",
+    ("typst-render", "0.15.1"): "9054046d9f1d92ad08ba2ad4e9a1ad637f6a14f9b736b705df0de5b2cc360588",
+    ("typst-svg", "0.15.1"): "a1bad2e658d6fb8eec57c1db14fcc99608b6739a377e92a1e97075ca2511c7f9",
+    ("typst-syntax", "0.15.1"): "89d8f4f96f7347b4d203ea71420081493bc785a7bc51f3a7bebcec7193346bdd",
+    ("typst-timing", "0.15.1"): "59c4db219cbd3a590f35c573ec80c5f1b300386f3b0417523f310ae0b0d13a14",
+    ("typst-utils", "0.15.1"): "051703909a05418042fb6645cbafff57f4a265d97218685b28d387f88092ab16",
+}
 RELEASE_NOTICE_ROOT = Path(__file__).resolve().parent.parent
 PINNED_NOTICE_GROUPS = {
     "mitex": {
@@ -146,19 +173,21 @@ PINNED_NOTICE_GROUPS = {
 PINNED_PACKAGES = {
     **{key: {
         "group": "mitex", "checksum": checksum,
-        "vcs_path": f"crates/{key[0]}",
+        "vcs_path": f"crates/{key[0]}", "vendored_files": VENDORED_FILES[key],
     } for key, checksum in MITEX_CHECKSUMS.items()},
     **{key: {
         "group": "typst", "checksum": checksum,
-        "vcs_path": f"crates/{key[0]}",
+        "vcs_path": f"crates/{key[0]}", "vendored_files": VENDORED_FILES[key],
     } for key, checksum in TYPST_CHECKSUMS.items()},
     ("roman-numerals-rs", "3.1.0"): {
         "group": "roman-numerals-rs", "vcs_path": "rust",
         "checksum": "c85cd47a33a4510b1424fe796498e174c6a9cf94e606460ef022a19f3e4ff85e",
+        "vendored_files": VENDORED_FILES[("roman-numerals-rs", "3.1.0")],
     },
     ("selectors", "0.41.0"): {
         "group": "selectors", "vcs_path": "selectors",
         "checksum": "8322aebea94a6cc288ff884e8a49bdbceef60206c400c6c46d22e62fc4fd91a6",
+        "vendored_files": VENDORED_FILES[("selectors", "0.41.0")],
         "source_url": "https://static.crates.io/crates/selectors/selectors-0.41.0.crate",
     },
 }
@@ -440,6 +469,153 @@ def permits_mit_only(expression):
     return either() is True and position == len(tokens)
 
 
+def vendored_directory(workspace):
+    """Find the directory source that this workspace substitutes for crates.io.
+
+    Only the workspace's own .cargo/config.toml counts, so a vendored package
+    is recognized where the checkout declares one and nowhere else. Cargo
+    resolves a config file's relative paths against the parent of .cargo.
+    """
+    config = Path(workspace) / ".cargo" / "config.toml"
+    if not config.is_file():
+        return None
+    try:
+        settings = tomllib.loads(config.read_text(encoding="utf-8"))
+    except ValueError as error:
+        raise NoticeError(
+            f"unreadable Cargo configuration: {config}"
+        ) from error
+
+    def table(value):
+        return value if isinstance(value, dict) else {}
+
+    sources = table(settings.get("source"))
+    replacement = table(sources.get("crates-io")).get("replace-with")
+    if not isinstance(replacement, str):
+        return None
+    directory = table(sources.get(replacement)).get("directory")
+    if not isinstance(directory, str):
+        return None
+    return (Path(workspace) / directory).resolve()
+
+
+def vendored_files_digest(files):
+    """Fingerprint a file table as its `sha256sum` listing, sorted by path."""
+    listing = "".join(
+        f"{digest}  {path}\n" for path, digest in sorted(files.items())
+    )
+    return hashlib.sha256(listing.encode("utf-8")).hexdigest()
+
+
+def vendored_vcs_record(root, name, version, pin, require):
+    """Prove that a vendored copy is the reviewed one; return its VCS record.
+
+    A directory source keeps no .crate archive to hash. Its checksum record
+    is no substitute: Cargo compares `package` with Cargo.lock and each listed
+    file with its listed hash, so a copy edited together with its record still
+    builds. The pin's own digest of the reviewed file table carries the proof
+    instead, and the directory must hold exactly those files and bytes.
+    """
+    require(
+        root.name in {name, f"{name}-{version}"},
+        "unsupported vendored source layout"
+    )
+    record = root / VENDORED_RECORD
+    require(
+        record.is_file() and not record.is_symlink(),
+        "vendored checksum record is missing or linked"
+    )
+    try:
+        listed = json.loads(record.read_bytes())
+    except ValueError:
+        listed = None
+    files = listed.get("files") if isinstance(listed, dict) else None
+    # A line break in a path would let one file pass for two listing lines.
+    require(
+        isinstance(files, dict) and all(
+            isinstance(digest, str) and "\n" not in path
+            for path, digest in files.items()
+        ),
+        "malformed vendored checksum record"
+    )
+    require(
+        listed.get("package") == pin["checksum"],
+        "vendored crate checksum changed"
+    )
+    present = set()
+    vcs_bytes = None
+    for path in files_beneath(root):
+        relative = path.relative_to(root).as_posix()
+        if relative == VENDORED_RECORD:
+            continue
+        require(relative in files, f"vendored file is not listed: {relative}")
+        raw = path.read_bytes()
+        require(
+            hashlib.sha256(raw).hexdigest() == files[relative],
+            f"vendored file checksum changed: {relative}"
+        )
+        present.add(relative)
+        if relative == ".cargo_vcs_info.json":
+            vcs_bytes = raw
+    missing = sorted(files.keys() - present)
+    require(
+        not missing,
+        "listed vendored file is missing: " + ", ".join(missing[:3])
+    )
+    digest = vendored_files_digest(files)
+    require(
+        digest == pin["vendored_files"],
+        f"vendored file table checksum changed: {digest}"
+    )
+    require(vcs_bytes is not None, "vendored VCS record is missing")
+    return vcs_bytes
+
+
+def cached_vcs_record(root, name, version, expected, require):
+    """Prove the registry's cached archive; return the VCS record it holds."""
+    require(
+        root.name == f"{name}-{version}" and root.parent.parent.name == "src",
+        "unsupported registry source/cache layout, "
+        "and not a vendored source of this workspace"
+    )
+    archive = (
+        root.parent.parent.parent / "cache" / root.parent.name
+        / f"{name}-{version}.crate"
+    )
+    require(
+        archive.is_file() and not archive.is_symlink(),
+        "verified cached crate archive is missing or linked"
+    )
+    digest = hashlib.sha256()
+    with archive.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    require(digest.hexdigest() == expected, "cached crate checksum changed")
+    member_name = f"{name}-{version}/.cargo_vcs_info.json"
+    with tarfile.open(archive, "r:gz") as source:
+        members = [
+            member for member in source.getmembers()
+            if member.name == member_name
+        ]
+        require(
+            len(members) == 1 and members[0].isfile(),
+            "crate VCS record is missing, duplicate or non-regular"
+        )
+        stream = source.extractfile(members[0])
+        require(stream is not None, "crate VCS record is unreadable")
+        vcs_bytes = stream.read()
+    vcs_file = root / ".cargo_vcs_info.json"
+    require(
+        vcs_file.is_file() and not vcs_file.is_symlink(),
+        "source VCS record is missing or linked"
+    )
+    require(
+        vcs_file.read_bytes() == vcs_bytes,
+        "source VCS record differs from archive"
+    )
+    return vcs_bytes
+
+
 def pinned_crate_notices(package, embedded, workspace):
     """Reuse exact reviewed notices only after immutable crate source guards."""
     name, version = package["name"], package["version"]
@@ -477,45 +653,10 @@ def pinned_crate_notices(package, embedded, workspace):
     require(len(matches) == 1, "locked package identity missing or ambiguous")
     require(matches[0].get("checksum") == expected, "locked checksum changed")
     root = Path(package["manifest_path"]).parent.resolve(strict=True)
-    require(
-        root.name == f"{name}-{version}" and root.parent.parent.name == "src",
-        "unsupported registry source/cache layout"
-    )
-    archive = (
-        root.parent.parent.parent / "cache" / root.parent.name
-        / f"{name}-{version}.crate"
-    )
-    require(
-        archive.is_file() and not archive.is_symlink(),
-        "verified cached crate archive is missing or linked"
-    )
-    digest = hashlib.sha256()
-    with archive.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    require(digest.hexdigest() == expected, "cached crate checksum changed")
-    member_name = f"{name}-{version}/.cargo_vcs_info.json"
-    with tarfile.open(archive, "r:gz") as source:
-        members = [
-            member for member in source.getmembers()
-            if member.name == member_name
-        ]
-        require(
-            len(members) == 1 and members[0].isfile(),
-            "crate VCS record is missing, duplicate or non-regular"
-        )
-        stream = source.extractfile(members[0])
-        require(stream is not None, "crate VCS record is unreadable")
-        vcs_bytes = stream.read()
-    vcs_file = root / ".cargo_vcs_info.json"
-    require(
-        vcs_file.is_file() and not vcs_file.is_symlink(),
-        "source VCS record is missing or linked"
-    )
-    require(
-        vcs_file.read_bytes() == vcs_bytes,
-        "source VCS record differs from archive"
-    )
+    if root.parent == vendored_directory(workspace):
+        vcs_bytes = vendored_vcs_record(root, name, version, pin, require)
+    else:
+        vcs_bytes = cached_vcs_record(root, name, version, expected, require)
     vcs = json.loads(vcs_bytes)
     require(
         isinstance(vcs, dict) and isinstance(vcs.get("git"), dict),
@@ -601,8 +742,16 @@ def crate_notices(package, embedded, workspace):
         if not resolved.is_file():
             raise NoticeError(f"license_file is not a file: {package['name']}")
         notices[relative.as_posix()] = resolved.read_bytes()
-    if not notices:
+    pinned = None
+    key = (package["name"], package["version"])
+    # crates.io never changes a published version, and the pinned ones ship
+    # no notice. A vendored copy that holds one is not the reviewed copy, so
+    # the guard runs for it all the same.
+    if not notices or (
+        key in PINNED_PACKAGES and root.parent == vendored_directory(workspace)
+    ):
         pinned = pinned_crate_notices(package, embedded, workspace)
+    if not notices:
         if pinned is not None:
             notices.update(pinned)
         elif permits_mit_only(package.get("license")):

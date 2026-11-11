@@ -9,7 +9,8 @@
 #
 # "Run workflow" builds the same archives for an existing revision as
 # artifacts of the run and publishes nothing: a dry run for workflow changes.
-# Pull requests and pushes to main that touch the release helpers run their
+# Pull requests and pushes to main that touch the release helpers, or the
+# vendored crates and lockfile that the notice guard pins, run the helper
 # tests only.
 name: Release
 
@@ -36,6 +37,10 @@ on:
             - docs/dev/release-notice-sources.json
             - assets/licenses/**
             - .gitattributes
+            # The notice tests run the guard on the vendored pinned crates.
+            - vendor/**
+            - Cargo.lock
+            - .cargo/config.toml
     push:
         branches: [main]
         # GitHub does not apply the path filter to tag pushes.
@@ -49,6 +54,9 @@ on:
             - docs/dev/release-notice-sources.json
             - assets/licenses/**
             - .gitattributes
+            - vendor/**
+            - Cargo.lock
+            - .cargo/config.toml
 
 permissions:
     contents: read

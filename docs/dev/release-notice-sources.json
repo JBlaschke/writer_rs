@@ -2,6 +2,22 @@
     "verified_date": "2026-10-29",
     "scope": "Exact reviewed source copies for missing published notices; no generated non-MIT license.",
     "source_registry": "registry+https://github.com/rust-lang/crates.io-index",
+    "vendored_sources": {
+        "verified_date": "2026-11-10",
+        "directory": "vendor",
+        "files_digest": "vendored_files_sha256 is the SHA-256 of a copy's file table as a `sha256sum` listing: one `<sha256>  <path>` line per file, sorted by path, without .cargo-checksum.json.",
+        "evidence": [
+            "Each crates.io archive in the local Cargo cache has its row's crate_sha256.",
+            "Every vendored file equals the archive member of the same path.",
+            "A fresh `cargo vendor` of those archives (cargo 1.99.1) writes the same checksum records."
+        ],
+        "archive_only_files": {
+            "note": "`cargo vendor` leaves out .gitattributes and .gitignore files.",
+            "mitex-spec-gen 0.2.4": [
+                "assets/artifacts/.gitattributes"
+            ]
+        }
+    },
     "groups": {
         "mitex": {
             "repository": "https://github.com/mitex-rs/mitex",
@@ -114,49 +130,56 @@
             "version": "0.2.4",
             "group": "mitex",
             "vcs_path": "crates/mitex",
-            "crate_sha256": "81f1eb466efdd212fe624f8bf24083f21d582f2d08e3b879bc4a059b25969d6c"
+            "crate_sha256": "81f1eb466efdd212fe624f8bf24083f21d582f2d08e3b879bc4a059b25969d6c",
+            "vendored_files_sha256": "67bfffc03d9dbf22f8234f21cd71132b73ceae5899b038f010acb6a3fb4aaa66"
         },
         {
             "name": "mitex-glob",
             "version": "0.2.4",
             "group": "mitex",
             "vcs_path": "crates/mitex-glob",
-            "crate_sha256": "c3074187856f137e3392e906daefa2fdc993175d1c7d55ff1348e3bb9321d415"
+            "crate_sha256": "c3074187856f137e3392e906daefa2fdc993175d1c7d55ff1348e3bb9321d415",
+            "vendored_files_sha256": "053765d2c8e2c3df76a07fefbe1ac784975ae3b942149b262f87d6c2ea281e7d"
         },
         {
             "name": "mitex-lexer",
             "version": "0.2.4",
             "group": "mitex",
             "vcs_path": "crates/mitex-lexer",
-            "crate_sha256": "0fd0a245774eed6cbf0df25bc3a9c6cc64445a5ea2c3a241f1c9691d83ae214b"
+            "crate_sha256": "0fd0a245774eed6cbf0df25bc3a9c6cc64445a5ea2c3a241f1c9691d83ae214b",
+            "vendored_files_sha256": "082153a16359ce446755169e099813043e7c1298065a540e20d08b8b4f22d25e"
         },
         {
             "name": "mitex-parser",
             "version": "0.2.4",
             "group": "mitex",
             "vcs_path": "crates/mitex-parser",
-            "crate_sha256": "1a42a2f86c46d250802262387dfb1d6bb18affd2d99328bbe4dbd12ce294c3a4"
+            "crate_sha256": "1a42a2f86c46d250802262387dfb1d6bb18affd2d99328bbe4dbd12ce294c3a4",
+            "vendored_files_sha256": "828d2d70e6e1fb4243734b5ad064f87030b4f45c7c682ab573a025403da5aecd"
         },
         {
             "name": "mitex-spec",
             "version": "0.2.4",
             "group": "mitex",
             "vcs_path": "crates/mitex-spec",
-            "crate_sha256": "12ecaa5f36d60e2d64ea5508d1be44b1c19daa50518f5b8425f36697fdc60509"
+            "crate_sha256": "12ecaa5f36d60e2d64ea5508d1be44b1c19daa50518f5b8425f36697fdc60509",
+            "vendored_files_sha256": "3bb0264518e1ca3cd363cb801cd1fcf1285b3c30bdf14ffdffd403714627cd82"
         },
         {
             "name": "mitex-spec-gen",
             "version": "0.2.4",
             "group": "mitex",
             "vcs_path": "crates/mitex-spec-gen",
-            "crate_sha256": "a1e9ef918ec9c2a14e60ebb20275684b483d23afb5c3314127c9eb46ce74ae68"
+            "crate_sha256": "a1e9ef918ec9c2a14e60ebb20275684b483d23afb5c3314127c9eb46ce74ae68",
+            "vendored_files_sha256": "364534e6a9746b5dd635febbf968c4bc2b1739ea50de968290c9082976d3c301"
         },
         {
             "name": "roman-numerals-rs",
             "version": "3.1.0",
             "group": "roman-numerals-rs",
             "vcs_path": "rust",
-            "crate_sha256": "c85cd47a33a4510b1424fe796498e174c6a9cf94e606460ef022a19f3e4ff85e"
+            "crate_sha256": "c85cd47a33a4510b1424fe796498e174c6a9cf94e606460ef022a19f3e4ff85e",
+            "vendored_files_sha256": "1431c50126e3778f4506cb5fe77a702fa39261390e1f58081cfd8633c4557bd9"
         },
         {
             "name": "selectors",
@@ -164,6 +187,7 @@
             "group": "selectors",
             "vcs_path": "selectors",
             "crate_sha256": "8322aebea94a6cc288ff884e8a49bdbceef60206c400c6c46d22e62fc4fd91a6",
+            "vendored_files_sha256": "24ee4c6b360708b6d1d6162c00544094fd942b3f5858bbdabe831ff45ff13885",
             "source_url": "https://static.crates.io/crates/selectors/selectors-0.41.0.crate"
         },
         {
@@ -171,97 +195,112 @@
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst",
-            "crate_sha256": "d1cb79435d128de5d5443a058a983f6dcc16738760fa55ed703762bc278b1fd3"
+            "crate_sha256": "d1cb79435d128de5d5443a058a983f6dcc16738760fa55ed703762bc278b1fd3",
+            "vendored_files_sha256": "ca9156be7505c12aa58b2029b1b4c3131efdcb6d1a99eb20697205670eaf9204"
         },
         {
             "name": "typst-eval",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-eval",
-            "crate_sha256": "a8823e1822bd181d8bee47b05632d16bf3a0a8ab042e01d815826350d7ae16c3"
+            "crate_sha256": "a8823e1822bd181d8bee47b05632d16bf3a0a8ab042e01d815826350d7ae16c3",
+            "vendored_files_sha256": "dcef98e7b9681d98c171b34da19c29b3a46ead789939aee3847001e6d03546f3"
         },
         {
             "name": "typst-html",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-html",
-            "crate_sha256": "f41bcfbe480b640c4447d8bf9bb59020da610f239aa032d53328651a03572c09"
+            "crate_sha256": "f41bcfbe480b640c4447d8bf9bb59020da610f239aa032d53328651a03572c09",
+            "vendored_files_sha256": "4f3a7b437d58eb53078f6d4c4d66626dacb086c983418cae8050fe695bf15ae5"
         },
         {
             "name": "typst-kit",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-kit",
-            "crate_sha256": "27ee52e27dfab0da5ac3d19e7e43a21fbc7ff83af9301119468bae89fa857a8b"
+            "crate_sha256": "27ee52e27dfab0da5ac3d19e7e43a21fbc7ff83af9301119468bae89fa857a8b",
+            "vendored_files_sha256": "14ad7611f1fdc38342f3d1a03c3a5579b5ee11a60c86837004a3f5015b3d5583"
         },
         {
             "name": "typst-layout",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-layout",
-            "crate_sha256": "1916c407baf8f8815e5d50030eed6d5ac6a0702d927b3c156e38db7a618499e2"
+            "crate_sha256": "1916c407baf8f8815e5d50030eed6d5ac6a0702d927b3c156e38db7a618499e2",
+            "vendored_files_sha256": "7d492ab334b7992d42a823685a7942b40b9033a1010664fabcb850a325c37526"
         },
         {
             "name": "typst-library",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-library",
-            "crate_sha256": "12becd02464849f1507f3c4ef3f401a4d28d5938cc74b6acc6f1d703458bf393"
+            "crate_sha256": "12becd02464849f1507f3c4ef3f401a4d28d5938cc74b6acc6f1d703458bf393",
+            "vendored_files_sha256": "ca0b080c82f78e498ba37741697872a3f0503a78362066ed581296e83113ddd4"
         },
         {
             "name": "typst-pdf",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-pdf",
-            "crate_sha256": "3aef841ff3e606542f3057ce5dd0ff264d53a439e00ed4a91ec00ec8568b3b7f"
+            "crate_sha256": "3aef841ff3e606542f3057ce5dd0ff264d53a439e00ed4a91ec00ec8568b3b7f",
+            "vendored_files_sha256": "f5ee8998bf23a979afa0ccdc565eaf4a6e29ce5a229136b60424e14e7b49b697"
         },
         {
             "name": "typst-realize",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-realize",
-            "crate_sha256": "a8f2eb73ab25add88cab03b26effabc657977fe850ff81556b28c6b137ff4bf1"
+            "crate_sha256": "a8f2eb73ab25add88cab03b26effabc657977fe850ff81556b28c6b137ff4bf1",
+            "vendored_files_sha256": "a45aef746ef153819404cd0684a12453e1ca9697ea02088bfb2d8cbc22291c47"
         },
         {
             "name": "typst-render",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-render",
-            "crate_sha256": "de8a657a5fa5b9b7d3d458f482978674de910b54889d46f3bb55ca89f570f83e"
+            "crate_sha256": "de8a657a5fa5b9b7d3d458f482978674de910b54889d46f3bb55ca89f570f83e",
+            "vendored_files_sha256": "9054046d9f1d92ad08ba2ad4e9a1ad637f6a14f9b736b705df0de5b2cc360588"
         },
         {
             "name": "typst-svg",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-svg",
-            "crate_sha256": "5df6dc785695aae085678bd6657aa04a1d26058a76ed042e738658078bca681e"
+            "crate_sha256": "5df6dc785695aae085678bd6657aa04a1d26058a76ed042e738658078bca681e",
+            "vendored_files_sha256": "a1bad2e658d6fb8eec57c1db14fcc99608b6739a377e92a1e97075ca2511c7f9"
         },
         {
             "name": "typst-syntax",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-syntax",
-            "crate_sha256": "92a20d79df5d10c7fb0b4f7c18e4b2671edfc21e5ed9ad9894e18cccefd1c70f"
+            "crate_sha256": "92a20d79df5d10c7fb0b4f7c18e4b2671edfc21e5ed9ad9894e18cccefd1c70f",
+            "vendored_files_sha256": "89d8f4f96f7347b4d203ea71420081493bc785a7bc51f3a7bebcec7193346bdd"
         },
         {
             "name": "typst-timing",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-timing",
-            "crate_sha256": "ab6ee5110f671a23164c61caa85dbc476043d503103dedd36f16d93f970f3f59"
+            "crate_sha256": "ab6ee5110f671a23164c61caa85dbc476043d503103dedd36f16d93f970f3f59",
+            "vendored_files_sha256": "59c4db219cbd3a590f35c573ec80c5f1b300386f3b0417523f310ae0b0d13a14"
         },
         {
             "name": "typst-utils",
             "version": "0.15.1",
             "group": "typst",
             "vcs_path": "crates/typst-utils",
-            "crate_sha256": "b33ad1675497b45ae9d960a16e95207c35c2c46330d1a6249a9a977670c8c160"
+            "crate_sha256": "b33ad1675497b45ae9d960a16e95207c35c2c46330d1a6249a9a977670c8c160",
+            "vendored_files_sha256": "051703909a05418042fb6645cbafff57f4a265d97218685b28d387f88092ab16"
         }
     ],
     "guards": [
         "Exact package name/version/source/repository/license and absent license_file.",
-        "One matching Cargo.lock identity with reviewed checksum; actual cached crate SHA-256.",
-        "Exactly one regular archive VCS record equal to extracted source bytes; exact clean revision/path.",
+        "One matching Cargo.lock identity with reviewed checksum.",
+        "Registry source: actual cached crate SHA-256; exactly one regular archive VCS record equal to extracted source bytes.",
+        "Vendored source, a direct child of the workspace's crates-io replacement directory: checksum record package equal to the reviewed checksum; exactly the listed files, each with its listed SHA-256; reviewed vendored_files_sha256 of the file table; checked even when the copy holds a notice.",
+        "Exact clean VCS revision/path in either layout.",
         "Each embedded/release notice is copied byte-exact after its reviewed runtime SHA-256 check.",
         "Release sources are confined beneath the helper checkout; no runtime notice download.",
         "Only missing published source notices trigger reviewed source-copy exceptions.",
