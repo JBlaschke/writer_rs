@@ -427,12 +427,8 @@ fn pdf_is_reproducible() {
     let second = compile_pdf(&mut world, &options).into_result().unwrap().0;
     assert_eq!(first, second);
     assert_eq!(first.pages, 1);
-    assert!(
-        first
-            .bytes
-            .windows(b"writer 0.1.0".len())
-            .any(|bytes| bytes == b"writer 0.1.0")
-    );
+    let creator = concat!("writer ", env!("CARGO_PKG_VERSION")).as_bytes();
+    assert!(first.bytes.windows(creator.len()).any(|bytes| bytes == creator));
 }
 
 #[test]

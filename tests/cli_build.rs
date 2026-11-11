@@ -222,11 +222,12 @@ fn licenses_flag() {
 
 #[test]
 fn version_flag() {
+    let prefix = concat!("writer ", env!("CARGO_PKG_VERSION"));
     writer()
         .arg("--version")
         .assert()
         .success()
-        .stdout(predicates::str::starts_with("writer 0.1.0"));
+        .stdout(predicates::str::starts_with(prefix));
 }
 
 #[test]
