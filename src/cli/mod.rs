@@ -853,7 +853,8 @@ mod tests {
     fn version_string() {
         let rendered = Cli::command().render_version().to_string();
         assert_eq!(rendered, format!("writer {}\n", version()));
-        assert!(rendered.starts_with("writer 0.1.0"), "{rendered}");
+        let prefix = concat!("writer ", env!("CARGO_PKG_VERSION"));
+        assert!(rendered.starts_with(prefix), "{rendered}");
         assert_eq!(version_text("0.1.0", None), "0.1.0");
         assert_eq!(version_text("0.1.0", Some(" ")), "0.1.0");
         assert_eq!(version_text("0.1.0", Some("abc1234")), "0.1.0 (abc1234)");

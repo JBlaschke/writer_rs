@@ -7,9 +7,11 @@ Cargo remains `publish = false`.
 
 ## Cutting a release
 
-1. Set `version` in `Cargo.toml` (and refresh `Cargo.lock` with a build).
-   Write the release notes in `docs/release/NOTES-<version>.md`; they become
-   the release's description. Merge both to `main`.
+1. Set `version` in `Cargo.toml` (and refresh `Cargo.lock` with a build),
+   and name the new archive in the install commands of
+   `docs/guide/getting-started.md`. Write the release notes in
+   `docs/release/NOTES-<version>.md`; they become the release's description.
+   Merge them to `main`.
 2. Optionally dry-run: Actions → Release → Run workflow on `main`. It builds,
    smokes and checksums all six archives as run artifacts and publishes
    nothing.

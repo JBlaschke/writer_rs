@@ -755,7 +755,7 @@ mod tests {
             &AssetRegistry::new(),
         );
         assert_eq!(inputs.len(), 2);
-        assert_eq!(inputs["writer-version"], "0.1.0");
+        assert_eq!(inputs["writer-version"], env!("CARGO_PKG_VERSION"));
         assert_eq!(
             inputs["writer-config"],
             r#"{"lang":"en","toc":0,"numbering":{"headings":false,"figures":"document","equations":"labelled"},"paper":"a4","cite_locale":""}"#

@@ -13,8 +13,8 @@ release's `SHA256SUMS`, unpack it, and move `writer` (`writer.exe` on
 Windows) to a directory on your `PATH`:
 
 ```sh
-tar -xzf writer-v0.1.0-aarch64-apple-darwin.tar.gz
-mv writer-v0.1.0-aarch64-apple-darwin/writer ~/.local/bin/
+tar -xzf writer-v0.1.1-aarch64-apple-darwin.tar.gz
+mv writer-v0.1.1-aarch64-apple-darwin/writer ~/.local/bin/
 writer --version
 ```
 
