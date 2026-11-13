@@ -3,11 +3,12 @@
 //!
 //! typst-kit's `embedded-fonts` feature would link the files as they are,
 //! 3.1 MiB more than their deflated copies. [`embedded`] serves the same fonts
-//! in the same order, so font selection and output are unchanged; inflating
-//! them takes some 20 ms once per process.
+//! in the same order, so font selection and output are unchanged. The files
+//! are inflated once per process, in parallel.
 
 use std::io::Read;
 use std::sync::OnceLock;
+use std::{panic, thread};
 
 use flate2::read::DeflateDecoder;
 use typst::foundations::Bytes;
@@ -37,19 +38,46 @@ fn files() -> &'static [Bytes] {
     static FILES: OnceLock<Vec<Bytes>> = OnceLock::new();
     FILES.get_or_init(|| {
         let mut rest = FONT_DATA;
-        FONT_SIZES
+        let streams: Vec<(&[u8], usize)> = FONT_SIZES
             .iter()
             .map(|&(packed, size)| {
-                let (file, next) = rest.split_at(packed);
+                let (stream, next) = rest.split_at(packed);
                 rest = next;
-                let mut data = Vec::with_capacity(size);
-                DeflateDecoder::new(file)
-                    .read_to_end(&mut data)
-                    .expect("build.rs writes complete deflate streams");
-                Bytes::new(data)
+                (stream, size)
             })
-            .collect()
+            .collect();
+        // A thread per file: one after another, they added about 45 ms to
+        // every build on a hosted Windows runner, in parallel 10-20 ms.
+        thread::scope(|scope| {
+            let threads: Vec<_> = streams
+                .iter()
+                .map(|&(stream, size)| {
+                    thread::Builder::new()
+                        .spawn_scoped(scope, move || inflate(stream, size))
+                })
+                .collect();
+            threads
+                .into_iter()
+                .zip(&streams)
+                .map(|(thread, &(stream, size))| match thread {
+                    Ok(thread) => thread
+                        .join()
+                        .unwrap_or_else(|panic| panic::resume_unwind(panic)),
+                    // No thread to spare: inflate the file here instead.
+                    Err(_) => inflate(stream, size),
+                })
+                .collect()
+        })
     })
+}
+
+/// One font file from its deflate stream and original length.
+fn inflate(stream: &[u8], size: usize) -> Bytes {
+    let mut data = Vec::with_capacity(size);
+    DeflateDecoder::new(stream)
+        .read_to_end(&mut data)
+        .expect("build.rs writes complete deflate streams");
+    Bytes::new(data)
 }
 
 #[cfg(test)]
