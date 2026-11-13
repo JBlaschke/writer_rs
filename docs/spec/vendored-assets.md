@@ -500,6 +500,11 @@ docx-output.md §7.2), `two-face-04 = { package = "two-face", version
 `[profile.dist]` `inherits = "release"`, `lto = "fat"` (the archived executable, §6).
 `clippy.toml`: presenter's `too-many-arguments-threshold = 8` plus §3.3's `disallowed-methods`.
 
+> **Contract change (release size, 2026-11-13):** typst-kit drops `embedded-fonts`, `flate2` joins
+> the dependencies, and `[build-dependencies]` and the `typst-assets` dev dependency are new:
+> `build.rs` stores typst-assets' fonts deflated (§3.1), about 3.1 MiB less on every target. The
+> x86_64 Windows executable had been 59,904 B under §6's ceiling (v0.1.1, Rust 1.100.0).
+
 Not dependencies (decided): `comemo`, `ecow` (use `typst::comemo`, `typst::ecow`; a direct `ecow` would
 add 0.3.1 next to typst's 0.2.6), `typst-library`, `typst-assets` at run time (re-exported by typst;
 only `build.rs` and the tests use it), `tylax`, `katex`/`katex-rs`, `pulldown-latex`, `ansi-to-html`,
