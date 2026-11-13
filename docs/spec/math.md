@@ -319,8 +319,8 @@ a baseline lookup finds nothing and a fallback to the height would lift inline p
 for `a/b`); the box yields one `FrameItem::Group` with `has_baseline()` at the same size.
 `baseline_pt` = `pos.y + g.frame.baseline()` of that group; a missing group is an `Err`
 (`Error::Other("equation has no baseline")`), never the height. Size and fonts are typst's
-defaults (11 pt, Libertinus Serif, New Computer Modern Math, all embedded via typst-kit
-`embedded-fonts` and served first), so renditions are byte-identical on every machine; a caller
+defaults (11 pt, Libertinus Serif, New Computer Modern Math, all embedded (vendored-assets.md
+§3.1) and served first), so renditions are byte-identical on every machine; a caller
 that needs another size scales the picture (§4.4, §5.3). Measured anchors for the tests: inline
 `x^2 + 1/2` → 31.317 × 13.242 pt, baseline 9.447 (descent 3.795), PNG 63×26 px; inline `a/b` →
 6.974 × 11.602 pt, baseline 7.73; inline `x` → 6.292 × 4.983 pt, baseline 4.862; display

@@ -72,7 +72,7 @@ impl WordLines {
             lines.resolve_paths(&mut missing, &found);
         }
         if !missing.is_empty() {
-            let embedded: Vec<_> = typst_kit::fonts::embedded().collect();
+            let embedded: Vec<_> = crate::typst::fonts::embedded().collect();
             lines.resolve(
                 &mut missing,
                 embedded.iter().map(|(_, info)| info),
@@ -220,7 +220,7 @@ mod tests {
     use crate::design::Font as DesignFont;
 
     fn embedded(family: &str) -> Font {
-        typst_kit::fonts::embedded()
+        crate::typst::fonts::embedded()
             .find(|(_, info)| info.family == family)
             .map(|(font, _)| font)
             .expect("embedded family")

@@ -61,7 +61,7 @@ license = "Apache-2.0"
 role = "license-only"
 date = "2026-10-25"
 path = "crates/typst-assets"
-note = "linked through typst-kit embedded-fonts; only LICENSE and NOTICE are copied"
+note = "fonts embedded deflated by writer's build.rs; only LICENSE and NOTICE are copied"
 [[package.source]]
 url = "https://static.crates.io/crates/typst-assets/typst-assets-0.15.1.crate"
 sha256 = "bcee505dac6702dd1c5e65aa2e94a6179d19ee09e2e5637d7313db91765dc4e0"

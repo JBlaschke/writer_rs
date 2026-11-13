@@ -8,6 +8,7 @@ pub use crate::vendor::MITEX_VERSION;
 
 pub mod compile;
 pub mod emit;
+pub mod fonts;
 pub mod frontend;
 pub mod html;
 pub mod includes;

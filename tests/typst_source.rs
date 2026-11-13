@@ -497,7 +497,7 @@ fn dynamic_consumed_file_symlinks_and_hard_links_are_protected() {
 #[test]
 fn a_disk_font_selected_in_the_retained_session_cannot_be_overwritten() {
     let directory = project("Native font safety.\n");
-    let (embedded, _) = typst_kit::fonts::embedded().next().unwrap();
+    let (embedded, _) = writer::typst::fonts::embedded().next().unwrap();
     let font = directory.path().join("fonts/copied.otf");
     write(directory.path(), "fonts/copied.otf", embedded.data());
     write(
@@ -518,7 +518,7 @@ fn a_disk_font_selected_in_the_retained_session_cannot_be_overwritten() {
     // families take precedence during ordinary layout, so merely adding a copy
     // to font_paths would not select the disk font or prove consumed-file
     // safety.
-    let index = typst_kit::fonts::embedded().count();
+    let index = writer::typst::fonts::embedded().count();
     assert!(world.font(index).is_some());
     assert!(world.accessed().contains(&fs::canonicalize(&font).unwrap()));
     let original = fs::read(&font).unwrap();

@@ -65,7 +65,7 @@ fn letter_tokens_precede_theme_entries_and_layout_follows_them() {
 
 fn font_project() -> (tempfile::TempDir, BuildOptions, Prepared, Vec<u8>) {
     let root = tempfile::tempdir().unwrap();
-    let (font, info) = typst_kit::fonts::embedded()
+    let (font, info) = writer::typst::fonts::embedded()
         .find(|(_, info)| {
             info.variant.style == typst::text::FontStyle::Normal
                 && info.variant.weight.to_number() == 400

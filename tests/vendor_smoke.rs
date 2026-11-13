@@ -154,7 +154,7 @@ const PACKAGE_PINS: [PackagePin; 6] = [
         name: "typst-assets", version: "0.15.1", license: "Apache-2.0",
         role: "license-only", path: "crates/typst-assets",
         note: Some(
-            "linked through typst-kit embedded-fonts; only LICENSE and NOTICE are copied",
+            "fonts embedded deflated by writer's build.rs; only LICENSE and NOTICE are copied",
         ),
         sources: &[(
             "https://static.crates.io/crates/typst-assets/typst-assets-0.15.1.crate",

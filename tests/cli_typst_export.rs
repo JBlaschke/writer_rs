@@ -379,7 +379,7 @@ fn chosen_non_utf8_output_stem_is_rejected_before_writing() {
 fn a_declared_design_exports_its_json_images_and_font_files() {
     let directory =
         project("# Letter\n\n:::recipient\nDr Example\n:::\n\nBody.\n");
-    let (font, info) = typst_kit::fonts::embedded().next().unwrap();
+    let (font, info) = writer::typst::fonts::embedded().next().unwrap();
     write(
         directory.path(),
         "writer.toml",

@@ -60,6 +60,8 @@ zip = { version = "=9.0.5", default-features = false, features = ["deflate"] }
 quick-xml = "0.42.0"
 imagesize = "0.15.0"
 ureq = "3.5.0"
+# Inflates the embedded fonts that build.rs deflates (src/typst/fonts.rs).
+flate2 = "1.1.10"
 
 [dependencies.minijinja]
 version  = "2.24.0"
@@ -71,12 +73,16 @@ features = [
     "rt-multi-thread", "macros", "sync", "signal", "time", "fs",
 ]
 
+# Without `embedded-fonts`, which links typst-assets' fonts uncompressed:
+# build.rs stores them deflated instead (src/typst/fonts.rs).
 [dependencies.typst-kit]
 version = "=0.15.1"
 default-features = false
-features = [
-    "embedded-fonts", "scan-fonts", "system-packages", "universe-packages",
-]
+features = ["scan-fonts", "system-packages", "universe-packages"]
+
+[build-dependencies]
+flate2 = "1.1.10"
+typst-assets = { version = "=0.15.1", features = ["fonts"] }
 
 [dev-dependencies]
 insta = { version = "1.49.0", features = ["json", "filters", "redactions"] }
@@ -84,6 +90,9 @@ assert_cmd = "2.2.2"
 predicates = "3.1.4"
 tempfile = "3.27.0"
 docx-rs = { version = "=0.4.22", default-features = false }
+# The font files src/typst/fonts.rs must reproduce; tests/build_script.rs
+# compiles build.rs, which packs them.
+typst-assets = { version = "=0.15.1", features = ["fonts"] }
 
 [dev-dependencies.two-face-04]
 package = "two-face"

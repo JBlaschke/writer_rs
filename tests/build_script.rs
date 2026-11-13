@@ -2,18 +2,23 @@
 //! `WRITER_GIT_SHA` override, the `unknown` fallback without git or outside a
 //! checkout, `git describe --always --dirty` semantics on a scratch repository,
 //! the build id charset, and the git paths watched so that the id cannot go
-//! stale (loose and packed refs, reftable, linked worktrees).
+//! stale (loose and packed refs, reftable, linked worktrees); and the packing
+//! of the embedded fonts into deflate streams with their table.
 //!
 //! Tests that need git skip themselves (with a note on stderr) when it is not
 //! installed.
 
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+use flate2::read::DeflateDecoder;
 
 #[allow(dead_code)] // `main` and the constants are the build script's own.
 #[path = "../build.rs"]
 mod build_script;
 
+use build_script::{FONT_DATA, FONT_TABLE, pack_fonts};
 use build_script::{Source, build_id, crate_inputs};
 
 /// A program name that cannot exist on `PATH`.
@@ -445,5 +450,62 @@ fn a_linked_worktree_watches_its_own_head() {
     for other in ["HEAD", "refs/heads/main"] {
         let other = git_dir.join(other).canonicalize().unwrap();
         assert!(!watch.contains(&other), "{other:?}: {watch:?}");
+    }
+}
+
+/// The `(deflated, original)` lengths in a font table, in order.
+fn table_sizes(table: &str) -> Vec<(usize, usize)> {
+    table
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix('(')?.strip_suffix("),"))
+        .map(|pair| {
+            let (packed, size) = pair.split_once(", ").unwrap();
+            (packed.parse().unwrap(), size.parse().unwrap())
+        })
+        .collect()
+}
+
+/// Each font becomes one raw deflate stream, back to back in the data file,
+/// with its deflated and original length in the table.
+#[test]
+fn fonts_pack_into_deflate_streams_and_a_table() {
+    let dir = tempfile::tempdir().unwrap();
+    let fonts: [&[u8]; 3] = [b"first font", b"", &[7; 5000]];
+    assert!(pack_fonts(fonts, dir.path()).unwrap());
+    let data = std::fs::read(dir.path().join(FONT_DATA)).unwrap();
+    let table = std::fs::read_to_string(dir.path().join(FONT_TABLE)).unwrap();
+    assert!(table.contains("const FONT_SIZES: [(usize, usize); 3] = [\n"));
+    let sizes = table_sizes(&table);
+    assert_eq!(sizes.len(), fonts.len());
+    let mut rest = data.as_slice();
+    for (font, (packed, size)) in fonts.iter().zip(sizes) {
+        assert_eq!(size, font.len());
+        let (stream, next) = rest.split_at(packed);
+        rest = next;
+        let mut inflated = Vec::new();
+        DeflateDecoder::new(stream).read_to_end(&mut inflated).unwrap();
+        assert_eq!(inflated, *font);
+    }
+    assert!(rest.is_empty());
+}
+
+/// A rerun keeps both files while they hold the same fonts, and rewrites them
+/// when a font's bytes or the file boundaries change or a file is missing.
+#[test]
+fn a_rerun_rewrites_the_fonts_only_when_they_change() {
+    let dir = tempfile::tempdir().unwrap();
+    let fonts: [&[u8]; 2] = [b"regular", b"bold"];
+    assert!(pack_fonts(fonts, dir.path()).unwrap());
+    assert!(!pack_fonts(fonts, dir.path()).unwrap());
+    let others: [[&[u8]; 2]; 2] =
+        [[b"Regular", b"bold"], [b"regula", b"rbold"]];
+    for other in others {
+        assert!(pack_fonts(other, dir.path()).unwrap());
+        assert!(!pack_fonts(other, dir.path()).unwrap());
+    }
+    for missing in [FONT_DATA, FONT_TABLE] {
+        std::fs::remove_file(dir.path().join(missing)).unwrap();
+        assert!(pack_fonts(fonts, dir.path()).unwrap());
+        assert!(!pack_fonts(fonts, dir.path()).unwrap());
     }
 }

@@ -113,7 +113,7 @@ AFTERRECIPIENT
     };
     // The exact 12.1pt pitch less the line box of the default body font
     // (design.md §6.2): Libertinus Serif's cap height at 11pt.
-    let (font, _) = typst_kit::fonts::embedded()
+    let (font, _) = writer::typst::fonts::embedded()
         .find(|(_, info)| info.family == "Libertinus Serif")
         .unwrap();
     let regular = FontVariant::new(
