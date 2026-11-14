@@ -130,11 +130,18 @@ hosted dry run (4 November 2026, run 41812146321) still built with thin LTO:
 x86_64 Windows failed the gate at 68,976,128 bytes, and x86_64 Linux reached
 65,711,440. The second dry run (run 41908189568, `cf9dcf5`) built the
 archived executable with the `dist` profile's fat LTO and passed on all six
-targets. Fat LTO saved 2.9% on x86_64 Windows, which now sits at 66,987,008
-bytes, only 121,856 bytes under the gate; the other targets saved 3.4-5.7%
-and keep 4.4-12.8 MB of headroom. Anything that grows the x86_64 Windows
-executable by more than about 119 KiB fails a release, so check its size
-before adding dependencies or embedded assets.
+targets. Fat LTO saved 2.9% on x86_64 Windows, which then sat at 66,987,008
+bytes, only 121,856 bytes under the gate; the other targets saved 3.4-5.7%.
+The compiler moves the size too: the v0.1.1 tag run used Rust 1.100.0,
+released after its dry run on 1.99.1, and built x86_64 Windows 113,152 bytes
+larger than that dry run, 59,904 bytes under the gate. Since then `build.rs`
+stores the embedded fonts deflated instead of linking them as they are
+(vendored-assets.md §3.1), about 3.1 MiB less on every target. The dry run on
+`ff1af31` (13 November 2026, run 43445630875, Rust 1.100.0) built 48.7-60.8
+MiB per target: x86_64 Windows sits at 63,788,544 bytes, 3,320,320 bytes
+(3.2 MiB) under the gate, and the other targets keep 7.8-16.0 MB of headroom.
+x86_64 Windows is still the closest, so check its size before adding
+dependencies or embedded assets, and after a compiler update.
 
 `EMBEDDED.txt` is exact `--licenses` output from the executable being archived.
 All embedded notice paths are copied byte for byte under `assets/`, including
