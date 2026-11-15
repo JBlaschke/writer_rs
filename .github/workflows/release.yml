@@ -177,7 +177,12 @@ jobs:
                   sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
                       /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
                   df -h /
-            - uses: dtolnay/rust-toolchain@stable
+            # An exact compiler, so a dry run builds what the tag run that
+            # follows it will release: the same commit built 113,152 bytes
+            # larger x86_64 Windows with 1.100.0 than with 1.99.1. Bump it
+            # in its own commit, then dry-run it (docs/dev/release.md).
+            # CI and the site stay on stable to try new compilers early.
+            - uses: dtolnay/rust-toolchain@1.100.0
               with:
                   targets: ${{ matrix.target }}
             - uses: actions/setup-python@v7
