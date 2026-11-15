@@ -229,7 +229,7 @@ license = "Apache-2.0"
 role = "license-only"
 date = "${PINNED_DATE}"
 path = "crates/typst-assets"
-note = "linked through typst-kit embedded-fonts; only LICENSE and NOTICE are copied"
+note = "fonts embedded deflated by writer's build.rs; only LICENSE and NOTICE are copied"
 [[package.source]]
 url = "${TYPST_ASSETS_URL}"
 sha256 = "${TYPST_ASSETS_SHA256}"

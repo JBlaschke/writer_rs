@@ -42,7 +42,7 @@ fn embedded(family: &str) -> FontInstance {
         FontWeight::REGULAR,
         FontStretch::NORMAL,
     );
-    typst_kit::fonts::embedded()
+    writer::typst::fonts::embedded()
         .find(|(_, info)| info.family == family)
         .map(|(font, _)| font)
         .expect("embedded family")

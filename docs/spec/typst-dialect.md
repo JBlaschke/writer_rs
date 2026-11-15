@@ -725,16 +725,18 @@ package_paths` root (relative to its `writer.toml`): `{root}/{namespace}/{name}/
 FsPackages::system_data(), FsPackages::system_cache(), UniversePackages::new(d)).obtain(&spec)?
 .load(vpath)` (data dir, cache dir, download for `preview` only) with `d` = `WriterDownloader` (`ureq`
 + rustls, user agent `writer/<version>`) under `[pdf] allow_packages`/`--allow-packages`, else
-`NoDownloader` (`stream` → `Err(io::ErrorKind::NotFound.into())`). typst-kit features: `embedded-fonts`,
-`scan-fonts`, `system-packages`, `universe-packages` (never `system-downloader`: no OpenSSL). Another
-`writer/doc` version not on disk → `PackageError::VersionNotFound(spec, WRITER_DOC_VERSION)`.
+`NoDownloader` (`stream` → `Err(io::ErrorKind::NotFound.into())`). typst-kit features: `scan-fonts`,
+`system-packages`, `universe-packages` (never `system-downloader`: no OpenSSL; not `embedded-fonts`,
+§6.6). Another `writer/doc` version not on disk → `PackageError::VersionNotFound(spec,
+WRITER_DOC_VERSION)`.
 
 ### 6.6 Fonts
-`FontStore::new()`, then `extend(typst_kit::fonts::embedded())` (Libertinus Serif, New Computer
-Modern, New Computer Modern Math, DejaVu Sans Mono), then `extend(scan(dir))` for each `[pdf]
-font_paths` entry, then `extend(system())` when `[pdf] system_fonts`. Embedded first makes output
-independent of the machine for the package's families; `system_fonts = false` gives byte-identical
-PDFs across machines (R1 §8).
+`FontStore::new()`, then `extend(writer::typst::fonts::embedded())` (Libertinus Serif, New Computer
+Modern, New Computer Modern Math, DejaVu Sans Mono: typst-assets' fonts, stored deflated by `build.rs`
+and yielded exactly as `typst_kit::fonts::embedded()` would, vendored-assets.md §3.1), then
+`extend(scan(dir))` for each `[pdf] font_paths` entry, then `extend(system())` when `[pdf]
+system_fonts`. Embedded first makes output independent of the machine for the package's families;
+`system_fonts = false` gives byte-identical PDFs across machines (R1 §8).
 
 > **Contract change (coordinator, 2026-11-01):** `WorldOptions` gains `font_files: Vec<PathBuf>`
 > (the design's `fonts.*.files`), loaded with `scan(file)` after `[pdf] font_paths` and before the

@@ -64,7 +64,7 @@ fn inputs_are_absent_without_design_and_virtualize_furniture_images() {
 #[test]
 fn design_font_file_adds_faces_to_the_world() {
     let directory = tempfile::tempdir().unwrap();
-    let (font, info) = typst_kit::fonts::embedded().next().unwrap();
+    let (font, info) = writer::typst::fonts::embedded().next().unwrap();
     let path = directory.path().join("fixture.ttf");
     std::fs::write(&path, font.data()).unwrap();
     let design = design(
@@ -166,7 +166,7 @@ fn delegating_template_receives_design_defaults_and_explicit_arguments_win() {
     // 1.35 lines of 11pt less the line box Typst lays the body font out
     // with (design.md §6.2): DejaVu Sans Mono has no OS/2 cap height, so
     // that box is its ascender, which `cap_height` then reports.
-    let (font, _) = typst_kit::fonts::embedded()
+    let (font, _) = writer::typst::fonts::embedded()
         .find(|(_, info)| info.family == "DejaVu Sans Mono")
         .unwrap();
     let regular = FontVariant::new(

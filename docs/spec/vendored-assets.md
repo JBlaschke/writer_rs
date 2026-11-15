@@ -61,7 +61,7 @@ sha256 = "24da5a599eb2fcede2e270b99a6ff48bca816beecc95feeb84e8cccbd1bb34fd"
 
 Packages appear in the order of the table in §1; `latin-modern-math` has four `[[package.source]]`
 entries (one per file, in the order of the file table); `license-only` packages add `note = "…"`
-(`typst-assets`: "linked through typst-kit embedded-fonts; only LICENSE and NOTICE are copied";
+(`typst-assets`: "fonts embedded deflated by writer's build.rs; only LICENSE and NOTICE are copied";
 `tylax`: "assets/math/unicode-latex.toml is derived from it; only LICENSE is copied"). Paths:
 `katex`, `morphdom`, `latin-modern-math`, `typst-packages/preview/mitex/0.2.7`, `crates/typst-assets`,
 `crates/tylax`.
@@ -112,7 +112,7 @@ other file of the two crates.
 
 ## 3. Data compiled into the binary by dependencies, and its notices — T00 (T51 for §3.7)
 
-### 3.1 `typst-assets` 0.15.1 (via `typst-kit` feature `embedded-fonts` and typst itself)
+### 3.1 `typst-assets` 0.15.1 (fonts via writer's `build.rs`, the rest via typst itself)
 
 | data | files | bytes | license (crate `NOTICE` section) | used for |
 |---|---|---|---|---|
@@ -126,8 +126,11 @@ other file of the two crates.
 | ICU segmentation | `icu_cj_segment.postcard` | 30,135 | not named in NOTICE (crate LICENSE; generated with icu4x-datagen) | CJK line breaking |
 | HTML/MathML tables | `files/html/data.rs`, `files/mathml/data.rs` (compiled) | — | CC-BY-4.0 / BSD-3-Clause (WHATWG), W3C Document License (ARIA, Referrer Policy, MathML Core) | `typst-html` |
 
-The 17 font files total 9,683,068 B; `typst_kit::fonts::embedded()` exposes the four families
-"Libertinus Serif", "New Computer Modern", "New Computer Modern Math", "DejaVu Sans Mono". The W3C
+The 17 font files total 9,683,068 B. `build.rs` stores them deflated (6,399,779 B, one raw deflate
+stream per file) instead of enabling typst-kit's `embedded-fonts`, which links them as they are;
+`writer::typst::fonts::embedded()` inflates them byte for byte once per process and yields what
+`typst_kit::fonts::embedded()` would, in the same order: the four families "Libertinus Serif",
+"New Computer Modern", "New Computer Modern Math", "DejaVu Sans Mono". The W3C
 Document License requires "the full text of this NOTICE in a location viewable to users", and the
 OFL/GUST/Bitstream terms require their notices with every copy, so the complete `NOTICE` and `LICENSE`
 are vendored (§2), embedded and printed by `--licenses` (§8). NewCM10-Regular is distributed
@@ -408,11 +411,11 @@ wired by T72) writes `DIR/preview/mitex/0.2.7/<p>` for every `p` in
 
 | item | size | when it ships |
 |---|---|---|
-| typst embedding (typst + kit + pdf/svg/render/html + typst-assets fonts), R1 | 47,355,536 B (45.2 MiB; fonts +9,773,744 B; incl. typst's two-face 0.4.5 syntaxes, 920,515 B) | always |
+| typst embedding (typst + kit + pdf/svg/render/html + typst-assets fonts), R1 | 47,355,536 B (45.2 MiB; fonts +9,773,744 B as typst-kit linked them, about 3.1 MiB less deflated, §3.1; incl. typst's two-face 0.4.5 syntaxes, 920,515 B) | always |
 | two-face 0.5.2 syntaxes + themes | ≈ +1.0 MiB (measured +1,073,456 B with syntect's dumps also linked) | always |
 | `assets/vendor/**` | 1,425,604 B | always (embedded) |
 | `assets/licenses/**` | ≈ 385 KB (two-face.md 200,481 B, two-face-0.4.md 143,398 B) | always |
-| **whole release binary** (`dist` profile, fat LTO) | 51.8–63.9 MiB per target (second hosted dry run, 2026-11-04; thin LTO built 54.9–65.8 MiB); x86_64 Windows is 66,987,008 B, 121,856 B under the ceiling; **ceiling 64 MiB** (67,108,864 B) | T75 fails a release build above it |
+| **whole release binary** (`dist` profile, fat LTO) | 48.7–60.8 MiB per target (dry run 43445630875, 2026-11-13, Rust 1.100.0, fonts deflated; v0.1.1 built 51.9–63.9 MiB; thin LTO on 2026-11-04 built 54.9–65.8 MiB); x86_64 Windows is 63,788,544 B, 3,320,320 B under the ceiling (v0.1.1: 67,048,960 B, 59,904 B under); **ceiling 64 MiB** (67,108,864 B) | T75 fails a release build above it |
 
 Standalone HTML additions from vendored files (html-output.md owns the base budget, ≈ 45–60 KB;
 rows add up, e.g. LaTeX and typst equations under the defaults get the first two):
@@ -478,27 +481,36 @@ minimum at the verified version. `Cargo.lock` is committed and CI builds with `-
 | hayagriva | `=0.10.1` | (defaults: `biblatex`, `archive`) | citations (T70); must equal typst's |
 | math-core / mitex / codex | `=0.9.0` / `=0.2.4` / `=0.3.0` | | LaTeX→MathML (T1A, T42) / emitter pre-flight (T30) and `check` (T33), math.md §6 / typst→LaTeX (T51) |
 | typst, typst-syntax, typst-layout, typst-pdf, typst-svg, typst-render, typst-html | `=0.15.1` each | | compiler (T03, T32, T50) |
-| typst-kit | `=0.15.1` | df, `embedded-fonts`, `scan-fonts`, `system-packages`, `universe-packages` | World (T03) |
+| typst-kit | `=0.15.1` | df, `scan-fonts`, `system-packages`, `universe-packages` (not `embedded-fonts`, §3.1) | World (T03) |
 | zip / quick-xml | `=9.0.5` / `0.42.0` | df, `deflate` / — | DOCX (T04; quick-xml also T43) |
 | imagesize | `0.15.0` | | image sizes (T41) |
 | ureq | `3.5.0` | (defaults: `rustls`, `gzip`) | writer's `Downloader` (T03) |
+| flate2 | `1.1.10` | | inflates the embedded fonts (§3.1) |
 
+`[build-dependencies]`: `flate2 = "1.1.10"`, `typst-assets = { version = "=0.15.1", features =
+["fonts"] }` (`build.rs` deflates the fonts, §3.1; the version typst links).
 `[dev-dependencies]`: `insta = { version = "1.49.0", features = ["json", "filters", "redactions"] }`,
 `assert_cmd = "2.2.2"`, `predicates = "3.1.4"`, `tempfile = "3.27.0"`, `docx-rs = { version =
 "=0.4.22", default-features = false }` (read-back helper `tests/common/docx.rs`, T04; used by T40–T43,
 docx-output.md §7.2), `two-face-04 = { package = "two-face", version
-= "=0.4.5", default-features = false, features = ["syntect-fancy"] }` (§3.2; equals typst-library's).
+= "=0.4.5", default-features = false, features = ["syntect-fancy"] }` (§3.2; equals typst-library's),
+`typst-assets` as under `[build-dependencies]` (the fonts the inflated copies must equal).
 `[features]`: `browser-tests = []` (T25). Profiles: `[profile.dev.package."*"] opt-level = 2`;
 `[profile.release]` `opt-level = 3`, `lto = "thin"`, `codegen-units = 1`, `strip = true`;
 `[profile.dist]` `inherits = "release"`, `lto = "fat"` (the archived executable, §6).
 `clippy.toml`: presenter's `too-many-arguments-threshold = 8` plus §3.3's `disallowed-methods`.
 
+> **Contract change (release size, 2026-11-13):** typst-kit drops `embedded-fonts`, `flate2` joins
+> the dependencies, and `[build-dependencies]` and the `typst-assets` dev dependency are new:
+> `build.rs` stores typst-assets' fonts deflated (§3.1), about 3.1 MiB less on every target. The
+> x86_64 Windows executable had been 59,904 B under §6's ceiling (v0.1.1, Rust 1.100.0).
+
 Not dependencies (decided): `comemo`, `ecow` (use `typst::comemo`, `typst::ecow`; a direct `ecow` would
-add 0.3.1 next to typst's 0.2.6), `typst-library`, `typst-assets` (re-exported or reached through
-typst-kit), `tylax`, `katex`/`katex-rs`, `pulldown-latex`, `ansi-to-html`, `cansi`, `lol_html`, `grass`,
-`codemap` (R8: dropped with SCSS, T79), `chrono` (typst-kit `datetime` off), `similar`, `sha1`
-(references.md uses `sha1_smol`). Majors left behind on purpose: minijinja 3.0.3 (T79), notify
-9.0.0-rc.6, html-escape 0.3.0, zip 9.1.0.
+add 0.3.1 next to typst's 0.2.6), `typst-library`, `typst-assets` at run time (re-exported by typst;
+only `build.rs` and the tests use it), `tylax`, `katex`/`katex-rs`, `pulldown-latex`, `ansi-to-html`,
+`cansi`, `lol_html`, `grass`, `codemap` (R8: dropped with SCSS, T79), `chrono` (typst-kit `datetime`
+off), `similar`, `sha1` (references.md uses `sha1_smol`). Majors left behind on purpose: minijinja
+3.0.3 (T79), notify 9.0.0-rc.6, html-escape 0.3.0, zip 9.1.0.
 
 ## 8. Third-party notices: `--licenses` and release archives — T00, T16, T75
 

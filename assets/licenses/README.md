@@ -18,7 +18,7 @@ as published by Typst Universe under Apache-2.0. Its notice is
 vendor/typst-packages/preview/mitex/0.2.7/LICENSE. The WASM is compiled from
 the mitex Rust workspace and the crates it links.
 
-typst-assets 0.15.1 supplies fonts and data through typst and typst-kit.
+typst-assets 0.15.1 supplies the fonts writer embeds and data used by typst.
 vendor/crates/typst-assets/LICENSE and vendor/crates/typst-assets/NOTICE
 contain its complete notices. Libertinus Serif uses SIL OFL 1.1; New Computer
 Modern and New Computer Modern Math use the GUST Font License, except

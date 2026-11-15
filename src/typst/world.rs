@@ -140,7 +140,7 @@ impl WriterWorld {
         let native_main = native_file.then_some(main);
         let (paged_library, html_library) = libraries(&opts.inputs);
         let mut fonts = FontStore::new();
-        fonts.extend(typst_kit::fonts::embedded());
+        fonts.extend(super::fonts::embedded());
         for dir in &opts.font_paths {
             fonts.extend(typst_kit::fonts::scan(dir));
         }
@@ -814,7 +814,7 @@ mod tests {
             "Libertinus Serif", "New Computer Modern",
             "New Computer Modern Math", "DejaVu Sans Mono",
         ];
-        let embedded: Vec<_> = typst_kit::fonts::embedded().collect();
+        let embedded: Vec<_> = crate::typst::fonts::embedded().collect();
         for family in expected {
             assert!(world.book().families().any(|(name, _)| name == family));
         }

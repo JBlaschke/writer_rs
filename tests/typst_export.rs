@@ -221,7 +221,7 @@ fn replace_bytes(data: &[u8], old: &[u8], new: &[u8]) -> Vec<u8> {
 /// The embedded Libertinus Serif Regular face renamed to a family no font
 /// book has unless this very file is loaded: a project's own font file.
 fn renamed_font() -> Vec<u8> {
-    let (font, _) = typst_kit::fonts::embedded()
+    let (font, _) = writer::typst::fonts::embedded()
         .find(|(_, info)| {
             info.family == "Libertinus Serif"
                 && info.variant.weight == FontWeight::REGULAR

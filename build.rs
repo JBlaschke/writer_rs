@@ -1,5 +1,5 @@
-//! Build script: embeds the build's git description and keeps the embedded
-//! `assets/` directory in sync in release builds.
+//! Build script: embeds the build's git description, keeps the embedded
+//! `assets/` directory in sync in release builds, and packs the embedded fonts.
 //!
 //! # Build id (`writer --version`)
 //!
@@ -56,9 +56,30 @@
 //! so Cargo notices edits to those files but not files that were added or
 //! removed. Watching the directory makes Cargo rebuild the crate in that case.
 //! Debug builds read `assets/` from disk at runtime and need no rebuild.
+//!
+//! # Embedded fonts
+//!
+//! Every build embeds typst-assets' 17 font files (9,683,068 bytes), which
+//! typst-kit's `embedded-fonts` feature would link as they are. The script
+//! stores them deflated instead, about a third smaller: [`FONT_DATA`] in
+//! `OUT_DIR` holds one raw deflate stream per file, back to back in
+//! `typst_assets::fonts()` order, and [`FONT_TABLE`] each file's deflated and
+//! original length. `src/typst/fonts.rs` includes both and inflates the files
+//! on first use. typst-assets is a build dependency at the version typst
+//! links, so these are the files typst-kit would have served.
+//!
+//! Deflating takes a second or two in an unoptimized build script. A rerun
+//! keeps both files when the table's first line, a hash of the fonts, shows
+//! that they hold these fonts already.
 
+use std::fs;
+use std::hash::{DefaultHasher, Hasher};
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+use flate2::Compression;
+use flate2::write::DeflateEncoder;
 
 /// The variable `cli::version()` reads at compile time, and the environment
 /// override.
@@ -79,6 +100,13 @@ const CRATE_INPUTS: [&str; 4] = ["build.rs", "Cargo.toml", "Cargo.lock", "src"];
 /// `reftable`) or the shared directory.
 const GIT_PATHS: [&str; 5] =
     ["HEAD", "logs/HEAD", "packed-refs", "refs/tags", "reftable"];
+
+/// The file in `OUT_DIR` with the deflated font files, back to back.
+pub(crate) const FONT_DATA: &str = "embedded-fonts.deflate";
+
+/// The Rust file in `OUT_DIR` that defines `FONT_SIZES: [(usize, usize); N]`,
+/// each font file's deflated and original length.
+pub(crate) const FONT_TABLE: &str = "embedded-fonts.rs";
 
 fn main() {
     // Cargo always sets CARGO_MANIFEST_DIR for build scripts, and runs them in
@@ -107,6 +135,61 @@ fn main() {
     }
     println!("cargo::rustc-env={BUILD_ID_VAR}={}", build.id);
     println!("cargo::rustc-env={SOURCE_VAR}={}", build.source.as_str());
+
+    let out_dir =
+        PathBuf::from(std::env::var_os("OUT_DIR").expect("Cargo sets OUT_DIR"));
+    if let Err(error) = pack_fonts(typst_assets::fonts(), &out_dir) {
+        panic!("cannot write the fonts to {}: {error}", out_dir.display());
+    }
+}
+
+/// Writes `fonts` to [`FONT_DATA`] and [`FONT_TABLE`] in `out_dir` (module
+/// docs), unless the table's first line shows that the two files hold these
+/// fonts already. Returns whether it wrote them.
+pub(crate) fn pack_fonts<'a>(
+    fonts: impl IntoIterator<Item = &'a [u8]>, out_dir: &Path,
+) -> io::Result<bool> {
+    let fonts: Vec<&[u8]> = fonts.into_iter().collect();
+    let stamp = font_stamp(&fonts);
+    let data_path = out_dir.join(FONT_DATA);
+    let table_path = out_dir.join(FONT_TABLE);
+    let packed = fs::read_to_string(&table_path)
+        .is_ok_and(|table| table.starts_with(&stamp));
+    if packed && data_path.is_file() {
+        return Ok(false);
+    }
+    let mut data = Vec::new();
+    let mut sizes = String::new();
+    for font in &fonts {
+        let start = data.len();
+        let mut encoder = DeflateEncoder::new(&mut data, Compression::best());
+        encoder.write_all(font)?;
+        encoder.finish()?;
+        let length = data.len() - start;
+        sizes.push_str(&format!("    ({length}, {}),\n", font.len()));
+    }
+    let count = fonts.len();
+    // The data first: a table with the new stamp then always has its data.
+    fs::write(&data_path, data)?;
+    fs::write(
+        &table_path,
+        format!(
+            "{stamp}const FONT_SIZES: [(usize, usize); {count}] = [\n\
+             {sizes}];\n"
+        ),
+    )?;
+    Ok(true)
+}
+
+/// The first line of [`FONT_TABLE`]: the number of fonts and a hash of their
+/// lengths and bytes, as a comment.
+fn font_stamp(fonts: &[&[u8]]) -> String {
+    let mut hasher = DefaultHasher::new();
+    for font in fonts {
+        hasher.write_usize(font.len());
+        hasher.write(font);
+    }
+    format!("// {} fonts, hash {:016x}\n", fonts.len(), hasher.finish())
 }
 
 /// The crate's own inputs to watch, relative to `crate_dir`: [`CRATE_INPUTS`],
