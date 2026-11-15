@@ -83,9 +83,12 @@ must contain these helper scripts. Release notes are selected from
 `docs/release/NOTES-<version>.md`; missing notes fail rather than borrowing a
 different version's history.
 
-The workflow uses the existing stable Rust toolchain and locked Cargo inputs,
-plus stdlib Python 3.13 for packaging (helpers require Python >=3.11). Native
-release tests run before the executable is archived. They use the `release`
+The native build job installs an exact Rust toolchain, 1.100.0
+(`dtolnay/rust-toolchain@1.100.0`), so that a dry run and the tag run after it
+use the same compiler; CI and the site still build on stable, so new compilers
+are tried there first. The workflow uses locked Cargo inputs, plus stdlib
+Python 3.13 for packaging (helpers require Python >=3.11). Native release
+tests run before the executable is archived. They use the `release`
 profile: opt-level 3, thin LTO, codegen-units 1 and strip. The archived
 executable uses the `dist` profile, which inherits `release` and switches to
 fat LTO. On main `2161bc1` (4 November 2026) fat LTO made the executable 5.6%
@@ -95,6 +98,15 @@ get under the size gate below. Keep fat LTO out of `release`, or the test
 step applies it to every test binary. Both Windows targets keep the static
 CRT configuration in `.cargo/config.toml`; do not replace its flags through
 `RUSTFLAGS`/`CARGO_ENCODED_RUSTFLAGS` overrides.
+
+To release with a newer Rust, change the version in the build job's
+`dtolnay/rust-toolchain@<version>` line (the action has a ref for every Rust
+release) in a commit of its own, and run a Release dry run on that commit
+before tagging. Check the x86_64 Windows size in its smoke report
+(`binary_bytes`) against the 64 MiB gate, `MAX_BINARY_BYTES` in
+`scripts/release_common.py`: a compiler update alone once added 113,152 bytes
+there (see the archive contract below). The pin fixes the compiler only; the
+runner images, and with them the Windows linker, still change between runs.
 
 Official action usage was checked on 2026-10-29:
 [setup-python@v7](https://github.com/actions/setup-python),
