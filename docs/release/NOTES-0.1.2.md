@@ -6,8 +6,8 @@ Documents build as they did with 0.1.1, and projects need no changes.
 
 - **Smaller executables.** The 17 fonts that writer embeds for typesetting
   (9.7 MB) are stored deflated (6.4 MB) and unpacked in memory the first
-  time a run needs them, in a few milliseconds. The executables are 48.7-60.8 MiB, down from 51.9-63.9 MiB
-  in 0.1.1. The fonts and the order in which writer offers them are
+  time a run needs them, in a few milliseconds. The executables are
+  48.7-60.8 MiB, down from 51.9-63.9 MiB in 0.1.1. The fonts and the order in which writer offers them are
   unchanged, so font selection and typesetting stay the same.
 - **No project changes.** The bundled Typst package stays at
   `@writer/doc` 0.3.0, so templates and ejected package copies from 0.1.1
