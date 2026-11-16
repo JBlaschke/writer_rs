@@ -1,4 +1,4 @@
-writer 0.1.3 can set the body of a Word document in two or more columns,
+writer 0.2.0 can set the body of a Word document in two or more columns,
 like a journal article, with `columns` in `[design.page]`. Documents that do
 not set the new key look as they did with 0.1.2, and projects need no
 changes.
@@ -42,7 +42,7 @@ changes.
   can set its own columns from it. The bundled Typst package stays at
   `@writer/doc` 0.3.0. writer 0.1.2 rejects the key with
   `design.page.columns: unknown key`, so a project that sets it needs
-  0.1.3.
+  0.2.0.
 
 ## Downloads
 
