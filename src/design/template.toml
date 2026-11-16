@@ -29,6 +29,9 @@
 # header_offset = "17mm"         # Length from the top edge to the top of the header furniture; default unset (DOCX 0.5in; PDF: header-ascent)
 # footer_offset = "10mm"         # Length from the bottom edge to the bottom of the footer furniture; default unset (DOCX 0.5in)
 # print         = "margin-boxes" # HTML print furniture mode: "margin-boxes" (default) | "fixed" (§9.3)
+# columns       = 2              # column count 1–16, or { count = 2, gap = Length, start = "body" | "after-rule" }; default unset:
+#                                # one column. Word only: gap default 0.5in; start "body" (default) = after the title block,
+#                                # "after-rule" = after the body's first top-level `---`. HTML and PDF do not apply it
 # 
 # [design.page.background]       # one image behind everything on the page (§9.6); default none; an empty table removes an inherited one
 # image = { src = "assets/cover.jpg", fit = "cover", align = "center" }

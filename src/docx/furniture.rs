@@ -127,8 +127,11 @@ pub(crate) fn generate(
             }
         }
     }
-    emitter.layout.sect_pr = super::design::section(
-        design, &emitter.config.pdf.paper, &headers, &footers,
+    let paper = &emitter.config.pdf.paper;
+    emitter.layout.sect_pr =
+        super::design::section(design, paper, &headers, &footers);
+    emitter.layout.columns = super::ColumnSections::new(
+        design, paper, &headers, &footers, emitter.layout.text_width_twips,
     );
     Ok(())
 }

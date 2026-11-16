@@ -141,14 +141,27 @@ impl Emitter<'_> {
             self.content.body.in_abstract = false;
             self.containers.pop();
         }
-        self.blocks(&self.doc.blocks);
+        let columns = self.column_start();
+        self.sibling_blocks(&self.doc.blocks, columns);
+        // Taking back a trailing break can leave the body ending in a
+        // table, which the block sequence then closes.
+        self.finish_sections();
         self.finish_block_sequence();
     }
 
     /// Writes siblings, preserving paragraph adjacency across raw blocks.
     pub(crate) fn blocks(&mut self, blocks: &[Block]) {
+        self.sibling_blocks(blocks, None);
+    }
+
+    /// [`Self::blocks`]; for the body's top level, `columns` is the index of
+    /// the first block of a multi-column body (columns.rs).
+    fn sibling_blocks(&mut self, blocks: &[Block], columns: Option<usize>) {
         let mut preceding_paragraph = false;
         for (index, block) in blocks.iter().enumerate() {
+            if columns.is_some_and(|start| index >= start) {
+                self.column_section_for(block);
+            }
             let previous_span = self.content.span.clone();
             if let Some(span) = block.span() {
                 self.content.span = Some(span.clone());
@@ -380,6 +393,7 @@ impl Emitter<'_> {
         } else {
             None
         };
+        self.mark_paragraph_start();
         self.buffer().push_str(&format!("<w:p>{}", props.to_xml()));
         let prefix = std::mem::take(&mut self.content.paragraph_prefix);
         self.buffer().push_str(&prefix);
@@ -402,6 +416,7 @@ impl Emitter<'_> {
     /// Closes the current paragraph.
     pub(crate) fn end_paragraph(&mut self) {
         self.buffer().push_str("</w:p>");
+        self.mark_paragraph_end();
     }
 
     fn list(&mut self, kind: &ListKind, tight: bool, items: &[ListItem]) {
