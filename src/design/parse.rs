@@ -26,6 +26,19 @@ pub fn parse_length(text: &str) -> Result<Pt> {
     Err(Error::Config(format!("{LENGTH}, got {text:?}")))
 }
 
+/// Parses a length that may be negative, such as a frame's `offset`.
+pub(crate) fn parse_signed_length(text: &str) -> Result<Pt> {
+    match text.trim().strip_prefix('-') {
+        Some(rest) => parse_length(rest).map(|length| Pt(-length.0)),
+        None => parse_length(text),
+    }
+    .map_err(|_| {
+        Error::Config(format!(
+            "expected a length with a unit, such as \"4mm\" or \"-9mm\", got {text:?}"
+        ))
+    })
+}
+
 /// Parses a hex colour or an already resolved colour token.
 pub fn parse_color(text: &str, colors: &Colors) -> Result<Color> {
     if let Some(hex) = text.strip_prefix('#') {
@@ -147,6 +160,11 @@ mod tests {
             assert!(parse_weight(&value).is_err());
         }
         assert!(line_height(&json!(0)).is_err());
+        assert_eq!(parse_signed_length("-1in").unwrap(), Pt(-72.0));
+        assert_eq!(parse_signed_length("2pt").unwrap(), Pt(2.0));
+        for input in ["--1pt", "-", "-12px", "1pt-"] {
+            assert!(parse_signed_length(input).is_err(), "{input}");
+        }
         assert_eq!(
             line_height(&json!("12.1pt")).unwrap(),
             LineHeight::Exact(Pt(12.1))

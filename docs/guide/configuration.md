@@ -547,9 +547,48 @@ is a block of its own: `space_after` on `Body Text` separates body paragraphs.
 | `styles.<Name>.space_after` | Length | Unset: backend default |
 | `styles.<Name>.keep_together` | Boolean | False; Word keeps each paragraph's lines together, not the whole multi-paragraph div |
 | `styles.<Name>.keep_with_next` | Boolean | False |
+| `styles.<Name>.frame` | Frame table | Unset: the div stays in the text flow; Word only, see [frames](#frames-in-word) |
 
 The [customization guide](customization.md#cross-format-design) shows complete
 examples, precedence, font handling and the inspection/ejection workflow.
+
+### Frames in Word
+
+`frame` floats a div style's paragraphs in a Word frame. The text beside the
+frame wraps around it, as it does around a badge or margin note in a theme's
+HTML or PDF layout. HTML and PDF ignore the key; a theme places such a div
+with its own CSS or Typst template.
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `styles.<Name>.frame.width` | Length | Unset: Word fits the frame to its contents |
+| `styles.<Name>.frame.align` | `left`, `center` or `right` | `left`: the frame's place between the page margins |
+| `styles.<Name>.frame.gap` | Length | Unset: none; space between the frame and the text that wraps around it |
+| `styles.<Name>.frame.anchor` | `"div"` or `"title"` | `"div"`: the frame stays where the div is; `"title"`: writer moves the div to just after the title paragraph |
+| `styles.<Name>.frame.offset` | Signed length | 0: the frame's top is where the div is in the text, just below the title with `anchor = "title"`; a positive offset moves it down, a negative one up |
+
+```toml
+[design.styles.Repository]
+size = "8pt"
+align = "center"
+frame = { width = "16mm", align = "right", gap = "6mm", anchor = "title", offset = "-8mm" }
+```
+
+With `anchor = "title"`, each top-level div with this style follows the title
+paragraph, ahead of the subtitle, authors and date. A negative `offset` lifts
+it beside the title, and the title wraps around it. The offset that lines the
+frame up with the title's last line depends on the frame's height, so check
+it in Word. Nested divs keep their place, and so does a div in a document
+without a title.
+
+Only a div style can have a frame: names writer uses for its own paragraphs,
+such as `Title`, `Body Text` or `Header`, cannot. Word frames the div's
+paragraphs that take the style, including list items, display math and the
+body of a figure that is not an image, table or code listing; such a
+figure's caption stays in the text flow. Tables, image figures, headings and
+code blocks inside the div keep their own styles and stay in the text flow.
+A reference document that defines a style of the same name wins: writer adds
+no frame, and the div keeps its place.
 
 ## Strictness
 

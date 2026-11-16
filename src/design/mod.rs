@@ -90,6 +90,11 @@ spec!(StyleSpec {
     color: Option<String>, weight: Option<WeightSpec>, italic: Option<bool>,
     align: Option<String>, space_before: Option<String>, space_after: Option<String>,
     keep_together: Option<bool>, keep_with_next: Option<bool>,
+    frame: Option<FrameSpec>,
+});
+spec!(FrameSpec {
+    width: Option<String>, align: Option<String>, gap: Option<String>,
+    anchor: Option<FrameAnchor>, offset: Option<String>,
 });
 
 /// A font role's family string or file-bearing table.
@@ -553,6 +558,37 @@ pub struct Style {
     pub keep_together: bool,
     /// Keep the div with the following block.
     pub keep_with_next: bool,
+    /// A floating frame for the div; applied by the DOCX backend only.
+    pub frame: Option<Frame>,
+}
+
+/// A div style's floating frame (`styles.<Name>.frame`, design.md §8.6).
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub struct Frame {
+    /// Frame width; unset lets Word fit the frame to its contents.
+    pub width: Option<Pt>,
+    /// Horizontal place between the margins: left, center or right.
+    pub align: Align,
+    /// Space between the frame and the text beside it.
+    pub gap: Option<Pt>,
+    /// What the vertical `offset` is measured from.
+    pub anchor: FrameAnchor,
+    /// Vertical distance from the anchor; negative moves the frame up.
+    pub offset: Pt,
+}
+
+/// What a frame's vertical position is measured from.
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum FrameAnchor {
+    /// The div's own place in the body.
+    #[default]
+    Div,
+    /// The foot of the document title: Word writes a top-level div with the
+    /// style right after the title paragraph.
+    Title,
 }
 
 /// One ordered design source, before merging or resolving values.

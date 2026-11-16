@@ -550,8 +550,9 @@ fn config_default_cells_compare_values_without_layout_assumptions() {
 fn design_reference_covers_the_serialized_schema_shapes() {
     use writer::design::{
         BackgroundImageDetailsSpec, BackgroundSpec, ColumnsDetailsSpec,
-        DesignSpec, FontDetailsSpec, FurnitureSpec, ImageDetailsSpec,
-        LineDetailsSpec, MarginSidesSpec, RuleDetailsSpec, StyleSpec,
+        DesignSpec, FontDetailsSpec, FrameSpec, FurnitureSpec,
+        ImageDetailsSpec, LineDetailsSpec, MarginSidesSpec, RuleDetailsSpec,
+        StyleSpec,
     };
     fn keys(
         value: &serde_json::Value, prefix: &str, into: &mut BTreeSet<String>,
@@ -612,6 +613,10 @@ fn design_reference_covers_the_serialized_schema_shapes() {
             serde_json::to_value(RuleDetailsSpec::default()).unwrap(),
         ),
         ("styles.<Name>", serde_json::to_value(StyleSpec::default()).unwrap()),
+        (
+            "styles.<Name>.frame",
+            serde_json::to_value(FrameSpec::default()).unwrap(),
+        ),
     ];
     for (prefix, shape) in shapes {
         keys(&shape, prefix, &mut expected);

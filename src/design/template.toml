@@ -70,3 +70,8 @@
 # space_after    = "6mm"         # Length; default unset
 # keep_together  = true          # bool; default unset (false)
 # keep_with_next = false         # bool; default unset (false)
+# frame          = { width = "16mm", align = "right", gap = "6mm", anchor = "title", offset = "-8mm" }
+#                                # Word only (§8.6), div styles only; default unset. width, gap: Length, default unset;
+#                                # align: left | center | right, default left; anchor: "div" (default) | "title" = written right
+#                                # after the title; offset: signed Length, default 0 = the frame's top where the div is in the
+#                                # text (with "title", just below the title); negative moves it up

@@ -178,6 +178,10 @@ space_before   = "0mm"         # Length; default unset
 space_after    = "6mm"         # Length; default unset
 keep_together  = true          # bool; default unset (false)
 keep_with_next = false         # bool; default unset (false)
+frame          = { width = "16mm", align = "right", gap = "6mm", anchor = "title", offset = "-8mm" }
+                               # DOCX only (§8.6); default unset (no frame). width, gap: Length,
+                               # default unset; align: left|center|right, default left; anchor:
+                               # div|title, default div; offset: signed Length, default 0
 ```
 `first`/`rest` tables must not contain `first`/`rest` themselves (`design.page.header.first.rest:
 unknown key`). Unknown keys anywhere are errors with the usual hint (§4.4). Furniture `size`,
@@ -200,7 +204,8 @@ pub struct DesignSpec {
 // BackgroundSpec { image: Option<BackgroundImageSpec>, pages: Option<BackgroundPages> },
 // BackgroundImageSpec = untagged String | { src, fit: Option<Fit>, align: Option<String> },
 // FurnitureSpec { image: Option<ImageSpec>, lines, right_lines: Vec<LineSpec>, rule: Option<RuleSpec>,
-// align, size, color, weight, italic, first, rest: Option<Box<FurnitureSpec>> }, StyleSpec { … §2.2 }.
+// align, size, color, weight, italic, first, rest: Option<Box<FurnitureSpec>> }, StyleSpec { … §2.2,
+// frame: Option<FrameSpec> }, FrameSpec { width, align, gap: Option<String>, anchor: Option<FrameAnchor>, offset: Option<String> }.
 // Every struct `#[serde(default, deny_unknown_fields)]`; scalar strings stay strings here.
 
 /// Resolved, in points; what every backend reads. `Default` = nothing declared.
@@ -258,7 +263,11 @@ pub struct Style {
     pub font: Option<FontRef>, pub size: Option<Pt>, pub line_height: Option<LineHeight>, pub color: Option<Color>,
     pub weight: Option<Weight>, pub italic: Option<bool>, pub align: Option<Align>,
     pub space_before: Option<Pt>, pub space_after: Option<Pt>, pub keep_together: bool, pub keep_with_next: bool,
+    pub frame: Option<Frame>,                                     // DOCX only, §8.6
 }
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub struct Frame { pub width: Option<Pt>, pub align: Align, pub gap: Option<Pt>, pub anchor: FrameAnchor, pub offset: Pt }   // align never Justify
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)] #[serde(rename_all = "lowercase")] pub enum FrameAnchor { #[default] Div, Title }
 
 /// One source of §1.1: its `[design]` map and the directory its paths resolve against.
 pub struct Layer<'a> { pub table: serde_json::Map<String, serde_json::Value>, pub base_dir: &'a Path, pub origin: Origin }
@@ -332,14 +341,16 @@ Nothing else is derived: an unset key stays `None` (§0.2).
                         "rest": { /* same shape */ } },
             "footer": { "first": { /* … */ }, "rest": { /* … */ } } },
   "styles": { "Recipient": { "font": null, "size": null, "line_height": { "exact": 12.1 }, "color": null, "weight": null, "italic": null,
-                             "align": null, "space_before": null, "space_after": 11.339, "keep_together": true, "keep_with_next": false } }
+                             "align": null, "space_before": null, "space_after": 11.339, "keep_together": true, "keep_with_next": false,
+                             "frame": null } }
 }
 ```
 Keys in struct order (above); lengths are points as JSON numbers with at most three decimals
 (`(pt × 1000).round() / 1000`, so the same design always serializes to the same bytes); unset keys
 are `null`, unset `Slot` members are `null`, an undeclared slot is `null`; `styles` is a
 `BTreeMap` (sorted by declared name); `print` is always present; undeclared `columns` and an undeclared
-background are `null`.
+background are `null`; an unset style `frame` is `null`, a set one is `{ "width", "align", "gap", "anchor", "offset" }`
+with `null` for an unset width or gap.
 `PathMode::Real` writes absolute real paths; `PathMode::Virtual` writes the Typst virtual path
 `/__assets/<id>.<ext>` of each furniture and background image registered in the `AssetRegistry`
 (typst-dialect.md §6.3) and omits nothing else. `declared` is not
@@ -795,7 +806,7 @@ One rule per style, selector `[data-style="<name>"]` (the name escaped with `CSS
 `font-family` (`var(--w-font-body|heading|mono)` for a role, `"<family>"` otherwise), `font-size`,
 `line-height`, `color`, `font-weight`, `font-style: italic|normal`, `text-align`, `margin-top`
 (`space_before`), `margin-bottom` (`space_after`), `break-inside: avoid` (`keep_together`),
-`break-after: avoid` (`keep_with_next`). Spacing applies to the div, so a multi-paragraph div keeps
+`break-after: avoid` (`keep_with_next`); `frame` writes nothing (§8.6). Spacing applies to the div, so a multi-paragraph div keeps
 the theme's paragraph gaps inside; the last paragraph's bottom margin is not removed (open point 4).
 
 ### 8.4 Typst (`writer-div` in `@writer/doc`)
@@ -822,7 +833,8 @@ rule with the box of the style's own font and size, measured in a `context` bloc
 style's `set text` rules, and puts the design's `text.paragraph_spacing` (when set) on top of that
 leading between the div's paragraphs; an unset `line_height` inherits the document's leading,
 which is in ems and so follows the style's `size`. `block(sticky: true)` is
-Typst's keep-with-next (Verified API hints). The function is also what §6.4's emitter calls for styleless
+Typst's keep-with-next (Verified API hints). `writer-div` ignores `frame` (§8.6); a
+template that floats such a div reads it from `writer-design.styles`. The function is also what §6.4's emitter calls for styleless
 divs (`spec == none` → `body`).
 
 ### 8.5 DOCX
@@ -872,6 +884,47 @@ writer's asset) and their space separates consecutive paragraphs of the same sty
 `space_before` spaces consecutive top-level contents entries. The body emitter (docx-output.md §4.1) pushes `Style(id)` for a `Div` when
 `style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
 exists, so `custom` returns its id). With a reference document, §7.3.
+
+### 8.6 DOCX frames (`styles.<Name>.frame`)
+A style's `frame` floats the div's paragraphs that take the style in a Word frame (ECMA-376
+§17.3.1.11 `framePr`), the DOCX counterpart of a theme that floats the div with CSS or in its Typst
+template. HTML (§8.3) and Typst (§8.4) ignore the key; it is in the resolved JSON (§3.3) for
+templates that want it. §8.5's `w:pPr` gains, after `w:keepLines` (`PPR` order, docx-output.md):
+```xml
+<w:framePr w:w="907" w:hSpace="340" w:wrap="around" w:vAnchor="text" w:hAnchor="margin"
+           w:xAlign="right" w:y="-454"/>
+```
+`w:w` is `width` and `w:hSpace` is `gap` in twips, each only when set (no width: Word sizes the
+frame to its contents); `w:xAlign` is `align` (`left`, `center`, `right`; default `left`, `justify`
+is an error); `w:y` is `offset` in signed twips (`(pt × 20).round()`), from where the div's
+paragraph sits in the text (`vAnchor="text"`), so 0 keeps the frame's top there and a title-anchored
+div's 0 is just below the title. `wrap`, `vAnchor` and `hAnchor` are fixed. Word wraps text
+around the frame whether that text comes before or after the frame's anchor paragraph, which the
+title anchor relies on.
+
+`anchor = "title"` moves the div in DOCX only: when `meta.title` is set, the body emitter (docx-output.md
+§4.4) writes each top-level body `Div` whose `style_for` style has a title-anchored frame
+that writer wrote (`StyleTable::framed`: not a name the reference document defines, below)
+right after the `Title` paragraph, before `Subtitle`, in source order, with its bookmark, and
+skips it in the body. The body treats a skipped div as absent: the paragraph after it follows the
+one before it (§4.1 Body Text), and a `:::pagebreak` before it goes on the next block written
+(docx-output.md §4.3). Footnote numbers follow document order (docx-output.md §4.8): the
+content plan walks the moved divs first, then the abstract and the rest of the body
+(`ContentState::new`'s `beside_title`). A negative `offset` then lifts the frame beside the title, and the title
+wraps around it. Lining its last line up with the title's last line takes an offset that depends
+on the frame's height (a theme measures it in Word); Word cannot bottom-align a frame. Nested divs
+and a document without a title keep source order. A moved div is in the title block, so with
+columns (§7.5) it stays in the one-column title section.
+
+`frame` is allowed on div styles only: a name that writer selects for its own paragraphs (§8.1:
+docx-output.md §2.3's paragraph vocabulary, and `Header`) is an error,
+`design.styles.Title.frame: only a div style can have a frame; writer uses "Title" for its own
+paragraphs`. Other errors name the key: `design.styles.Badge.frame.align: expected left, center or
+right for a frame, got "justify"`, `….anchor: expected div or title, got "page"`, `….offset:
+expected a length with a unit, such as "4mm" or "-9mm", got …`. `width` and `gap` are non-negative
+lengths (§2.1). With a reference document a reference style of the same name wins (§7.3), frame
+included: writer writes no `w:framePr` for it and does not move the div, so it stays in the body
+with the reference's own formatting.
 
 ## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst; T90 image gap, T91 page background)
 
