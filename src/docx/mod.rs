@@ -2,6 +2,7 @@
 //! Owner: T04. Stub created by T00.
 
 pub mod body;
+mod columns;
 pub mod custom_style;
 pub mod design;
 pub mod fields;
@@ -27,6 +28,7 @@ use crate::error::{Diagnostics, Error, Result};
 use crate::ir::{Document, MathDialect};
 use crate::resolve::LangTag;
 
+pub use columns::ColumnSections;
 pub(crate) use footnotes::visible_bookmarks;
 
 pub use numbering::Numbering;
@@ -129,6 +131,7 @@ pub struct Emitter<'a> {
     pub(crate) fields: fields::FieldState,
     pub(crate) math_state: math::State,
     pub(crate) table_width_twips: Option<u32>,
+    pub(crate) section: columns::SectionState,
     pub(crate) deferred_error: Option<Error>,
 }
 
@@ -141,6 +144,8 @@ pub struct PageLayout {
     pub text_width_twips: u32,
     /// Height available for text.
     pub text_height_twips: u32,
+    /// Sections of a body set in columns (`[design.page] columns`).
+    pub columns: Option<ColumnSections>,
 }
 
 /// Next identifiers; each starts at one or above copied reference identifiers.
@@ -186,7 +191,9 @@ pub enum Container {
 
 impl Emitter<'_> {
     pub(crate) fn available_width_twips(&self) -> u32 {
-        self.table_width_twips.unwrap_or(self.layout.text_width_twips).max(1)
+        self.table_width_twips
+            .unwrap_or_else(|| self.column_width_twips())
+            .max(1)
     }
 
     fn buffer(&mut self) -> &mut String {
@@ -345,6 +352,7 @@ fn prepare_emitter<'a>(
         fields: fields::FieldState::default(),
         math_state: math::State::new(opts.config),
         table_width_twips: None,
+        section: columns::SectionState::default(),
         deferred_error: None,
     })
 }

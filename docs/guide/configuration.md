@@ -395,6 +395,7 @@ screen.
 | `page.header_offset` | Length from page top | Unset: PDF 30% of top margin, Word 0.5 in; HTML uses its print layout |
 | `page.footer_offset` | Length from page bottom | Unset: PDF 30% of bottom margin, Word 0.5 in; HTML uses its print layout |
 | `page.print` | `"margin-boxes"` or `"fixed"` | `"margin-boxes"`; HTML print behavior |
+| `page.columns` | Column count or columns table | Unset: one column; Word only, see [columns](#columns-in-word) |
 | `page.background` | Background table | Unset: no page background |
 | `page.header` | Furniture table | Unset: retain backend header |
 | `page.footer` | Furniture table | Unset: retain backend footer/page numbering |
@@ -404,6 +405,37 @@ Word recognizes A4, A5, US Letter and US Legal and falls back to A4 for other
 names. PDF accepts the Typst paper names. Declaring either Typst furniture
 slot disables the package's built-in page numbering; include `{page}` in your
 footer when you want it.
+
+### Columns in Word
+
+`page.columns` sets the Word body in columns, like a journal article. A count
+is shorthand for `{ count = N }`.
+
+| Key | Type / unit | Default and effect |
+|---|---|---|
+| `page.columns.count` | Integer from 1 to 16 | Required in a table; 1 leaves the document in one column |
+| `page.columns.gap` | Length | Unset: Word's 0.5 in between columns |
+| `page.columns.start` | `"body"` or `"after-rule"` | `"body"`: columns start at the first body block, after the title block; `"after-rule"`: after the body's first top-level `---`, so the blocks above it form a full-width lead section (without a `---`, at the first body block) |
+
+```toml
+[design.page]
+columns = { count = 2, gap = "7mm", start = "after-rule" }
+```
+
+The title block, the lead section and every top-level figure, including
+captioned tables, run across the full text width; the rest of the body is in
+columns. Word balances the columns above each figure, so text reads down the
+left column and then the right before the figure, and a figure that does not
+fit on the rest of a page moves to the next one. Images, uncaptioned tables
+and equation images in a column are sized to the column width, and so are
+those in a footnote referenced from a column. Each part is a Word section
+with the same headers and footers (the first-page header and footer stay on
+page one), and footnote numbers run on across them. A reference document's
+page setup takes precedence: `page.columns` is not applied, and the
+reference's own section, including any columns it sets, is kept. HTML and PDF
+do not apply `page.columns`. A theme's HTML templates (`theme.design`) and a
+Typst template (`sys.inputs.writer-design`) can read the value and set their
+own columns; theme CSS cannot read it.
 
 ### Page background
 

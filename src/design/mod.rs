@@ -51,8 +51,12 @@ spec!(ColorsSpec {
 spec!(PageSpec {
     paper: Option<String>, margin: Option<MarginSpec>,
     header_offset: Option<String>, footer_offset: Option<String>,
-    print: Option<PrintMode>, background: Option<BackgroundSpec>,
+    print: Option<PrintMode>, columns: Option<ColumnsSpec>,
+    background: Option<BackgroundSpec>,
     header: Option<FurnitureSpec>, footer: Option<FurnitureSpec>,
+});
+spec!(ColumnsDetailsSpec {
+    count: Option<u8>, gap: Option<String>, start: Option<ColumnStart>,
 });
 spec!(BackgroundSpec {
     image: Option<BackgroundImageSpec>, pages: Option<BackgroundPages>,
@@ -126,6 +130,16 @@ pub enum MarginSpec {
     All(String),
     /// Per-side lengths.
     Sides(MarginSidesSpec),
+}
+
+/// A column count, or a table with the count, gap and start.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ColumnsSpec {
+    /// A column count with the default gap and start.
+    Count(u8),
+    /// Count, gap and where the columns begin.
+    Details(ColumnsDetailsSpec),
 }
 
 /// A furniture image's path or table with size and alignment.
@@ -282,12 +296,39 @@ pub struct Page {
     pub footer_offset: Option<Pt>,
     /// HTML print strategy.
     pub print: PrintMode,
+    /// Multi-column body; applied by the DOCX backend only.
+    pub columns: Option<Columns>,
     /// Full-page image behind the body and furniture.
     pub background: Option<Background>,
     /// Declared header, including an explicitly empty slot.
     pub header: Option<Slot>,
     /// Declared footer, including an explicitly empty slot.
     pub footer: Option<Slot>,
+}
+
+/// A body set in columns (`page.columns`).
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub struct Columns {
+    /// Number of columns, 1 to 16.
+    pub count: u8,
+    /// Space between columns; unset keeps the backend default.
+    pub gap: Option<Pt>,
+    /// The first block set in columns.
+    pub start: ColumnStart,
+}
+
+/// Where a multi-column body begins.
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize,
+)]
+#[serde(rename_all = "kebab-case")]
+pub enum ColumnStart {
+    /// The first body block, after the title block.
+    #[default]
+    Body,
+    /// The block after the body's first top-level thematic break, so the
+    /// blocks above the rule form a full-width lead section.
+    AfterRule,
 }
 
 /// Independent optional page margins.

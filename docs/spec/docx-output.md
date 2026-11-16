@@ -459,6 +459,9 @@ ordinary footnote (§4.8); `c.note` is not read and the emitter never makes foot
 | `Listing` | caption paragraph (Caption) first, then the code paragraph |
 | `Other` | the body blocks (sub-figures are ordinary figures; their SEQ fields precede the parent's, §4.11 `\r`), then the caption paragraph (Caption) |
 
+With `[design.page] columns` above one, a top-level figure is a one-column section of its own between
+the body's sections in columns, so it spans them at the text width (design.md §7.5).
+
 Caption paragraph content (html-output.md §1.6's text): when `number` is `Some`: bookmark start (if
 labelled), runs `SUP` and U+00A0, the number fields of §4.11, bookmark end, then (if caption) a run
 `resolve::caption_separator(&lang)` and the caption runs; when `number` is `None`: the caption runs
@@ -716,6 +719,11 @@ reference has neither: a4 → 11906 − 2880 = 9026 twips, a T04 unit test; pand
 > from `header_offset`/`footer_offset` (unset 720), `w:titlePg` and header/footer references for the
 > generated parts (design.md §7.2). A reference's body-level `sectPr` wins entirely, as do its styles
 > for the names it defines; the precedence table is design.md §7.3 (T83, T87).
+>
+> **Columns (2026-11-15):** `[design.page] columns` above one splits the generated section into
+> continuous sections: one column for the title block, the lead and each top-level figure, columns
+> for the rest of the body. Paragraph-level `sectPr` elements end all but the last; each repeats the
+> header/footer references, and only the first has `w:titlePg` (design.md §7.5).
 
 ### 6.4 Settings
 Built-in `assets/docx/settings.xml` children: `<w:zoom w:percent="100"/>`,

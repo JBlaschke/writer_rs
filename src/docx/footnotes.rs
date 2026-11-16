@@ -377,6 +377,7 @@ impl Emitter<'_> {
     }
 
     fn note_reference_run(&mut self, index: usize) {
+        self.mark_note_reference(index);
         let note = self.content.plan.notes[index].clone();
         let bookmark = match (note.label, note.bookmark.as_deref()) {
             (Some(label), _) => self.start_bookmark(label),
@@ -419,7 +420,8 @@ impl Emitter<'_> {
             std::mem::replace(&mut self.containers, vec![Container::Footnote]);
         let body = std::mem::take(&mut self.content.body);
         let span = self.content.span.take();
-        for note in notes {
+        for (index, note) in notes.into_iter().enumerate() {
+            let section = self.enter_note(index);
             self.content.body = BodyState::default();
             self.content.span = note.span;
             self.notes.push_str(&format!("<w:footnote w:id=\"{}\">", note.id));
@@ -442,6 +444,7 @@ impl Emitter<'_> {
             self.blocks(note.blocks);
             self.finish_block_sequence();
             self.notes.push_str("</w:footnote>");
+            self.leave_note(section);
         }
         self.part = part;
         self.containers = containers;

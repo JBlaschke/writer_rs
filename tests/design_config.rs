@@ -2,7 +2,8 @@ use std::path::Path;
 
 use serde_json::json;
 use writer::design::{
-    Align, BackgroundPages, Fit, Layer, Origin, PathMode, VerticalAlign, merge,
+    Align, BackgroundPages, ColumnStart, Columns, Fit, Layer, Origin, PathMode,
+    Pt, VerticalAlign, merge,
 };
 use writer::pipeline::{self, BuildOptions, ChangeKind, InputRole};
 
@@ -320,6 +321,83 @@ fn page_background_resolves_shorthand_fit_align_and_pages() {
             merge(&[layer(json!({"page":{"background":background}}), base)])
                 .unwrap_err()
                 .to_string();
+        assert!(error.contains(expected), "{error}");
+    }
+}
+
+#[test]
+fn page_columns_resolve_a_count_or_a_table() {
+    let base = Path::new("/");
+    let page = |columns| json!({"page": {"columns": columns}});
+    // A bare count keeps the backend's gap and starts at the body.
+    let design = merge(&[layer(page(json!(2)), base)]).unwrap();
+    assert_eq!(
+        design.page.columns,
+        Some(Columns { count: 2, gap: None, start: ColumnStart::Body })
+    );
+    let table = json!({"count": 3, "gap": "7mm", "start": "after-rule"});
+    let design = merge(&[layer(page(table), base)]).unwrap();
+    assert_eq!(
+        design.page.columns,
+        Some(Columns {
+            count: 3,
+            gap: Some(Pt(7.0 * 72.0 / 25.4)),
+            start: ColumnStart::AfterRule,
+        })
+    );
+    assert_eq!(
+        design.to_json(PathMode::Real)["page"]["columns"],
+        json!({"count": 3, "gap": 19.843, "start": "after-rule"})
+    );
+    // Tables merge key by key, so a document can change only the gap.
+    let design = merge(&[
+        layer(page(json!({"count": 2, "start": "after-rule"})), base),
+        layer(page(json!({"gap": "5mm"})), base),
+    ])
+    .unwrap();
+    let columns = design.page.columns.unwrap();
+    assert_eq!((columns.count, columns.start), (2, ColumnStart::AfterRule));
+    assert_eq!(columns.gap, Some(Pt(5.0 * 72.0 / 25.4)));
+    // Unset columns stay null in the shared JSON.
+    let design =
+        merge(&[layer(json!({"page": {"paper": "a4"}}), base)]).unwrap();
+    assert_eq!(design.to_json(PathMode::Real)["page"]["columns"], json!(null));
+    for (columns, expected) in [
+        (
+            json!(0),
+            "design.page.columns: expected a column count from 1 to 16, got 0",
+        ),
+        (
+            json!(17),
+            "design.page.columns: expected a column count from 1 to 16, got 17",
+        ),
+        (
+            json!("2"),
+            "design.page.columns: expected a column count from 1 to 16, got \"2\"",
+        ),
+        (
+            json!({"gap": "7mm"}),
+            "design.page.columns.count: expected a column count",
+        ),
+        (
+            json!({"count": 2.5}),
+            "design.page.columns.count: expected a column count from 1 to 16",
+        ),
+        (
+            json!({"count": 2, "start": "rule"}),
+            "design.page.columns.start: expected body or after-rule, got \"rule\"",
+        ),
+        (
+            json!({"count": 2, "gap": "7"}),
+            "design.page.columns.gap: expected a length",
+        ),
+        (
+            json!({"count": 2, "span": true}),
+            "design.page.columns.span: unknown key",
+        ),
+    ] {
+        let error =
+            merge(&[layer(page(columns), base)]).unwrap_err().to_string();
         assert!(error.contains(expected), "{error}");
     }
 }

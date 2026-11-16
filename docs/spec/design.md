@@ -137,6 +137,9 @@ margin        = { top = "50mm", right = "22mm", bottom = "38mm", left = "22mm" }
 header_offset = "17mm"         # Length from the top edge to the top of the header furniture; default unset (DOCX 0.5in; PDF: header-ascent)
 footer_offset = "10mm"         # Length from the bottom edge to the bottom of the footer furniture; default unset (DOCX 0.5in)
 print         = "margin-boxes" # HTML print furniture mode: "margin-boxes" (default) | "fixed" (§9.3)
+columns       = 2              # column count 1–16, or { count = 2, gap = Length, start = "body" | "after-rule" }; default unset:
+                               # one column. Word only (§7.5): gap default 0.5in; start "body" (default) = after the title block,
+                               # "after-rule" = after the body's first top-level `---`. HTML and PDF do not apply it
 
 [design.page.background]       # one image behind everything on the page (§9.6); default none; an empty table removes an inherited one
 image = { src = "assets/cover.jpg", fit = "cover", align = "center" }
@@ -191,7 +194,8 @@ pub struct DesignSpec {
 }
 // FontsSpec { body, heading, mono: Option<FontSpec> }, FontSpec = untagged String | { family, files }
 // TextSpec, ColorsSpec, PageSpec { paper, margin: Option<MarginSpec>, header_offset, footer_offset,
-// print: Option<PrintMode>, background: Option<BackgroundSpec>, header, footer: Option<FurnitureSpec> },
+// print: Option<PrintMode>, columns: Option<ColumnsSpec>, background: Option<BackgroundSpec>,
+// header, footer: Option<FurnitureSpec> }, ColumnsSpec = untagged u8 | { count: Option<u8>, gap, start: Option<ColumnStart> },
 // MarginSpec = untagged String | sides table,
 // BackgroundSpec { image: Option<BackgroundImageSpec>, pages: Option<BackgroundPages> },
 // BackgroundImageSpec = untagged String | { src, fit: Option<Fit>, align: Option<String> },
@@ -222,6 +226,7 @@ pub struct Colors { pub text: Option<Color>, pub accent: Option<Color>, pub mute
 pub struct Page {
     pub paper: Option<String>, pub margin: Margin,
     pub header_offset: Option<Pt>, pub footer_offset: Option<Pt>, pub print: PrintMode,
+    pub columns: Option<Columns>,                                // None = one column (§7.5)
     pub background: Option<Background>,                          // None = no page background (§9.6)
     pub header: Option<Slot>, pub footer: Option<Slot>,          // None = slot not declared (built-in furniture stays)
 }
@@ -233,6 +238,8 @@ pub struct Page {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)] #[serde(rename_all = "lowercase")] pub enum VerticalAlign { Top, #[default] Center, Bottom }
 #[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)] pub struct Margin { pub top: Option<Pt>, pub right: Option<Pt>, pub bottom: Option<Pt>, pub left: Option<Pt> }
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)] #[serde(rename_all = "kebab-case")] pub enum PrintMode { #[default] MarginBoxes, Fixed }
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)] pub struct Columns { pub count: u8, pub gap: Option<Pt>, pub start: ColumnStart }   // a bare count: gap None, start Body
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)] #[serde(rename_all = "kebab-case")] pub enum ColumnStart { #[default] Body, AfterRule }
 /// Resolved per page class: `first` = the `first` table else the base table; `rest` likewise.
 /// `None` = that page class shows nothing (an empty slot).
 #[derive(Debug, Clone, Default, PartialEq, Serialize)] pub struct Slot { pub first: Option<Furniture>, pub rest: Option<Furniture> }
@@ -318,6 +325,7 @@ Nothing else is derived: an unset key stays `None` (§0.2).
   "colors": { "text": "#242424", "accent": "#a96d4b", "muted": "#575757", "link": null, "background": null },
   "page": { "paper": "a4", "margin": { "top": 141.732, "right": 62.362, "bottom": 107.717, "left": 62.362 },
             "header_offset": 48.189, "footer_offset": 28.346, "print": "margin-boxes",
+            "columns": { "count": 2, "gap": 19.843, "start": "after-rule" },
             "background": { "image": { "path": "…", "fit": "cover", "align": { "horizontal": "center", "vertical": "center" } }, "pages": "first" },
             "header": { "first": { "image": { "path": "…", "width": 141.732, "align": null, "gap": 10.205 }, "lines": [ { "text": "…", "weight": null, "italic": null, "size": null, "color": null } ],
                                    "right_lines": [], "rule": null, "align": "center", "size": 11.0, "color": "#242424", "weight": 400, "italic": false },
@@ -330,7 +338,8 @@ Nothing else is derived: an unset key stays `None` (§0.2).
 Keys in struct order (above); lengths are points as JSON numbers with at most three decimals
 (`(pt × 1000).round() / 1000`, so the same design always serializes to the same bytes); unset keys
 are `null`, unset `Slot` members are `null`, an undeclared slot is `null`; `styles` is a
-`BTreeMap` (sorted by declared name); `print` is always present; an undeclared background is `null`.
+`BTreeMap` (sorted by declared name); `print` is always present; undeclared `columns` and an undeclared
+background are `null`.
 `PathMode::Real` writes absolute real paths; `PathMode::Virtual` writes the Typst virtual path
 `/__assets/<id>.<ext>` of each furniture and background image registered in the `AssetRegistry`
 (typst-dialect.md §6.3) and omits nothing else. `declared` is not
@@ -652,7 +661,7 @@ a declared footer slot replaces it (an empty one removes it). `DocxOptions` gain
 | `docDefaults`, Normal, Body Text, headings, code, every §2.3 name the reference defines | the reference, verbatim (docx-output.md §6.3); tokens of §7.1 are **not** applied to them | generated §7.1 |
 | §2.3 names the reference lacks | writer's built-in definition with §7.1 edits applied | generated §7.1 |
 | `[design.styles]` names | a reference style of the same name wins entirely; the design definition is appended only for names the reference lacks (§8.5) | appended |
-| body-level `sectPr` | the reference's, raw, with its header/footer references (page size, margins, offsets, `titlePg`); `page.*` and furniture are not applied | generated §7.2 |
+| body-level `sectPr` | the reference's, raw, with its header/footer references (page size, margins, offsets, `titlePg`); `page.*` (including `columns`, §7.5) and furniture are not applied | generated §7.2, §7.5 |
 | header/footer parts and media | copied from the reference when its `sectPr` references them; none generated | generated §9.5 |
 | fonts | by name in both cases (§4.3) | by name |
 A reference with styles but **no** body-level `sectPr` gets the generated section and furniture
@@ -685,6 +694,67 @@ in another family inheriting the document default). Measured with Word for Mac 1
 - 17.4 pt with the Calibri assumption (`265`, the letter as shipped, without font files or
   system fonts);
 - 21.1 pt from `round(1.35 × 240)`.
+
+### 7.5 Columns (`page.columns`; `src/docx/columns.rs`)
+A `columns` count above one sets the body in columns with continuous section breaks; a count of one
+or no `columns` writes the single section of §7.2, byte for byte (a design whose only key is
+`columns = 1` is still declared, §1, so §5–§9 apply as for any other key). Only the generated
+section is set in columns: a reference document's body-level `sectPr` wins, its own `w:cols`
+included (§7.3). HTML and PDF do not apply the key; the resolved JSON (§3.3) carries it, so a
+theme's HTML templates (`theme.design`, §5.5) and a Typst template (`sys.inputs.writer-design`,
+§6.1) can read it and set their own columns. Theme CSS cannot: no custom property carries it.
+
+**Sections.** The title block (docx-output.md §4.4) is a one-column section. The top-level body
+blocks from the start block on are in columns, except that every top-level `Figure` (image, captioned
+table, listing or other) is a one-column section of its own, so it spans the columns at the full
+text width. The start block is the first body block (`start = "body"`) or, for `"after-rule"`, the
+block after the body's first top-level `ThematicBreak`, so the blocks above the rule form a
+full-width lead; without such a rule `"after-rule"` starts at the first body block. Figures nested in
+a list, quote, callout or div stay in their column. An open section without content changes its
+column count instead of writing a break, so a body without a title block starts in columns; when
+the section before it already has the count asked for, the break that opened the empty section is
+taken back instead. A section is empty until it holds a paragraph, table or content control;
+bookmarks (an empty div's anchor), comments and whitespace do not count. A break that nothing
+follows (blocks that write nothing to Word, such as raw HTML or LaTeX, after the last figure) is
+taken back too, before the body's closing `<w:p/>` after a table (docx-output.md §4.1), so the
+document never ends in an empty section and two figures separated only by such blocks share one
+section.
+
+**Why figures span.** Figures drawn for the full text width (schematics, charts with 8–9 pt labels)
+would shrink to less than half their size in a column; spanning keeps them at the full text width,
+the size writer's one-column PDF and HTML give them, and the layout two-column templates use (a
+Typst float with `scope: "parent"`, CSS `column-span: all`). Word balances the columns above a
+continuous break, so the text before a figure reads down the left column and then the right. A
+figure that does not fit on the rest of a page moves to the next page; Word cannot float a
+full-width block to the top of the page. Captions stay with their figures
+through the styles' `w:keepNext` (Captioned Figure on the image paragraphs, Table Caption above a
+table, docx-output.md §2.3).
+
+**Section properties.** Each section is §7.2's `sectPr` with the same header and footer
+references, so the furniture does not change at a break. Only the first section has `w:titlePg`.
+Word takes a page's header and footer from the first section on the page, and treats the page a
+section starts on as that section's first page. The first section always starts page one, so page
+one keeps its first-page furniture. A later continuous section can start at the top of a page,
+for example a figure that moved to the next page; with `w:titlePg` that page would show the
+first-page header and footer. In addition:
+- `w:footnotePr/w:numRestart w:val="continuous"` replaces `eachSect`, so footnote numbers run on
+  across the breaks;
+- every section but the first has `<w:type w:val="continuous"/>`;
+- a one-column section has `<w:cols w:space="S"/>`, a section in columns
+  `<w:cols w:num="N" w:space="S"/>`, with `S` = `gap` in twips, else 720 (Word's 0.5 in).
+
+The last section is the body-level `sectPr`. A section ends in the `w:pPr` of its last paragraph
+when the body ends with a paragraph writer started (the Title, a `---` rule, a caption, a body
+paragraph); after a table, raw XML or a bookmark end it ends in a paragraph of its own with
+`w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"` and a one-point mark
+(`w:rPr/w:sz w:val="2"`), the construction of §9.5's rule paragraphs.
+
+**Widths.** In a section in columns the available width (docx-output.md §4.12, §4.16) is the
+column width, `(text width − (N − 1) × S) / N` twips: images, uncaptioned tables, display-math
+pictures and contents tab stops take it. One-column sections keep the text width. A footnote's
+pictures and tables take the width of the section its first reference is in (Word sets a footnote
+in the column of its reference); a note without a reference takes the text width. Header and
+footer furniture always uses the text width.
 
 ## 8. Named paragraph styles (T85; `writer-div` in T84's package)
 

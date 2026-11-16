@@ -359,13 +359,15 @@ pub(crate) fn page_layout(
     design: &crate::design::Design,
 ) -> PageLayout {
     let (width, height) = paper_size(paper);
+    let footer_refs: Vec<(&str, String)> =
+        footer_rel.map(|id| vec![("default", id.into())]).unwrap_or_default();
+    // Only writer's own section is set in columns; a reference's wins.
+    let generated =
+        design.declared && reference.is_none_or(|r| r.sect_pr.is_none());
     let sect_pr = reference
         .and_then(|reference| reference.sect_pr.clone())
         .unwrap_or_else(|| {
             if design.declared {
-                let footer_refs = footer_rel
-                    .map(|id| vec![("default", id.into())])
-                    .unwrap_or_default();
                 super::design::section(design, paper, &[], &footer_refs)
             } else {
                 builtin_section(width, height, footer_rel.unwrap_or(""))
@@ -391,13 +393,24 @@ pub(crate) fn page_layout(
     let gutter = dimension(margins, "w:gutter", 0);
     let top = dimension(margins, "w:top", 1440);
     let bottom = dimension(margins, "w:bottom", 1440);
+    let text_width_twips =
+        width.saturating_sub(left).saturating_sub(right).saturating_sub(gutter);
+    let columns = generated
+        .then(|| {
+            super::ColumnSections::new(
+                design,
+                paper,
+                &[],
+                &footer_refs,
+                text_width_twips,
+            )
+        })
+        .flatten();
     PageLayout {
         sect_pr,
-        text_width_twips: width
-            .saturating_sub(left)
-            .saturating_sub(right)
-            .saturating_sub(gutter),
+        text_width_twips,
         text_height_twips: height.saturating_sub(top).saturating_sub(bottom),
+        columns,
     }
 }
 

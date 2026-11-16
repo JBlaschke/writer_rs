@@ -393,10 +393,35 @@ pub(crate) fn first_page(design: &Design) -> bool {
         })
 }
 
+/// Columns and break type of one section of a multi-column document.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SectionColumns {
+    /// Number of columns; one is a full-width section.
+    pub count: u8,
+    /// Space between the columns, in twips.
+    pub space: u32,
+    /// The section starts on the same page as the one before it.
+    pub continuous: bool,
+}
+
 /// Generates page geometry with references to the planned furniture parts.
 pub fn section(
     design: &Design, paper: &str, header_refs: &[(&str, String)],
     footer_refs: &[(&str, String)],
+) -> String {
+    section_with(design, paper, header_refs, footer_refs, None)
+}
+
+/// [`section`] for one section of a multi-column document, or for the
+/// document's only section when `columns` is `None`. Every section repeats
+/// the header and footer references, so the furniture does not change at a
+/// section break, and footnote numbers run on across them. Only the first
+/// section has `w:titlePg`: a page takes its furniture from the first
+/// section on it, and a continuous section that happens to start at the top
+/// of a later page would otherwise show the first-page header and footer.
+pub fn section_with(
+    design: &Design, paper: &str, header_refs: &[(&str, String)],
+    footer_refs: &[(&str, String)], columns: Option<SectionColumns>,
 ) -> String {
     let (width, height) = page_size(design, paper);
     let mut refs = String::new();
@@ -416,13 +441,34 @@ pub fn section(
     let left = margins.left.map(twips).unwrap_or(1440);
     let header = design.page.header_offset.map(twips).unwrap_or(720);
     let footer = design.page.footer_offset.map(twips).unwrap_or(720);
-    let title = if first_page(design) {
+    let continuous = columns.is_some_and(|columns| columns.continuous);
+    let title = if first_page(design) && !continuous {
         "<w:titlePg/>"
     } else {
         ""
     };
+    let (restart, kind, cols) = match columns {
+        None => ("eachSect", "", "<w:cols w:space=\"720\"/>".to_owned()),
+        Some(columns) => {
+            let kind = if columns.continuous {
+                "<w:type w:val=\"continuous\"/>"
+            } else {
+                ""
+            };
+            let space = columns.space;
+            let cols = if columns.count > 1 {
+                format!(
+                    "<w:cols w:num=\"{}\" w:space=\"{space}\"/>",
+                    columns.count
+                )
+            } else {
+                format!("<w:cols w:space=\"{space}\"/>")
+            };
+            ("continuous", kind, cols)
+        }
+    };
     format!(
-        "<w:sectPr>{refs}<w:footnotePr><w:numRestart w:val=\"eachSect\"/></w:footnotePr><w:pgSz w:w=\"{width}\" w:h=\"{height}\"/><w:pgMar w:top=\"{top}\" w:right=\"{right}\" w:bottom=\"{bottom}\" w:left=\"{left}\" w:header=\"{header}\" w:footer=\"{footer}\" w:gutter=\"0\"/><w:cols w:space=\"720\"/>{title}</w:sectPr>"
+        "<w:sectPr>{refs}<w:footnotePr><w:numRestart w:val=\"{restart}\"/></w:footnotePr>{kind}<w:pgSz w:w=\"{width}\" w:h=\"{height}\"/><w:pgMar w:top=\"{top}\" w:right=\"{right}\" w:bottom=\"{bottom}\" w:left=\"{left}\" w:header=\"{header}\" w:footer=\"{footer}\" w:gutter=\"0\"/>{cols}{title}</w:sectPr>"
     )
 }
 

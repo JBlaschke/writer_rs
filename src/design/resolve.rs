@@ -78,7 +78,7 @@ pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
             "design.page",
             &[
                 "paper", "margin", "header_offset", "footer_offset", "print",
-                "background", "header", "footer",
+                "columns", "background", "header", "footer",
             ],
         )?;
         let print = match string(map, "print", "design.page")?.as_deref() {
@@ -101,6 +101,7 @@ pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
             header_offset: length(map, "header_offset", "design.page")?,
             footer_offset: length(map, "footer_offset", "design.page")?,
             print,
+            columns: map.get("columns").map(columns).transpose()?,
             background: map
                 .get("background")
                 .map(background)
@@ -246,6 +247,49 @@ fn margin(value: &Value) -> Result<Margin> {
         bottom: length(map, "bottom", path)?,
         left: length(map, "left", path)?,
     })
+}
+
+/// A bare count keeps the default gap and starts at the body.
+fn columns(value: &Value) -> Result<Columns> {
+    let path = "design.page.columns";
+    if !value.is_object() {
+        return Ok(Columns {
+            count: column_count(value, path)?,
+            gap: None,
+            start: ColumnStart::Body,
+        });
+    }
+    let map = object(value, path)?;
+    keys(map, path, &["count", "gap", "start"])?;
+    let count = match map.get("count") {
+        Some(count) => column_count(count, &format!("{path}.count"))?,
+        None => {
+            return bad(&format!("{path}.count"), "expected a column count");
+        }
+    };
+    let start = match string(map, "start", path)?.as_deref() {
+        None | Some("body") => ColumnStart::Body,
+        Some("after-rule") => ColumnStart::AfterRule,
+        Some(other) => {
+            return bad(
+                &format!("{path}.start"),
+                &format!("expected body or after-rule, got {other:?}"),
+            );
+        }
+    };
+    Ok(Columns { count, gap: length(map, "gap", path)?, start })
+}
+
+fn column_count(value: &Value, path: &str) -> Result<u8> {
+    value
+        .as_u64()
+        .filter(|count| (1..=16).contains(count))
+        .and_then(|count| u8::try_from(count).ok())
+        .ok_or_else(|| {
+            Error::Config(format!(
+                "{path}: expected a column count from 1 to 16, got {value}"
+            ))
+        })
 }
 
 fn slot(value: &Value, header: bool, design: &Design) -> Result<Slot> {
