@@ -2,8 +2,8 @@ use std::path::Path;
 
 use serde_json::json;
 use writer::design::{
-    Align, BackgroundPages, ColumnStart, Columns, Fit, Layer, Origin, PathMode,
-    Pt, VerticalAlign, merge,
+    Align, BackgroundPages, ColumnStart, Columns, Fit, Frame, FrameAnchor,
+    Layer, Origin, PathMode, Pt, VerticalAlign, merge,
 };
 use writer::pipeline::{self, BuildOptions, ChangeKind, InputRole};
 
@@ -399,5 +399,107 @@ fn page_columns_resolve_a_count_or_a_table() {
         let error =
             merge(&[layer(page(columns), base)]).unwrap_err().to_string();
         assert!(error.contains(expected), "{error}");
+    }
+}
+
+#[test]
+fn style_frames_resolve_with_defaults_and_signed_offsets() {
+    let base = Path::new("/");
+    let style = |frame| json!({"styles": {"Badge": {"frame": frame}}});
+    // An empty table is a left-aligned frame at the div's own place.
+    let design = merge(&[layer(style(json!({})), base)]).unwrap();
+    assert_eq!(
+        design.styles["Badge"].frame,
+        Some(Frame {
+            width: None,
+            align: Align::Left,
+            gap: None,
+            anchor: FrameAnchor::Div,
+            offset: Pt(0.0),
+        })
+    );
+    let frame = json!({
+        "width": "16mm", "align": "right", "gap": "6mm", "anchor": "title",
+        "offset": "-9mm",
+    });
+    let design = merge(&[layer(style(frame), base)]).unwrap();
+    assert_eq!(
+        design.styles["Badge"].frame,
+        Some(Frame {
+            width: Some(Pt(16.0 * 72.0 / 25.4)),
+            align: Align::Right,
+            gap: Some(Pt(6.0 * 72.0 / 25.4)),
+            anchor: FrameAnchor::Title,
+            offset: Pt(-9.0 * (72.0 / 25.4)),
+        })
+    );
+    assert_eq!(
+        design.to_json(PathMode::Real)["styles"]["Badge"]["frame"],
+        json!({
+            "width": 45.354, "align": "right", "gap": 17.008,
+            "anchor": "title", "offset": -25.512,
+        })
+    );
+    // Tables merge key by key, so a document can move a theme's frame.
+    let design = merge(&[
+        layer(style(json!({"width": "16mm", "anchor": "title"})), base),
+        layer(style(json!({"offset": "2pt"})), base),
+    ])
+    .unwrap();
+    let frame = design.styles["Badge"].frame.unwrap();
+    assert_eq!(frame.anchor, FrameAnchor::Title);
+    assert_eq!(frame.offset, Pt(2.0));
+    // A style without a frame keeps a null in the shared JSON.
+    let design =
+        merge(&[layer(json!({"styles": {"Badge": {}}}), base)]).unwrap();
+    assert_eq!(
+        design.to_json(PathMode::Real)["styles"]["Badge"]["frame"],
+        json!(null)
+    );
+    for (frame, expected) in [
+        (
+            json!({"align": "justify"}),
+            "design.styles.Badge.frame.align: expected left, center or right for a frame, got \"justify\"",
+        ),
+        (
+            json!({"align": "middle"}),
+            "design.styles.Badge.frame.align: expected left, center or right for a frame, got \"middle\"",
+        ),
+        (
+            json!({"anchor": "page"}),
+            "design.styles.Badge.frame.anchor: expected div or title, got \"page\"",
+        ),
+        (
+            json!({"offset": "-9"}),
+            "design.styles.Badge.frame.offset: expected a length with a unit",
+        ),
+        (
+            json!({"offset": -9}),
+            "design.styles.Badge.frame.offset: expected a length with a unit, such as \"4mm\" or \"-9mm\", got -9",
+        ),
+        (
+            json!({"width": "-16mm"}),
+            "design.styles.Badge.frame.width: expected a length",
+        ),
+        (
+            json!({"wrap": "none"}),
+            "design.styles.Badge.frame.wrap: unknown key",
+        ),
+        (json!(true), "design.styles.Badge.frame: expected a table"),
+    ] {
+        let error =
+            merge(&[layer(style(frame), base)]).unwrap_err().to_string();
+        assert!(error.contains(expected), "{error}");
+    }
+    // Writer's own paragraph styles cannot float.
+    for name in ["Title", "Body Text", "heading-1", "Header", "footer"] {
+        let table = json!({"styles": {name: {"frame": {}}}});
+        let error = merge(&[layer(table, base)]).unwrap_err().to_string();
+        assert!(
+            error.contains(&format!(
+                "design.styles.{name}.frame: only a div style can have a frame"
+            )),
+            "{error}"
+        );
     }
 }

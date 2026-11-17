@@ -288,6 +288,8 @@ pub struct StyleTable {
     ids: BTreeSet<String>,
     defaults: BTreeSet<StyleKind>,
     diagnostics: Diagnostics,
+    /// Design styles whose definition writer wrote with a frame.
+    framed: BTreeSet<String>,
 }
 
 impl StyleTable {
@@ -486,7 +488,16 @@ impl StyleTable {
                 name, &styles[name], &self.design, self,
             );
             self.replace_definition(&id, xml);
+            if styles[name].frame.is_some() {
+                self.framed.insert(name.clone());
+            }
         }
+    }
+
+    /// Whether writer wrote the design style `name` with its frame, which a
+    /// reference definition of the same name prevents (design.md §8.6).
+    pub(crate) fn framed(&self, name: &str) -> bool {
+        self.framed.contains(name)
     }
 
     fn read(xml: &str) -> Result<Self> {
@@ -509,6 +520,7 @@ impl StyleTable {
             ids: BTreeSet::new(),
             defaults: BTreeSet::new(),
             diagnostics: Diagnostics::new(),
+            framed: BTreeSet::new(),
         };
         for node in tree.children.iter().filter(|node| node.name == "w:style") {
             let def = Definition::parse(xml, node)?;

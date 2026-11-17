@@ -11,7 +11,7 @@ const FURNITURE: &[&str] = &[
 ];
 const STYLE: &[&str] = &[
     "font", "size", "line_height", "color", "weight", "italic", "align",
-    "space_before", "space_after", "keep_together", "keep_with_next",
+    "space_before", "space_after", "keep_together", "keep_with_next", "frame",
 ];
 
 pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
@@ -165,6 +165,10 @@ pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
                         .unwrap_or(false),
                     keep_with_next: boolean(map, "keep_with_next", &path)?
                         .unwrap_or(false),
+                    frame: map
+                        .get("frame")
+                        .map(|value| frame(value, name, &path))
+                        .transpose()?,
                 },
             );
         }
@@ -278,6 +282,61 @@ fn columns(value: &Value) -> Result<Columns> {
         }
     };
     Ok(Columns { count, gap: length(map, "gap", path)?, start })
+}
+
+fn frame(value: &Value, name: &str, path: &str) -> Result<Frame> {
+    let path = format!("{path}.frame");
+    // Frames hold a div's paragraphs. A style that writer selects for its own
+    // paragraphs is the base of others or recurs on every page in Word.
+    if crate::docx::styles::writer_selects(name) {
+        return bad(
+            &path,
+            &format!(
+                "only a div style can have a frame; writer uses {name:?} \
+                 for its own paragraphs"
+            ),
+        );
+    }
+    let map = object(value, &path)?;
+    keys(map, &path, &["width", "align", "gap", "anchor", "offset"])?;
+    let align = match string(map, "align", &path)?.as_deref() {
+        None | Some("left") => Align::Left,
+        Some("center") => Align::Center,
+        Some("right") => Align::Right,
+        Some(other) => {
+            return bad(
+                &format!("{path}.align"),
+                &format!(
+                    "expected left, center or right for a frame, got {other:?}"
+                ),
+            );
+        }
+    };
+    let anchor = match string(map, "anchor", &path)?.as_deref() {
+        None | Some("div") => FrameAnchor::Div,
+        Some("title") => FrameAnchor::Title,
+        Some(other) => {
+            return bad(
+                &format!("{path}.anchor"),
+                &format!("expected div or title, got {other:?}"),
+            );
+        }
+    };
+    let offset = optional(map, "offset", &path, |value| {
+        match value.as_str() {
+            Some(text) => parse::parse_signed_length(text),
+            None => Err(Error::Config(format!(
+                "expected a length with a unit, such as \"4mm\" or \"-9mm\", got {value}"
+            ))),
+        }
+    })?;
+    Ok(Frame {
+        width: length(map, "width", &path)?,
+        align,
+        gap: length(map, "gap", &path)?,
+        anchor,
+        offset: offset.unwrap_or(Pt(0.0)),
+    })
 }
 
 fn column_count(value: &Value, path: &str) -> Result<u8> {

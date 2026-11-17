@@ -352,7 +352,7 @@ direct flags accumulate.
 | `BlockQuote`, `Div` | children in the §4.1 container; a `Div`/`Callout`/`Cell`/`CodeBlock`/bare `Table` with `attrs.id` gets a block-level bookmark (`w:bookmarkStart` before its first element, `w:bookmarkEnd` after its last; pandoc's `wrapBookmark`) |
 | `Raw` | `openxml`: verbatim at block level (§4.7); others dropped (`check` reports `raw-skipped`) |
 | `ThematicBreak` | `<w:p><w:pPr><w:pStyle w:val="{Horizontal Rule}"/></w:pPr></w:p>` |
-| `PageBreak` | before a non-empty `Paragraph` or a `Heading` (`Raw` blocks of other formats in between write nothing and are skipped): `<w:pageBreakBefore/>` in that paragraph's `w:pPr`, which Word ignores when the paragraph already starts a page; before anything else, or at the end of a block sequence: `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`. Word renders a break paragraph that lands at the top of a page as a blank page, so a break after content that exactly fills its page, such as a TOC, must not be a paragraph |
+| `PageBreak` | before a non-empty `Paragraph` or a `Heading` (`Raw` blocks of other formats in between write nothing and are skipped, as are divs written beside the title, design.md §8.6): `<w:pageBreakBefore/>` in that paragraph's `w:pPr`, which Word ignores when the paragraph already starts a page; before anything else, or at the end of a block sequence: `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`. Word renders a break paragraph that lands at the top of a page as a blank page, so a break after content that exactly fills its page, such as a TOC, must not be a paragraph |
 
 ### 4.4 Title block and headings
 Before the body, from `DocMeta` (plain text runs; DocMeta strings are not Markdown): `Title`,
@@ -360,6 +360,11 @@ Before the body, from `DocMeta` (plain text runs; DocMeta strings are not Markdo
 `<w:br/>` + email as a `mailto:` hyperlink, each when present), `Date`, then, when `abstract_` is
 `Some`, an `Abstract Title` paragraph (`meta.vars["abstract-title"]` when a string, else
 `term(&lang, Term::Abstract)`, html-output.md §1.3) and the abstract's blocks in the Abstract container.
+When there is a `Title`, each top-level body `Div` whose design style has a frame with
+`anchor = "title"`, written by writer rather than taken from a reference document, is written
+right after it, before `Subtitle`, and not again in the body (design.md §8.6; the style's
+`w:framePr` floats it beside the title). Its footnotes are numbered before the abstract's and the
+body's (§4.8).
 A `Heading` is `<w:p>` with pStyle `heading N`, except a heading that `resolved.toc` omits (inside
 `meta.abstract_`, or class `notoc`/`unlisted`; references.md §4.8), which uses pStyle
 `ensure("Heading N Unlisted", Paragraph)` (§2.3): the TOC field's `\o` lists only the built-in

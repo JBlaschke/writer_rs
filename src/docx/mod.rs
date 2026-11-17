@@ -330,7 +330,8 @@ fn prepare_emitter<'a>(
     let lang = LangTag::effective(&doc.meta, opts.config)
         .unwrap_or_else(|| LangTag { lang: "en".into(), region: None });
     let mut ids = reference.map_or_else(Ids::default, |r| r.ids);
-    let content = footnotes::ContentState::new(doc, &mut ids);
+    let beside_title = body::beside_title(doc, opts.design, &styles);
+    let content = footnotes::ContentState::new(doc, &mut ids, beside_title);
     Ok(Emitter {
         doc,
         design: opts.design,

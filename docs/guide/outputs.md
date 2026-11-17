@@ -104,6 +104,8 @@ embedded; Word selects the declared family by name.
 `[design.page] columns` sets the body in two or more columns, with the title
 block, an optional lead section and each figure across the full width. See
 [columns in Word](configuration.md#columns-in-word).
+A named style's `frame` floats its divs in a Word frame, for example beside
+the title. See [frames in Word](configuration.md#frames-in-word).
 
 A reference document's existing style definitions and body-level section,
 including its referenced headers and footers, take precedence. Missing styles

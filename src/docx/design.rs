@@ -517,6 +517,9 @@ pub fn style_xml(
     if style.keep_together {
         paragraph.set("w:keepLines", "<w:keepLines/>");
     }
+    if let Some(frame) = &style.frame {
+        paragraph.set("w:framePr", frame_pr(frame));
+    }
     let mut spacing = child("w:pPr")
         .and_then(|node| node.children.iter().find(|n| n.name == "w:spacing"))
         .map(|node| node.attrs.clone())
@@ -627,6 +630,31 @@ pub fn style_xml(
     }
     definition.set("w:rPr", run.to_xml());
     definition.to_xml()
+}
+
+/// A div style's frame (design.md §8.6): placed between the margins,
+/// vertically from the paragraph it is anchored to, with text around it.
+fn frame_pr(frame: &crate::design::Frame) -> String {
+    use crate::design::Align;
+    let mut attrs = Vec::new();
+    if let Some(width) = frame.width {
+        attrs.push(("w:w", twips(width).to_string()));
+    }
+    if let Some(gap) = frame.gap {
+        attrs.push(("w:hSpace", twips(gap).to_string()));
+    }
+    attrs.push(("w:wrap", "around".into()));
+    attrs.push(("w:vAnchor", "text".into()));
+    attrs.push(("w:hAnchor", "margin".into()));
+    let align = match frame.align {
+        Align::Center => "center",
+        Align::Right => "right",
+        Align::Left | Align::Justify => "left",
+    };
+    attrs.push(("w:xAlign", align.into()));
+    let offset = (frame.offset.0 * 20.0).round() as i32;
+    attrs.push(("w:y", offset.to_string()));
+    property("w:framePr", &attrs)
 }
 
 #[cfg(test)]
