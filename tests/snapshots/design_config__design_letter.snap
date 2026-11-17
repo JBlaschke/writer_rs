@@ -220,7 +220,8 @@ expression: value
       "space_before": 17.008,
       "space_after": 22.677,
       "keep_together": false,
-      "keep_with_next": true
+      "keep_with_next": true,
+      "frame": null
     },
     "Date": {
       "font": null,
@@ -233,7 +234,8 @@ expression: value
       "space_before": null,
       "space_after": 8.504,
       "keep_together": false,
-      "keep_with_next": false
+      "keep_with_next": false,
+      "frame": null
     },
     "Inside Address": {
       "font": null,
@@ -246,7 +248,8 @@ expression: value
       "space_before": null,
       "space_after": null,
       "keep_together": true,
-      "keep_with_next": false
+      "keep_with_next": false,
+      "frame": null
     },
     "Recipient": {
       "font": null,
@@ -261,7 +264,8 @@ expression: value
       "space_before": null,
       "space_after": 17.008,
       "keep_together": true,
-      "keep_with_next": false
+      "keep_with_next": false,
+      "frame": null
     },
     "Salutation": {
       "font": null,
@@ -274,7 +278,8 @@ expression: value
       "space_before": 17.008,
       "space_after": 8.504,
       "keep_together": false,
-      "keep_with_next": false
+      "keep_with_next": false,
+      "frame": null
     },
     "Signature": {
       "font": null,
@@ -289,7 +294,8 @@ expression: value
       "space_before": 0.0,
       "space_after": 0.0,
       "keep_together": true,
-      "keep_with_next": false
+      "keep_with_next": false,
+      "frame": null
     }
   }
 }

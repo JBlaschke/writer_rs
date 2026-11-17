@@ -7,13 +7,16 @@ use syntect::easy::ScopeRegionIterator;
 use syntect::parsing::{ParseState, Scope, ScopeStack, SyntaxReference};
 use syntect::util::LinesWithEndings;
 
+use crate::design::{Design, FrameAnchor};
 use crate::html::highlight::{SYNTAXES, SyntaxChoice, resolve_syntax};
 use crate::ir::{
-    Attrs, Block, Cell, DefinitionItem, Inline, ListItem, ListKind, OutputKind,
+    Attrs, Block, Cell, DefinitionItem, Document, Inline, ListItem, ListKind,
+    OutputKind,
 };
 use crate::markdown::code::CodeAttrs;
 use crate::resolve::{Term, term};
 
+use super::styles::StyleTable;
 use super::xml::{self, ParaProps, RunProps};
 use super::{Container, Emitter, StyleKind};
 
@@ -89,14 +92,17 @@ struct ListFrame {
 impl Emitter<'_> {
     /// Writes metadata before the body in the fixed title-block order.
     pub(crate) fn document(&mut self) {
-        let meta = &self.doc.meta;
-        for (text, style) in [
-            (meta.title.as_deref(), "Title"),
-            (meta.subtitle.as_deref(), "Subtitle"),
-        ] {
-            if let Some(text) = text {
-                self.body_text_paragraph(text, style);
+        let doc = self.doc;
+        let meta = &doc.meta;
+        let beside = self.content.beside_title.clone();
+        if let Some(title) = &meta.title {
+            self.body_text_paragraph(title, "Title");
+            for &index in &beside {
+                self.moved_block(&doc.blocks[index]);
             }
+        }
+        if let Some(subtitle) = &meta.subtitle {
+            self.body_text_paragraph(subtitle, "Subtitle");
         }
         for author in &meta.authors {
             let style = self.styles.ensure("Author", StyleKind::Paragraph);
@@ -142,23 +148,39 @@ impl Emitter<'_> {
             self.containers.pop();
         }
         let columns = self.column_start();
-        self.sibling_blocks(&self.doc.blocks, columns);
+        self.sibling_blocks(&doc.blocks, columns, &beside);
         // Taking back a trailing break can leave the body ending in a
         // table, which the block sequence then closes.
         self.finish_sections();
         self.finish_block_sequence();
     }
 
+    /// Writes a top-level block away from its place in the body.
+    fn moved_block(&mut self, block: &Block) {
+        let previous_span = self.content.span.clone();
+        if let Some(span) = block.span() {
+            self.content.span = Some(span.clone());
+        }
+        self.block(block, false);
+        self.content.span = previous_span;
+    }
+
     /// Writes siblings, preserving paragraph adjacency across raw blocks.
     pub(crate) fn blocks(&mut self, blocks: &[Block]) {
-        self.sibling_blocks(blocks, None);
+        self.sibling_blocks(blocks, None, &[]);
     }
 
     /// [`Self::blocks`]; for the body's top level, `columns` is the index of
-    /// the first block of a multi-column body (columns.rs).
-    fn sibling_blocks(&mut self, blocks: &[Block], columns: Option<usize>) {
+    /// the first block of a multi-column body (columns.rs), and `skip` holds
+    /// the indices of blocks already written beside the title.
+    fn sibling_blocks(
+        &mut self, blocks: &[Block], columns: Option<usize>, skip: &[usize],
+    ) {
         let mut preceding_paragraph = false;
         for (index, block) in blocks.iter().enumerate() {
+            if skip.contains(&index) {
+                continue;
+            }
             if columns.is_some_and(|start| index >= start) {
                 self.column_section_for(block);
             }
@@ -166,8 +188,15 @@ impl Emitter<'_> {
             if let Some(span) = block.span() {
                 self.content.span = Some(span.clone());
             }
+            // Blocks written beside the title are not next in the body.
+            let rest = blocks
+                .iter()
+                .enumerate()
+                .skip(index + 1)
+                .filter(|(at, _)| !skip.contains(at))
+                .map(|(_, block)| block);
             if matches!(block, Block::PageBreak { .. })
-                && next_starts_own_paragraph(&blocks[index + 1..])
+                && next_starts_own_paragraph(rest)
             {
                 self.content.body.pending_page_break = true;
             } else {
@@ -761,12 +790,39 @@ impl Emitter<'_> {
 ///
 /// Word renders a break paragraph that lands at the top of a page as a blank
 /// page, while a paragraph that already starts a page ignores the property.
-fn next_starts_own_paragraph(blocks: &[Block]) -> bool {
-    match blocks.iter().find(|block| !writes_nothing(block)) {
+fn next_starts_own_paragraph<'b>(
+    mut blocks: impl Iterator<Item = &'b Block>,
+) -> bool {
+    match blocks.find(|block| !writes_nothing(block)) {
         Some(Block::Paragraph { inlines, .. }) => !inlines.is_empty(),
         Some(Block::Heading { .. }) => true,
         _ => false,
     }
+}
+
+/// Indices of the top-level divs written right after the title (design.md
+/// §8.6): the document has a title, and the div's style has a frame anchored
+/// to it that writer wrote (a reference style of the same name wins).
+pub(crate) fn beside_title(
+    doc: &Document, design: &Design, styles: &StyleTable,
+) -> Vec<usize> {
+    if doc.meta.title.is_none() {
+        return Vec::new();
+    }
+    let anchored = |block: &Block| {
+        let Block::Div { attrs, .. } = block else {
+            return false;
+        };
+        crate::design::style_for(design, attrs).is_some_and(|name| {
+            styles.framed(name)
+                && design.styles[name]
+                    .frame
+                    .is_some_and(|frame| frame.anchor == FrameAnchor::Title)
+        })
+    };
+    (0..doc.blocks.len())
+        .filter(|&index| anchored(&doc.blocks[index]))
+        .collect()
 }
 
 /// Raw blocks for other formats leave the DOCX body untouched.

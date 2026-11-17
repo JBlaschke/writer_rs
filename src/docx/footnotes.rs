@@ -11,6 +11,8 @@ use crate::resolve::{BIBLIOGRAPHY_ANCHOR, anchor};
 use super::{Container, Emitter, Ids, Part, StyleKind, body::BodyState, xml};
 
 pub(crate) struct ContentState<'a> {
+    /// Top-level blocks written right after the title (body::beside_title).
+    pub(crate) beside_title: Vec<usize>,
     pub(crate) body: BodyState,
     pub(crate) span: Option<SourceSpan>,
     pub(crate) paragraph_prefix: String,
@@ -42,7 +44,7 @@ struct Note<'a> {
 
 /// Actual bookmark targets after the emitter's two-pass content planning.
 pub(crate) fn visible_bookmarks(doc: &Document) -> BTreeSet<String> {
-    ContentState::new(doc, &mut Ids::default())
+    ContentState::new(doc, &mut Ids::default(), Vec::new())
         .plan
         .bookmarks
         .into_keys()
@@ -50,13 +52,20 @@ pub(crate) fn visible_bookmarks(doc: &Document) -> BTreeSet<String> {
 }
 
 impl<'a> ContentState<'a> {
-    pub(crate) fn new(doc: &'a Document, ids: &mut Ids) -> Self {
+    /// `beside_title` lists the top-level blocks written right after the
+    /// title, so that notes are numbered in document order.
+    pub(crate) fn new(
+        doc: &'a Document, ids: &mut Ids, beside_title: Vec<usize>,
+    ) -> Self {
         // Discover forward targets before choosing Page-reference content.
         // Resolved text may be a clone of the supplement; only one is emitted.
         let mut provisional_ids = *ids;
-        let potential = ContentPlan::collect(doc, &mut provisional_ids, None);
+        let potential = ContentPlan::collect(
+            doc, &beside_title, &mut provisional_ids, None,
+        );
         let targets = potential.bookmarks.into_keys().collect();
-        let mut plan = ContentPlan::collect(doc, ids, Some(targets));
+        let mut plan =
+            ContentPlan::collect(doc, &beside_title, ids, Some(targets));
         let mut reserved: BTreeSet<_> =
             plan.bookmarks.keys().cloned().collect();
         for index in 0..plan.notes.len() {
@@ -79,6 +88,7 @@ impl<'a> ContentState<'a> {
             };
         }
         Self {
+            beside_title,
             body: BodyState::default(),
             span: None,
             paragraph_prefix: String::new(),
@@ -89,14 +99,24 @@ impl<'a> ContentState<'a> {
 }
 
 impl<'a> ContentPlan<'a> {
+    /// Plans the blocks in the order the body writes them: the blocks
+    /// beside the title, the abstract, then the rest of the body.
     fn collect(
-        doc: &'a Document, ids: &mut Ids, targets: Option<BTreeSet<String>>,
+        doc: &'a Document, beside_title: &[usize], ids: &mut Ids,
+        targets: Option<BTreeSet<String>>,
     ) -> Self {
         let mut plan = Self { targets, ..Default::default() };
+        for &index in beside_title {
+            plan.blocks(&doc.blocks[index..=index], doc, None, None, ids);
+        }
         if let Some(blocks) = &doc.meta.abstract_ {
             plan.blocks(blocks, doc, None, None, ids);
         }
-        plan.blocks(&doc.blocks, doc, None, None, ids);
+        for (index, block) in doc.blocks.iter().enumerate() {
+            if !beside_title.contains(&index) {
+                plan.blocks(std::slice::from_ref(block), doc, None, None, ids);
+            }
+        }
         plan
     }
 
