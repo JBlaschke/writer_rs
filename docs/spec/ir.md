@@ -614,7 +614,9 @@ replaces the body only. T01 also provides `ir::detect_kind(path: &Path) -> Resul
 pipeline (T16) dispatch the same way.
 
 Frontends are pure functions of their inputs except that they may `stat` referenced files to
-decide between registering them and reporting `missing-asset`, and read included sources.
+decide between registering them and reporting `missing-asset`, and read included sources. The
+Markdown walker also reads `SOURCE_DATE_EPOCH` and the clock for a `{{today}}` placeholder
+(markdown-dialect.md §6.1).
 Frontends never fail on a missing asset (warning `missing-asset`; `build` escalates it, `serve`
 and `check` do not), exactly as in presenter. Front matter: frontends apply
 `Config::merge_front_matter(&meta)` to a clone of their config; the pipeline applies it again

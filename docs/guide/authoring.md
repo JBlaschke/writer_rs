@@ -159,6 +159,29 @@ Directives are containers and need closing fences. Even empty directives use
 two lines, such as `:::pagebreak` followed by `:::`. When nesting directives,
 give the outer one a longer fence than the inner one.
 
+## Today's date
+
+Write `{{today}}` in body text to print the build date, such as
+19 November 2026:
+
+```markdown
+:::date
+{{today}}
+:::
+```
+
+The date is the day of the build, in UTC. For repeatable builds, pin it with
+`[pdf] timestamp` or the `SOURCE_DATE_EPOCH` environment variable. Front matter
+`date` does not change it. Front matter values such as `title` and `date` are
+plain text and print `{{today}}` as written; the `abstract` accepts it.
+
+To print the placeholder itself, escape its first brace as `\{{today}}` or put
+it in code. Alert titles and `title=` or `caption=` values drop the backslash
+before the placeholder is read, so use code there. A heading with the
+placeholder gets the date in its automatic identifier; give it an explicit
+label if anything links to it. Notebook Markdown cells accept the placeholder
+too; native Typst sources have none.
+
 ## Include another source
 
 At the document's top level:

@@ -224,7 +224,9 @@ LaTeX export requires `.bib` resources even when YAML resolves in other formats.
 For repeatable PDF output, pin a timestamp and set `system_fonts = false`.
 With an empty timestamp, writer uses a document date when provided, then
 `SOURCE_DATE_EPOCH`, then the current time. Preview/watch retains one session
-timestamp and caches fonts; restart after changing font files.
+timestamp and caches fonts; restart after changing font files. The Markdown
+[`{{today}}` placeholder](authoring.md#todays-date) follows the same timestamp
+in every output, but skips the document date.
 
 ## `[docx]`
 
