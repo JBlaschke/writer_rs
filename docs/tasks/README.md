@@ -84,9 +84,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T87 | Page furniture: DOCX | M8 | M | T85 | done (PR #60) |
 | T88 | Page furniture: Typst | M8 | M | T85 | done (PR #61) |
 | T89 | Design guide and `examples/letter/` | M8 | M | T86, T87, T88 | done |
-| T91 | Page background image (`[design.page.background]`) in HTML, Typst and DOCX | M8 | M | T86, T87, T88 | ready for review (PR #66) |
-| T92 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | ready for review (PR #65) |
-| T90 | Furniture image `gap` | M8 | S | T89 | ready for review (PR #64) |
+| T91 | Page background image (`[design.page.background]`) in HTML, Typst and DOCX | M8 | M | T86, T87, T88 | done (PR #66) |
+| T92 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | done (PR #65) |
+| T90 | Furniture image `gap` | M8 | S | T89 | done (PR #64) |
+| T93 | `@writer/doc` 0.4.0: the package version wherever it is named; no behaviour change | M8 | S | T90, T91, T92 | in progress (`claude/typst-vocabulary-styles`) |
+| T94 | Vocabulary styles in the PDF (`design.typ`), `title-block`, design tokens, starter template in override order | M8 | M | T92, T93 | in progress (`claude/typst-vocabulary-styles`) |
+| T95 | Guide: named styles in the PDF, the PDF template as a list of overrides | M8 | S | T94 | in progress (`claude/typst-vocabulary-styles`) |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -110,6 +113,9 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 15 | T89, T91 | 2 |
 | 16 | T92 | 1 |
 | 16 | T90 | 1 |
+| 17 | T93 | 1 |
+| 18 | T94 | 1 |
+| 19 | T95 | 1 |
 
 ## Coordinator notes (2026-10-24)
 - T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI
@@ -659,3 +665,27 @@ Manual checks performed: …
   without losing `outlineLvl 9` (and so entering the TOC field), `toc 2`–`toc 6` lost their indents
   and `Title` its centring, while `check` called every such style unused. T92 merges instead and
   exempts vocabulary names and the header furniture's `Header` from `design-style-unused`.
+
+- 2026-11-20: T93–T95 (waves 17–19) follow from the same theme. Its `theme.toml` describes
+  headings, the title block, the contents, captions and table text once, under the Word
+  vocabulary names of T92, and Word applies them; the PDF did not, so the theme's `[pdf] template`
+  repeated every value (142 lines for the report, a second template for the letter). T93 moves the
+  package to `@writer/doc` 0.4.0 without changing it, T94 installs the prototype of
+  `docs/research/R11-typst-vocabulary-styles.md` (the package applies those styles as show-set
+  rules, a template overrides them key by key, `design-tokens` gives it the design as Typst
+  values) and T95 rewrites the guide's passages. The contract is design.md §8.7 and
+  typst-dialect.md §4.2 and §4.6. The three tasks run one after the other. T90, T91 and T92 are
+  merged (PRs #64, #66, #65) and their rows say so now. `scripts/waves.py` no longer runs over
+  this directory (seventeen frozen briefs name their dependency row `Dependencies`), so the three
+  waves were computed by hand.
+
+  The three tasks ran the same day on branch `claude/typst-vocabulary-styles`, one after the
+  other, each given to a cheaper model (T93 to the smallest one), and arrive in one PR. The four
+  quality gates pass on the result. Two errors of the plan showed while the tasks ran, and both
+  are corrected where they came from. The prototype built the typed tokens for every document,
+  which stopped a native document whose `design:` holds a value the tokens cannot convert
+  (`native_typography_arguments_stay_with_the_compiler`); `writer-doc` now builds them for a
+  `title-block` function alone (R11 §6, design.md §8.7, T94's steps and hints). T95's table of
+  style names had the names in its first column, where `tests/guide.rs` reads every cell that
+  holds one backticked name, between `## [design]` and `## Strictness`, as a configuration key;
+  the PDF element comes first now.

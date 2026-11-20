@@ -4,7 +4,8 @@
 `dump --design`, `eject theme`), T81 (§5 HTML tokens and fonts), T82 (§6.1–6.3, §6.5–6.7 Typst
 input, `writer-doc` defaults, fonts), T83 (§7 DOCX generated styles and section), T84 (§6.4 the
 emitter's `writer-div`), T85 (§8 named styles in every backend), T86 (§9.3 HTML furniture), T87
-(§9.5 DOCX furniture), T88 (§9.4 Typst furniture), T89 (guide and the letter example). Consumers:
+(§9.5 DOCX furniture), T88 (§9.4 Typst furniture), T89 (guide and the letter example), T93–T95
+(§8.7 vocabulary styles in the PDF, design tokens for templates, package `0.4.0`). Consumers:
 `check` (§10, extends T71's passes), live reload (§12), T74's guide pages (T89 edits them).
 
 The design layer is one table, `[design]`, that describes a document's typography, colours, page
@@ -535,7 +536,7 @@ unchanged. `world_inputs` stays the only producer. Furniture images are register
 | `page.margin.*` | `set page(margin: (top:, right:, bottom:, left:))`, unset sides keep `2.5cm` |
 | `page.header`, `page.footer` | §9.4; a declared slot sets `page(header: none, footer: none, numbering: none)` and places the furniture through `page(background:)` |
 | `page.background` | §9.6; `page(background:)` places the image at the page origin before the furniture, on page 1 or on every page; a background without a declared slot leaves `numbering: "1"` and the built-in header and footer alone |
-| `styles.*` | §8.4 (`writer-div`) |
+| `styles.*` | §8.4 (`writer-div`, for divs) and §8.7 (show-set rules on writer's own elements for the names of §8.1's vocabulary; package `0.4.0`) |
 | `colors.accent`, `colors.muted`, `fonts.*.files`, `header_offset`, `footer_offset`, `print` | read by furniture (§9.4) or not used by Typst (`files`: §6.5; `print`: HTML only) |
 
 The package exposes `writer-design` (the decoded dictionary or `(:)`) for templates and documents.
@@ -548,7 +549,8 @@ body's divs see the exported design. Package version `0.3.0` (2026-11-09) added 
 ejected `0.2.0` would swallow it silently through `..extra`. The same version derives the leading
 and paragraph spacing from the measured line box (the `text.line_height` and
 `text.paragraph_spacing` rows above); `writer-div` and `writer-furniture` apply the rule at their
-own sizes (§8.4, §9.4).
+own sizes (§8.4, §9.4). Package version `0.4.0` (2026-11-19) adds `design-tokens(..args)`, the
+applied design as Typst values for a template's own rules, and `style-tokens(theme, name)` (§8.7).
 
 ### 6.3 BYO template and explicit arguments
 A `[pdf] template` that delegates (`base.writer-doc(..args, body)`, typst-dialect.md §4.6) inherits
@@ -558,9 +560,20 @@ every default above. A template that builds its own layout reads `sys.inputs` it
     json(bytes(sys.inputs.at("writer-design")))
 } else { (:) }
 ```
-Template code and explicit arguments always win: the design is an input, never an injected `set`
-rule. `check` notes which design parts a non-delegating template shadows only when it can tell
-(`design-shadowed`, §10: the template does not import `@writer/doc`).
+Template code and explicit arguments always win. `check` notes which design parts a
+non-delegating template shadows only when it can tell (`design-shadowed`, §10: the template does
+not import `@writer/doc`).
+
+> **Contract change (2026-11-19, package `0.4.0`; replaces "the design is an input, never an
+> injected `set` rule"):** `writer-doc` applies the design's vocabulary styles as show-set rules
+> (§8.7). They are defaults: a template that delegates with `show: base.writer-doc.with(..args)`
+> and writes its own rules after that line overrides them key by key, because Typst lets an inner
+> rule win over an outer one property by property. That order is the template contract from
+> `0.4.0` on (typst-dialect.md §4.6); the starter that `eject typst-template` writes uses it. A
+> template that sets its rules first and then calls `base.writer-doc(..args, body)` still
+> compiles, but for every key a declared vocabulary style sets the design now wins, as it already
+> did for what `writer-doc` sets itself (page, fonts). A template that needs the design's values
+> for its own rules takes them from `base.design-tokens(..args)` instead of decoding the JSON.
 
 ### 6.4 The emitter keeps div classes (`src/typst/emit.rs` §5.4, T84; `writer-div` in `lib.typ`)
 The `Div` row of typst-dialect.md §5.4 becomes:
@@ -788,6 +801,11 @@ letter restyles `Date`. The header furniture's lines select `Header` (`docx::sty
 §9.5), which §2.3 does not list: a design style of that name (compared case-insensitively) is a
 custom definition those lines use, and `design-style-unused` does not report it either.
 
+From package `0.4.0` the PDF applies the names it has an element for to that element (§8.7:
+headings, the contents title and entries, the title block's parts, captions, table cells, the
+furniture lines), so one table styles Word and the PDF. HTML still applies named styles to divs
+only (§8.3; open point 13).
+
 ### 8.2 Resolution order (one function, `design::style_for`, every backend)
 For a `Div` (ir.md: `attrs.classes`, `attrs.pairs`):
 1. `attrs.pairs["custom-style"]`, when its normalised key names a design style → that style.
@@ -835,7 +853,9 @@ leading between the div's paragraphs; an unset `line_height` inherits the docume
 which is in ems and so follows the style's `size`. `block(sticky: true)` is
 Typst's keep-with-next (Verified API hints). `writer-div` ignores `frame` (§8.6); a
 template that floats such a div reads it from `writer-design.styles`. The function is also what §6.4's emitter calls for styleless
-divs (`spec == none` → `body`).
+divs (`spec == none` → `body`). From package `0.4.0` the style's `set text` arguments come from
+`style-text` (§8.7), so a `font` that names a face by its weight word selects that face here
+too; the block spacing above is unchanged (open point 11).
 
 ### 8.5 DOCX
 Each design style is appended to `styles.xml` (§7.1) as
@@ -925,6 +945,117 @@ expected a length with a unit, such as "4mm" or "-9mm", got …`. `width` and `g
 lengths (§2.1). With a reference document a reference style of the same name wins (§7.3), frame
 included: writer writes no `w:framePr` for it and does not move the div, so it stays in the body
 with the reference's own formatting.
+
+### 8.7 Vocabulary styles in the PDF (`design.typ` in `@writer/doc` `0.4.0`; T94)
+A design style named after one of writer's own paragraph kinds (§8.1) is applied by `writer-doc`
+to the element writer gives that name in Word, so a theme states a heading's or the title's look
+once and a `[pdf] template` holds only what the design has no key for. Names are compared by
+normalised key (§8.1). The measurements behind this section and its verified reference code are
+in R11 (`docs/research/R11-typst-vocabulary-styles.md`).
+
+| style | element in the PDF | rule |
+|---|---|---|
+| `Heading N` (N = 1–6) | headings of level N | `show heading.where(level: N): set …` |
+| `Heading N Unlisted` | headings of level N with `outlined: false` | `show heading.where(level: N, outlined: false): set …`, after every `Heading N` rule, so it is laid over `Heading N` key by key as Word's `basedOn` does |
+| `TOC Heading` | the contents title | `show outline: set heading(supplement: [writer-contents-title])` marks the title and `show heading.where(supplement: [writer-contents-title]): set …` styles it, with `Heading 1`'s keys under `TOC Heading`'s: Word bases the style on `heading 1`, and the title is an unlisted level-1 heading too, so `Heading 1` is restored over `Heading 1 Unlisted` |
+| `toc N` | contents entries of level N | `show outline.entry.where(level: N): set …` |
+| `Caption` | every caption | `show figure.caption: set …` with the text keys, `align` and `line_height` only |
+| `Table Caption`, `Image Caption` | captions of tables, of images | `show figure.caption.where(kind: table): set …`, `.where(kind: image)`, after `Caption`, the same keys |
+| `Compact` | table cells | `show table.cell: set …` (text keys, `align`, `line_height`) and `set table(inset: (top: L/2 + space_before, bottom: L/2 + space_after))`, each side only when its space is set |
+| `Title`, `Subtitle`, `Author`, `Date` | the parts of the title block | the styled title block below |
+| `Header`, `footer` | the furniture lines (§9.4) | the style's `font` and `line_height`, in place of the document's |
+
+**Keys.** `font`, `size`, `color`, `weight` and `italic` become `set text(font:, size:, fill:,
+weight:, style:)`. `font` is a role's family (no rule when the design leaves the role unset) or a
+family. Typst files a face under its family and has no family called `Source Sans 3 SemiBold`,
+the name Word needs for a face it has no flag for, so a family whose last word is a weight name
+is that family without the word, at that weight or at the style's own `weight`, whichever is
+heavier: `Thin`/`Hairline` 100, `ExtraLight`/`UltraLight` 200, `Light` 300, `Regular` 400,
+`Medium` 500, `SemiBold`/`DemiBold` 600, `Bold` 700, `ExtraBold`/`UltraBold` 800, `Black`/`Heavy`
+900 (case and hyphens ignored). `align` becomes `set align(left|center|right)` and `set
+par(justify: align == "justify")`. `line_height` becomes `set par(leading: L)` by §6.2's rule on
+the style's own face and size. `space_before` and `space_after` become `set block(above: L +
+space_before, below: L + space_after)`, each only when set, where `L` is the style's leading, or
+the document's when it sets no `line_height` (that one is in ems, so it follows the style's
+size): the distance to the next baseline is then a line pitch plus the space, as §6.2 makes it
+between paragraphs and as Word sets it. `keep_with_next = true` becomes `set block(sticky:
+true)` and `keep_together = true` becomes `set block(breakable: false)`; `false` adds nothing. An
+unset key adds no argument, so the element keeps Typst's or the template's value for it (§0.2).
+`frame` is not allowed on these names (§8.6).
+
+**Order and overrides.** These are show-set rules, never transformational ones, applied around
+the body after `writer-doc`'s own `set par(..)`, in the table's order. Typst lets an inner rule
+win over an outer one property by property, so a template's rule placed after `show:
+base.writer-doc.with(..args)` (§6.3, typst-dialect.md §4.6) overrides the design for the keys it
+sets: `show heading.where(level: 1): set text(fill: red)` changes the colour and keeps the
+design's size. Such a rule on `heading.where(level: 1)` also covers the unlisted level-1 headings
+and the contents title. Explicit `writer-doc` arguments are unaffected (§6.2).
+
+**Title block.** When the design declares at least one of `Title`, `Subtitle`, `Author` and
+`Date`, the title block is one full-width block per part: the title; the subtitle; the author
+names joined by ", " with each affiliation in a 9pt paragraph below them; the date. Each part
+takes its style's keys over the part's built-in look (the title 17pt bold, the others body
+text). The block's alignment is `Title`'s `align`, centre when unset, and a part's own `align`
+holds for that part. The first part's `space_before` is kept at the top of the page, where
+Typst would drop a block's space, and measured as Word measures it, from the font's ascender: a
+strong `v(space_before + ascender − cap height)` of the part's face. The closing `v(1.5em)`
+stays unless the last part sets `space_after`. A part whose style sets no key is drawn exactly
+as the plain block draws it, and with none of the four declared the plain block
+(typst-dialect.md §4.2) is used unchanged.
+
+`writer-doc(title-block:)` chooses who draws it: `auto` (the above); `none` (no title block; the
+metadata still reaches `document(..)`); or a function `(meta, theme) => content`, with `meta =
+(title:, subtitle:, authors:, date:, abstract:, keywords:, description:)` (`authors` an array of
+dictionaries with `name` and optional `affiliation`, `email`, `id`; `date` a string, a
+`datetime` or `none`) and `theme` the tokens below. A cover page is such a function. The
+tokens are built when a function asks for them: without one `writer-doc` reads only the keys it
+applies, so a document that compiled with package `0.3.0` is not stopped by a value the tokens
+cannot convert.
+
+**Tokens for templates.** `design-tokens(..args)` returns the design that `writer-doc` applies
+(its `design:` argument, else the input) as Typst values under §3.3's key names: `declared`
+(bool); `fonts.body`, `.heading`, `.mono` (a family or `none`); `text.size`, `.line_height`,
+`.paragraph_spacing`, `.justify`; `colors.text`, `.accent`, `.muted`, `.link`, `.background`;
+`page.paper`, `.margin.top|right|bottom|left`, `.header_offset`, `.footer_offset`; and
+`styles.<declared name>`. Lengths are lengths, colours are colours, a `line_height` is
+`(multiple: n)` or `(exact: length)`, and an unset key is `none`. `style-tokens(theme, name)` is
+the named style (by normalised key) with `font`, `weight`, `size`, `line_height`, `color`,
+`italic`, `align`, `space_before`, `space_after`, `keep_together`, `keep_with_next` and `text`,
+the arguments of `text(..)` that set its face; for an undeclared name every key is unset, so
+`text(..style-tokens(theme, "Title").text, meta.title)` is then plain text. A template's rules
+name these instead of repeating the theme's values:
+```typst
+#import "@writer/doc:0.4.0" as base
+
+#let writer-doc(..args, body) = {
+    let theme = base.design-tokens(..args)
+    show: base.writer-doc.with(..args)
+    // Only what the design has no key for; each rule overrides the design key by key.
+    set table(fill: (x, y) => if y == 0 { theme.colors.accent } else { none })
+    show outline.entry.where(level: 1): it => upper(it)
+    body
+}
+```
+
+**Not applied in the PDF** (these names restyle Word only): `Body Text`, `First Paragraph`,
+`Block Text`, `Footnote Text`, `Abstract Title`, `Abstract`, `Bibliography`, `Definition Term`,
+`Definition`, `Source Code`, `Figure`, `Captioned Figure`; `Compact` on tight lists; a caption's
+`space_before`/`space_after`. `writer-div` is unchanged (§8.4), except that a style's `font`
+goes through the face rule above.
+
+**Absent means unchanged** (§0.2). Without a declared design, and with a design that declares
+none of these names, `writer-doc` adds no rule and draws the plain title block: the PDF is
+byte-identical to package `0.3.0`'s. A design that declares one changes the PDF, which is the
+point. Three effects reach a theme that was tuned in Word and carried the PDF's look in a
+template: heading and contents-entry spacing follow the theme's `space_before`/`space_after`
+unless the template sets its own `block(above:, below:)`; table cells take `Compact`'s text keys
+and inset; the furniture lines take the `Header` and `footer` styles' pitch.
+
+**Differences from Word that remain** (R11 §4): a key that only `Heading 1 Unlisted` sets also
+reaches the contents title (set it on `TOC Heading` to restore it); `Subtitle`, `Author` and
+`Date` do not inherit `Title`'s other keys as Word's `basedOn` chain does, only its alignment;
+and between two styled blocks the larger of the two spaces holds, as CSS margins collapse, where
+Word adds them (open points 11 and 12).
 
 ## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst; T90 image gap, T91 page background)
 
@@ -1035,6 +1166,12 @@ A declared slot sets `page(header: none, footer: none, numbering: none)` and
     }
 })
 ```
+From package `0.4.0`, `writer-furniture` also takes `font: none`, and the header slot's lines take
+the `font` and `line_height` of a design style named `Header`, the footer slot's those of
+`footer` (§8.7), each in place of the document's when the style sets it: the styles Word uses for
+the same lines (§9.5), so one table sets their pitch in both. Their other keys are not applied in
+the PDF (a line's own `size`, `color`, `weight` and `italic` come from the furniture table).
+
 An unset `header_offset` is 30 % of the top margin (Typst's own `header-ascent` default, expressed
 as an offset from the edge); an unset `footer_offset` is 30 % of the bottom margin.
 Rules: `line(length: 100%, stroke: width * 1pt + rgb(color))`; `{page}`/`{pages}` per §9.2; `align`
@@ -1347,6 +1484,25 @@ so an edit elsewhere keeps the Libraries.
    (the ejected theme's commented block, §4.2, is the discovery path).
 10. **Package version bump** (§6.4, `0.1.0` → `0.2.0`). Recommended: bump, because ejected and
     installed packages must expose `writer-div` for exported sources to compile.
+11. **Div spacing in the PDF.** `writer-div` passes `space_before`/`space_after` to its block as
+    they are (§8.4), one leading less than §8.7's `L + space` and than HTML and Word show.
+    Recommended: a follow-up task aligns it with §8.7's rule (it moves every styled div in existing
+    PDFs by one leading, so it gets its own contract-change note and package version).
+12. **Word's `basedOn` chains in the PDF.** §8.7 reproduces the heading and caption chains by rule
+    order and `TOC Heading` by laying `Heading 1` under it; the title parts inherit `Title`'s
+    alignment only, and a key that only `Heading N Unlisted` sets reaches the contents title.
+    Recommended: leave as documented; a theme sets the key on each style, which also reads better.
+13. **Vocabulary styles in HTML.** HTML applies named styles to divs only, so a theme still styles
+    `h1`, `.title`, `.toc` and captions in its CSS. Recommended: a follow-up task generates rules
+    for the same mapping in `layout_css` (§5.3) under selectors of specificity zero
+    (`:where(h1)`), so that a theme's own CSS keeps winning as §5.4 requires.
+14. **Tight lists and `Compact`.** Word uses `Compact` for tight-list paragraphs as well as table
+    cells; the PDF applies it to cells only. Recommended: leave; list spacing in Typst is `set
+    list(spacing:)`, which a template sets.
+15. **A weight Word cannot select.** A theme reaches a semibold face in Word by naming it
+    (`font = "Source Sans 3 SemiBold"`), which §8.7 translates for Typst. Recommended: a follow-up
+    lets DOCX choose the face from `font` plus `weight` (family name lookup in the declared font
+    files), so that a theme writes `weight = 600` and no backend needs the face's name.
 
 ## Verified API hints (for the task files; each says where it was read)
 - `typst::text::FontInfo::iter(data: &[u8]) -> impl Iterator<Item = FontInfo>` and

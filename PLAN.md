@@ -307,7 +307,7 @@ writer_rs/                                                                    ow
 ├── assets/writer/live-reload.js: T22   pages.js: T21 (placeholder) → T24   math.js: T00 (one-line placeholder) → T1A
 ├── assets/l10n/**                                                              T01 (en.toml, with src/resolve/l10n.rs)
 ├── assets/themes/default/{theme.toml, templates/**}                           T15 → T19;  styles/**, README.md: T19
-├── assets/typst/writer-doc/**   (@writer/doc: typst.toml, lib.typ, callout.typ, numbering.typ, cells.typ, oracle.typ, template.typ)   T31 (cells.typ include-notebook helper: T53, additive)
+├── assets/typst/writer-doc/**   (@writer/doc: typst.toml, lib.typ, callout.typ, numbering.typ, cells.typ, oracle.typ, design.typ, template.typ)   T31 (cells.typ include-notebook helper: T53, additive; design.typ, its rules in lib.typ and the starter template.typ: T94; the package version: T93)
 ├── assets/docx/{styles.xml, numbering.xml, settings.xml}                       T04
 ├── assets/latex/writer-template.tex                                            T61
 ├── assets/scaffold/**                                                          T72
@@ -501,6 +501,9 @@ presenter_rs per R8 §10.
 | T91 | Page background image `[design.page.background]` behind the body in HTML (`body::before`), Typst (`page(background:)`) and DOCX (anchored `behindDoc` picture) (added 2026-11-02) | M | T86, T87, T88 |
 | T92 | Design styles named after §2.3 Word styles restyle the built-in definition in place; `design-style-unused` exempts them (added 2026-11-02) | S | T85, T89 |
 | T90 | Furniture image `gap`: the space between a furniture image and its lines in HTML, Typst and DOCX, the paragraph spacing by default | S | T89 |
+| T93 | `@writer/doc` 0.4.0: the package version in the constant, the manifest, the starter template's import, the example, the fixtures, the test literals and the snapshots; no behaviour change (added 2026-11-20) | S | T90, T91, T92 |
+| T94 | Vocabulary styles in the PDF: `design.typ` applies `[design.styles]` tables named after §2.3 Word styles to headings, the title block, the contents, captions, table cells and the furniture lines as show-set rules a template can override; `writer-doc(title-block:)`, `design-tokens`/`style-tokens`; starter template in override order (R11; added 2026-11-20) | M | T92, T93 |
+| T95 | Guide: named styles in the PDF, the PDF template as a list of overrides, design tokens (added 2026-11-20) | S | T94 |
 
 ### Dependency graph (what each task unblocks; derived from the dependency column)
 
@@ -539,6 +542,10 @@ w13 T85 ─► T86, T87, T88
 w14 T86 ─► T89, T91   T87 ─► T89, T91   T88 ─► T89, T91
 w15 T89 ─► T92
 w15 T89 ─► T90
+w15 T91 ─► T93
+w16 T90 ─► T93        T92 ─► T93, T94
+w17 T93 ─► T94
+w18 T94 ─► T95
 ```
 
 ### Waves (computed from the dependency column; no task depends on a task in its own wave)
@@ -563,6 +570,9 @@ w15 T89 ─► T90
 | 15 | T89, T91 | 2 |
 | 16 | T92 | 1 |
 | 16 | T90 | 1 |
+| 17 | T93 | 1 |
+| 18 | T94 | 1 |
+| 19 | T95 | 1 |
 
 Edges added after the first plan (`A → B`: B depends on A). Requested in the specs' Deviations:
 T03 → T15, T14 → T12, T13 → T18, T13 → T60, T30 → T1A, T16 → T1A (html-output.md, math.md);
@@ -600,6 +610,15 @@ them (typst-dialect.md §1, §5.1, §6.1, §6.4; notebook-mapping.md §7.3); wit
 arrives in T53"))`.
 T20 (live-reload.md §6.4) calls `include::scan_includes` without depending on T1B because T16 lifts
 that pure function into `src/markdown/include.rs` first (§3.2).
+M8 (coordinator, 2026-11-20, `docs/research/R11-typst-vocabulary-styles.md`; design.md §8.7,
+typst-dialect.md §4.2 and §4.6): T93–T95 carry the design's vocabulary styles into the PDF, so
+that a `[pdf] template` holds overrides and additions instead of a second copy of the theme. T93
+depends on T90, T91 and T92 because it rewrites the import line of every fixture and snapshot and
+must start from their merged state; T94 depends on T93 because the new behaviour ships under the
+new package version, and on T92 because the PDF follows the vocabulary names T92 fixed for Word;
+T95 documents T94. The three run one after the other (waves 17–19): each edits files the next
+one reads. `scripts/waves.py` no longer runs over `docs/tasks/` (seventeen frozen briefs name
+their dependency row `Dependencies`), so these waves were computed by hand.
 
 The hard integration points are T16 (everything of M1 meets), T32 (emitter, package and
 compiler meet) and T52 (the typst backend meets serve and the exports). The coordinator
@@ -803,3 +822,10 @@ No `writer.toml` may live in an ancestor of the fixture directories.
   parsing, ANSI crates compared.
 - **presenter_rs** (R8): 54.8k LOC; ~13.5k LOC lift verbatim, ~18k adapt; `pptx.rs` holds the
   XML helpers for DOCX; `pdf.rs` is a generic Chrome DevTools driver (Unix-only).
+- **Design styles in typst** (R11, 2026-11-19): show-set rules written after
+  `show: base.writer-doc.with(..args)` are the inner ones and win key by key, rules written
+  before `base.writer-doc(..args, body)` lose to every key the package sets; a design rule must
+  be `show <selector>: set <element>(..)`, never a transformational rule; `set` rules with an
+  empty spread are no-ops; `outline`'s title is a level-1 heading with `outlined: false`, and
+  `heading.where(supplement: ..)` tells it apart. R11 §5 and §6 hold the prototype of
+  `@writer/doc` 0.4.0 that T94 installs, measured on two real themes.
