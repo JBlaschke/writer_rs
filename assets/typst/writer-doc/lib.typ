@@ -1,5 +1,6 @@
 #import "callout.typ": callout, writer-term
 #import "cells.typ": code-cell, include-notebook
+#import "design.typ": *
 #import "numbering.typ": writer-numbering, bibliography-term
 
 #let language(tag) = {
@@ -25,78 +26,6 @@
 
 #let from-config(value, config, key, fallback) = {
     if value == auto { config.at(key, default: fallback) } else { value }
-}
-
-// The resolved design is shared with HTML and DOCX. Missing inputs leave every
-// built-in default intact, including standalone exported Typst documents.
-#let writer-design = if "writer-design" in sys.inputs {
-    json(bytes(sys.inputs.at("writer-design")))
-} else { (:) }
-
-// A dotted lookup in one design dictionary; `default` stands in for a missing
-// or `none` value.
-#let design-get(design, key, default) = {
-    let value = design
-    for part in key.split(".") {
-        if type(value) != dictionary { return default }
-        value = value.at(part, default: none)
-    }
-    if value == none { default } else { value }
-}
-
-#let from-design(key, default) = design-get(writer-design, key, default)
-
-// The design `writer-doc` applies: its explicit `design:` argument wins over
-// the `writer-design` input, which wins over the package defaults. An exported
-// source passes the JSON copied beside its main file here, so a plain compile
-// needs no input; `none` ignores the input and keeps the defaults.
-#let design-value(design) = {
-    if design == auto { writer-design }
-    else if design == none { (:) }
-    else {
-        assert(
-            type(design) == dictionary,
-            message: "writer-doc: design must be auto, none or a dictionary"
-        )
-        design
-    }
-}
-
-// Shares the applied design with `writer-div`, which the body calls outside
-// `writer-doc`'s arguments; `none` until `writer-doc` records it.
-#let design-state = state("writer-design", none)
-
-// The line box Typst lays text of `size` out with: with the default
-// `top-edge: "cap-height"` and `bottom-edge: "baseline"`, the cap height of
-// the font in effect (its OS/2 `sCapHeight`, else its ascender; a fallback
-// font's when the family is missing). Measured rather than assumed, so the
-// fonts and edges actually in use decide. Needs context.
-#let line-box(size) = measure(text(size: size)[H]).height
-
-// `par.leading` for a design pitch (design.md §6.2). Typst's leading is the
-// gap between one line's bottom edge and the next line's top edge, so a
-// baseline pitch needs `pitch − line box`; HTML's `line-height` and Word's
-// lines then agree with the PDF. The result is in ems of `size`, so that a
-// multiple follows a paragraph's own size as HTML's unitless `line-height`
-// and Word's `auto` lines do, and an exact pitch holds at any size. Needs
-// context, except for the `0.65em` default of an unset pitch.
-#let design-leading(pitch, size) = {
-    if pitch == none { return 0.65em }
-    let box = line-box(size)
-    let target = if "multiple" in pitch { pitch.multiple * size }
-        else { pitch.exact * 1pt }
-    if target <= box { return 0pt }
-    if "multiple" in pitch { (pitch.multiple - box / size) * 1em }
-    else { target - box / size * 1em }
-}
-
-// `par.spacing` for a design paragraph spacing: Typst measures it like the
-// leading, from the last baseline to the next line's cap height, so a
-// paragraph break adds `spacing` to a full line pitch, as HTML's
-// `margin-block` and Word's `w:after` do, only as `leading + spacing`.
-// `none` keeps Typst's `1.2em`.
-#let design-spacing(leading, spacing) = {
-    if spacing == none { 1.2em } else { leading + spacing * 1pt }
 }
 
 #let document-date(date) = {
@@ -155,6 +84,73 @@
     }
 }
 
+// The title block when the design styles one of its parts (design.md §8.7):
+// `Title`, `Subtitle`, `Author` and `Date` over each part's built-in look.
+// Word bases the last three on `Title`, so they follow its alignment. Needs
+// context.
+#let styled-title-block(meta, design, leading) = {
+    let parts = ()
+    if meta.title != none {
+        parts.push(("Title", (size: 17pt, weight: "bold"), meta.title))
+    }
+    if meta.subtitle != none { parts.push(("Subtitle", (:), meta.subtitle)) }
+    if meta.authors.len() > 0 {
+        parts.push(("Author", (:), {
+            meta.authors.map(
+                author => author.at("name", default: "")
+            ).join(", ")
+            for author in meta.authors {
+                let affiliation = author.at("affiliation", default: none)
+                if affiliation != none {
+                    parbreak()
+                    text(size: 9pt, affiliation)
+                }
+            }
+        }))
+    }
+    if meta.date != none {
+        parts.push(("Date", (:), if type(meta.date) == datetime {
+            meta.date.display("[year]-[month]-[day]")
+        } else { meta.date }))
+    }
+    if parts.len() == 0 { return }
+    let rules(name) = style-rules(design, design-style(design, name), leading)
+    let base = rules("Title").align.at(0, default: center)
+    for (index, (name, defaults, body)) in parts.enumerate() {
+        let part = rules(name)
+        let face = (: ..defaults, ..part.text)
+        let spacing = part.block
+        if index == 0 and "above" in spacing {
+            // Typst drops a block's space above at the top of a page, where
+            // Word keeps the first paragraph's. Word's line starts at the
+            // font's ascender, Typst's at its cap height.
+            let before = style-value(design-style(design, name), "space_before")
+            let rise = (
+                measure(text(..face, top-edge: "ascender")[H]).height
+                    - measure(text(..face)[H]).height
+            )
+            v(before * 1pt + rise, weak: false)
+            let _ = spacing.remove("above")
+        }
+        // The face is set around the block, so that the block's spacing is in
+        // ems of the part's own size: an unset space is then the paragraph
+        // spacing at that size, as it is for the plain title block's lines.
+        {
+            set text(..face)
+            block(width: 100%, ..spacing, {
+                set par(..part.par)
+                set align(part.align.at(0, default: base))
+                body
+            })
+        }
+    }
+    // A set `space_after` on the last part replaces the closing gap.
+    let last = design-style(design, parts.last().first())
+    if style-value(last, "space_after") == none { v(1.5em) }
+}
+
+#let title-styles = ("Title", "Subtitle", "Author", "Date")
+
 #let abstract-block(body, title: auto) = {
     if body != none {
         set heading(numbering: none, outlined: false)
@@ -169,7 +165,17 @@
 
 #let numbered-layout(meta, settings, body) = {
     show: writer-numbering.with(..settings.numbering)
-    title-block(meta)
+    if type(settings.title-block) == function {
+        // The typed tokens are built here, for the function that asked for
+        // them: a document without one never converts its design.
+        (settings.title-block)(meta, design-tokens(design: settings.design))
+    } else if settings.title-block == auto {
+        if title-styles.any(name => (
+            design-style(settings.design, name) != none
+        )) {
+            styled-title-block(meta, settings.design, settings.leading)
+        } else { title-block(meta) }
+    }
     abstract-block(meta.abstract, title: settings.abstract-title)
     if settings.toc != false and settings.toc != 0 {
         outline(depth: if settings.toc == true { 3 } else { settings.toc })
@@ -247,11 +253,12 @@
 // image and the lines below it (design.md §9.1); `line-height` is the
 // design's `text.line_height`, which sets the lines' leading at their size.
 #let writer-furniture(
-            spec, text-width, spacing: 1.2em, line-height: none
+            spec, text-width, spacing: 1.2em, line-height: none, font: none
         ) = context {
     if spec == none { return none }
     let size = if spec.size == none { text.size } else { spec.size * 1pt }
     let fill = if spec.color == none { text.fill } else { rgb(spec.color) }
+    set text(..if font == none { (:) } else { (font: font) })
     set text(size: size, fill: fill, weight: spec.weight,
         style: if spec.italic { "italic" } else { "normal" })
     set par(
@@ -349,10 +356,18 @@
     let margin = (top: side("top", "y"), right: side("right", "x"),
         bottom: side("bottom", "y"), left: side("left", "x"))
     let text-width = page.width - margin.left - margin.right
-    let furniture(chosen) = writer-furniture(
-        chosen, text-width,
-        spacing: furniture-gap(settings), line-height: settings.line-height,
-    )
+    // The lines take the font and pitch of the `Header` and `footer` styles
+    // (design.md §8.7), as Word's do; else the document's.
+    let furniture(chosen, name) = {
+        let style = design-style(design, name)
+        let pitch = style-value(style, "line_height")
+        writer-furniture(
+            chosen, text-width, spacing: furniture-gap(settings),
+            line-height: if pitch == none { settings.line-height }
+                else { pitch },
+            font: style-face(design, style).font,
+        )
+    }
     let header = design-get(design, "page.header", none)
     if header != none {
         let chosen = if first { header.first } else { header.rest }
@@ -360,7 +375,8 @@
             let offset = design-get(design, "page.header_offset", none)
             let offset = if offset == none { margin.top * 0.3 }
                 else { offset * 1pt }
-            place(top + left, dx: margin.left, dy: offset, furniture(chosen))
+            place(top + left, dx: margin.left, dy: offset,
+                furniture(chosen, "Header"))
         }
     }
     let footer = design-get(design, "page.footer", none)
@@ -371,8 +387,8 @@
             let offset = if offset == none { margin.bottom * 0.3 }
                 else { offset * 1pt }
             let content = if chosen.size == none {
-                text(size: 0.75em, furniture(chosen))
-            } else { furniture(chosen) }
+                text(size: 0.75em, furniture(chosen, "footer"))
+            } else { furniture(chosen, "footer") }
             place(bottom + left, dx: margin.left, dy: -offset, content)
         }
     }
@@ -392,7 +408,8 @@
             design-spacing(leading, settings.paragraph-spacing)
         } else { settings.spacing },
     )
-    reference-layout(meta, settings, body)
+    show: vocabulary-layout.with(settings.design, leading)
+    reference-layout(meta, (..settings, leading: leading), body)
 }
 
 #let furniture-layout(meta, settings, body) = {
@@ -454,6 +471,7 @@
             font: auto, heading-font: auto, mono-font: auto, size: auto,
             leading: auto, spacing: auto, justify: auto, margin: auto,
             text-fill: auto, link-fill: auto, background: auto, design: auto,
+            title-block: auto,
             markdown: (:), math: (:), references: (:), html: (:), pdf: (:),
             docx: (:), latex: (:), typst: (:), notebook: (:), ..extra, body
         ) = {
@@ -479,6 +497,10 @@
         )
     }
     let locale = from-config(cite-locale, config, "cite_locale", "")
+    assert(
+        title-block in (auto, none) or type(title-block) == function,
+        message: "writer-doc: title-block must be auto, none or a function"
+    )
     let design = design-value(design)
     let from-design(key, default) = design-get(design, key, default)
     let meta = (
@@ -531,7 +553,7 @@
         background: if background == auto {
             colour("colors.background", auto)
         } else { background },
-        design: design,
+        design: design, title-block: title-block,
         lang: language(from-config(lang, config, "lang", "en")),
         toc: from-config(toc, config, "toc", false), toc-title: toc-title,
         numbering: numbers, bibliography: bibliography,
@@ -637,20 +659,8 @@
 #let writer-styled(design, style, body) = {
     let spec = design-get(design, "styles", (:)).at(style, default: none)
     if spec == none { return body }
-    let text-opts = (:)
+    let text-opts = style-text(design, spec)
     let par-opts = (:)
-    if spec.font != none {
-        let family = if spec.font in ("body", "heading", "mono") {
-            design-get(design, "fonts." + spec.font + ".family", none)
-        } else { spec.font }
-        if family != none { text-opts.insert("font", family) }
-    }
-    if spec.size != none { text-opts.insert("size", spec.size * 1pt) }
-    if spec.color != none { text-opts.insert("fill", rgb(spec.color)) }
-    if spec.weight != none { text-opts.insert("weight", spec.weight) }
-    if spec.italic != none {
-        text-opts.insert("style", if spec.italic { "italic" } else { "normal" })
-    }
     if spec.align != none {
         par-opts.insert("justify", spec.align == "justify")
     }

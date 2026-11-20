@@ -91,6 +91,8 @@ fn prepare_inner<'a>(
                         // Native layout stays with the compiler, including
                         // expressions such as rgb(...). These arguments are
                         // not document metadata or a design source.
+                        // `title-block` takes a function, which is no
+                        // literal.
                         if matches!(
                             name,
                             "font"
@@ -105,6 +107,7 @@ fn prepare_inner<'a>(
                                 | "link-fill"
                                 | "background"
                                 | "design"
+                                | "title-block"
                         ) {
                             continue;
                         }
