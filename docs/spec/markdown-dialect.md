@@ -445,7 +445,7 @@ excluded: §8).
 ## 6. Inline syntax — T12 (scanner: T1B)
 | comrak | IR | notes |
 |---|---|---|
-| `Text` | `Text` | smart punctuation already applied in the literal when `parse.smart`; `@…` scanned per §7 |
+| `Text` | `Text` | smart punctuation already applied in the literal when `parse.smart`; `{{today}}` expanded per §6.1, then `@…` scanned per §7 |
 | `SoftBreak` / `LineBreak` | `SoftBreak` / `LineBreak` | `\` or two trailing spaces give hard breaks |
 | `Emph` (`*x*`, `_x_`), `Strong`, `Strikethrough` (`~~x~~`) | `Emph`, `Strong`, `Strikeout` | |
 | `Superscript` (`x^2^`), `Subscript` (`H~2~O`) | `Superscript`, `Subscript` | only with `[markdown] superscript`/`subscript` |
@@ -457,6 +457,22 @@ excluded: §8).
 | `HtmlInline(s)` | `Raw { format: "html", text }` | `<!-- … -->` inline comments are dropped |
 | `Escaped` > `Text` | the child `Text` | `\@`, `\*`, `\$`, `\#` …; see §7.2 |
 | `Underline`, `SmallCaps`, `Span` | — | no Markdown syntax (raw HTML or the typst frontend) |
+
+### 6.1 The `{{today}}` placeholder (`src/markdown/today.rs`)
+`{{today}}` in a `Text` literal becomes the build date as day, English month name and year:
+`19 November 2026`. Spaces or tabs may pad the name (`{{ today }}`); the name is case-sensitive.
+The date is `pdf_timestamp`'s (config.md `[pdf] timestamp`, then `SOURCE_DATE_EPOCH`, then the
+current time, each as a UTC date) without the document `date`, which stays the title block's
+own value. The walker computes it once per walk, on the first placeholder; an invalid timestamp
+or epoch is then `Error::Config`, and a fragment without a placeholder never reads either.
+`Code`, `HtmlInline`, code and raw blocks, math and link URLs stay literal, and so does an
+escaped brace (`\{{today}}`), because comrak's `Escaped` splits the `Text`. Text that
+`nested_inlines` parses a second time (alert titles, `title=` and `caption=` attribute values)
+has lost its escapes by then, so only a code span keeps the placeholder literal there. Front
+matter `title`, `subtitle`, `date` and authors are plain `DocMeta` strings (§2) and keep it as
+written; the abstract is parsed as blocks and expands it. Automatic heading identifiers derive
+from the expanded text. Other `{{name}}` text stays literal without a diagnostic. The typst
+frontend has no placeholder.
 
 ## 7. References and citations — T1B (syntax), T17/T70 (classification, references.md)
 
@@ -593,8 +609,8 @@ differently:
 `writer check --compat presenter` recomputes the three `--compat` rows from the source text
 (the pre-pass line list, the include positions relative to `---` lines, the front matter keys)
 and reports them as warnings. Writer-only constructs (implicit figures, `Table:` captions,
-`@refs`, raw fences, leaf directives, `^[…]`) are not reported: presenter renders them as
-images, paragraphs, text, code blocks, empty divs and text respectively.
+`@refs`, raw fences, leaf directives, `^[…]`, `{{today}}`) are not reported: presenter renders
+them as images, paragraphs, text, code blocks, empty divs, text and text respectively.
 
 > **Coordinator clarification (2026-10-27):** compatibility include
 > boundaries are file/cell edges or top-level `---` thematic breaks, with
