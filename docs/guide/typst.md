@@ -18,7 +18,7 @@ notebook input and rejects a native Typst source.
 ## Start a document
 
 ```typst
-#import "@writer/doc:0.3.0": *
+#import "@writer/doc:0.4.0": *
 
 #show: writer-doc.with(
     title: [My report],
