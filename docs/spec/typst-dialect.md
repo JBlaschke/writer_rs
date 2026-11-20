@@ -271,6 +271,7 @@ literals (`E-TYP-TEMPLATE-ARG` otherwise); `auto` means "not given".
 | `cite-locale` | str | `auto` (→ `writer-config` `"cite_locale"`) | `[references] locale` (as `vars.cite_locale`: the generic `-` → `_` rule of this section, read by `Config::merge_front_matter`, config.md §3) | locale rules (references.md §3) |
 | `paper` | str | `"a4"` | `[pdf] paper` | `set page(paper:)` |
 | `design` | `auto` \| none \| dict (design.md §3.3 shape) | `auto` (→ `sys.inputs.writer-design`) | skipped, like the typography arguments | the design `writer-doc` applies (design.md §6.2); exports pass their copied design (design.md §6.7) |
+| `title-block` | `auto` \| none \| function `(meta, theme) => content` | `auto` | skipped, like the typography arguments (a function is not a §2.5 literal) | who draws the title block (design.md §8.7): the package, nobody, or the function; a `[pdf] template` passes it, the emitter never writes it |
 | `toc-title`, `abstract-title`, `reference-section-title` | str \| content (plain text) | `auto` | `DocMeta.vars` under that name (pandoc's variables: html-output.md §1.3, §1.10, §1.12; docx-output.md §4.4, §4.13, §4.14) | titles of the outline, the abstract and the bibliography (§4.2) |
 | `theme`, `template`, `reference-doc`, `latex-template` | str | — | config.md §3 | ignored |
 | `markdown`, `math`, `references`, `html`, `pdf`, `docx`, `latex`, `typst`, `notebook` | dict | (:) | the same tables | uses `pdf.paper` |
@@ -289,7 +290,9 @@ path(\"refs.bib\")".
 `typst.toml` (`[package] name = "doc"`, `version = "0.1.0"`, `entrypoint = "lib.typ"`,
 `compiler = "0.15.1"`, `license = "MIT"`, `description`); `lib.typ` (entrypoint: `writer-doc`,
 `listing`, re-exports `callout`, `code-cell`, `include-notebook`); `callout.typ`; `numbering.typ`;
-`cells.typ`; `oracle.typ`; `template.typ` (the starter that `eject typst-template` writes, §4.6).
+`cells.typ`; `oracle.typ`; `template.typ` (the starter that `eject typst-template` writes, §4.6);
+from `0.4.0` `design.typ` (the design input, its conversion rules, the vocabulary styles and the
+tokens of design.md §8.7; `lib.typ` imports and re-exports all of it with `#import "design.typ": *`).
 The package uses only typst built-ins (no `@preview` imports); LaTeX math needs the separate
 `#import "@preview/mitex:0.2.7": mi, mitex`. Versioning: `WRITER_DOC_VERSION` changes with any change
 of the argument vocabulary or output (minor before 1.0); emitted files import exactly it; `check`
@@ -343,6 +346,25 @@ citation-locale `title:` of the bibliography the package places.
 > measuring the body font's cap-height box in a `context` block (design.md §6.2), so the PDF's
 > line pitch and paragraph gaps match HTML's and Word's; `writer-div` and `writer-furniture`
 > apply the same rule at their own sizes. `WRITER_DOC_VERSION` becomes `0.3.0`.
+
+> **Contract change (2026-11-19, package `0.4.0`; T93, T94):** `writer-doc` applies the design's
+> styles named after writer's own paragraph kinds to the PDF's elements, as show-set rules that a
+> template's later rules override key by key (design.md §8.7): `Heading N`, `Heading N Unlisted`,
+> `TOC Heading`, `toc N`, `Caption`, `Table Caption`, `Image Caption`, `Compact` (table cells),
+> `Title`/`Subtitle`/`Author`/`Date` (the title block's parts) and `Header`/`footer` (the
+> furniture lines' font and pitch). New: `writer-doc(title-block: auto)` (`auto`, `none`, or a
+> function `(meta, theme) => content`; any other value fails the assertion "writer-doc:
+> title-block must be auto, none or a function"); `design-tokens(design: auto, ..rest)` and
+> `style-tokens(tokens, name)` (the design as Typst values); `writer-furniture(.., font: none)`;
+> `design-leading(pitch, size, box: auto)`; the helpers `style-key`, `design-style`,
+> `style-value`, `style-over`, `style-face`, `style-text`, `style-leading`, `style-rules`,
+> `vocabulary`, `cell-inset`, `apply-rules`, `vocabulary-layout`, `typed-style`, `contents-title`,
+> `styled-title-block` and `title-styles`. The design helpers move from `lib.typ` to `design.typ`
+> (§4.1); every name `lib.typ` exported before is still exported. Without a declared design, and
+> with one that declares none of those names, the output is byte-identical to `0.3.0`'s.
+> `WRITER_DOC_VERSION` becomes `0.4.0`; a document or template that imports `@writer/doc:0.3.0`
+> gets `W-TYP-PACKAGE-VERSION` (native input) or a compile error that names the embedded version
+> (a `[pdf] template`), as at every bump.
 
 ### 4.3 Callouts, numbering, figures
 - `callout(kind: "note", title: auto, body)`: `title: auto` → the dictionary word for the kind
@@ -406,6 +428,30 @@ body) }` with comments naming every argument.
 > **Contract change (coordinator, 2026-11-01):** a template that delegates inherits the design
 > defaults; one that builds its own layout reads `sys.inputs.writer-design` itself (design.md §6.3).
 > Template code and explicit arguments always win over the design.
+
+> **Contract change (2026-11-19, package `0.4.0`; T94):** the delegating form is `show:
+> base.writer-doc.with(..args)` **first**, the template's own `set` and `show` rules after it,
+> then `body`. In that order the template's rules are the inner ones, so they override, key by
+> key, what `writer-doc` and the design set (design.md §6.3, §8.7); the template is then a list
+> of overrides and of what the design has no key for. The starter becomes:
+> ```typst
+> #import "@writer/doc:0.4.0" as base
+>
+> #let writer-doc(..args, body) = {
+>     let theme = base.design-tokens(..args)
+>     show: base.writer-doc.with(..args)
+>
+>     // Rules written here override the package and the design key by key.
+>     show heading: set text(fill: rgb("#1a3a8a"))
+>     body
+> }
+> ```
+> with comments that name every argument (`title-block` among them), `theme` (`design-tokens`,
+> design.md §8.7) and the override order. The earlier form (`show`/`set` rules, then
+> `base.writer-doc(..args, body)`) still compiles; its rules lose to `writer-doc`'s own and, from
+> this version on, to the design's vocabulary styles for the keys those set. A template passes
+> `title-block:` after `..args` (`base.writer-doc.with(..args, title-block: cover)`): a later
+> named argument replaces an earlier one of the same name.
 
 ## 5. IR → typst emitter (T30)
 
@@ -966,6 +1012,9 @@ directory → exit 2, nothing written. `eject typst-template FILE` writes `templ
 > <out>/<stem>_assets/fonts --package-path <eject typst-package dir> <out>/<stem>.typ` (plus
 > `--ignore-system-fonts` where `[pdf] system_fonts = false`); `dump --typst` and exports of
 > undeclared designs are unchanged. The package version is `0.3.0`.
+>
+> **2026-11-19:** the package version is `0.4.0` (§4.2): exports import `@writer/doc:0.4.0` and
+> `eject typst-package DIR` writes `DIR/writer/doc/0.4.0/`, now with `design.typ`.
 
 ## 11. Verified API hints
 

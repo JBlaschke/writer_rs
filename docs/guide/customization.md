@@ -69,8 +69,11 @@ headings, the title block, the contents list, captions and footer lines. The
 keys you set replace the built-in values and everything else stays, so a
 restyled `TOC Heading` keeps its outline level and stays out of the contents
 list, and `toc 2` keeps its indent. Header lines use a style named `Header`,
-which you can declare the same way. HTML and PDF apply named styles to divs
-only; their heading look comes from the theme and the Typst template.
+which you can declare the same way. The PDF applies the same styles to its
+headings, title block, contents list, captions, table cells and furniture
+lines, so one table styles both outputs; see [named paragraph
+styles](configuration.md#named-paragraph-styles) for the list. HTML applies
+named styles to divs only; its heading look comes from the theme's CSS.
 `writer check` does not report any of these styles as unused.
 
 Furniture slots can contain an image, lines, a right column and a rule. Text
@@ -227,8 +230,74 @@ The command prints the configuration to select the file:
 template = "report-template.typ"
 ```
 
-Edit the exported `writer-doc` function while preserving its expected package
-interface. This template applies to PDF generated from Markdown or notebooks.
+This template applies to PDF generated from Markdown or notebooks. The look
+comes from `[design]`; the template holds what the design has no key for, and
+overrides for the PDF alone. The exported file is the smallest such template:
+
+```typst
+#import "@writer/doc:0.4.0" as base
+
+#let writer-doc(..args, body) = {
+    let theme = base.design-tokens(..args)
+    show: base.writer-doc.with(..args)
+
+    // Rules written here override the package and the design key by key.
+    show heading: set text(fill: rgb("#1a3a8a"))
+    body
+}
+```
+
+The order matters. A `set` or `show` rule written after `show:
+base.writer-doc.with(..args)` wins over the design for the properties it
+sets and leaves the others alone: the rule above changes the heading colour
+and keeps the size, weight and spacing of the theme's `Heading 1`. A rule
+written before that line loses to the design.
+
+`theme` is the design as Typst values, so a rule can name a colour or a
+margin instead of repeating it: `theme.colors.accent`, `theme.fonts.heading`,
+`theme.text.size`, `theme.page.margin.top`. An unset key is `none`.
+`base.style-tokens(theme, "Title")` returns one named style; its `text` field
+holds the arguments that give `text(..)` the style's font, size, weight and
+colour.
+
+`title-block` replaces the built-in title block: `none` draws nothing, and a
+function receives the document's metadata and the theme. This template draws
+a cover page from the theme's `Title` and `Subtitle` styles, gives tables a
+header row in the accent colour and sets second-level headings in italics in
+the PDF only:
+
+```typst
+#import "@writer/doc:0.4.0" as base
+
+#let cover(meta, theme) = {
+    let face(name) = base.style-tokens(theme, name).text
+    v(60mm)
+    if meta.title != none { text(..face("Title"), meta.title) }
+    if meta.subtitle != none {
+        v(6mm)
+        text(..face("Subtitle"), meta.subtitle)
+    }
+    pagebreak(weak: true)
+}
+
+#let writer-doc(..args, body) = {
+    let theme = base.design-tokens(..args)
+    show: base.writer-doc.with(..args, title-block: cover)
+
+    set table(fill: (x, y) => if y == 0 { theme.colors.accent })
+    show table.cell.where(y: 0): set text(fill: white, weight: "bold")
+    show heading.where(level: 2): set text(style: "italic")
+    body
+}
+```
+
+If your theme was tuned in Word and an older template carried the PDF's look,
+three things follow the theme once it declares the styles: the space around
+headings and contents entries, the text and padding of table cells (`Compact`)
+and the line height of header and footer lines (`Header`, `footer`). To keep a
+value for the PDF alone, write the rule after the `writer-doc` line, for
+example `show heading.where(level: 1): set block(above: 2em, below: 1em)`.
+
 A native Typst document applies its own show rule in source and ignores this
 setting with a warning.
 

@@ -18,7 +18,7 @@ notebook input and rejects a native Typst source.
 ## Start a document
 
 ```typst
-#import "@writer/doc:0.3.0": *
+#import "@writer/doc:0.4.0": *
 
 #show: writer-doc.with(
     title: [My report],
@@ -64,8 +64,36 @@ The [subset contract](../spec/typst-dialect.md) lists exact accepted calls.
 ## Shared design in Typst
 
 The bundled `writer-doc` uses the same `[design]` as HTML and Word. It receives
-resolved values in `sys.inputs` when Writer compiles a PDF. A custom template
-can inspect them without re-parsing lengths or colors:
+resolved values in `sys.inputs` when Writer compiles a PDF. A template or a
+native document reads them as Typst values through the package:
+
+```typst
+#import "@writer/doc:0.4.0": *
+
+#let theme = design-tokens()
+#let title = style-tokens(theme, "Title")
+```
+
+`theme.colors.accent` is a colour, `theme.text.size` and
+`theme.page.margin.top` are lengths, `theme.fonts.heading` is a family and
+`theme.styles` holds the named styles; an unset key is `none`.
+`style-tokens(theme, name)` returns one named style, with every key unset
+when the design does not declare it, and its `text` field holds the arguments
+for `text(..)`. A template that passes its arguments on writes
+`base.design-tokens(..args)`, which also sees an exported source's `design:`
+argument.
+
+A template that delegates to `writer-doc` receives the design defaults and
+the named styles of [the shared vocabulary](configuration.md#named-paragraph-styles).
+Explicit `writer-doc` arguments take precedence, and so do set and show rules
+written after `show: base.writer-doc.with(..args)`; see [the PDF
+template](customization.md#generated-typst-pdf-template). `writer-doc` takes
+`title-block: none` to leave the title block out and a function `(meta, theme)
+=> content` to draw another one.
+
+A template that does not import the package can read the raw values, where
+lengths are points, colors are lowercase hex strings and unset keys are
+`none`:
 
 ```typst
 #let design = if "writer-design" in sys.inputs {
@@ -73,14 +101,11 @@ can inspect them without re-parsing lengths or colors:
 } else { (:) }
 ```
 
-Lengths in that JSON are points; colors are lowercase hex strings. Unset keys
-are `none`. Furniture image paths name registered virtual assets. A template
-that delegates to `writer-doc` receives the design defaults, while explicit
-`writer-doc` arguments and subsequent set/show rules take precedence. A
-fully independent generated-PDF template keeps its own appearance, and
-`check` reports `design-shadowed` when it does not import the bundled document
-package. Native Typst keeps its original styling authority; design checks on
-native inputs are limited to missing resources.
+Furniture image paths name registered virtual assets. A fully independent
+generated-PDF template keeps its own appearance, and `check` reports
+`design-shadowed` when it does not import the bundled document package.
+Native Typst keeps its original styling authority; design checks on native
+inputs are limited to missing resources.
 
 Generated classed divs use the portable `writer-div` helper:
 
