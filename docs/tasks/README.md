@@ -87,9 +87,9 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T91 | Page background image (`[design.page.background]`) in HTML, Typst and DOCX | M8 | M | T86, T87, T88 | done (PR #66) |
 | T92 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | done (PR #65) |
 | T90 | Furniture image `gap` | M8 | S | T89 | done (PR #64) |
-| T93 | `@writer/doc` 0.4.0: the package version wherever it is named; no behaviour change | M8 | S | T90, T91, T92 | in progress (`claude/typst-vocabulary-styles`) |
-| T94 | Vocabulary styles in the PDF (`design.typ`), `title-block`, design tokens, starter template in override order | M8 | M | T92, T93 | in progress (`claude/typst-vocabulary-styles`) |
-| T95 | Guide: named styles in the PDF, the PDF template as a list of overrides | M8 | S | T94 | in progress (`claude/typst-vocabulary-styles`) |
+| T93 | `@writer/doc` 0.4.0: the package version wherever it is named; no behaviour change | M8 | S | T90, T91, T92 | ready for review (PR #88) |
+| T94 | Vocabulary styles in the PDF (`design.typ`), `title-block`, design tokens, starter template in override order | M8 | M | T92, T93 | ready for review (PR #88) |
+| T95 | Guide: named styles in the PDF, the PDF template as a list of overrides | M8 | S | T94 | ready for review (PR #88) |
 
 ## Order of execution (waves, computed from the dependency column)
 
