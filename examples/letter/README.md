@@ -21,6 +21,8 @@ outputs. They appear as `letter.html`, `letter.pdf` and `letter.docx` under
 Open the outputs and compare:
 
 - The recipient, inside address, date and salutation use named div styles.
+  The date is written out; replace it with `{{today}}` to print the build
+  date.
 - The first printed page has the logo and institute name; page two has a
   compact continuation header. An explicit page break makes both visible.
 - Both printed pages have the legal/contact footer and page counters. The

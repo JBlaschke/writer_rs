@@ -24,6 +24,7 @@ use crate::markdown::attrs::{
 use crate::markdown::code::check_code_attrs;
 use crate::markdown::directives::{DirectiveInfo, parse_directive_info};
 use crate::markdown::recover::{UNPARSED_ATTR_BLOCK, fence_attrs};
+use crate::markdown::today;
 
 /// Walks a parsed and recovered fragment, retaining the original source lines.
 pub(crate) fn walk<'a>(
@@ -51,6 +52,7 @@ pub(crate) fn walk_with_includes<'a>(
         bibliography_seen: false,
         html_scan: HtmlScan::default(),
         includes,
+        today: None,
     };
     walker.collect_footnotes(root);
     walker.children(root, top_level)
@@ -68,6 +70,8 @@ struct Walker<'a, 't, 'w, 'f> {
     bibliography_seen: bool,
     html_scan: HtmlScan,
     includes: Option<&'w mut super::include::State>,
+    /// The `{{today}}` date, computed on first use.
+    today: Option<String>,
 }
 
 impl<'a> Walker<'a, '_, '_, '_> {
@@ -1149,6 +1153,13 @@ impl<'a> Walker<'a, '_, '_, '_> {
     fn text_inlines(
         &mut self, text: &str, node: &'a AstNode<'a>, span: &SourceSpan,
     ) -> Result<Inlines> {
+        let expanded;
+        let text = if today::contains(text) {
+            expanded = today::expand(text, self.today()?);
+            expanded.as_str()
+        } else {
+            text
+        };
         let excluded = node.ancestors().any(|parent| {
             matches!(
                 parent.data().value,
@@ -1165,6 +1176,13 @@ impl<'a> Walker<'a, '_, '_, '_> {
             )
         });
         super::refs::scan(text, start_allowed, span, self.config, self.ctx)
+    }
+
+    fn today(&mut self) -> Result<&str> {
+        if self.today.is_none() {
+            self.today = Some(today::build_date(self.config)?);
+        }
+        Ok(self.today.as_deref().expect("date computed above"))
     }
 
     fn dimensions(&mut self, attrs: &mut Attrs, span: &SourceSpan) {
@@ -2999,6 +3017,52 @@ mod tests {
             )),
             "Undefined[^missing]."
         );
+    }
+
+    #[test]
+    fn today_placeholders_print_the_build_date() {
+        let mut config = Config::default();
+        config.pdf.timestamp = "2026-11-19T09:00:00Z".into();
+        let text = "# Report {{today}}\n\n\
+            Dated {{ today }}, not \\{{today}} or `{{today}}`.\n\n\
+            :::date\n{{today}}\n:::\n\n\
+            [Sent {{today}}](https://example.org) ![On {{today}}](x.png)\n";
+        let result = parse(&source(), text, &config).unwrap();
+        assert!(!codes(&result).contains(&super::UNPARSED_ATTR_BLOCK));
+        let Block::Heading { inlines, .. } = &result.document.blocks[0] else {
+            panic!("expected a heading");
+        };
+        assert_eq!(plain_text(inlines), "Report 19 November 2026");
+        let inlines = paragraph(&result.document.blocks[1]);
+        assert_eq!(
+            plain_text(inlines),
+            "Dated 19 November 2026, not {{today}} or {{today}}."
+        );
+        assert!(inlines.contains(&Inline::Code {
+            text: "{{today}}".into(),
+            attrs: Default::default(),
+        }));
+        let Block::Div { blocks, .. } = &result.document.blocks[2] else {
+            panic!("expected the date div");
+        };
+        assert_eq!(plain_text(paragraph(&blocks[0])), "19 November 2026");
+        let mut texts = Vec::new();
+        walk_inlines(&result.document, &mut |inline| {
+            if let Inline::Text { text } = inline {
+                texts.push(text.clone());
+            }
+        });
+        assert!(texts.contains(&"Sent 19 November 2026".to_string()));
+        assert!(texts.contains(&"On 19 November 2026".to_string()));
+
+        config.pdf.timestamp = "yesterday".into();
+        assert!(
+            parse(&source(), "No placeholder {{date}}.\n", &config).is_ok()
+        );
+        let Err(error) = parse(&source(), "{{today}}\n", &config) else {
+            panic!("an invalid timestamp printed a date");
+        };
+        assert!(error.to_string().contains("invalid [pdf] timestamp"));
     }
 
     #[test]
