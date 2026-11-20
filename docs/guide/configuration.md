@@ -524,8 +524,39 @@ style instead of adding one: the keys you set replace the built-in values and
 every other property, such as an outline level or a contents-list indent,
 keeps its built-in value. Word applies the result wherever writer uses the
 style, so `writer check` does not report such a name as unused. The same holds
-for `Header`, the style of the header lines. HTML and PDF apply named styles
-to divs only.
+for `Header`, the style of the header lines. The PDF applies the same names to
+the elements listed below. HTML applies named styles to divs only.
+
+| Element in the PDF | Style names |
+|---|---|
+| Headings of a level | `Heading 1` to `Heading 6` |
+| Headings left out of the contents list | `Heading 1 Unlisted` to `Heading 6 Unlisted`, laid over `Heading N` |
+| The title of the contents list | `TOC Heading`, laid over `Heading 1` |
+| Contents entries of a level | `toc 1` to `toc 6` |
+| Figure and table captions | `Caption` |
+| Captions of tables and of images | `Table Caption` and `Image Caption`, laid over `Caption` |
+| Table cells | `Compact` |
+| The lines of the title block | `Title`, `Subtitle`, `Author`, `Date` |
+| Header and footer lines (font and line height) | `Header`, `footer` |
+
+In the PDF, `space_before` and `space_after` of these styles are added to a
+full line, as in Word: a heading with `space_before = "20pt"` starts 20 pt
+plus one line below the text above it. Where two styled blocks meet, the
+larger of the two spaces applies; Word adds them. The first line of the title
+block keeps its `space_before` at the top of the page. `Subtitle`, `Author`
+and `Date` follow `Title`'s `align`; set their other keys on each style.
+A caption uses the style's text keys, `align` and `line_height` only, and a
+table cell takes `space_before` and `space_after` as padding above and below
+its text.
+
+A font name that ends in a weight, such as `Source Sans 3 SemiBold`, selects
+that face in both outputs: Word by the name, the PDF as the family `Source
+Sans 3` at weight 600.
+
+These names restyle Word only: `Body Text`, `First Paragraph`, `Block Text`,
+`Footnote Text`, `Abstract Title`, `Abstract`, `Bibliography`, `Definition
+Term`, `Definition`, `Source Code`, `Figure` and `Captioned Figure`. A design
+that declares none of the names in the table leaves the PDF as it was.
 
 In Word, `space_before` and `space_after` of a div's style, of `Header` and of
 `footer` surround the whole block: Word drops them between consecutive

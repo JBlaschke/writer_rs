@@ -91,6 +91,15 @@ An ignored `[pdf] template` warning means that setting applies to generated
 Markdown/notebook PDF instead. Font changes in retained preview/watch sessions
 require a restart, including when an earlier font load failed.
 
+A rule in a PDF template that no longer changes a heading, a caption or the
+contents list is written before the `writer-doc` call, where the design's
+named styles win. Move it after `show: base.writer-doc.with(..args)`; see
+[the PDF template](customization.md#generated-typst-pdf-template).
+
+A template that stops compiling after an upgrade with "package found, but
+version ... does not exist (latest is ...)" names an older `@writer/doc` in
+its `#import` line. Change the version to the latest one the message gives.
+
 ## Packages and preview recovery
 
 Embedded document and math packages need no download. An unavailable external
