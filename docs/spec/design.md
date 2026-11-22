@@ -5,7 +5,9 @@
 input, `writer-doc` defaults, fonts), T83 (§7 DOCX generated styles and section), T84 (§6.4 the
 emitter's `writer-div`), T85 (§8 named styles in every backend), T86 (§9.3 HTML furniture), T87
 (§9.5 DOCX furniture), T88 (§9.4 Typst furniture), T89 (guide and the letter example), T93–T95
-(§8.7 vocabulary styles in the PDF, design tokens for templates, package `0.4.0`). Consumers:
+(§8.7 vocabulary styles in the PDF, design tokens for templates, package `0.4.0`), T96–T101 (§0.3
+one spacing model for Word, PDF and HTML: §3.3 and §6.1 the `lines` key, §6.2 the PDF's line
+boxes, §8.8 vocabulary styles in HTML, §8.5 a Word div as one block, package `0.5.0`). Consumers:
 `check` (§10, extends T71's passes), live reload (§12), T74's guide pages (T89 edits them).
 
 The design layer is one table, `[design]`, that describes a document's typography, colours, page
@@ -42,6 +44,52 @@ When no layer declares `[design]`, every backend produces byte-identical output 
   (§3) into `Design`; backends convert from points and never re-parse strings.
 - **Deterministic.** The resolved JSON (§3.3) has a fixed key order; generated CSS, Typst input,
   `styles.xml` and header/footer parts are pure functions of `Design` (plus the asset registry).
+
+### 0.3 One spacing model (2026-11-21; T96–T101)
+A declared design must give the same vertical layout in Word, the PDF and HTML. Word cannot be
+taught another layout, so **Word is the reference** and the other two lay text out as Word does.
+The model, measured in Word for Mac 16 (`docs/research/R12-spacing-model.md` §2):
+
+- **Line box.** A line is a box as tall as its pitch (`line_height`: a multiple of the font size,
+  or an exact length). Consecutive lines of a paragraph stack box on box, with nothing between
+  them. An exact pitch `h` puts `0.8 h` above the baseline and `0.2 h` below it, whatever the
+  font. A multiple `m` on a font whose single line is `s` em, `A` em of it above the baseline
+  (§7.4), puts `min(1, m / s) × A × size` above the baseline and the rest of `m × size` below it.
+- **Blocks and their spaces.** Every block has a space before and a space after its line boxes. A
+  body paragraph has `(0, P)` with `P = text.paragraph_spacing`; a named style's `space_before`
+  and `space_after` replace the two, key by key (§8). Between two blocks the distance from the
+  upper block's last line box to the lower block's first is the **larger** of the upper block's
+  space after and the lower block's space before. It is never their sum.
+- **A div is one block.** A named style's spaces are the outer spaces of its div. The paragraphs
+  inside it keep the body's `(0, P)` between themselves (§8.3–§8.5).
+- **Page tops.** The first block of the document keeps its space before. A block that starts a
+  later page loses it.
+
+Each backend's section says how it reaches the model: §6.2 (PDF: `text` edges and block spacing),
+§5.3, §8.3 and §8.8 (HTML: `line-height` and margins, which CSS collapses to the larger one) and
+§7, §8.5 (Word itself). The model applies to a **declared** design only (§0.2): without one, the
+PDF keeps Typst's own leading and paragraph spacing and HTML keeps the theme's CSS.
+
+**Agreement, as measured** (R12 §6): Word and the PDF agree within 0.3 pt on every distance
+between two lines of declared styles in the probe documents (0.5 pt where Word could only be read
+on a coarser grid), which is the reading error. HTML keeps CSS's half-leading, which centres the
+font's content area in the line box where Word hangs it from the ascent: the same pitch and the
+same spaces, but every line of a style sits a constant amount lower or higher in its box than
+Word's (lower by `(m − s) / 2 × size` for a multiple of at least the single line, in a font
+without a line gap). The distance between two blocks therefore differs from Word's by the
+difference of the two styles' constants. Measured: 0.4 to 0.8 pt between body text and a declared
+heading or between the parts of a title block, 0.5 pt for body text on an exact 12.1 pt pitch,
+2 pt for 16 pt text on an exact 20 pt pitch, about 10 pt for 24 pt text at a multiple of 2.0. It
+does not add up down the page. The pitch and the spaces cannot remove it; shifting a style's
+lines by its constant can (R12 §6), which the generated CSS does not do.
+
+**Scope.** The model covers body paragraphs, divs of named styles and the vocabulary styles of
+§8.7 (headings, the title block, the contents list, captions, table cells). Lists, block quotes,
+code blocks, the space around tables and figures, footnotes, callouts, equations and headings no
+style declares keep each backend's own spacing for now; R12 §8 lists what a follow-up needs. In
+the PDF those spaces are Typst's own or `P`, between line boxes like every other space, so they
+are not where package `0.4.0` had them (R12 §7), and footnotes and display equations get rules
+of their own so that their lines keep a pitch (§6.2).
 
 ## 1. Where `[design]` lives and how layers combine
 
@@ -357,6 +405,25 @@ with `null` for an unset width or gap.
 (typst-dialect.md §6.3) and omits nothing else. `declared` is not
 serialized: an undeclared design is `null` wherever the JSON appears.
 
+**The `lines` key (T96).** The Typst input (§6.1) and the exported `writer-design.json` (§6.7)
+hold this JSON plus one more top-level key, after `styles`: the line metrics of the design's font
+families as Word reads them (§7.4), which the package needs for §0.3's line box.
+```jsonc
+"lines": { "dejavu sans mono": { "single": 1.1640625, "ascent": 0.92822265625 },
+           "libertinus serif": { "single": 1.14, "ascent": 0.894 } }
+```
+`typst::world::design_input(config, design, paths)` builds the value: `Design::to_json(paths)`,
+then `lines` from `WordLines::load_declared(design, &config.pdf.font_paths,
+config.pdf.system_fonts).to_json()`. The families are the ones §7.4 reads (`fonts.body`,
+`fonts.heading`, `fonts.mono` and every style's `font` that names a family), from the same
+sources in the same order. The key of an entry is the family in lower case; entries are sorted by
+that key; `single` and `ascent` are in ems and are not rounded. A family found in no source has
+no entry, and the package then measures the face Typst selects (§6.2). A family whose name ends
+in a weight word (`Source Sans 3 SemiBold`, §8.7) and that no source holds under that name is
+looked up without the word and recorded under both names. `lines` is always present for a
+declared design (`{}` when no family is read) and is not part of `Design::to_json`: `dump
+--design` and the HTML context (§5.1) do not carry it.
+
 ## 4. CLI, errors and ejection
 
 ### 4.1 `writer dump --design <INPUT>` (cli.md `dump`, T80)
@@ -484,7 +551,9 @@ In this order, each part only when its keys are set:
    `jis-b5` → `JIS-B5`, `us-letter` → `letter`, `us-legal` → `legal`, `us-tabloid` → `ledger`; any
    other paper name is written as its width and height in mm from Typst's paper table (Verified API hints
    `typst::layout::Paper`), e.g. `size: 210mm 297mm`.
-3. Named styles (§8.3), one rule per style in `BTreeMap` order.
+3. Named styles (§8.3), the rules of one style after the other in `BTreeMap` order, then the
+   vocabulary rules (§8.8; T99). The rule for an empty table cell (§8.8) is always written, so
+   the block is never empty for a declared design.
 4. Furniture (§9.3): screen rules, then the `@page` margin-box or `fixed` rules.
 5. Page background (§9.6): the `body::before` screen band, then its `@media print` box.
 
@@ -494,6 +563,12 @@ every token (they come after `tokens_css`) and, with higher specificity or a lat
 their own, every layout rule. A theme that extends `default` and declares `[design]` therefore gets
 the default theme's components (callouts, code, tables) in the design's fonts and colours for free,
 and may still restyle anything in `styles/`.
+
+The vocabulary rules (§8.8) follow the same order: they come after every entry, so a declared
+style beats an entry's rule of the same or a lower specificity for the keys it sets (`Heading 2`
+beats the theme's `h2 { … }`), and an entry's rule of a higher specificity (`.report h2`,
+`[data-writer-document] h2`) beats the design. A theme that declares a vocabulary style should
+therefore not restate that element's size, colour, weight or margins in its CSS.
 
 ### 5.5 Context and emitter
 `theme` in the template context (html-output.md §4.1) gains `"design": <§3.3 JSON> | null` (after
@@ -507,7 +582,8 @@ such as the serve pages shell).
 
 ### 6.1 `sys.inputs.writer-design`
 `world_inputs(config, design)` (typst-dialect.md §6.2 gains the parameter) inserts `writer-design`
-= §3.3 JSON (`PathMode::Virtual`, compact `serde_json::to_string`) **only when a design is
+= §3.3 JSON with its `lines` key (`design_input`, `PathMode::Virtual`, compact
+`serde_json::to_string`) **only when a design is
 declared**; the key is absent otherwise, so `"writer-design" in sys.inputs` is the test and an
 undeclared design leaves the inputs map, and therefore the Libraries and the comemo cache,
 unchanged. `world_inputs` stays the only producer. Furniture images are registered in the
@@ -526,8 +602,8 @@ unchanged. `world_inputs` stays the only producer. Furniture images are register
 | `fonts.heading.family` | `show heading: set text(font: F)` |
 | `fonts.mono.family` | `show raw: set text(font: F)` (replaces `"DejaVu Sans Mono"`) |
 | `text.size` | `set text(size: S * 1pt)` |
-| `text.line_height` | `set par(leading: L)` with `L = pitch − box`, the pitch `n × size` for a multiple `n` or the exact length, floored at 0pt. Typst's leading is the gap between one line's bottom edge and the next line's top edge, and with the default edges (`top-edge: "cap-height"`, `bottom-edge: "baseline"`) a line's box is the font's cap height (OS/2 `sCapHeight`, else its ascender, as `FontMetrics` resolves it), so the baseline pitch then holds exactly, as in HTML and Word. The package measures the box in a `context` block (`line-box(size) = measure(text(size: size)[H]).height`) rather than assuming a constant, so the fonts and edges actually in use decide, a fallback font's box included. `L` is in ems of the size, `(n − box/size) × 1em` or `exact − box/size × 1em`, so a multiple follows a paragraph's own size the way HTML's unitless `line-height` and Word's `auto` lines do. Package `0.3.0`; before it `L = (n − 0.8) × size`, calibrated once on the §11 letter (`0.55em`), drew 13.3 pt lines where HTML and Word drew 14.85 pt |
-| `text.paragraph_spacing` | `set par(spacing: L + P * 1pt)`: Typst measures `spacing` like the leading, from the last baseline to the next line's cap height, so a paragraph break then adds `P` to a full pitch as HTML's `margin-block` and Word's `w:after` do. `P` alone (before `0.3.0`) lost a leading per break: 17.5 pt instead of 25.05 pt in the §11 letter |
+| `text.line_height` | §0.3's line box: `set text(top-edge: a, bottom-edge: −d)` and `set par(leading: 0pt)`, see "Lines and blocks" below (package `0.5.0`). Packages `0.3.0` and `0.4.0` set `par(leading: pitch − cap height)` instead, which gave the same pitch but hung every block from its capitals, so the spaces around a block were measured from other edges than Word's and HTML's |
+| `text.paragraph_spacing` | `set par(spacing: P * 1pt)` and `set block(above: 0pt, below: P * 1pt)`, with every paragraph's spacing carried by a block ("Lines and blocks" below; package `0.5.0`). Packages `0.3.0` and `0.4.0` set `par(spacing: L + P)` |
 | `text.justify` | `set par(justify: J)` |
 | `colors.text` | `set text(fill: rgb(C))` |
 | `colors.link` | `show link: set text(fill: rgb(C))` |
@@ -551,6 +627,66 @@ and paragraph spacing from the measured line box (the `text.line_height` and
 `text.paragraph_spacing` rows above); `writer-div` and `writer-furniture` apply the rule at their
 own sizes (§8.4, §9.4). Package version `0.4.0` (2026-11-19) adds `design-tokens(..args)`, the
 applied design as Typst values for a template's own rules, and `style-tokens(theme, name)` (§8.7).
+Package version `0.5.0` (2026-11-21) replaces the leading rule by §0.3's model:
+
+**Lines and blocks (package `0.5.0`, T98; `design.typ`, `paragraph-layout` in `lib.typ`).** With
+an applied design (`design:` is not `none` and the dictionary has a key), `writer-doc` lays the
+document out in §0.3's model. Without one it sets `par(leading:)` and `par(spacing:)` to the
+explicit arguments or Typst's `0.65em` and `1.2em` and nothing else, so a PDF without a design
+is byte-identical to `0.4.0`'s.
+
+- *Line box.* `set text(top-edge: a, bottom-edge: −d)` and `set par(leading: 0pt)`. `line-edges(
+  design, pitch, face)` computes the edges for a face (`face` holds `text` arguments, `(:)` for
+  the text in effect): an exact pitch `h` gives the absolute lengths `0.8 h` and `−0.2 h`; a
+  multiple `m` gives ems, `ascent × 1em` and `(ascent − m) × 1em` with `ascent = min(1, m / s) ×
+  A`, so the box follows the size of the text it is applied to. `s` and `A` are the face's
+  `single` and `ascent` from the design's `lines` table (§3.3) under the family in lower case;
+  for a family the table lacks, `font-lines` measures the face Typst selects: `A` is its ascender
+  and `s` its ascender plus descender.
+- *Blocks.* `set par(spacing: P)`, `set block(above: 0pt, below: P)`, and `show par: par-end`:
+  every paragraph is followed by `flow-mark(P)`, a block without height whose space below is the
+  paragraph's spacing (none when the spacing is `0pt`). Typst gives a paragraph the same weak
+  spacing above and below and lets a neighbouring block's spacing replace it outright; as a
+  block's space, the paragraph spacing meets the next block's space above on equal terms and
+  Typst keeps the larger of the two, which is §0.3's rule. A named style's spaces are plain
+  `block(above:, below:)` values between line boxes (§8.4, §8.7).
+- *First block.* Typst drops a block's space above at the top of a page. `paragraph-layout`
+  passes `opening: flow-mark(0pt)` on, and `numbered-layout` places it once, before the first
+  thing the package draws (the title block, the abstract, the contents list), else inside the
+  body through `open-flow(mark, body)`, which puts the mark in front of the body's first element
+  but inside the set and show rules the body starts with (a page rule in front of the mark would
+  otherwise start a second page). The first block then keeps its space before on page 1 and
+  loses it at the top of a later page, as in Word. A body that opens with `page(..)` or
+  `pagebreak()` and a `title-block` function (it lays out its own page, §8.7) get no mark.
+- *Lists and cells.* Inside a tight list `par.spacing` is `0pt` (an item's nested list or block
+  sits right under its text); a loose list restores `P`. An empty table cell holds one line box
+  (`empty-cell`), as every cell holds a paragraph in Word.
+- *Footnotes and display equations.* Typst reads `par.leading` there as well (R12 §3). `show
+  footnote.entry: set par(leading: 0pt)` replaces the entry's own `0.5em`, so a note's lines are
+  line boxes at the note's size (Typst's `0.85em`). `set footnote.entry(gap: G)` keeps two notes
+  no closer than a plain Typst document has them: `G = max(0pt, 0.5em − 0.85 × (pitch − cap
+  height))` at the body size, and `max(0pt, 0.5em − (h − 0.85 × cap height))` for an exact pitch
+  `h`; it is `0pt` at a line height of 1.35. `show math.equation.where(block: true): set
+  par(leading: pitch − cap height)` puts Typst's leading for the pitch between the rows of a
+  display equation, which are as far apart as under `0.4.0`. An inline equation keeps the
+  leading of zero: a line grows by what its math needs beyond the line box. `spacing-model`
+  returns the two values as `note-gap` and `leading`.
+- *Headings in `heading-font`* take that font's line box at the document's pitch.
+- *Unset keys.* Without `text.line_height` the pitch is Typst's own, the body font's cap height
+  plus `0.65em`, with the baseline at the font's ascent. Without `text.paragraph_spacing`, `P`
+  is Typst's `1.2em` less the part of the line box outside the capitals, `max(0pt, 1.2em −
+  (pitch − cap height))` at the body size, so two paragraphs look as far apart as before (6.05 pt
+  at 11 pt Libertinus Serif). Headings no style declares keep Typst's spacing constants, now
+  between line boxes.
+- *Explicit arguments* keep Typst's meaning and are converted (`spacing-model`): `leading: X`
+  gives the pitch `cap height + X`; `spacing: X` gives `P = max(0pt, X − (pitch − cap height))`.
+  `spacing: 0pt` is no space at all.
+
+The helpers `line-box`, `design-leading`, `design-spacing` and `style-leading` are gone; `design.typ`
+gains `cap-height`, `font-lines`, `line-edges`, `inherited-pitch`, `line-trim`, `spacing-model`,
+`flow-mark`, `par-end`, `open-flow` and `empty-cell`, and `style-rules`, `vocabulary`,
+`cell-inset`, `vocabulary-layout` and `styled-title-block` take the document's pitch (`none`, `(
+multiple: m)` or `(exact: h)`) where they took a leading.
 
 ### 6.3 BYO template and explicit arguments
 A `[pdf] template` that delegates (`base.writer-doc(..args, body)`, typst-dialect.md §4.6) inherits
@@ -574,6 +710,42 @@ not import `@writer/doc`).
 > compiles, but for every key a declared vocabulary style sets the design now wins, as it already
 > did for what `writer-doc` sets itself (page, fonts). A template that needs the design's values
 > for its own rules takes them from `base.design-tokens(..args)` instead of decoding the JSON.
+
+> **Contract change (2026-11-21, package `0.5.0`; T98):** with an applied design the body is laid
+> out in §0.3's line boxes (§6.2), and a template inherits them. What a template author meets:
+> - **Text positions.** A line's top edge is the font's ascent (or `0.8 h`), no longer its cap
+>   height. The first line of a page, and anything a template places against a line's top, sits
+>   lower by ascent minus cap height (2.6 pt at 11 pt Libertinus Serif); the default page number
+>   moves the same way. Code that draws its own page and wants Typst's edges back (a cover in a
+>   `title-block` function) writes `set text(top-edge: "cap-height", bottom-edge: "baseline")`
+>   and its own `set par(leading: …)` at its start.
+> - **`par.leading` is `0pt`.** A template rule `set par(leading: X)` adds `X` between line
+>   boxes on top of the pitch. To change the pitch, set the design's `line_height`, pass
+>   `leading:` to `writer-doc`, or set the two `text` edges.
+> - **Footnotes and display equations** carry show-set rules of the package (§6.2), which that
+>   `set par(leading: X)` does not reach; under `0.4.0` it changed an equation's rows. After the
+>   show line, `show footnote.entry: set par(leading: X)` adds `X` between a note's lines, `set
+>   footnote.entry(gap: X)` sets the space between two notes, and `show
+>   math.equation.where(block: true): set par(leading: X)` sets the rows' leading.
+> - **Blocks outside the model** (block quotes, figures, tables, display equations, code) keep
+>   Typst's own spaces or `P`, now between line boxes: a block quote stands 7.6 pt further from
+>   the text on each side at 11 pt and 1.35, a figure, a table or a display equation 2.6 pt
+>   closer above and 5.0 pt closer below (R12 §7).
+> - **`set par(spacing: X)`** after the show line still sets the paragraph spacing, now from
+>   line box to line box.
+> - **`first-line-indent`.** Every paragraph is followed by a block (`flow-mark`), and Typst
+>   indents only a paragraph that follows another paragraph: write `first-line-indent: (amount:
+>   1em, all: true)`.
+> - **Space before the first block** holds on page 1 (§6.2, "First block"); a template that
+>   added a `v(..)` of its own to get it removes that.
+> - **Removed helpers.** `design-leading`, `design-spacing`, `line-box` and `style-leading` no
+>   longer exist; `line-edges(design, pitch, face)` is their replacement.
+> - **Unchanged keys, changed look.** A design that sets no `text.line_height` keeps its pitch
+>   and paragraph distance; its plain title block (no `Title` style) is 3.1 pt tighter under the
+>   title, because the parts' spacing is the body's `P` and no longer `1.2em` of each part's size.
+>
+> A template must import the package version writer embeds, so `0.4.0` templates change their
+> import line to `@writer/doc:0.5.0` (typst-dialect.md §4.2).
 
 ### 6.4 The emitter keeps div classes (`src/typst/emit.rs` §5.4, T84; `writer-div` in `lib.typ`)
 The `Div` row of typst-dialect.md §5.4 becomes:
@@ -614,8 +786,9 @@ defaults up. `writer check` applies no design lint to native input except the fi
 `dump --typst` is unchanged: it reads `sys.inputs`, which writer's own compile supplies. A
 `--format typ` export of a project that declares a design carries the design itself
 (2026-11-09), so the tree compiles with the plain Typst CLI and no `--input`:
-- `<stem>_assets/writer-design.json` is the §3.3 JSON (`PathMode::Export`, pretty-printed, one
-  trailing newline) with every registered furniture and background image and every
+- `<stem>_assets/writer-design.json` is the §3.3 JSON with its `lines` key (`design_input`,
+  `PathMode::Export`, pretty-printed, one trailing newline; the line metrics travel with the
+  tree, so the plain Typst CLI draws the same line boxes) with every registered furniture and background image and every
   `fonts.*.files` entry rewritten to its path inside the tree, relative to the main file;
 - the furniture and background images are copied into `<stem>_assets/` under typst-dialect.md
   §10's export names (an image the body also shows keeps its one copy), and the declared font
@@ -719,6 +892,23 @@ in another family inheriting the document default). Measured with Word for Mac 1
   system fonts);
 - 21.1 pt from `round(1.35 × 240)`.
 
+**The line box (T96; R12 §2).** Word places the baseline inside a line by rule: the `hhea`
+descent lies below the baseline of a single line and the rest of the single line above it, so a
+font's *ascent* is `(single line − hhea descent) / unitsPerEm` (`LineMetrics { single, ascent }`,
+`line_metrics(font)`; `single_line` is its first field). Libertinus Serif: 1.14 and 0.894; DejaVu
+Sans Mono: 2384/2048 and 1901/2048; Source Sans 3: 1.424 and 1.024. A line of multiple `m` keeps
+that ascent while `m` is at least the single line and puts everything else below the baseline; a
+tighter line shrinks both parts by `m / s`. An exact line of height `h` ignores the font: `0.8 h`
+above the baseline, `0.2 h` below. The PDF draws these boxes (§6.2), so it needs both numbers
+for every family of a declared design, whatever its line heights: `WordLines::load_declared`
+reads them (the sources and the regular face as above; `WordLines::load` is `load_declared` when
+a multiple is set and empty otherwise, so the DOCX is unchanged), and `WordLines::to_json` is
+§3.3's `lines` table. A family that ends in a weight word and is found under no source by that
+name (`Source Sans 3 SemiBold`, the name Word selects that face by, §8.7) is looked up without
+the word and recorded under both names; the weight words are `thin`, `hairline`, `extralight`,
+`ultralight`, `light`, `regular`, `medium`, `semibold`, `demibold`, `bold`, `extrabold`,
+`ultrabold`, `black` and `heavy`, compared in lower case without hyphens.
+
 ### 7.5 Columns (`page.columns`; `src/docx/columns.rs`)
 A `columns` count above one sets the body in columns with continuous section breaks; a count of one
 or no `columns` writes the single section of §7.2, byte for byte (a design whose only key is
@@ -803,8 +993,8 @@ custom definition those lines use, and `design-style-unused` does not report it 
 
 From package `0.4.0` the PDF applies the names it has an element for to that element (§8.7:
 headings, the contents title and entries, the title block's parts, captions, table cells, the
-furniture lines), so one table styles Word and the PDF. HTML still applies named styles to divs
-only (§8.3; open point 13).
+furniture lines), so one table styles Word and the PDF. From T99 HTML applies them to its
+elements as well (§8.8), so the same table styles all three outputs.
 
 ### 8.2 Resolution order (one function, `design::style_for`, every backend)
 For a `Div` (ir.md: `attrs.classes`, `attrs.pairs`):
@@ -825,37 +1015,59 @@ One rule per style, selector `[data-style="<name>"]` (the name escaped with `CSS
 `line-height`, `color`, `font-weight`, `font-style: italic|normal`, `text-align`, `margin-top`
 (`space_before`), `margin-bottom` (`space_after`), `break-inside: avoid` (`keep_together`),
 `break-after: avoid` (`keep_with_next`); `frame` writes nothing (§8.6). Spacing applies to the div, so a multi-paragraph div keeps
-the theme's paragraph gaps inside; the last paragraph's bottom margin is not removed (open point 4).
+the paragraph gaps inside (§0.3: a div is one block). After the style's rule come, each only
+when its key is set (T99):
+```css
+[data-style="Closing"] p{text-align:inherit}            /* align */
+[data-style="Closing"]>:first-child{margin-top:0}       /* space_before */
+[data-style="Closing"]>:last-child{margin-bottom:0}     /* space_after */
+```
+CSS collapses the div's margin with its first and last child's into the larger one, so without
+the two child rules a `space_after` smaller than the paragraph spacing (`0pt`, say) would leave
+the last paragraph's margin standing. With them a set space is the whole space at that edge, as
+in Word and the PDF; an unset one keeps the child's margin, the body paragraph's `(0, P)`.
+Adjacent blocks then collapse to the larger space by CSS's own rule, which is §0.3's.
 
 ### 8.4 Typst (`writer-div` in `@writer/doc`)
 ```typst
 #let writer-div(style: none, classes: (), body) = {
     let spec = if style != none { writer-design.at("styles", default: (:)).at(style, default: none) } else { none }
     if spec == none { return body }
-    let inner = body
-    // set text(font:, size:, fill:, weight:, style:), set par(justify:), align(..) per spec
-    // key; with line_height: context { set par(leading: design-leading(line_height,
-    // text.size), spacing: leading + paragraph_spacing) } around the body (§6.2); then
-    block(
-        above: space_before, below: space_after,   // default auto
-        breakable: not keep_together,
-        sticky: keep_with_next,
-        width: 100%,
-        inner
-    )
+    context {
+        let rules = style-rules(design, spec, inherited-pitch())   // §8.7
+        let modelled = type(text.top-edge) == length                // inside §6.2's model
+        block(
+            above: space_before,    // unset: 0pt in the model, else auto
+            below: space_after,     // unset: par.spacing in the model, else auto
+            breakable: not keep_together,
+            sticky: keep_with_next,
+            width: 100%,
+            {
+                set text(..rules.text)      // font, size, fill, weight, style and, for a
+                                            // style with its own line_height or font, its edges
+                set par(..rules.par)        // justify; leading: 0pt with edges of its own
+                align(..rules.align, body)  // left | center | right, when set
+            }
+        )
+    }
 }
 ```
 `font: "body"|"heading"|"mono"` → that role's family when the design sets it, else no `set`;
-`align` → `align(left|center|right)(..)` or `set par(justify: true)`; `line_height` uses §6.2's
-rule with the box of the style's own font and size, measured in a `context` block inside the
-style's `set text` rules, and puts the design's `text.paragraph_spacing` (when set) on top of that
-leading between the div's paragraphs; an unset `line_height` inherits the document's leading,
-which is in ems and so follows the style's `size`. `block(sticky: true)` is
-Typst's keep-with-next (Verified API hints). `writer-div` ignores `frame` (§8.6); a
-template that floats such a div reads it from `writer-design.styles`. The function is also what §6.4's emitter calls for styleless
-divs (`spec == none` → `body`). From package `0.4.0` the style's `set text` arguments come from
-`style-text` (§8.7), so a `font` that names a face by its weight word selects that face here
-too; the block spacing above is unchanged (open point 11).
+`align` → `align(left|center|right)(..)` or `set par(justify: true)`. From package `0.5.0`
+(T98) the div is a block of §0.3's model. A style with a `line_height` or a `font` of its own
+gets its own line box (`line-edges` on the style's face, at the style's pitch or else the pitch
+in effect, which `inherited-pitch()` reads back from the `text` edges); any other style inherits
+the document's edges, which are in ems for a multiple and so follow the style's `size`.
+`space_before` and `space_after` are the block's spacing between line boxes, exactly as written;
+an unset one is the body paragraph's (`0pt` above, the paragraph spacing below), as for a Word
+style based on `Body Text`. The paragraphs inside keep the document's paragraph spacing between
+themselves (§6.2's `par-end` applies to them as to any paragraph). Outside the model (no applied
+design, or text whose edges a template set back to Typst's names) an unset space stays `auto`.
+`block(sticky: true)` is Typst's keep-with-next (Verified API hints). `writer-div` ignores
+`frame` (§8.6); a template that floats such a div reads it from `writer-design.styles`. The
+function is also what §6.4's emitter calls for styleless divs (`spec == none` → `body`). From
+package `0.4.0` the style's `set text` arguments come from `style-text` (§8.7), so a `font` that
+names a face by its weight word selects that face here too.
 
 ### 8.5 DOCX
 Each design style is appended to `styles.xml` (§7.1) as
@@ -868,7 +1080,7 @@ Each design style is appended to `styles.xml` (§7.1) as
         <w:keepNext/>                 <!-- keep_with_next -->
         <w:keepLines/>                <!-- keep_together -->
         <w:spacing w:before="0" w:after="340" w:line="242" w:lineRule="exact"/>  <!-- set keys only -->
-        <w:contextualSpacing/>        <!-- space_before or space_after set, on a block style (below) -->
+        <w:contextualSpacing/>        <!-- Header and footer only, with a space key (below) -->
         <w:jc w:val="left|center|right|both"/>
     </w:pPr>
     <w:rPr>
@@ -893,17 +1105,46 @@ its `before="0"`; every other child (`outlineLvl`, `ind`, `tabs`, `pBdr`, `shd`,
 body font.
 `keep_with_next` and `keep_together` are booleans: true adds the element, false (the default)
 leaves the built-in's alone. `w:contextualSpacing` makes consecutive paragraphs of the same
-style omit the gap between them. It is added only to a **block style**, one whose paragraphs
-together form one block: a custom name (a div's paragraphs; `Header`, the header furniture's
-lines) and `footer` (the footer furniture's lines). There `space_before`/`space_after` behave as
-the block's outer margins, like a div's in HTML and Typst. Writer selects every other §2.3 name
-per block (each body paragraph, heading, contents entry, caption, table-cell or tight-list
-paragraph is a block of its own), so those keep the built-in definition's setting (none in
-writer's asset) and their space separates consecutive paragraphs of the same style:
-`[design.styles."Body Text"]` with `space_after` keeps body paragraphs apart, and `toc 1` with
-`space_before` spaces consecutive top-level contents entries. The body emitter (docx-output.md §4.1) pushes `Style(id)` for a `Div` when
-`style_for` selects a style, with `id = custom(name, Paragraph, None)` (the definition already
-exists, so `custom` returns its id). With a reference document, §7.3.
+style omit the gap between them. It is added only to the furniture's line styles, and only when
+the style sets a space key: `Header` (compared case-insensitively; the header furniture's lines)
+and `footer` (the footer furniture's lines), whose lines sit together as one block. Writer
+selects every other §2.3 name per block (each body paragraph, heading, contents entry, caption,
+table-cell or tight-list paragraph is a block of its own), so those keep the built-in
+definition's setting (none in writer's asset) and their space separates consecutive paragraphs
+of the same style: `[design.styles."Body Text"]` with `space_after` keeps body paragraphs apart,
+and `toc 1` with `space_before` spaces consecutive top-level contents entries. The body emitter
+(docx-output.md §4.1) pushes `Style(id)` for a `Div` when `style_for` selects a style, with `id
+= custom(name, Paragraph, None)` (the definition already exists, so `custom` returns its id).
+With a reference document, §7.3.
+
+**A div is one block (decision D1, 2026-11-21; T100).** Word has no container: every paragraph
+of a div carries the div's style, so the style's `w:before` and `w:after` would apply to each of
+them. Until T100 `w:contextualSpacing` on the style hid that, and with it two things §0.3
+requires: the space between the paragraphs of one div (Word showed none where HTML and the PDF
+show the paragraph spacing) and the space between two consecutive divs of one style (none, where
+the other outputs show the larger of the two spaces). Now the style's spaces are the div's outer
+spaces and writer spaces the inside as direct formatting (`Emitter::space_div`,
+`src/docx/body.rs`), written when the div ends:
+
+- The first paragraph of the div keeps the style's space before, the last one the style's space
+  after.
+- Every paragraph but the first gets a direct `w:before`, every paragraph but the last a direct
+  `w:after` (`<w:spacing w:before="0" w:after="204"/>` in the paragraph's `w:pPr`; one attribute
+  on the first and on the last paragraph). The values are the space the paragraph has outside a
+  div: the style's base before the design's keys are laid over it (`StyleTable::block_spacing`:
+  `Body Text`'s `w:before`/`w:after` along its `basedOn` chain down to the document defaults,
+  after §7.1's edits, so `(0, P)` when `text.paragraph_spacing` is set and the asset's 6 pt and
+  6 pt otherwise), or `Compact`'s for an item of a tight list inside the div.
+- A div of one paragraph gets no direct formatting. Neither does a paragraph that already has
+  direct spacing, nor one that takes another style (a heading, a nested div of another style).
+- Only a div style writer wrote with `space_before` or `space_after` is treated so: a name
+  writer selects itself (§8.1's vocabulary, `Header`) is spaced per block as above, a style
+  without a space key inherits `Body Text`'s spacing on every paragraph already, and a reference
+  document's definition of the name wins entirely (§7.3), so writer leaves its paragraphs alone.
+
+Word then shows what §0.3 says: `(0, P)` between a div's paragraphs and the larger of the two
+spaces between adjacent blocks, two divs of one style included (Word itself takes the larger of
+`w:after` and the next paragraph's `w:before`).
 
 ### 8.6 DOCX frames (`styles.<Name>.frame`)
 A style's `frame` floats the div's paragraphs that take the style in a Word frame (ECMA-376
@@ -961,7 +1202,7 @@ in R11 (`docs/research/R11-typst-vocabulary-styles.md`).
 | `toc N` | contents entries of level N | `show outline.entry.where(level: N): set …` |
 | `Caption` | every caption | `show figure.caption: set …` with the text keys, `align` and `line_height` only |
 | `Table Caption`, `Image Caption` | captions of tables, of images | `show figure.caption.where(kind: table): set …`, `.where(kind: image)`, after `Caption`, the same keys |
-| `Compact` | table cells | `show table.cell: set …` (text keys, `align`, `line_height`) and `set table(inset: (top: L/2 + space_before, bottom: L/2 + space_after))`, each side only when its space is set |
+| `Compact` | table cells | `show table.cell: set …` (text keys, `align`, `line_height`) and `set table(inset: (top: space_before, bottom: space_after))` around the cell's line box, as Word's rows are built (package `0.5.0`). A side whose space is unset, and both sides under a declared design without `Compact`, is Typst's `5pt` less what the line box adds outside the capitals (`line-trim`: the top edge minus the cap height above, the bottom edge's depth below; never below `0pt`), so such a cell looks as before: 2.404 pt and 0.446 pt at 11 pt Libertinus Serif without a `line_height`. Left and right stay `5pt` |
 | `Title`, `Subtitle`, `Author`, `Date` | the parts of the title block | the styled title block below |
 | `Header`, `footer` | the furniture lines (§9.4) | the style's `font` and `line_height`, in place of the document's |
 
@@ -973,15 +1214,18 @@ is that family without the word, at that weight or at the style's own `weight`, 
 heavier: `Thin`/`Hairline` 100, `ExtraLight`/`UltraLight` 200, `Light` 300, `Regular` 400,
 `Medium` 500, `SemiBold`/`DemiBold` 600, `Bold` 700, `ExtraBold`/`UltraBold` 800, `Black`/`Heavy`
 900 (case and hyphens ignored). `align` becomes `set align(left|center|right)` and `set
-par(justify: align == "justify")`. `line_height` becomes `set par(leading: L)` by §6.2's rule on
-the style's own face and size. `space_before` and `space_after` become `set block(above: L +
-space_before, below: L + space_after)`, each only when set, where `L` is the style's leading, or
-the document's when it sets no `line_height` (that one is in ems, so it follows the style's
-size): the distance to the next baseline is then a line pitch plus the space, as §6.2 makes it
-between paragraphs and as Word sets it. `keep_with_next = true` becomes `set block(sticky:
-true)` and `keep_together = true` becomes `set block(breakable: false)`; `false` adds nothing. An
-unset key adds no argument, so the element keeps Typst's or the template's value for it (§0.2).
-`frame` is not allowed on these names (§8.6).
+par(justify: align == "justify")`. From package `0.5.0` (T98) the rest follows §0.3's model
+(§6.2): a style with a `line_height` or a `font` of its own gets `set text(top-edge:,
+bottom-edge:)` from `line-edges` on its face, at its own pitch or else the document's (any other
+style inherits the document's edges, which are in ems for a multiple and so follow the style's
+size), and `space_before` and `space_after` become `set block(above: space_before, below:
+space_after)`, each only when set: plain spaces between line boxes, exactly the numbers in the
+design, of which Typst keeps the larger where two blocks meet. (`0.4.0` wrote `above: L +
+space_before` around boxes that hung from the capitals.) `keep_with_next = true` becomes `set
+block(sticky: true)` and `keep_together = true` becomes `set block(breakable: false)`; `false`
+adds nothing. An unset key adds no argument, so the element keeps Typst's or the template's
+value for it (§0.2): an undeclared heading keeps Typst's own spacing. `frame` is not allowed on
+these names (§8.6).
 
 **Order and overrides.** These are show-set rules, never transformational ones, applied around
 the body after `writer-doc`'s own `set par(..)`, in the table's order. Typst lets an inner rule
@@ -997,11 +1241,12 @@ names joined by ", " with each affiliation in a 9pt paragraph below them; the da
 takes its style's keys over the part's built-in look (the title 17pt bold, the others body
 text). The block's alignment is `Title`'s `align`, centre when unset, and a part's own `align`
 holds for that part. The first part's `space_before` is kept at the top of the page, where
-Typst would drop a block's space, and measured as Word measures it, from the font's ascender: a
-strong `v(space_before + ascender − cap height)` of the part's face. The closing `v(1.5em)`
-stays unless the last part sets `space_after`. A part whose style sets no key is drawn exactly
-as the plain block draws it, and with none of the four declared the plain block
-(typst-dialect.md §4.2) is used unchanged.
+Typst would drop a block's space: a strong `v(space_before)` above the part, whose line box
+starts at the font's ascent as Word's does (package `0.5.0`; `0.4.0` added `ascender − cap
+height` by hand). A part's unset space is the document's: none above, the paragraph spacing
+below. The closing `v(1.5em)` stays unless the last part sets `space_after`. With none of the
+four declared the plain block (typst-dialect.md §4.2) is used; under a declared design its
+parts are spaced by the document's paragraph spacing (§6.3's `0.5.0` note).
 
 `writer-doc(title-block:)` chooses who draws it: `auto` (the above); `none` (no title block; the
 metadata still reaches `document(..)`); or a function `(meta, theme) => content`, with `meta =
@@ -1025,7 +1270,7 @@ the arguments of `text(..)` that set its face; for an undeclared name every key 
 `text(..style-tokens(theme, "Title").text, meta.title)` is then plain text. A template's rules
 name these instead of repeating the theme's values:
 ```typst
-#import "@writer/doc:0.4.0" as base
+#import "@writer/doc:0.5.0" as base
 
 #let writer-doc(..args, body) = {
     let theme = base.design-tokens(..args)
@@ -1040,22 +1285,77 @@ name these instead of repeating the theme's values:
 **Not applied in the PDF** (these names restyle Word only): `Body Text`, `First Paragraph`,
 `Block Text`, `Footnote Text`, `Abstract Title`, `Abstract`, `Bibliography`, `Definition Term`,
 `Definition`, `Source Code`, `Figure`, `Captioned Figure`; `Compact` on tight lists; a caption's
-`space_before`/`space_after`. `writer-div` is unchanged (§8.4), except that a style's `font`
-goes through the face rule above.
+`space_before`/`space_after`. `writer-div` applies a style to a div (§8.4), with a style's
+`font` going through the face rule above.
 
-**Absent means unchanged** (§0.2). Without a declared design, and with a design that declares
-none of these names, `writer-doc` adds no rule and draws the plain title block: the PDF is
-byte-identical to package `0.3.0`'s. A design that declares one changes the PDF, which is the
-point. Three effects reach a theme that was tuned in Word and carried the PDF's look in a
-template: heading and contents-entry spacing follow the theme's `space_before`/`space_after`
-unless the template sets its own `block(above:, below:)`; table cells take `Compact`'s text keys
-and inset; the furniture lines take the `Header` and `footer` styles' pitch.
+**Absent means unchanged** (§0.2). Without a declared design `writer-doc` adds no rule, keeps
+Typst's leading and draws the plain title block: the PDF is byte-identical to package `0.4.0`'s.
+A design that declares none of these names adds no vocabulary rule, but from `0.5.0` its text is
+laid out in §0.3's line boxes like any declared design's (§6.2 says what stays the same: the
+pitch, the paragraph distance, the look of a table cell). A design that declares one changes
+the PDF, which is the point. Three effects reach a theme that was tuned in Word and carried the
+PDF's look in a template: heading and contents-entry spacing follow the theme's
+`space_before`/`space_after` unless the template sets its own `block(above:, below:)`; table
+cells take `Compact`'s text keys and inset; the furniture lines take the `Header` and `footer`
+styles' pitch.
 
-**Differences from Word that remain** (R11 §4): a key that only `Heading 1 Unlisted` sets also
-reaches the contents title (set it on `TOC Heading` to restore it); `Subtitle`, `Author` and
-`Date` do not inherit `Title`'s other keys as Word's `basedOn` chain does, only its alignment;
-and between two styled blocks the larger of the two spaces holds, as CSS margins collapse, where
-Word adds them (open points 11 and 12).
+**Differences from Word that remain** (R11 §4, R12 §8): a key that only `Heading 1 Unlisted`
+sets also reaches the contents title (set it on `TOC Heading` to restore it); `Subtitle`,
+`Author` and `Date` do not inherit `Title`'s other keys as Word's `basedOn` chain does, only its
+alignment (open point 12). Between two styled blocks the larger of the two spaces holds in all
+three outputs. (Until 2026-11-21 this paragraph said that Word adds the two; measuring Word
+showed that it takes the larger one, R12 §2.)
+
+### 8.8 Vocabulary styles in HTML (`vocabulary_css` in `src/html/design.rs`; T99)
+The same names style the same elements on the page, so headings, the title block, the contents
+list, captions and table cells follow the theme's styles in HTML as they do in Word and the PDF.
+`layout_css` (§5.3) writes the rules after the named styles' (§8.3) and before the furniture's.
+Names are compared by normalised key (§8.1).
+
+Every selector is scoped to the document and adds no specificity for that:
+`:where([data-writer-document]) <selector>`; a rule with several selectors scopes each one. A
+rule's specificity is therefore the selector's own (`h2` is one element), which sets its place in
+§5.4's order. A rule without a declaration is not written.
+
+| style | selectors | declarations |
+|---|---|---|
+| `Heading N` (N = 1–6) | `hN`; for N = 1: `h1:where(:not(.title))` and `.references-title` (the document title is an `h1` with the `Title` style; the bibliography title is a level-1 heading in Word too) | block |
+| `Heading N Unlisted` | `hN.unlisted`, `hN.notoc`, `.abstract hN` | block |
+| `TOC Heading` | `p.toc-title` | block, of `Heading 1`'s keys with `TOC Heading`'s laid over them (Word's `basedOn`); written when either is declared |
+| `toc N` | `nav.toc>ol>li>a` for N = 1, one more `>ol>li` per level | `display:block`, then block. With `space_before`, a second rule sets `margin-top:0` on that level's list and items (`nav.toc>ol` and `nav.toc>ol>li` for N = 1), so the entry's own space replaces the theme's list margins above it |
+| `Caption` | `figcaption` | text |
+| `Table Caption`, `Image Caption` | `.kind-table>figcaption`, `.kind-image>figcaption` | text |
+| `Compact` | `th`, `td` | text, then `padding-top` (`space_before`) and `padding-bottom` (`space_after`) |
+| (always) | `td:empty::before`, `th:empty::before` | `content:"\200b"`: an empty cell holds one line, as every cell does in Word |
+| `Title` | `.title` | block |
+| `Subtitle` | `p.subtitle` | block, with `Title`'s `align` when the style sets none |
+| `Author` | `p.author` | text (with `Title`'s `align` when the style sets none), then `margin-top:0` when `space_before` is set and `margin-bottom:0` when `space_after` is set |
+| `Author` | `.authors` | `margin-top`, `margin-bottom` (the authors share one block, whose edges take the style's spaces), then `justify-content: flex-start \| center \| flex-end` for `align` left, centre, right (the style's, else `Title`'s) |
+| `Date` | `p.date` | block, with `Title`'s `align` when the style sets none |
+
+The title block's parts follow the title's alignment, as they do in Word, whose `Subtitle`,
+`Author` and `Date` are based on `Title`, and in the PDF (§8.7): a part whose style sets no
+`align`, declared or not, takes `Title`'s. A design that sets `align` on `Title` alone therefore
+writes a rule for each part (`p.subtitle{text-align:left}`, …), which also overrides the default
+theme's centred title block. A part's other unset keys stay the theme's (open point 12).
+
+The rules are written in the table's order, all `Heading N` before all `Heading N Unlisted`,
+levels ascending. *Text* is §8.3's `font-family`, `font-size`, `line-height`, `color`,
+`font-weight`, `font-style` and `text-align`, each only when set; *block* is text, then
+`margin-top`, `margin-bottom`, `break-inside:avoid` and `break-after:avoid` as in §8.3. Lengths
+are written as §5.3 writes them (`<pt>pt`, at most three decimals). Example, for `[design.styles.
+"Heading 1"]` with `size = "14pt"` and `space_before = "20pt"` alone:
+```css
+:where([data-writer-document]) h1:where(:not(.title)),:where([data-writer-document]) .references-title{font-size:14pt;margin-top:20pt}
+:where([data-writer-document]) p.toc-title{font-size:14pt;margin-top:20pt}
+:where([data-writer-document]) td:empty::before,:where([data-writer-document]) th:empty::before{content:"\200b"}
+```
+
+CSS collapses the vertical margins of adjacent blocks to the larger one, which is §0.3's rule,
+so the margins are the style's numbers as written. HTML keeps its own line box (§0.3,
+"Agreement"). Not applied in HTML: the names §8.7 lists as not applied in the PDF, a caption's
+spaces, `keep_together` and `keep_with_next` on captions and cells, and `Header` and `footer`
+(the furniture's own rules, §9.3).
 
 ## 9. Page furniture (T86 HTML, T87 DOCX, T88 Typst; T90 image gap, T91 page background)
 
@@ -1066,11 +1366,15 @@ left column and `right_lines` as a right column when the latter is non-empty; ot
 aligned by `align`), and the rule at its `position` (above everything for `above`, below for
 `below`). The image's `gap` (§2.2; the paragraph spacing by default, §3.2) is the vertical space
 between its bottom edge and the top of the first line's box (T90). That box starts at the cap
-height in Typst, at the ascender plus half the leading in HTML, and in Word below the image line's
-descent and the line spacing Word adds above the text. The same value therefore looks larger in
-HTML and larger again in Word: in the §11 letter the line's capitals sit 0, 1.1 and 1.5 mm below
-the gap's end (PDF, HTML screen, Word's own PDF export; measured 4 Nov 2026, after the image
-paragraph took single line spacing, §9.5; Word's was 3.4 mm before). Line text is plain
+height in Typst up to package `0.4.0`, at the ascender plus half the leading in HTML, and in Word
+below the image line's descent and the line spacing Word adds above the text. The same value
+therefore looked larger in HTML and larger again in Word: in the §11 letter the line's capitals
+sat 0, 1.1 and 1.5 mm below the gap's end (PDF, HTML screen, Word's own PDF export; measured
+4 Nov 2026, after the image paragraph took single line spacing, §9.5; Word's was 3.4 mm before).
+From package `0.5.0` the PDF's box is §0.3's line box, which starts at the font's ascent as
+Word's does, so its capitals sit about 1.2 mm below the gap's end (computed, not measured:
+Source Sans 3 at 11 pt and 1.35 has 10.68 pt of its box above the baseline and capitals
+7.26 pt tall). Line text is plain
 text with §9.2 placeholders; no inline markup (open point 6). Lines
 inherit the furniture's `size`, `color`, `weight`, `italic` unless they set their own. The
 furniture's width is the text width (page width − left − right margin); the header's top edge is at
@@ -1145,8 +1449,10 @@ A declared slot sets `page(header: none, footer: none, numbering: none)` and
     // block(below: gap, image(spec.image.path, width:)) with gap = spec.image.gap * 1pt or
     // `spacing` when null, grid(columns: (1fr, auto)) of lines / right_lines joined by
     // linebreak(), optional rule below; text(size:, fill:, weight:, style:) per line;
-    // set par(leading: design-leading(line-height, size)), so the lines take the design's
-    // `text.line_height` pitch at the furniture's size (§6.2).
+    // set text(..line-edges(design, line-height, face)) and set par(leading: 0pt), so the
+    // lines are §6.2's line boxes at the design's `text.line_height` pitch and the
+    // furniture's own size and font (package `0.5.0`; a `design:` argument carries the
+    // design whose `lines` table holds that font's metrics).
 }
 #set page(background: context {
     // the design's paragraph spacing, else an explicit `writer-doc(spacing:)`, else 1.2em
@@ -1171,6 +1477,14 @@ the `font` and `line_height` of a design style named `Header`, the footer slot's
 `footer` (§8.7), each in place of the document's when the style sets it: the styles Word uses for
 the same lines (§9.5), so one table sets their pitch in both. Their other keys are not applied in
 the PDF (a line's own `size`, `color`, `weight` and `italic` come from the furniture table).
+
+From package `0.5.0` (T98) the furniture's lines are line boxes (§6.2), and the distances are
+measured to the boxes, as in Word: the footer's bottom edge at `footer_offset` is the bottom of
+its last line's box (0.4.0 put that line's baseline there, one descent lower), the header's top
+edge is the top of its first line's box, and the image's `gap` ends at the top of the first
+line's box (§9.1; an unset gap stays the paragraph spacing, else `1.2em` of the furniture's
+text). `writer-furniture` sets `block(above: 0pt, below: 0pt)` inside itself, so the body's
+block spacing does not reach its parts.
 
 An unset `header_offset` is 30 % of the top margin (Typst's own `header-ascent` default, expressed
 as an offset from the edge); an unset `footer_offset` is 30 % of the bottom margin.
@@ -1469,8 +1783,10 @@ so an edit elsewhere keeps the Libraries.
    (§5.2) and a light-only design sets `color-scheme: light` in its CSS.
 3. **`colors.background` in DOCX.** Recommended: not applied (`w:background` needs
    `w:displayBackgroundShape` in settings and prints oddly); HTML and PDF apply it.
-4. **Last-paragraph margin inside a styled div (HTML).** Recommended: `[data-style] > p:last-child
-   { margin-bottom: 0 }` is *not* generated; themes add it where wanted.
+4. **Last-paragraph margin inside a styled div (HTML).** Resolved (2026-11-21, §8.3; T99): a
+   style that sets `space_after` gets `>:last-child{margin-bottom:0}`, one that sets
+   `space_before` gets `>:first-child{margin-top:0}`, so a set space is the whole space at that
+   edge, as in Word and the PDF.
 5. **Exports and design files.** Resolved (2026-11-09, §6.7): `--format typ` copies design fonts
    and images into the export tree and writes `<stem>_assets/writer-design.json`, which the main
    file passes as `writer-doc(design:)`.
@@ -1484,25 +1800,35 @@ so an edit elsewhere keeps the Libraries.
    (the ejected theme's commented block, §4.2, is the discovery path).
 10. **Package version bump** (§6.4, `0.1.0` → `0.2.0`). Recommended: bump, because ejected and
     installed packages must expose `writer-div` for exported sources to compile.
-11. **Div spacing in the PDF.** `writer-div` passes `space_before`/`space_after` to its block as
-    they are (§8.4), one leading less than §8.7's `L + space` and than HTML and Word show.
-    Recommended: a follow-up task aligns it with §8.7's rule (it moves every styled div in existing
-    PDFs by one leading, so it gets its own contract-change note and package version).
-12. **Word's `basedOn` chains in the PDF.** §8.7 reproduces the heading and caption chains by rule
-    order and `TOC Heading` by laying `Heading 1` under it; the title parts inherit `Title`'s
-    alignment only, and a key that only `Heading N Unlisted` sets reaches the contents title.
-    Recommended: leave as documented; a theme sets the key on each style, which also reads better.
-13. **Vocabulary styles in HTML.** HTML applies named styles to divs only, so a theme still styles
-    `h1`, `.title`, `.toc` and captions in its CSS. Recommended: a follow-up task generates rules
-    for the same mapping in `layout_css` (§5.3) under selectors of specificity zero
-    (`:where(h1)`), so that a theme's own CSS keeps winning as §5.4 requires.
+11. **Div spacing in the PDF.** Resolved (2026-11-21, §0.3, §6.2, §8.4; T98, package `0.5.0`):
+    divs, vocabulary styles and paragraphs share one model, spaces between line boxes with the
+    larger of two adjacent spaces holding, which is what Word shows. §6.3 carries the
+    contract-change note.
+12. **Word's `basedOn` chains in the PDF and HTML.** §8.7 reproduces the heading and caption
+    chains by rule order and `TOC Heading` by laying `Heading 1` under it; the title parts inherit
+    `Title`'s alignment only (in HTML too, §8.8), and a key that only `Heading N Unlisted` sets
+    reaches the contents title. In Word a part also takes `Title`'s line height, weight and
+    colour when its own style leaves them unset (R12 §8). Recommended: leave as documented; a
+    theme sets the key on each style, which also reads better.
+13. **Vocabulary styles in HTML.** Resolved (2026-11-21, §8.8; T99): `layout_css` generates the
+    rules. They are layout rules, so they come after the theme's entries and beat an entry's rule
+    of the same specificity for the keys the style sets (§5.4); the recommendation of
+    specificity zero was dropped, because a theme's generic `h1 { … }` would then hide the
+    design and the three outputs would disagree again (decision for the maintainer's sign-off,
+    R12 §7).
 14. **Tight lists and `Compact`.** Word uses `Compact` for tight-list paragraphs as well as table
-    cells; the PDF applies it to cells only. Recommended: leave; list spacing in Typst is `set
-    list(spacing:)`, which a template sets.
+    cells; the PDF and HTML apply it to cells only. Recommended: the follow-up that brings lists,
+    quotes, code blocks and the space around tables and figures into §0.3's model decides it
+    (R12 §8).
 15. **A weight Word cannot select.** A theme reaches a semibold face in Word by naming it
     (`font = "Source Sans 3 SemiBold"`), which §8.7 translates for Typst. Recommended: a follow-up
     lets DOCX choose the face from `font` plus `weight` (family name lookup in the declared font
     files), so that a theme writes `weight = 600` and no backend needs the face's name.
+16. **Blocks outside §0.3's model.** Lists, block quotes, code blocks, the space around tables
+    and figures, footnotes, callouts, equations and headings no style declares keep each
+    backend's own spacing: an undeclared `Heading 3` sits 29.0 pt (Word), 30.9 pt (PDF) and
+    42.7 pt (HTML, default theme) below the paragraph before it. Recommended: a follow-up
+    milestone with its own measurements (R12 §8 lists the differences found so far).
 
 ## Verified API hints (for the task files; each says where it was read)
 - `typst::text::FontInfo::iter(data: &[u8]) -> impl Iterator<Item = FontInfo>` and

@@ -100,6 +100,30 @@ A template that stops compiling after an upgrade with "package found, but
 version ... does not exist (latest is ...)" names an older `@writer/doc` in
 its `#import` line. Change the version to the latest one the message gives.
 
+After that change, text in the PDF of a document with a `[design]` can sit a
+few points lower on the page, and a template's own `set par(leading: ..)` can
+open the lines up. The package builds its lines as Word does; [the PDF
+template](customization.md#generated-typst-pdf-template) lists what a
+template changes. A heading whose style is not declared, or sets no
+`space_before` or `space_after`, also stands further from the text around
+it, by about 8 pt at a body size of 11 pt and a line height of 1.35: Typst's
+own heading spaces now count between line boxes. Set both keys on the
+heading styles to choose the distances, in all three outputs.
+
+Elements that take no named style in the PDF move with the lines too, here
+at the same size and line height. A block quote stands about 8 pt further
+from the text around it, as such a heading does. A figure, a table or a
+display equation stands closer to it, by about 3 pt above and up to 5 pt
+below: the paragraph spacing alone now lies between it and the line boxes
+around it. The lines of a footnote and of a code block take the design's
+line height at their own size.
+
+A heading, a title line, a caption or a table cell in HTML that stopped
+following the theme's CSS takes its look from a named style of the design,
+which styles HTML as well as Word and the PDF. Remove the CSS rule, or make
+it more specific than the plain element, for example `.report h1` instead of
+`h1`; see [cross-format design](customization.md#cross-format-design).
+
 ## Packages and preview recovery
 
 Embedded document and math packages need no download. An unavailable external

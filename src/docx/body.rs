@@ -80,6 +80,28 @@ pub(crate) struct BodyState {
     in_abstract: bool,
     /// A page break that the next paragraph's properties carry.
     pending_page_break: bool,
+    /// The open divs of design styles with a space key, innermost last.
+    divs: Vec<DivBlock>,
+}
+
+/// An open div of a design style with a space key (design.md §8.5).
+struct DivBlock {
+    /// The div's paragraph style identifier.
+    style: String,
+    /// The space before and after (twips) its paragraphs keep between
+    /// themselves.
+    inner: (u32, u32),
+    /// The paragraphs written with the div's style so far.
+    paragraphs: Vec<DivParagraph>,
+}
+
+/// One paragraph of an open [`DivBlock`], as `start_paragraph` wrote it.
+struct DivParagraph {
+    /// Offset of its `w:pPr` in the part's buffer.
+    at: usize,
+    /// It is an item of a tight list inside the div.
+    tight: bool,
+    props: ParaProps,
 }
 
 struct ListFrame {
@@ -372,10 +394,90 @@ impl Emitter<'_> {
         if custom {
             self.math_state.custom_div_style = Some(style.clone());
         }
+        let inner = custom.then(|| self.styles.block_spacing(&style)).flatten();
+        if let Some(inner) = inner {
+            self.content.body.divs.push(DivBlock {
+                style: style.clone(),
+                inner,
+                paragraphs: Vec::new(),
+            });
+        }
         self.containers.push(Container::Style(style));
         self.blocks(blocks);
         self.containers.pop();
+        if inner.is_some()
+            && let Some(block) = self.content.body.divs.pop()
+        {
+            self.space_div(block);
+        }
         self.math_state.custom_div_style = previous;
+    }
+
+    /// Notes a paragraph about to be written with the open div's style, so
+    /// [`Self::space_div`] can space the div's paragraphs when it ends.
+    fn record_div_paragraph(&mut self, props: &ParaProps) {
+        let at = self.buffer().len() + "<w:p>".len();
+        let tight = self
+            .containers
+            .iter()
+            .rev()
+            .take_while(|container| !matches!(container, Container::Style(_)))
+            .any(|container| *container == Container::TightList);
+        if let Some(block) = self.content.body.divs.last_mut()
+            && props.style.as_deref() == Some(block.style.as_str())
+            && props.spacing.is_none()
+        {
+            block.paragraphs.push(DivParagraph {
+                at,
+                tight,
+                props: props.clone(),
+            });
+        }
+    }
+
+    /// Spaces the paragraphs of a design div that has ended (design.md
+    /// §8.5).
+    ///
+    /// The style's space keys are the div's outer margins: its first
+    /// paragraph keeps the style's space before and its last the style's
+    /// space after. Between themselves the paragraphs keep the space they
+    /// have outside a div (Body Text's, or Compact's in a tight list), as
+    /// direct formatting, written here because only now is the last
+    /// paragraph known. A div of one paragraph needs none.
+    fn space_div(&mut self, block: DivBlock) {
+        let last = block.paragraphs.len().saturating_sub(1);
+        if last == 0 {
+            return;
+        }
+        let compact = block.paragraphs.iter().any(|p| p.tight).then(|| {
+            let id = self.styles.ensure("Compact", StyleKind::Paragraph);
+            self.styles.spacing_of(&id)
+        });
+        // Last first, so the offsets of the paragraphs before stay valid.
+        for (index, paragraph) in block.paragraphs.iter().enumerate().rev() {
+            let (before, after) = match compact {
+                Some(compact) if paragraph.tight => compact,
+                _ => block.inner,
+            };
+            let mut attrs = String::new();
+            if index > 0 {
+                attrs.push_str(&format!(" w:before=\"{before}\""));
+            }
+            if index < last {
+                attrs.push_str(&format!(" w:after=\"{after}\""));
+            }
+            let old = paragraph.props.to_xml();
+            let mut props = paragraph.props.clone();
+            props.spacing = Some(format!("<w:spacing{attrs}/>"));
+            let new = props.to_xml();
+            let range = paragraph.at..paragraph.at + old.len();
+            if self.buffer().get(range.clone()) != Some(old.as_str()) {
+                debug_assert!(false, "a div paragraph moved in its buffer");
+                continue;
+            }
+            self.buffer().replace_range(range, &new);
+            self.body_grew(paragraph.at, new.len() - old.len());
+        }
     }
 
     fn definitions(&mut self, items: &[DefinitionItem]) {
@@ -423,6 +525,7 @@ impl Emitter<'_> {
             None
         };
         self.mark_paragraph_start();
+        self.record_div_paragraph(&props);
         self.buffer().push_str(&format!("<w:p>{}", props.to_xml()));
         let prefix = std::mem::take(&mut self.content.paragraph_prefix);
         self.buffer().push_str(&prefix);

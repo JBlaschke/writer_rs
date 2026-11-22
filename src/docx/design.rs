@@ -555,16 +555,16 @@ pub fn style_xml(
         let attrs = spacing_attrs(&spacing);
         paragraph.set("w:spacing", property("w:spacing", &attrs));
     }
-    // The paragraphs of one div, or the lines of one footer, form one block
-    // whose outer margins the space keys are, as in HTML and Typst. Writer
-    // selects the other built-in names per block (body paragraphs, headings,
-    // contents entries, captions), so their space separates consecutive
-    // paragraphs of the same style and they keep the built-in's setting.
-    let block = matches!(
-        super::styles::vocabulary_paragraph(name),
-        None | Some("footer")
-    );
-    if block && (style.space_before.is_some() || style.space_after.is_some()) {
+    // The lines of one header or footer form one block whose outer margins
+    // the space keys are, so no space separates the lines. The paragraphs
+    // of one div form a block too, but keep their own space between
+    // themselves, which the emitter writes on them (`Emitter::space_div`).
+    // Writer selects the other built-in names per block (body paragraphs,
+    // headings, contents entries, captions), so their space separates
+    // consecutive paragraphs of the same style.
+    let lines = name.eq_ignore_ascii_case(super::styles::HEADER)
+        || super::styles::vocabulary_paragraph(name) == Some("footer");
+    if lines && (style.space_before.is_some() || style.space_after.is_some()) {
         paragraph.set("w:contextualSpacing", "<w:contextualSpacing/>");
     }
     if let Some(align) = style.align {
@@ -1002,7 +1002,7 @@ mod tests {
         assert_eq!(spacing.attr("w:before"), Some("60"));
         assert_eq!(spacing.attr("w:after"), Some("204"));
 
-        // The footer, a block of lines like the custom names, does get it.
+        // The footer's lines form one block, so it does get it.
         let footer = descendant(style("Footer"), &["w:pPr"]);
         assert!(names(footer).contains(&"w:contextualSpacing".to_owned()));
 
@@ -1054,11 +1054,32 @@ mod tests {
             descendant(custom, &["w:basedOn"]).attr("w:val"),
             Some("BodyText")
         );
+        // No contextual spacing: the emitter spaces a div's paragraphs.
         assert_eq!(
             names(descendant(custom, &["w:pPr"])),
-            ["w:keepNext", "w:spacing", "w:contextualSpacing"]
+            ["w:keepNext", "w:spacing"]
         );
         assert!(custom.children.iter().all(|n| n.name != "w:rPr"));
+    }
+
+    #[test]
+    fn only_header_and_footer_lines_get_contextual_spacing() {
+        use crate::design::Style;
+        use crate::docx::styles::{StyleKind, StyleTable};
+        let mut design = design();
+        let spaced = Style { space_after: Some(Pt(6.0)), ..Style::default() };
+        for name in ["Header", "footer", "Closing", "Caption"] {
+            design.styles.insert(name.into(), spaced.clone());
+        }
+        let table = StyleTable::generated(&design);
+        let contextual = |name: &str| {
+            let id = table.id_for(name, StyleKind::Paragraph).unwrap();
+            table.definition_xml(id).unwrap().contains("w:contextualSpacing")
+        };
+        assert!(contextual("Header"));
+        assert!(contextual("footer"));
+        assert!(!contextual("Closing"));
+        assert!(!contextual("Caption"));
     }
 
     #[test]

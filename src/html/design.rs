@@ -8,7 +8,9 @@ use typst::text::{FontInfo, FontStyle};
 use super::styles::Targets;
 use crate::assets::emit::{Emitter, OutputMode};
 use crate::assets::registry::AssetRegistry;
-use crate::design::{Color, Design, LineHeight, Pt};
+use crate::design::{
+    Align, Color, Design, FontRef, LineHeight, Pt, Style, normalise_style_key,
+};
 use crate::error::Result;
 
 /// Font faces and CSS tokens that form the theme's optional baseline.
@@ -189,6 +191,7 @@ pub fn layout_css(
     }
     // Named styles, furniture and the page background append their CSS here.
     css.push_str(&styles_css(design));
+    css.push_str(&vocabulary_css(design));
     css.push_str(&furniture_css(design, _targets)?);
     css.push_str(&background_css(design, _targets)?);
     Ok(css)
@@ -272,75 +275,263 @@ pub(crate) fn file_url(
     }
 }
 
+/// A style's text keys and alignment as CSS declarations, each only when
+/// set, in design.md §8.3's order.
+fn text_declarations(style: &Style) -> Vec<String> {
+    let mut declarations = Vec::new();
+    if let Some(font) = &style.font {
+        let value = match font {
+            FontRef::Body => "var(--w-font-body)".into(),
+            FontRef::Heading => "var(--w-font-heading)".into(),
+            FontRef::Mono => "var(--w-font-mono)".into(),
+            FontRef::Family(family) => css_string(family),
+        };
+        declarations.push(format!("font-family:{value}"));
+    }
+    if let Some(size) = style.size {
+        declarations.push(format!("font-size:{}", css_pt(size)));
+    }
+    if let Some(height) = style.line_height {
+        declarations.push(format!("line-height:{}", css_line_height(height)));
+    }
+    if let Some(color) = style.color {
+        declarations.push(format!("color:{}", css_color(color)));
+    }
+    if let Some(weight) = style.weight {
+        declarations.push(format!("font-weight:{}", weight.0));
+    }
+    if let Some(italic) = style.italic {
+        declarations.push(format!(
+            "font-style:{}",
+            if italic { "italic" } else { "normal" }
+        ));
+    }
+    if let Some(align) = style.align {
+        let value = match align {
+            Align::Left => "left",
+            Align::Center => "center",
+            Align::Right => "right",
+            Align::Justify => "justify",
+        };
+        declarations.push(format!("text-align:{value}"));
+    }
+    declarations
+}
+
+/// A style's spaces as declarations of the two given properties.
+fn space_declarations(style: &Style, before: &str, after: &str) -> Vec<String> {
+    let mut declarations = Vec::new();
+    if let Some(space) = style.space_before {
+        declarations.push(format!("{before}:{}", css_pt(space)));
+    }
+    if let Some(space) = style.space_after {
+        declarations.push(format!("{after}:{}", css_pt(space)));
+    }
+    declarations
+}
+
+/// Every key a style sets on a block of its own (design.md §8.3): the text
+/// keys, the spaces as margins and the keep flags.
+fn block_declarations(style: &Style) -> Vec<String> {
+    let mut declarations = text_declarations(style);
+    declarations
+        .extend(space_declarations(style, "margin-top", "margin-bottom"));
+    if style.keep_together {
+        declarations.push("break-inside:avoid".into());
+    }
+    if style.keep_with_next {
+        declarations.push("break-after:avoid".into());
+    }
+    declarations
+}
+
 /// Paragraph style rules selected by the resolved design's declared names.
 pub fn styles_css(design: &Design) -> String {
-    use crate::design::{Align, FontRef};
     let mut css = String::new();
     for (name, style) in &design.styles {
-        let mut declarations = Vec::new();
-        if let Some(font) = &style.font {
-            let value = match font {
-                FontRef::Body => "var(--w-font-body)".into(),
-                FontRef::Heading => "var(--w-font-heading)".into(),
-                FontRef::Mono => "var(--w-font-mono)".into(),
-                FontRef::Family(family) => css_string(family),
-            };
-            declarations.push(format!("font-family:{value}"));
-        }
-        if let Some(size) = style.size {
-            declarations.push(format!("font-size:{}", css_pt(size)));
-        }
-        if let Some(height) = style.line_height {
-            declarations
-                .push(format!("line-height:{}", css_line_height(height)));
-        }
-        if let Some(color) = style.color {
-            declarations.push(format!("color:{}", css_color(color)));
-        }
-        if let Some(weight) = style.weight {
-            declarations.push(format!("font-weight:{}", weight.0));
-        }
-        if let Some(italic) = style.italic {
-            declarations.push(format!(
-                "font-style:{}",
-                if italic { "italic" } else { "normal" }
-            ));
-        }
-        if let Some(align) = style.align {
-            let value = match align {
-                Align::Left => "left",
-                Align::Center => "center",
-                Align::Right => "right",
-                Align::Justify => "justify",
-            };
-            declarations.push(format!("text-align:{value}"));
-        }
-        if let Some(space) = style.space_before {
-            declarations.push(format!("margin-top:{}", css_pt(space)));
-        }
-        if let Some(space) = style.space_after {
-            declarations.push(format!("margin-bottom:{}", css_pt(space)));
-        }
-        if style.keep_together {
-            declarations.push("break-inside:avoid".into());
-        }
-        if style.keep_with_next {
-            declarations.push("break-after:avoid".into());
-        }
+        let selector = format!("[data-style={}]", css_string(name));
         let _ = writeln!(
             css,
-            "[data-style={}]{{{}}}",
-            css_string(name),
-            declarations.join(";")
+            "{selector}{{{}}}",
+            block_declarations(style).join(";")
         );
         if style.align.is_some() {
-            let _ = writeln!(
-                css,
-                "[data-style={}] p{{text-align:inherit}}",
-                css_string(name)
-            );
+            let _ = writeln!(css, "{selector} p{{text-align:inherit}}");
+        }
+        // A space the style sets is the whole space at that edge of the div:
+        // the first or last block inside must not add its own margin to it.
+        if style.space_before.is_some() {
+            let _ = writeln!(css, "{selector}>:first-child{{margin-top:0}}");
+        }
+        if style.space_after.is_some() {
+            let _ = writeln!(css, "{selector}>:last-child{{margin-bottom:0}}");
         }
     }
+    css
+}
+
+/// The selectors, each limited to the document's own elements. `:where` adds
+/// no specificity, so a rule keeps the specificity of the selector alone.
+fn scoped(selectors: &[&str]) -> String {
+    selectors
+        .iter()
+        .map(|selector| format!(":where([data-writer-document]) {selector}"))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+/// Writes one rule for the scoped selectors; none without declarations.
+fn push_rule(css: &mut String, selectors: &[&str], declarations: &[String]) {
+    if !declarations.is_empty() {
+        let _ = writeln!(
+            css,
+            "{}{{{}}}",
+            scoped(selectors),
+            declarations.join(";")
+        );
+    }
+}
+
+/// `top`'s keys laid over `base`'s, as Word's `basedOn` layers two styles.
+fn layered(base: Option<&Style>, top: Option<&Style>) -> Option<Style> {
+    let (Some(base), Some(top)) = (base, top) else {
+        return base.or(top).cloned();
+    };
+    Some(Style {
+        font: top.font.clone().or_else(|| base.font.clone()),
+        size: top.size.or(base.size),
+        line_height: top.line_height.or(base.line_height),
+        color: top.color.or(base.color),
+        weight: top.weight.or(base.weight),
+        italic: top.italic.or(base.italic),
+        align: top.align.or(base.align),
+        space_before: top.space_before.or(base.space_before),
+        space_after: top.space_after.or(base.space_after),
+        keep_together: top.keep_together || base.keep_together,
+        keep_with_next: top.keep_with_next || base.keep_with_next,
+        frame: None,
+    })
+}
+
+/// Rules that give writer's own elements the design's vocabulary styles
+/// (design.md §8.8), as Word and the PDF apply them: headings, the contents
+/// title and entries, captions, table cells and the title block.
+pub fn vocabulary_css(design: &Design) -> String {
+    let style = |name: &str| {
+        let key = normalise_style_key(name);
+        design
+            .styles
+            .iter()
+            .find(|(declared, _)| normalise_style_key(declared) == key)
+            .map(|(_, style)| style)
+    };
+    let mut css = String::new();
+    for level in 1..=6 {
+        let Some(style) = style(&format!("Heading {level}")) else {
+            continue;
+        };
+        let heading = format!("h{level}");
+        // The document title is an `h1` of its own style, `Title`; the
+        // bibliography title is a level-1 heading in Word as well.
+        let selectors = if level == 1 {
+            vec!["h1:where(:not(.title))", ".references-title"]
+        } else {
+            vec![heading.as_str()]
+        };
+        push_rule(&mut css, &selectors, &block_declarations(style));
+    }
+    for level in 1..=6 {
+        let Some(style) = style(&format!("Heading {level} Unlisted")) else {
+            continue;
+        };
+        let selectors = [
+            format!("h{level}.unlisted"),
+            format!("h{level}.notoc"),
+            format!(".abstract h{level}"),
+        ];
+        let selectors: Vec<_> = selectors.iter().map(String::as_str).collect();
+        push_rule(&mut css, &selectors, &block_declarations(style));
+    }
+    if let Some(style) = layered(style("Heading 1"), style("TOC Heading")) {
+        push_rule(&mut css, &["p.toc-title"], &block_declarations(&style));
+    }
+    for level in 1..=6 {
+        let Some(style) = style(&format!("toc {level}")) else {
+            continue;
+        };
+        let declarations = block_declarations(style);
+        if declarations.is_empty() {
+            continue;
+        }
+        let list = format!("nav.toc{}>ol", ">ol>li".repeat(level - 1));
+        let item = format!("{list}>li");
+        let mut entry = vec!["display:block".to_string()];
+        entry.extend(declarations);
+        push_rule(&mut css, &[&format!("{item}>a")], &entry);
+        // The entry's own space replaces the theme's list margins above it.
+        if style.space_before.is_some() {
+            push_rule(&mut css, &[&list, &item], &["margin-top:0".into()]);
+        }
+    }
+    for (name, selector) in [
+        ("Caption", "figcaption"),
+        ("Table Caption", ".kind-table>figcaption"),
+        ("Image Caption", ".kind-image>figcaption"),
+    ] {
+        if let Some(style) = style(name) {
+            push_rule(&mut css, &[selector], &text_declarations(style));
+        }
+    }
+    if let Some(style) = style("Compact") {
+        let mut declarations = text_declarations(style);
+        declarations
+            .extend(space_declarations(style, "padding-top", "padding-bottom"));
+        push_rule(&mut css, &["th", "td"], &declarations);
+    }
+    // An empty cell holds one line, as every cell does in Word.
+    push_rule(
+        &mut css,
+        &["td:empty::before", "th:empty::before"],
+        &["content:\"\\200b\"".into()],
+    );
+    let title = style("Title");
+    if let Some(style) = title {
+        push_rule(&mut css, &[".title"], &block_declarations(style));
+    }
+    // Word bases `Subtitle`, `Author` and `Date` on `Title`, and the PDF
+    // aligns the title block as `Title` is aligned: a part without an
+    // `align` of its own takes `Title`'s here as well.
+    let part = |name: &str| {
+        let mut part = style(name).cloned().unwrap_or_default();
+        part.align = part.align.or(title.and_then(|title| title.align));
+        part
+    };
+    let subtitle = part("Subtitle");
+    push_rule(&mut css, &["p.subtitle"], &block_declarations(&subtitle));
+    // The authors share one block: its edges take the style's spaces, and
+    // each author's own margin gives way to them.
+    let author = part("Author");
+    let mut declarations = text_declarations(&author);
+    if author.space_before.is_some() {
+        declarations.push("margin-top:0".into());
+    }
+    if author.space_after.is_some() {
+        declarations.push("margin-bottom:0".into());
+    }
+    push_rule(&mut css, &["p.author"], &declarations);
+    let mut authors =
+        space_declarations(&author, "margin-top", "margin-bottom");
+    let place = match author.align {
+        Some(Align::Left) => Some("flex-start"),
+        Some(Align::Center) => Some("center"),
+        Some(Align::Right) => Some("flex-end"),
+        Some(Align::Justify) | None => None,
+    };
+    if let Some(place) = place {
+        authors.push(format!("justify-content:{place}"));
+    }
+    push_rule(&mut css, &[".authors"], &authors);
+    push_rule(&mut css, &["p.date"], &block_declarations(&part("Date")));
     css
 }
 

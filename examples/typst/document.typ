@@ -1,4 +1,4 @@
-#import "@writer/doc:0.4.0": *
+#import "@writer/doc:0.5.0": *
 
 #show: writer-doc.with(
     title: [A native Typst document],

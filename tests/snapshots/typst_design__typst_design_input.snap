@@ -297,5 +297,6 @@ expression: snapshot
       "keep_with_next": false,
       "frame": null
     }
-  }
+  },
+  "lines": {}
 }

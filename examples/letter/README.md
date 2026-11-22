@@ -81,11 +81,14 @@ The `text` portion of the resolved `dump --design` output is:
 
 Lengths are resolved to points. The three outputs share the geometry these
 values describe: body lines 1.35 × 11 pt = 14.85 pt apart, and 10.2 pt more
-(3.6 mm) across a paragraph break. In the PDF, `writer-doc` derives Typst's
-leading and paragraph spacing from them and from the body font's measured cap
-height, so the template needs no hand-tuned `par(leading:)`. Changing
-`paragraph_spacing` in the theme changes all three outputs. A document can
-override individual keys through front matter:
+(3.6 mm) across a paragraph break. The named styles' spaces follow one rule
+in all three: where two blocks meet, the larger of the upper block's
+`space_after` and the lower block's `space_before` applies, so the 6 mm
+before the salutation replaces the 3 mm after the date. In the PDF,
+`writer-doc` builds its lines as Word does, so the letter needs no Typst
+template for its spacing. Changing `paragraph_spacing` in the theme changes
+all three outputs. A document can override individual keys through front
+matter:
 
 ```yaml
 ---

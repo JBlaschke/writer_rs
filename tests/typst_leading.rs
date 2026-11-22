@@ -2,7 +2,9 @@
 //! `text.line_height` and `text.paragraph_spacing` with the geometry of HTML
 //! and Word (design.md §6.2): a multiple `n` is a baseline pitch of `n × size`,
 //! and a paragraph break adds the paragraph spacing to a full pitch, as HTML's
-//! `margin-block: 0 <spacing>` and Word's `w:after` do.
+//! `margin-block: 0 <spacing>` and Word's `w:after` do. The lines sit in
+//! Word's line boxes: no leading between them, the font's ascent above the
+//! baseline and the rest of the pitch below it.
 
 use std::path::Path;
 
@@ -27,11 +29,18 @@ const SIZE: f64 = 11.0;
 const LINE_HEIGHT: f64 = 1.35;
 const SPACING: f64 = 3.6 * 72.0 / 25.4;
 const TOLERANCE: f64 = 0.05;
+/// The package's page margin, 2.5 cm in pt.
+const MARGIN: f64 = 25.0 * 72.0 / 25.4;
 
-/// A two-paragraph body whose last paragraph reports the resolved leading.
+/// A two-paragraph body whose last paragraph reports the resolved leading
+/// and the top and bottom edge of its lines, in pt.
 const BODY: &str = concat!(
     "LINEONE \\\nLINETWO\n\n",
-    "PARATWO #context [#metadata(par.leading.to-absolute().pt()) <leading>]\n",
+    "PARATWO #context [#metadata((\n",
+    "    par.leading.to-absolute().pt(),\n",
+    "    text.top-edge.to-absolute().pt(),\n",
+    "    text.bottom-edge.to-absolute().pt(),\n",
+    ")) <line-box>]\n",
 );
 
 /// The embedded `family`'s regular face, instantiated at the body size: the
@@ -109,17 +118,24 @@ fn baseline(document: &PagedDocument, marker: &str) -> f64 {
         .1
 }
 
-/// The `par.leading` the package resolved, reported by `BODY`.
-fn leading(document: &PagedDocument) -> f64 {
+/// The leading and the top and bottom edge the package resolved, reported
+/// by `BODY`.
+fn line_box(document: &PagedDocument) -> Vec<f64> {
     let content = document
         .introspector()
-        .query_label(Label::new(PicoStr::intern("leading")).unwrap())
+        .query_label(Label::new(PicoStr::intern("line-box")).unwrap())
         .unwrap();
     let metadata = content.to_packed::<MetadataElem>().unwrap();
-    let Value::Float(leading) = metadata.value else {
-        panic!("expected a resolved leading, got {:?}", metadata.value)
+    let Value::Array(values) = &metadata.value else {
+        panic!("expected a resolved line box, got {:?}", metadata.value)
     };
-    leading
+    values
+        .iter()
+        .map(|value| match value {
+            Value::Float(value) => *value,
+            other => panic!("expected a length in pt, got {other:?}"),
+        })
+        .collect()
 }
 
 fn assert_close(actual: f64, expected: f64, what: &str) {
@@ -130,7 +146,8 @@ fn assert_close(actual: f64, expected: f64, what: &str) {
 }
 
 /// Compiles `BODY` under `fonts` with the letter's text values and checks the
-/// line pitch and the paragraph gap; returns the resolved leading.
+/// line pitch, the paragraph gap and the line box; returns the ascent the
+/// box puts above the baseline, in pt.
 fn geometry(root: &Path, fonts: serde_json::Value) -> f64 {
     let design = design(
         serde_json::json!({
@@ -148,7 +165,16 @@ fn geometry(root: &Path, fonts: serde_json::Value) -> f64 {
     let next = baseline(&document, "PARATWO");
     assert_close(second - first, LINE_HEIGHT * SIZE, "line pitch");
     assert_close(next - second, LINE_HEIGHT * SIZE + SPACING, "paragraph gap");
-    leading(&document)
+    // Word's line box: no leading, the whole pitch between the two edges,
+    // and the first baseline the ascent below the page margin.
+    let lines = line_box(&document);
+    let [leading, top, bottom] = lines[..] else {
+        panic!("expected three lengths, got {lines:?}")
+    };
+    assert_close(leading, 0.0, "leading");
+    assert_close(top - bottom, LINE_HEIGHT * SIZE, "line box height");
+    assert_close(first, MARGIN + top, "first baseline");
+    top
 }
 
 #[test]
@@ -157,51 +183,46 @@ fn a_declared_font_takes_the_design_pitch_and_paragraph_gap() {
     let font = embedded("Libertinus Serif");
     let path = directory.path().join("libertinus.otf");
     std::fs::write(&path, font.font().data()).unwrap();
-    let leading = geometry(
+    let ascent = geometry(
         directory.path(),
         serde_json::json!({"body": {
             "family": "Libertinus Serif", "files": [path],
         }}),
     );
-    // Typst's line box runs from the cap height to the baseline, so the
-    // leading is the pitch less the font's OS/2 cap height at the size.
-    let metrics = font.metrics();
-    assert!(metrics.cap_height < metrics.ascender, "a cap height metric");
-    assert_close(
-        leading,
-        LINE_HEIGHT * SIZE - metrics.cap_height.get() * SIZE,
-        "leading",
-    );
+    // Word places the baseline the `hhea` ascender below the top of the
+    // line; Libertinus Serif's is the ascender Typst reports too.
+    assert_close(ascent, font.metrics().ascender.get() * SIZE, "ascent");
 }
 
 #[test]
 fn a_font_without_a_cap_height_metric_keeps_the_pitch() {
-    // DejaVu Sans Mono's OS/2 table predates `sCapHeight`; Typst lays it out
-    // with its ascender as the line box, and the measured leading follows.
+    // DejaVu Sans Mono's OS/2 table predates `sCapHeight`, and the ascender
+    // Typst reports for it is below the `hhea` one Word places the baseline
+    // with, 1901 of 2048 units: the box follows the font's line metrics in
+    // the design input, not Typst's metric.
     let directory = tempfile::tempdir().unwrap();
     let font = embedded("DejaVu Sans Mono");
     let metrics = font.metrics();
     assert_eq!(metrics.cap_height, metrics.ascender, "no cap height metric");
-    let leading = geometry(
+    let ascent = geometry(
         directory.path(),
         serde_json::json!({"body": "DejaVu Sans Mono"}),
     );
-    assert_close(
-        leading,
-        LINE_HEIGHT * SIZE - metrics.ascender.get() * SIZE,
-        "leading",
-    );
+    assert_close(ascent, 1901.0 / 2048.0 * SIZE, "ascent");
+    assert!(ascent > metrics.ascender.get() * SIZE + 1.0);
 }
 
 #[test]
 fn a_missing_family_keeps_the_pitch_with_the_fallback_font() {
     let directory = tempfile::tempdir().unwrap();
-    let leading = geometry(
+    let ascent = geometry(
         directory.path(),
         serde_json::json!({"body": "Writer Unknown Font Family"}),
     );
-    let fallback = embedded("Libertinus Serif").metrics().cap_height.get();
-    assert_close(leading, LINE_HEIGHT * SIZE - fallback * SIZE, "leading");
+    // No font file gives the family's line metrics, so the box takes the
+    // ascender of the font Typst sets the text in.
+    let fallback = embedded("Libertinus Serif").metrics().ascender.get();
+    assert_close(ascent, fallback * SIZE, "ascent");
 }
 
 #[test]

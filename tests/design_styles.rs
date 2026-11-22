@@ -79,7 +79,9 @@ fn class_and_attribute_routes_share_html_typst_and_word_styles() {
     assert_eq!(document.matches("w:pStyle w:val=\"Recipient\"").count(), 2);
     assert!(styles.contains("w:after=\"340\""));
     assert!(styles.contains("w:line=\"242\""));
-    assert!(styles.contains("w:contextualSpacing"));
+    // A div's paragraphs keep their own space between themselves, which the
+    // emitter writes on them (design.md §8.5): no style merges it away.
+    assert!(!styles.contains("w:contextualSpacing"));
     assert_eq!(styles.matches("w:styleId=\"Date\"").count(), 1);
     let date = styles
         .split_once("<w:name w:val=\"Date\"/>")

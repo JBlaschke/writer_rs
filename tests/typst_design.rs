@@ -4,10 +4,6 @@ use std::path::Path;
 
 use typst::foundations::{Datetime, Label, Value};
 use typst::introspection::{Introspector, MetadataElem};
-use typst::layout::Abs;
-use typst::text::{
-    FontStretch, FontStyle, FontVariant, FontVariations, FontWeight,
-};
 use typst::utils::PicoStr;
 use writer::assets::registry::AssetRegistry;
 use writer::config::{Config, Target};
@@ -15,7 +11,7 @@ use writer::design::{Design, Layer, Origin, PathMode, merge};
 use writer::pipeline::{self, BuildOptions, WorldSlot};
 use writer::typst::compile::compile_document;
 use writer::typst::sourcemap::SourceMap;
-use writer::typst::world::{MainFile, WriterWorld, world_inputs};
+use writer::typst::world::{MainFile, WriterWorld, design_input, world_inputs};
 
 fn design(value: serde_json::Value, root: &Path) -> Design {
     merge(&[Layer {
@@ -42,7 +38,11 @@ fn inputs_are_absent_without_design_and_virtualize_furniture_images() {
     );
     let value: serde_json::Value =
         serde_json::from_str(&inputs["writer-design"]).unwrap();
-    assert_eq!(value, prepared.design.to_json(PathMode::Virtual(&assets)));
+    // The input is the design with the line metrics of its fonts on top
+    // (design.md §3.3); no font file here holds the fixture's family.
+    let mut expected = prepared.design.to_json(PathMode::Virtual(&assets));
+    expected["lines"] = serde_json::json!({});
+    assert_eq!(value, expected);
     assert!(
         value["page"]["header"]["first"]["image"]["path"]
             .as_str()
@@ -118,6 +118,8 @@ fn delegating_template_receives_design_defaults_and_explicit_arguments_win() {
     #context [#metadata((
         size: text.size.pt(), font: text.font,
         leading: par.leading.to-absolute().pt(),
+        top: text.top-edge.to-absolute().pt(),
+        bottom: text.bottom-edge.to-absolute().pt(),
         justify: par.justify,
     )) <design-settings>]
     #body
@@ -160,27 +162,21 @@ fn delegating_template_receives_design_defaults_and_explicit_arguments_win() {
     };
     assert_eq!(settings.get("size").unwrap(), &Value::Float(11.0));
     assert_eq!(settings.get("justify").unwrap(), &Value::Bool(false));
-    let Value::Float(leading) = settings.get("leading").unwrap() else {
-        panic!("expected an absolute leading value")
-    };
-    // 1.35 lines of 11pt less the line box Typst lays the body font out
-    // with (design.md §6.2): DejaVu Sans Mono has no OS/2 cap height, so
-    // that box is its ascender, which `cap_height` then reports.
-    let (font, _) = writer::typst::fonts::embedded()
-        .find(|(_, info)| info.family == "DejaVu Sans Mono")
-        .unwrap();
-    let regular = FontVariant::new(
-        FontStyle::Normal,
-        FontWeight::REGULAR,
-        FontStretch::NORMAL,
-    );
-    let instance =
-        font.instantiate(regular, Abs::pt(11.0), &FontVariations::default());
-    let expected = 1.35 * 11.0 - instance.metrics().cap_height.get() * 11.0;
-    assert!(
-        (leading - expected).abs() < 0.01,
-        "leading {leading}, expected {expected}"
-    );
+    // Word's line box (design.md §6.2): no leading, and 1.35 lines of 11pt
+    // split at the baseline by the body font's ascent. DejaVu Sans Mono's
+    // `hhea` ascender is 1901 of 2048 units.
+    let ascent = 1901.0 / 2048.0 * 11.0;
+    for (key, expected) in
+        [("leading", 0.0), ("top", ascent), ("bottom", ascent - 1.35 * 11.0)]
+    {
+        let Value::Float(value) = settings.get(key).unwrap() else {
+            panic!("expected an absolute {key} value")
+        };
+        assert!(
+            (value - expected).abs() < 0.01,
+            "{key} {value}, expected {expected}"
+        );
+    }
     let matches_family = |family: &Value| {
         matches!(family,
             Value::Str(family) if family.as_str().eq_ignore_ascii_case("DejaVu Sans Mono")
@@ -452,4 +448,57 @@ fn an_explicit_design_argument_beats_the_input_and_none_keeps_the_defaults() {
             "design: {argument}"
         );
     }
+}
+
+#[test]
+fn design_input_carries_the_line_metrics_of_the_designs_fonts() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let mut config = Config::default();
+    config.pdf.system_fonts = false;
+    let (font, _) = writer::typst::fonts::embedded()
+        .find(|(_, info)| info.family == "Libertinus Serif")
+        .unwrap();
+    let path = root.join("libertinus.otf");
+    std::fs::write(&path, font.data()).unwrap();
+    let named = design(
+        serde_json::json!({
+            "fonts": {
+                "body": "DejaVu Sans Mono",
+                "heading": {"family": "Libertinus Serif", "files": [path]},
+                "mono": "No Such Family",
+            },
+            "styles": {
+                "Heading 3": {"font": "DejaVu Sans Mono Bold"},
+                "Quote": {"font": "New Computer Modern"},
+            },
+        }),
+        root,
+    );
+    let assets = AssetRegistry::new();
+    let input = design_input(&config, &named, PathMode::Virtual(&assets));
+    assert_eq!(
+        input["lines"],
+        serde_json::json!({
+            "dejavu sans mono": {"single": 1.1640625, "ascent": 0.92822265625},
+            "dejavu sans mono bold": {
+                "single": 1.1640625, "ascent": 0.92822265625
+            },
+            "libertinus serif": {"single": 1.14, "ascent": 0.894},
+            "new computer modern": {"single": 1.417, "ascent": 1.127},
+        })
+    );
+    assert_eq!(
+        input.as_object().unwrap().keys().collect::<Vec<_>>(),
+        ["fonts", "text", "colors", "page", "styles", "lines"]
+    );
+    assert!(input["lines"].get("no such family").is_none());
+
+    let sized = design(serde_json::json!({"text": {"size": "11pt"}}), root);
+    let input = design_input(&config, &sized, PathMode::Virtual(&assets));
+    assert_eq!(input["lines"], serde_json::json!({}));
+
+    let input =
+        design_input(&config, &Design::default(), PathMode::Virtual(&assets));
+    assert!(input.is_null());
 }

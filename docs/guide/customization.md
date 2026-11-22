@@ -71,10 +71,17 @@ restyled `TOC Heading` keeps its outline level and stays out of the contents
 list, and `toc 2` keeps its indent. Header lines use a style named `Header`,
 which you can declare the same way. The PDF applies the same styles to its
 headings, title block, contents list, captions, table cells and furniture
-lines, so one table styles both outputs; see [named paragraph
-styles](configuration.md#named-paragraph-styles) for the list. HTML applies
-named styles to divs only; its heading look comes from the theme's CSS.
+lines, and HTML to all of these except the furniture lines, so one table
+styles all three outputs; see [named paragraph
+styles](configuration.md#named-paragraph-styles) for the list.
 `writer check` does not report any of these styles as unused.
+
+In HTML these styles become CSS rules that follow the theme's stylesheets
+and weigh as much as a plain selector for the element. A theme rule such as
+`h1 { margin-top: 2em }` therefore loses to `Heading 1`'s `space_before`,
+while a more specific one such as `.report h1 { margin-top: 2em }` still
+wins, and a property the style does not set stays the theme's. A theme that
+declares one of these styles can delete the CSS that restated it.
 
 Furniture slots can contain an image, lines, a right column and a rule. Text
 is plain text. `{page}` and `{pages}` become page counters in printed output;
@@ -117,7 +124,7 @@ stay inside their theme. Font and image changes rebuild every affected output.
 
 | Existing customization | How it interacts with design |
 |---|---|
-| HTML theme CSS | Explicit theme rules and token overrides win; dark-mode theme rules still apply. |
+| HTML theme CSS | Token overrides win, and so does a theme rule more specific than the design's rule for the same element; dark-mode theme rules still apply. |
 | Typst PDF template | A template delegating to `writer-doc` receives design defaults; explicit arguments and later rules win. |
 | Word reference document | Existing styles and the body section, including referenced headers and footers, win. Missing styles can use generated definitions. |
 
@@ -235,7 +242,7 @@ comes from `[design]`; the template holds what the design has no key for, and
 overrides for the PDF alone. The exported file is the smallest such template:
 
 ```typst
-#import "@writer/doc:0.4.0" as base
+#import "@writer/doc:0.5.0" as base
 
 #let writer-doc(..args, body) = {
     let theme = base.design-tokens(..args)
@@ -267,7 +274,7 @@ header row in the accent colour and sets second-level headings in italics in
 the PDF only:
 
 ```typst
-#import "@writer/doc:0.4.0" as base
+#import "@writer/doc:0.5.0" as base
 
 #let cover(meta, theme) = {
     let face(name) = base.style-tokens(theme, name).text
@@ -297,6 +304,36 @@ headings and contents entries, the text and padding of table cells (`Compact`)
 and the line height of header and footer lines (`Header`, `footer`). To keep a
 value for the PDF alone, write the rule after the `writer-doc` line, for
 example `show heading.where(level: 1): set block(above: 2em, below: 1em)`.
+
+With a `[design]`, `writer-doc` builds lines and spaces as Word does ([body
+text](configuration.md#body-text)), and a template's own rules meet that
+layout:
+
+- A line's top edge is the font's ascent instead of its cap height. Text that
+  a template places against the top of a line or of the page sits lower by
+  the difference, 2.6 pt at 11 pt Libertinus Serif. A cover or another page
+  that the template draws itself gets Typst's edges back by starting with
+  `set text(top-edge: "cap-height", bottom-edge: "baseline")` and `set
+  par(leading: 0.65em)`.
+- Typst's leading is zero. `set par(leading: 4pt)` after the `writer-doc`
+  line adds 4 pt between the line boxes; to change the line pitch, set
+  `text.line_height` in the design or pass `leading:` to `writer-doc`.
+- Footnotes and display equations have rules of their own, which that `set
+  par(leading: ..)` does not reach. A footnote's lines are line boxes at the
+  note's size: `show footnote.entry: set par(leading: 2pt)` after the
+  `writer-doc` line adds 2 pt between them, and `set footnote.entry(gap:
+  1em)` sets the space between two notes. The rows of a display equation
+  keep the leading they had before, the line pitch less the cap height:
+  `show math.equation.where(block: true): set par(leading: 1em)` sets
+  another.
+- `set par(spacing: 8pt)` after the `writer-doc` line sets the paragraph
+  spacing, measured between line boxes.
+- A first-line indent needs `all: true`, as in `set par(first-line-indent:
+  (amount: 1em, all: true))`. Typst indents only a paragraph that directly
+  follows another one, and the package ends every paragraph with an invisible
+  block that carries its spacing.
+- The first block of the document keeps its `space_before` at the top of the
+  first page. A template that added a `v(..)` there for that removes it.
 
 A native Typst document applies its own show rule in source and ignores this
 setting with a warning.

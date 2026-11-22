@@ -76,10 +76,12 @@ A shared `[design]` supplies PDF font families, body size and line height,
 paragraph gaps, colors, page geometry, paragraph styles and page furniture.
 The bundled `writer-doc` reads resolved values through the `writer-design`
 compiler input. Named styles that carry a Word style name, such as
-`Heading 1`, `Title` or `toc 2`, style the same elements here as in Word. A
-custom template receives all of this when it delegates to `writer-doc`;
-explicit arguments win, and so do Typst rules placed after the `writer-doc`
-call ([PDF template](customization.md#generated-typst-pdf-template)).
+`Heading 1`, `Title` or `toc 2`, style the same elements here as in Word,
+and lines and the spaces between blocks are built as Word builds them
+([body text](configuration.md#body-text)). A custom template receives all of
+this when it delegates to `writer-doc`; explicit arguments win, and so do
+Typst rules placed after the `writer-doc` call ([PDF
+template](customization.md#generated-typst-pdf-template)).
 Declared font files load after `pdf.font_paths` and before system fonts.
 Design font and image changes are content inputs and rebuild retained sessions;
 other font discovery remains cached until the session restarts.

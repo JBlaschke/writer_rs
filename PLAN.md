@@ -307,7 +307,7 @@ writer_rs/                                                                    ow
 ├── assets/writer/live-reload.js: T22   pages.js: T21 (placeholder) → T24   math.js: T00 (one-line placeholder) → T1A
 ├── assets/l10n/**                                                              T01 (en.toml, with src/resolve/l10n.rs)
 ├── assets/themes/default/{theme.toml, templates/**}                           T15 → T19;  styles/**, README.md: T19
-├── assets/typst/writer-doc/**   (@writer/doc: typst.toml, lib.typ, callout.typ, numbering.typ, cells.typ, oracle.typ, design.typ, template.typ)   T31 (cells.typ include-notebook helper: T53, additive; design.typ, its rules in lib.typ and the starter template.typ: T94; the package version: T93)
+├── assets/typst/writer-doc/**   (@writer/doc: typst.toml, lib.typ, callout.typ, numbering.typ, cells.typ, oracle.typ, design.typ, template.typ)   T31 (cells.typ include-notebook helper: T53, additive; design.typ, its rules in lib.typ and the starter template.typ: T94; line boxes and block spaces in design.typ and lib.typ: T98; the package version: T93, T97)
 ├── assets/docx/{styles.xml, numbering.xml, settings.xml}                       T04
 ├── assets/latex/writer-template.tex                                            T61
 ├── assets/scaffold/**                                                          T72
@@ -323,7 +323,8 @@ writer_rs/                                                                    ow
 ├── src/math/mod.rs: T00 (skeleton)   latex_source.rs: T30 (T33 adds private shared preflight)   latex_mathml.rs: T1A   omml.rs and private omml/{parse,fold,render,text}.rs: T42   typst_to_latex.rs and private typst_to_latex/{symbols,calls}.rs + assets/math/unicode-latex.toml: T51
 ├── src/html/{emit,highlight}.rs: T13   {mod,context,document,paths,styles}.rs: T15   math.rs: T1A
 ├── src/theme/{mod,manifest,resolve,templates}.rs                               T15
-├── src/design/{mod,parse,merge,resolve,json}.rs: T80   src/html/design.rs: T81 → T85 → T86   src/docx/design.rs: T83 → T87 (T85 additive)   src/check/design.rs: T80 (T82, T83, T85 additive)   examples/letter/: T89   (design layer, docs/spec/design.md; M8)
+├── src/design/{mod,parse,merge,resolve,json}.rs: T80   src/html/design.rs: T81 → T85 → T86 → T99   src/docx/design.rs: T83 → T87 (T85 additive; T100)   src/check/design.rs: T80 (T82, T83, T85 additive)   examples/letter/: T89   (design layer, docs/spec/design.md; M8)
+├── spacing model (design.md §0.3; M8, 2026-11-21): src/docx/lines.rs, `design_input` in src/typst/world.rs, src/pipeline/typst.rs: T96   src/docx/{body,columns,styles}.rs (a div's inner spacing): T100   docs/guide/*.md, examples/letter/README.md (the model's passages): T101
 ├── src/docx/{mod,package,styles,numbering,reference,validate}.rs: T04   {body,inline,footnotes}.rs: T40   {tables,images,fields,toc}.rs: T41   math.rs: T42   custom_style.rs: T43
 ├── src/latex/{emit,escape}.rs: T60   {mod,template,assets,preamble}.rs: T61
 ├── src/pipeline/mod.rs (dispatch, every arm): T16   html.rs: T16   pdf.rs: T32   typst.rs (export): T34   docx.rs: T41   latex.rs: T61   typst_source.rs (.typ inputs): T52
@@ -504,6 +505,12 @@ presenter_rs per R8 §10.
 | T93 | `@writer/doc` 0.4.0: the package version in the constant, the manifest, the starter template's import, the example, the fixtures, the test literals and the snapshots; no behaviour change (added 2026-11-20) | S | T90, T91, T92 |
 | T94 | Vocabulary styles in the PDF: `design.typ` applies `[design.styles]` tables named after §2.3 Word styles to headings, the title block, the contents, captions, table cells and the furniture lines as show-set rules a template can override; `writer-doc(title-block:)`, `design-tokens`/`style-tokens`; starter template in override order (R11; added 2026-11-20) | M | T92, T93 |
 | T95 | Guide: named styles in the PDF, the PDF template as a list of overrides, design tokens (added 2026-11-20) | S | T94 |
+| T96 | Font line metrics for Typst: `WordLines::load_declared`, `line_metrics`, and `design_input`, which adds a `lines` table (single line and ascent per family, in em) to the `writer-design` input and to an export's `writer-design.json` (R12 §5.1, §5.2; added 2026-11-21) | S | T92, T95 |
+| T97 | `@writer/doc` 0.5.0: the package version in the constant, the manifest, the starter template's import, the guide, the example, the fixtures, the test literals and the snapshots; no behaviour change (added 2026-11-21) | S | T96 |
+| T98 | One spacing model in the PDF: with a declared design `design.typ` and `lib.typ` set Word's line box (`text` edges from the font's line metrics, `par.leading` 0pt) and keep the larger of two adjacent blocks' spaces, with the first block's space before held on page 1; no design, no change; `tests/typst_spacing.rs` pins the positions (R12 §5.3, §5.4; added 2026-11-21) | M | T96, T97 |
+| T99 | One spacing model in HTML: `vocabulary_css` writes the vocabulary styles as scoped rules after the theme's entries (decision D2), `styles_css` makes a div's spaces its outer edges, an empty table cell holds one line (R12 §5.5; added 2026-11-21) | S | T98 |
+| T100 | One spacing model in Word: a styled div is one block (decision D1): `w:contextualSpacing` on `Header` and `footer` alone, direct spacing between a div's paragraphs written when the div ends; `tests/docx_div_spacing.rs` (R12 §5.6 to §5.8; added 2026-11-21) | S | T99 |
+| T101 | Guide: lines and block spaces in the three outputs, vocabulary styles in HTML, a div as one block, what a Typst template meets under 0.5.0 (added 2026-11-21) | S | T98, T99, T100 |
 
 ### Dependency graph (what each task unblocks; derived from the dependency column)
 
@@ -546,6 +553,12 @@ w15 T91 ─► T93
 w16 T90 ─► T93        T92 ─► T93, T94
 w17 T93 ─► T94
 w18 T94 ─► T95
+w19 T95 ─► T96
+w20 T96 ─► T97, T98
+w21 T97 ─► T98
+w22 T98 ─► T99, T101
+w23 T99 ─► T100, T101
+w24 T100 ─► T101
 ```
 
 ### Waves (computed from the dependency column; no task depends on a task in its own wave)
@@ -573,6 +586,12 @@ w18 T94 ─► T95
 | 17 | T93 | 1 |
 | 18 | T94 | 1 |
 | 19 | T95 | 1 |
+| 20 | T96 | 1 |
+| 21 | T97 | 1 |
+| 22 | T98 | 1 |
+| 23 | T99 | 1 |
+| 24 | T100 | 1 |
+| 25 | T101 | 1 |
 
 Edges added after the first plan (`A → B`: B depends on A). Requested in the specs' Deviations:
 T03 → T15, T14 → T12, T13 → T18, T13 → T60, T30 → T1A, T16 → T1A (html-output.md, math.md);
@@ -619,6 +638,26 @@ new package version, and on T92 because the PDF follows the vocabulary names T92
 T95 documents T94. The three run one after the other (waves 17–19): each edits files the next
 one reads. `scripts/waves.py` no longer runs over `docs/tasks/` (seventeen frozen briefs name
 their dependency row `Dependencies`), so these waves were computed by hand.
+M8 (coordinator, 2026-11-21, `docs/research/R12-spacing-model.md`; design.md §0.3, §6.2, §6.3,
+§8.3, §8.5 and §8.8): T96–T101 make Word, the PDF and HTML lay a declared design out alike, with
+Word as the reference because Word cannot be taught another layout: a line is a box as tall as
+its pitch, hung from the font's ascent, and between two blocks the larger of their two spaces
+holds. T96 comes first because the package needs the fonts' line metrics as an input; T97 moves
+the package to 0.5.0 before T98 changes its behaviour, as T93 did before T94; T99 and T100 bring
+HTML and Word to the same model and follow T98 so that every stage can be compared with the
+PDF; T101 documents all of it. The six run one after the other (waves 20–25, computed by hand).
+Each installs its part of the reference code in R12 §5 with `git apply`. Two decisions are the
+maintainer's (R12 §7): D1, a styled div is one block in Word (T100, separable), and D2, an HTML
+vocabulary rule beats a theme rule of the same specificity (T99). Lists, block quotes, code
+blocks, the space around tables and figures, footnotes, callouts, equations and undeclared
+headings stay outside the model; R12 §8 holds the measurements for that follow-up. In the PDF
+their spaces now lie between line boxes like every other space, so they are not where 0.4.0 had
+them (R12 §7 has the table), and T98 gives footnotes and display equations rules of their own,
+because Typst reads the paragraph leading there too. Outside the model stays every
+key a declared style leaves unset, which keeps each backend's built-in value: a heading without
+`space_before` or `space_after` has Word's, Typst's and the theme CSS's own space (in the PDF
+about 8 pt more than under 0.4.0, R12 §7), and the title block's parts inherit `Title`'s
+alignment in all three outputs but its other keys in Word alone.
 
 The hard integration points are T16 (everything of M1 meets), T32 (emitter, package and
 compiler meet) and T52 (the typst backend meets serve and the exports). The coordinator
@@ -829,3 +868,12 @@ No `writer.toml` may live in an ancestor of the fixture directories.
   empty spread are no-ops; `outline`'s title is a level-1 heading with `outlined: false`, and
   `heading.where(supplement: ..)` tells it apart. R11 §5 and §6 hold the prototype of
   `@writer/doc` 0.4.0 that T94 installs, measured on two real themes.
+- **Spacing in Word, typst and CSS** (R12, 2026-11-21): Word for Mac 16 builds a line as a box
+  as tall as its pitch (a multiple hangs it from the font's ascent, an exact pitch puts four
+  fifths of itself above the baseline), keeps the larger of `w:after` and the next paragraph's
+  `w:before`, never their sum, and drops a paragraph's space before at the top of every page
+  but the first. In typst, `text(top-edge:, bottom-edge:)` with `par(leading: 0pt)` gives the
+  same box; a paragraph's spacing collapses with a block's only when a block carries it, and
+  `first-line-indent` then needs `all: true`. CSS collapses adjacent margins to the larger one
+  but centres the text in its line box, which leaves under 1 pt between HTML and Word at usual
+  line heights. R12 §5 holds the reference code T96 to T100 install, §6 the agreement measured.

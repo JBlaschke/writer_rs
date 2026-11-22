@@ -290,6 +290,10 @@ pub struct StyleTable {
     diagnostics: Diagnostics,
     /// Design styles whose definition writer wrote with a frame.
     framed: BTreeSet<String>,
+    /// Design div styles writer wrote with a space key, by style id, with
+    /// the space before and after (twips) the paragraphs of one div keep
+    /// between themselves (design.md §8.5).
+    blocks: BTreeMap<String, (u32, u32)>,
 }
 
 impl StyleTable {
@@ -484,9 +488,16 @@ impl StyleTable {
             selected.push((name, id));
         }
         for (name, id) in selected {
-            let xml = super::design::style_xml(
-                name, &styles[name], &self.design, self,
-            );
+            let style = &styles[name];
+            if !writer_selects(name)
+                && (style.space_before.is_some() || style.space_after.is_some())
+            {
+                // Until the design's keys replace it, the definition has
+                // its base's spacing: Body Text's, for a custom name.
+                let inner = self.spacing_of(&id);
+                self.blocks.insert(id.clone(), inner);
+            }
+            let xml = super::design::style_xml(name, style, &self.design, self);
             self.replace_definition(&id, xml);
             if styles[name].frame.is_some() {
                 self.framed.insert(name.clone());
@@ -498,6 +509,58 @@ impl StyleTable {
     /// reference definition of the same name prevents (design.md §8.6).
     pub(crate) fn framed(&self, name: &str) -> bool {
         self.framed.contains(name)
+    }
+
+    /// For a design div style writer wrote with a space key, the space
+    /// before and after (twips) the paragraphs of one div keep between
+    /// themselves; `None` for every other style id (design.md §8.5).
+    pub(crate) fn block_spacing(&self, id: &str) -> Option<(u32, u32)> {
+        self.blocks.get(id).copied()
+    }
+
+    /// The space before and after (twips) a paragraph of style `id` gets
+    /// from its style: the nearest `w:spacing` value along the `basedOn`
+    /// chain, else the document defaults', else none.
+    pub(crate) fn spacing_of(&self, id: &str) -> (u32, u32) {
+        let mut before = None;
+        let mut after = None;
+        let mut read = |node: Option<&XmlNode>| {
+            let spacing = node
+                .and_then(|node| child(node, "w:pPr"))
+                .and_then(|node| child(node, "w:spacing"));
+            let value = |name: &str| {
+                spacing
+                    .and_then(|node| node.attr(name))
+                    .and_then(|value| value.parse::<u32>().ok())
+            };
+            before = before.or(value("w:before"));
+            after = after.or(value("w:after"));
+        };
+        let mut seen = BTreeSet::new();
+        let mut next = Some(id.to_owned());
+        while let Some(id) = next.take() {
+            let Some(raw) = self.definition_xml(&id) else {
+                break;
+            };
+            let wrapper = format!("<root xmlns:w=\"{NS_W}\">{raw}</root>");
+            let Ok(root) = parse_xml(&wrapper) else {
+                break;
+            };
+            let tree = root.children.first();
+            read(tree);
+            next = tree
+                .and_then(|tree| child(tree, "w:basedOn"))
+                .and_then(|node| node.attr("w:val"))
+                .map(str::to_owned)
+                .filter(|base| seen.insert(base.clone()));
+        }
+        if let Ok(tree) = style_root(&self.source) {
+            read(
+                child(&tree, "w:docDefaults")
+                    .and_then(|node| child(node, "w:pPrDefault")),
+            );
+        }
+        (before.unwrap_or(0), after.unwrap_or(0))
     }
 
     fn read(xml: &str) -> Result<Self> {
@@ -521,6 +584,7 @@ impl StyleTable {
             defaults: BTreeSet::new(),
             diagnostics: Diagnostics::new(),
             framed: BTreeSet::new(),
+            blocks: BTreeMap::new(),
         };
         for node in tree.children.iter().filter(|node| node.name == "w:style") {
             let def = Definition::parse(xml, node)?;
@@ -1493,6 +1557,10 @@ Heading 6 Unlisted|Heading6Unlisted|paragraph|Heading6|BodyText||1|0
 mod design_tests {
     use super::*;
 
+    fn reference_xml(children: &str) -> String {
+        format!("<w:styles xmlns:w=\"{NS_W}\">{children}</w:styles>")
+    }
+
     #[test]
     fn undeclared_design_preserves_the_original_lazy_asset_selection() {
         let tree = style_root(&BUILTIN.source).unwrap();
@@ -1553,5 +1621,76 @@ mod design_tests {
         assert!(writer_selects("toc 2"));
         assert!(writer_selects("header"));
         assert!(!writer_selects("Recipient"));
+    }
+
+    #[test]
+    fn spacing_follows_the_base_chain_to_the_document_defaults() {
+        let reference = reference_xml(concat!(
+            "<w:docDefaults><w:pPrDefault><w:pPr>",
+            "<w:spacing w:after=\"160\" w:line=\"259\"/>",
+            "</w:pPr></w:pPrDefault></w:docDefaults>",
+            "<w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\">",
+            "<w:name w:val=\"Normal\"/></w:style>",
+            "<w:style w:type=\"paragraph\" w:styleId=\"Base\">",
+            "<w:name w:val=\"Base\"/><w:basedOn w:val=\"Normal\"/>",
+            "<w:pPr><w:spacing w:before=\"80\"/></w:pPr></w:style>",
+            "<w:style w:type=\"paragraph\" w:styleId=\"Leaf\">",
+            "<w:name w:val=\"Leaf\"/><w:basedOn w:val=\"Base\"/>",
+            "<w:pPr><w:spacing w:after=\"40\"/></w:pPr></w:style>",
+            "<w:style w:type=\"paragraph\" w:styleId=\"Loop\">",
+            "<w:name w:val=\"Loop\"/><w:basedOn w:val=\"Loop\"/></w:style>",
+        ));
+        let table = StyleTable::from_reference(&reference).unwrap();
+        // Each side from the nearest definition that sets it.
+        assert_eq!(table.spacing_of("Leaf"), (80, 40));
+        assert_eq!(table.spacing_of("Base"), (80, 160));
+        assert_eq!(table.spacing_of("Normal"), (0, 160));
+        assert_eq!(table.spacing_of("Loop"), (0, 160));
+        assert_eq!(table.spacing_of("Missing"), (0, 160));
+    }
+
+    #[test]
+    fn div_styles_with_a_space_key_report_the_spacing_inside_a_div() {
+        use crate::design::{Pt, Style};
+        let mut design = Design { declared: true, ..Design::default() };
+        let spaced = Style { space_before: Some(Pt(17.0)), ..Style::default() };
+        for name in ["Closing", "Header", "Heading 1", "footer", "Kept"] {
+            design.styles.insert(name.into(), spaced.clone());
+        }
+        design.styles.insert(
+            "Plain".into(),
+            Style { keep_together: true, ..Style::default() },
+        );
+        let spacing = |table: &StyleTable, name: &str| {
+            let id = table.id_for(name, StyleKind::Paragraph).unwrap();
+            table.block_spacing(id)
+        };
+        // Body Text's built-in 6 pt before and after.
+        let table = StyleTable::generated(&design);
+        assert_eq!(spacing(&table, "Closing"), Some((120, 120)));
+        // Writer selects these per block, and Plain sets no space key.
+        for name in ["Header", "Heading 1", "footer", "Plain"] {
+            assert_eq!(spacing(&table, name), None, "{name}");
+        }
+        // `text.paragraph_spacing` is Body Text's space after, with none
+        // before.
+        design.text.paragraph_spacing = Some(Pt(10.0));
+        let table = StyleTable::generated(&design);
+        assert_eq!(spacing(&table, "Closing"), Some((0, 200)));
+        // A reference's definition of the name wins, so writer leaves its
+        // paragraphs alone; its Body Text spaces the design's other divs.
+        let reference = reference_xml(concat!(
+            "<w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\">",
+            "<w:name w:val=\"Normal\"/></w:style>",
+            "<w:style w:type=\"paragraph\" w:styleId=\"BodyText\">",
+            "<w:name w:val=\"Body Text\"/><w:basedOn w:val=\"Normal\"/>",
+            "<w:pPr><w:spacing w:before=\"20\" w:after=\"80\"/></w:pPr></w:style>",
+            "<w:style w:type=\"paragraph\" w:styleId=\"Kept\">",
+            "<w:name w:val=\"Kept\"/><w:basedOn w:val=\"Normal\"/></w:style>",
+        ));
+        let table = StyleTable::from_reference_with_design(&reference, &design)
+            .unwrap();
+        assert_eq!(spacing(&table, "Kept"), None);
+        assert_eq!(spacing(&table, "Closing"), Some((20, 80)));
     }
 }

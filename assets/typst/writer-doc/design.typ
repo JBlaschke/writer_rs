@@ -41,38 +41,169 @@
 // `writer-doc`'s arguments; `none` until `writer-doc` records it.
 #let design-state = state("writer-design", none)
 
-// The line box Typst lays text of `size` out with: with the default
-// `top-edge: "cap-height"` and `bottom-edge: "baseline"`, the cap height of
-// the font in effect (its OS/2 `sCapHeight`, else its ascender; a fallback
-// font's when the family is missing). Measured rather than assumed, so the
-// fonts and edges actually in use decide. Needs context.
-#let line-box(size) = measure(text(size: size)[H]).height
+// A face's cap height: the line box Typst gives its lines by default
+// (`top-edge: "cap-height"`, `bottom-edge: "baseline"`), which the design's
+// line box replaces. `face` holds the `text` arguments of another face than
+// the one in effect. Measured, so the font actually in use decides, a
+// fallback font's included. Needs context.
+#let cap-height(face) = measure(
+    text(..face, top-edge: "cap-height", bottom-edge: "baseline")[H]
+).height
 
-// `par.leading` for a design pitch (design.md §6.2). Typst's leading is the
-// gap between one line's bottom edge and the next line's top edge, so a
-// baseline pitch needs `pitch − line box`; HTML's `line-height` and Word's
-// lines then agree with the PDF. The result is in ems of `size`, so that a
-// multiple follows a paragraph's own size as HTML's unitless `line-height`
-// and Word's `auto` lines do, and an exact pitch holds at any size. Needs
-// context, except for the `0.65em` default of an unset pitch. `box` is the
-// line box of another font than the one in effect (a named style's).
-#let design-leading(pitch, size, box: auto) = {
-    if pitch == none { return 0.65em }
-    let box = if box == auto { line-box(size) } else { box }
-    let target = if "multiple" in pitch { pitch.multiple * size }
-        else { pitch.exact * 1pt }
-    if target <= box { return 0pt }
-    if "multiple" in pitch { (pitch.multiple - box / size) * 1em }
-    else { target - box / size * 1em }
+// A face's line metrics in ems as Word reads them (design.md §7.4): `single`
+// is the height of a single line, `ascent` the part of it above the
+// baseline. Writer measures both and sends them in the design's `lines`
+// table under the family in lower case; a family it did not send falls back
+// to Typst's own ascender and descender. Needs context.
+#let font-lines(design, face) = {
+    let family = face.at("font", default: text.font)
+    if type(family) == array { family = family.first() }
+    if type(family) == dictionary { family = family.name }
+    let sent = design-get(design, "lines", (:)).at(lower(family), default: none)
+    if sent != none { return sent }
+    let size = face.at("size", default: text.size)
+    let reach(top, bottom) = measure(
+        text(..face, top-edge: top, bottom-edge: bottom)[H]
+    ).height / size
+    let ascent = reach("ascender", "baseline")
+    (single: ascent + reach("baseline", "descender"), ascent: ascent)
 }
 
-// `par.spacing` for a design paragraph spacing: Typst measures it like the
-// leading, from the last baseline to the next line's cap height, so a
-// paragraph break adds `spacing` to a full line pitch, as HTML's
-// `margin-block` and Word's `w:after` do, only as `leading + spacing`.
-// `none` keeps Typst's `1.2em`.
-#let design-spacing(leading, spacing) = {
-    if spacing == none { 1.2em } else { leading + spacing * 1pt }
+// The line box of a face's lines as `text`'s edges (design.md §6.2): Word's.
+// An exact pitch `h` puts `0.8 h` above the baseline and `0.2 h` below it,
+// whatever the font. A multiple `m` of the size keeps the font's ascent
+// while the line is at least a single line and puts the rest below the
+// baseline; a tighter line shrinks ascent and descent alike. The edges are
+// in ems for a multiple, so the box follows the size of the text, as HTML's
+// unitless `line-height` and Word's `auto` lines do. `pitch` is `none` for a
+// design that sets no line height: the lines then keep Typst's own pitch,
+// the cap height plus `0.65em`. Needs context.
+#let line-edges(design, pitch, face) = {
+    if pitch != none and "exact" in pitch {
+        return (
+            top-edge: pitch.exact * 0.8pt, bottom-edge: pitch.exact * -0.2pt
+        )
+    }
+    let multiple = if pitch == none {
+        cap-height(face) / face.at("size", default: text.size) + 0.65
+    } else { pitch.multiple }
+    let lines = font-lines(design, face)
+    let ascent = calc.min(1, multiple / lines.single) * lines.ascent
+    (top-edge: ascent * 1em, bottom-edge: (ascent - multiple) * 1em)
+}
+
+// The pitch of the line box in effect, as a design writes one: what a style
+// that sets no `line_height` inherits. `none` outside the line-box model
+// (Typst's named edges). Needs context.
+#let inherited-pitch() = {
+    let top = text.top-edge
+    let bottom = text.bottom-edge
+    if type(top) != length or type(bottom) != length { return none }
+    let pitch = top - bottom
+    if pitch.abs == 0pt { (multiple: pitch.em) }
+    else { (exact: pitch.abs.pt()) }
+}
+
+// How far a face's line box reaches beyond its capitals: `top` above the cap
+// height and `bottom` below the baseline. An inset that should look as it
+// did around Typst's own line box gives these up. Needs context.
+#let line-trim(design, pitch, face) = {
+    let edges = line-edges(design, pitch, face)
+    let size = face.at("size", default: text.size)
+    let resolve(edge) = edge.abs + edge.em * size
+    (
+        top: resolve(edges.top-edge) - cap-height(face),
+        bottom: -resolve(edges.bottom-edge),
+    )
+}
+
+// The document's line and paragraph model (design.md §6.2) from
+// `writer-doc`'s settings: the pitch of its lines, the body's line box and
+// the gap between two paragraphs' line boxes. An explicit `leading` or
+// `spacing` argument is Typst's own measure, from one line's baseline to the
+// next line's cap height, and is turned into the model's. An unset paragraph
+// spacing keeps Typst's `1.2em`, measured the same way. Two values stay in
+// Typst's measure for what `paragraph-layout` leaves outside the line boxes:
+// `leading`, Typst's leading for this pitch (in ems unless the pitch is
+// exact), which a display equation puts between its rows, and `note-gap`,
+// what is left between two footnotes of the `0.5em` that Typst keeps from
+// one note's last baseline to the next note's cap height once the note's
+// line box, at `0.85em`, has taken its part. Needs context.
+#let spacing-model(settings) = {
+    let cap = cap-height((:))
+    let pitch = if settings.leading == auto { settings.line-height } else {
+        (multiple: (cap + settings.leading.to-absolute()) / text.size)
+    }
+    let exact = pitch != none and "exact" in pitch
+    let height = if pitch == none { cap + 0.65em.to-absolute() }
+        else if exact { pitch.exact * 1pt }
+        else { pitch.multiple * text.size }
+    let gap = if settings.spacing != auto {
+        calc.max(0pt, settings.spacing.to-absolute() - (height - cap))
+    } else if settings.paragraph-spacing != none {
+        settings.paragraph-spacing * 1pt
+    } else { calc.max(0pt, 1.2em.to-absolute() - (height - cap)) }
+    let leading = if height <= cap { 0pt }
+        else if exact { height - cap / text.size * 1em }
+        else { (height - cap) / text.size * 1em }
+    let note = if exact { height - 0.85 * cap } else { 0.85 * (height - cap) }
+    (
+        pitch: pitch, gap: gap, leading: leading,
+        note-gap: calc.max(0pt, 0.5em.to-absolute() - note),
+        edges: line-edges(settings.design, pitch, (:)),
+    )
+}
+
+// A block without height that carries `below` as its space below. Typst
+// keeps a space above a block only when a frame precedes it on the page, and
+// lets two blocks' spaces meet on equal terms; this block is that frame and
+// that space.
+#let flow-mark(below) = block(
+    above: 0pt, below: below, height: 0pt, inset: 0pt, outset: 0pt,
+    stroke: none, fill: none, sticky: false,
+)
+
+// Ends a paragraph in the line-box model: the paragraph, then its spacing as
+// a block's space below. Typst gives a paragraph the same weak spacing above
+// and below, and any block's own spacing replaces it outright; as a block's
+// space the paragraph spacing meets the next block's space above on equal
+// terms, and the larger of the two holds, as in Word and HTML. A paragraph
+// without spacing needs no mark: every space next to it already holds.
+#let par-end(it) = {
+    if it.spacing == 0pt { it } else { it + flow-mark(it.spacing) }
+}
+
+// The elements content is made of where it holds set or show rules, several
+// children or only white space. Typst has no names for them.
+#let styled-content = {
+    set par(justify: false)
+    [x]
+}.func()
+#let content-sequence = [].func()
+#let blank-content = ([ ].func(), parbreak)
+
+// `body` with `mark` in front of its first element. Typst drops the space
+// above the first block of a page; Word and HTML keep it on the first page,
+// and a block without height in front of the document keeps it there
+// (design.md §6.2). The mark goes inside the set and show rules `body`
+// starts with: a page rule among them would otherwise find the mark before
+// it and start a new page after it. A body that opens with a page or a page
+// break of its own gets no mark.
+#let open-flow(mark, body) = {
+    if type(body) != content { return mark + body }
+    let kind = body.func()
+    if kind == styled-content {
+        styled-content(open-flow(mark, body.child), body.styles)
+    } else if kind == content-sequence {
+        let children = body.children
+        let at = children.position(child => child.func() not in blank-content)
+        if at == none { return mark + body }
+        (
+            children.slice(0, at).join()
+                + open-flow(mark, children.at(at))
+                + children.slice(at + 1).join()
+        )
+    } else if kind in (page, pagebreak) { body } else { mark + body }
 }
 
 // A style name's normalised key (design.md §8.1): its ASCII letters and
@@ -155,34 +286,25 @@
     opts
 }
 
-// A style's leading (§6.2) on its own font and size; `fallback`, the leading
-// around it, when it sets no `line_height`. Needs context.
-#let style-leading(design, spec, fallback) = {
-    let pitch = style-value(spec, "line_height")
-    if pitch == none { return fallback }
-    let opts = style-text(design, spec)
-    design-leading(
-        pitch, opts.at("size", default: text.size),
-        box: measure(text(..opts)[H]).height
-    )
-}
-
 // What a style sets on the element it styles, as the arguments of
-// `apply-rules`' show-set rules (design.md §8.7). Block spacing adds the
-// style's leading, as `design-spacing` does between paragraphs, so the gap
-// to the next baseline is a full line pitch plus the space, as in HTML and
-// Word. Needs context.
-#let style-rules(design, spec, leading) = {
-    let own = style-leading(design, spec, leading)
+// `apply-rules`' show-set rules (design.md §8.7). A style that sets its own
+// `line_height` or font gets its own line box; `pitch` is the pitch it
+// inherits otherwise. The spaces are plain block spacing between line boxes,
+// so the larger of two adjacent spaces holds. Needs context.
+#let style-rules(design, spec, pitch) = {
+    let face = style-text(design, spec)
+    let own = style-value(spec, "line_height")
+    let edges = if own != none { line-edges(design, own, face) }
+        else if "font" in face { line-edges(design, pitch, face) }
+        else { (:) }
     let align = style-value(spec, "align")
     let par = (:)
     if align != none { par.insert("justify", align == "justify") }
-    if style-value(spec, "line_height") != none { par.insert("leading", own) }
     let block = (:)
     let before = style-value(spec, "space_before")
     let after = style-value(spec, "space_after")
-    if before != none { block.insert("above", own + before * 1pt) }
-    if after != none { block.insert("below", own + after * 1pt) }
+    if before != none { block.insert("above", before * 1pt) }
+    if after != none { block.insert("below", after * 1pt) }
     if style-value(spec, "keep_with_next") == true {
         block.insert("sticky", true)
     }
@@ -190,7 +312,7 @@
         block.insert("breakable", false)
     }
     (
-        text: style-text(design, spec), par: par, block: block,
+        text: (: ..face, ..edges), par: par, block: block,
         align: if align in ("left", "center", "right") {
             ((left: left, center: center, right: right).at(align),)
         } else { () },
@@ -203,11 +325,12 @@
 
 // The show-set targets of the vocabulary styles (design.md §8.7), outermost
 // first: a later entry wins over an earlier one key by key, the way Word's
-// `Heading 1 Unlisted` is based on `heading 1`. Needs context.
-#let vocabulary(design, leading) = {
+// `Heading 1 Unlisted` is based on `heading 1`. `pitch` is the
+// document's. Needs context.
+#let vocabulary(design, pitch) = {
     let style(name) = design-style(design, name)
     let entry(target, spec) = (
-        target: target, ..style-rules(design, spec, leading)
+        target: target, ..style-rules(design, spec, pitch)
     )
     let inline(target, spec) = (..entry(target, spec), block: (:))
     let levels = range(1, 7)
@@ -239,18 +362,33 @@
     ))
 }
 
-// Table cells take `Compact`'s spacing as their inset: a line of the pitch
-// with the space above and below it, the text box (cap height to baseline)
-// in the middle of the line. Needs context.
-#let cell-inset(design, leading) = {
+// Table cells take `Compact`'s spaces as their inset above and below the
+// cell's line box, as Word's rows do. A space the style leaves unset keeps
+// the look of Typst's `5pt` around the capitals. Needs context.
+#let cell-inset(design, pitch) = {
     let spec = design-style(design, "Compact")
-    let own = style-leading(design, spec, leading)
-    let inset = (:)
+    let own = style-value(spec, "line_height")
+    let trim = line-trim(
+        design, if own == none { pitch } else { own }, style-text(design, spec)
+    )
     let before = style-value(spec, "space_before")
     let after = style-value(spec, "space_after")
-    if before != none { inset.insert("top", own / 2 + before * 1pt) }
-    if after != none { inset.insert("bottom", own / 2 + after * 1pt) }
-    if inset.len() == 0 { (:) } else { (inset: inset) }
+    (inset: (
+        top: if before != none { before * 1pt }
+            else { calc.max(0pt, 5pt - trim.top) },
+        bottom: if after != none { after * 1pt }
+            else { calc.max(0pt, 5pt - trim.bottom) },
+    ))
+}
+
+// An empty table cell holds one line box inside its inset, as in Word, where
+// every cell holds a paragraph: a row of empty cells is as tall as a row of
+// text. `it` is the cell, whose inset is one length or one per side.
+#let empty-cell(it) = {
+    let inset = it.inset
+    if type(inset) == dictionary { pad(..inset, sym.zws) }
+    else if inset == auto { sym.zws }
+    else { pad(rest: inset, sym.zws) }
 }
 
 #let apply-rules(entries, body) = {
@@ -265,10 +403,10 @@
 
 // Applies the design's vocabulary styles to `body` as show-set rules, so a
 // rule that a template adds after `show: writer-doc.with(..)` still wins key
-// by key. `leading` is the document's leading. Needs context.
-#let vocabulary-layout(design, leading, body) = {
-    let entries = vocabulary(design, leading)
-    set table(..cell-inset(design, leading))
+// by key. `pitch` is the document's. Needs context.
+#let vocabulary-layout(design, pitch, body) = {
+    let entries = vocabulary(design, pitch)
+    set table(..cell-inset(design, pitch))
     if entries.any(rules => (
         rules.target == heading.where(supplement: contents-title)
     )) {

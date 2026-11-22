@@ -18,7 +18,7 @@ notebook input and rejects a native Typst source.
 ## Start a document
 
 ```typst
-#import "@writer/doc:0.4.0": *
+#import "@writer/doc:0.5.0": *
 
 #show: writer-doc.with(
     title: [My report],
@@ -68,7 +68,7 @@ resolved values in `sys.inputs` when Writer compiles a PDF. A template or a
 native document reads them as Typst values through the package:
 
 ```typst
-#import "@writer/doc:0.4.0": *
+#import "@writer/doc:0.5.0": *
 
 #let theme = design-tokens()
 #let title = style-tokens(theme, "Title")
@@ -90,6 +90,12 @@ written after `show: base.writer-doc.with(..args)`; see [the PDF
 template](customization.md#generated-typst-pdf-template). `writer-doc` takes
 `title-block: none` to leave the title block out and a function `(meta, theme)
 => content` to draw another one.
+
+With a design, `writer-doc` sets the top and bottom edge of the text and a
+leading of zero, so that lines and the spaces between blocks match Word and
+HTML. A document that sets `par(leading:)`, `par(spacing:)` or a first-line
+indent of its own after the `writer-doc` line should read the notes on [the
+PDF template](customization.md#generated-typst-pdf-template) first.
 
 A template that does not import the package can read the raw values, where
 lengths are points, colors are lowercase hex strings and unset keys are

@@ -185,6 +185,26 @@ impl Emitter<'_> {
         }
     }
 
+    /// Keeps the recorded paragraph offsets in step with `added` bytes
+    /// written at `at`, inside a paragraph that is already in the part's
+    /// buffer (a styled div's paragraph spacing, `Emitter::space_div`).
+    pub(crate) fn body_grew(&mut self, at: usize, added: usize) {
+        if self.part != super::Part::Document {
+            return;
+        }
+        if self.section.paragraph_start > at {
+            self.section.paragraph_start += added;
+        }
+        if let Some((start, end)) = &mut self.section.paragraph {
+            if *start > at {
+                *start += added;
+            }
+            if *end > at {
+                *end += added;
+            }
+        }
+    }
+
     /// An empty open section changes its columns without a break, or
     /// takes back the break that began it when the section before it had
     /// the columns asked for.

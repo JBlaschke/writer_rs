@@ -3,6 +3,7 @@ source: tests/html_furniture.rs
 expression: "output.theme_css.split(\"/* design: layout */\").nth(1).unwrap()"
 ---
 
+:where([data-writer-document]) td:empty::before,:where([data-writer-document]) th:empty::before{content:"\200b"}
 .w-furniture{display:grid;grid-template-columns:1fr auto;gap:0 1em}
 .w-furniture[data-align=left]{text-align:left}
 .w-furniture[data-align=center]{text-align:center}

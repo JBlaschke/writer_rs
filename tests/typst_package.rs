@@ -17,7 +17,7 @@ use writer::typst::compile::{OracleEntry, compile_document, oracle};
 use writer::typst::sourcemap::SourceMap;
 use writer::typst::world::{MainFile, WorldOptions, WriterWorld, world_inputs};
 
-const IMPORT: &str = "#import \"@writer/doc:0.4.0\": *\n";
+const IMPORT: &str = "#import \"@writer/doc:0.5.0\": *\n";
 const BIB: &str = r#"@book{alpha,
   author = {Lovelace, Ada},
   title = {Analytical Engines},
