@@ -1,0 +1,19 @@
+{
+ "subtitle": {
+  "textAlign": "start",
+  "marginBottom": "8px"
+ },
+ "date": {
+  "textAlign": "start",
+  "marginBottom": "8px"
+ },
+ "centerdiv p": {
+  "textAlign": "start",
+  "marginBottom": "8px"
+ },
+ "body p": {
+  "textAlign": "start",
+  "marginBottom": "8px"
+ },
+ "blockquote last p": "8px"
+}
