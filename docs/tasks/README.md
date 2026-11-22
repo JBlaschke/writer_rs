@@ -96,6 +96,27 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T99 | HTML: vocabulary styles, a div's spaces as its edges, empty table cells | M8 | S | T98 | done (PR #89) |
 | T100 | Word: a styled div is one block (decision D1) | M8 | S | T99 | done (PR #89) |
 | T101 | Guide: one spacing model in Word, the PDF and HTML | M8 | S | T98, T99, T100 | done (PR #89) |
+| T102 | Cross-format measurement harness | M9 | M | T101 | brief |
+| T103 | Word record, the remainder (run by the owner) | M9 | M | T101 | brief |
+| T104 | HTML paragraph rule: alignment on the document, margins under `:where()` | M9 | S | T101 | brief |
+| T105 | Built-in defaults layer behind a switch (`APPLIED` empty) | M9 | L | T101 | brief |
+| T106 | Bundled line metrics and a missing-family warning | M9 | M | T103, T105 | brief |
+| T107 | `@writer/doc` 0.6.0: the package version wherever it is named; no behaviour change | M9 | S | T101 | brief |
+| T108 | Body text, fonts, page and colours: the first switch | M9 | L | T102, T104, T105, T106, T107 | brief |
+| T109 | Headings, title block and contents | M9 | M | T108 | brief |
+| T110 | Captions, figures and images | M9 | M | T109, T120 | brief |
+| T111 | Links and colour palette | M9 | M | T110 | brief |
+| T112 | Lists, quotes, rules and definitions | M9 | M | T103, T111 | brief |
+| T113 | Code, math, callouts and notebook cells | M9 | L | T103, T112 | brief |
+| T114 | Tables | M9 | M | T103, T113 | brief |
+| T115 | Footnotes and bibliography | M9 | L | T103, T114 | brief |
+| T116 | Furniture, page numbers and page background | M9 | M | T115 | brief |
+| T117 | Div-class styles, weights and keep rules | M9 | M | T116 | brief |
+| T118 | Language, hyphenation, widows and inline details | M9 | M | T103, T117 | brief |
+| T119 | HTML print: forced breaks and line-edge compensation | M9 | S | T118 | brief |
+| T120 | LaTeX consumes the design | M9 | M | T108 | brief |
+| T121 | Guard test: no presentational literals outside the defaults | M9 | S | T119, T120 | brief |
+| T122 | Guide: one set of defaults | M9 | S | T119, T120 | brief |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -128,6 +149,21 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 23 | T99 | 1 |
 | 24 | T100 | 1 |
 | 25 | T101 | 1 |
+| 26 | T102, T103, T104, T105, T107 | 5 |
+| 27 | T106 | 1 |
+| 28 | T108 | 1 |
+| 29 | T109, T120 | 2 |
+| 30 | T110 | 1 |
+| 31 | T111 | 1 |
+| 32 | T112 | 1 |
+| 33 | T113 | 1 |
+| 34 | T114 | 1 |
+| 35 | T115 | 1 |
+| 36 | T116 | 1 |
+| 37 | T117 | 1 |
+| 38 | T118 | 1 |
+| 39 | T119 | 1 |
+| 40 | T121, T122 | 2 |
 
 ## Coordinator notes (2026-10-24)
 - T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI
@@ -742,3 +778,21 @@ Manual checks performed: …
   each with its backend's own spacing: lists, block quotes, code blocks, the space around tables
   and figures, footnotes, callouts, equations and headings no style declares. R12 §8 holds the
   measurements a follow-up needs.
+
+- 2026-11-22: T102–T122 (milestone M9, waves 26–40) are planned and not ready for hand-off;
+  their status is `brief`. They follow from the owner's framing that writer's job is one set of
+  defaults that every output follows: a document without `[design]`, which is most documents,
+  still gets three unrelated looks, and the blocks listed above as outside the model keep each
+  backend's spacing. `docs/research/R13-single-source-defaults.md` audits main at `5890724f`
+  and proposes a built-in design as the lowest layer, which changes the contract (decision D13):
+  design.md §0.4 records it as planned, with the exceptions that stay. T105 adds the layer behind
+  a switch that changes no output, T108 switches body text, fonts, page and colours on, and each
+  domain task after it switches its own; they run one per wave because each edits `theme.css`,
+  `lib.typ` and `styles.xml`. T102 builds the harness that every acceptance uses, and T103 is
+  the owner's Word readings. Each brief has a "Before hand-off" section: what the coordinator
+  prototypes and measures, and which of the decisions D3–D19 must be taken, before the brief
+  becomes a task. The waves were computed by hand: `scripts/waves.py` reads two characters after
+  the T and so cannot parse T100 onward. T107 runs in wave 26 because it depends on T101 alone.
+  Typst line numbers in the briefs refer to the typst-library and typst-layout 0.15.1 crates in
+  the cargo registry (`~/.cargo/registry/src/index.crates.io-*/`), which writer compiles
+  against, not to a Typst checkout.

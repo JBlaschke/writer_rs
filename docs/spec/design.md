@@ -7,7 +7,8 @@ emitter's `writer-div`), T85 (§8 named styles in every backend), T86 (§9.3 HTM
 (§9.5 DOCX furniture), T88 (§9.4 Typst furniture), T89 (guide and the letter example), T93–T95
 (§8.7 vocabulary styles in the PDF, design tokens for templates, package `0.4.0`), T96–T101 (§0.3
 one spacing model for Word, PDF and HTML: §3.3 and §6.1 the `lines` key, §6.2 the PDF's line
-boxes, §8.8 vocabulary styles in HTML, §8.5 a Word div as one block, package `0.5.0`). Consumers:
+boxes, §8.8 vocabulary styles in HTML, §8.5 a Word div as one block, package `0.5.0`). Planned and
+not in force: T102–T122 (§0.4 one set of defaults, milestone M9, package `0.6.0`). Consumers:
 `check` (§10, extends T71's passes), live reload (§12), T74's guide pages (T89 edits them).
 
 The design layer is one table, `[design]`, that describes a document's typography, colours, page
@@ -90,6 +91,118 @@ style declares keep each backend's own spacing for now; R12 §8 lists what a fol
 the PDF those spaces are Typst's own or `P`, between line boxes like every other space, so they
 are not where package `0.4.0` had them (R12 §7), and footnotes and display equations get rules
 of their own so that their lines keep a pitch (§6.2).
+
+### 0.4 One set of defaults (planned, M9; T102–T122)
+**Planned, not in force.** This section records a contract change that milestone M9 proposes
+(`docs/research/R13-single-source-defaults.md`). Until the task named for a domain below has
+merged, §0.2's invariants and §0.3's restriction to a declared design hold for that domain as
+written, and no built-in design exists. The change needs the owner's sign-off (R13 decision D13)
+before T105 is handed off.
+
+§0.3 gives a declared design one layout in Word, the PDF and HTML. A document without
+`[design]`, which is most documents, still gets each backend's own fonts, sizes, colours, margins
+and spaces, and so three unrelated looks (R13 §1). M9 makes writer's own defaults a design that
+every backend renders. The proposed invariants, which replace §0.2 (R13 §4.4):
+
+- **One set of defaults.** writer's built-in design (`src/design/defaults/`) is the lowest layer
+  (§1.1) and sets every key. With nothing declared, every backend renders the built-in design.
+  No backend falls back to an engine default for a property the design governs. The exceptions
+  listed below are the only presentational values a backend owns.
+- **Unset means inherited.** A key a layer leaves unset takes the value from the layer below,
+  ending at the built-in design. em lengths follow `text.size` or the style's size.
+- **One meaning everywhere.** Each key has one model: §0.3's line box, the larger of two
+  adjoining spaces, and image size from the file's DPI or 96. Each backend converts that model
+  exactly, or with a residual named below.
+- **Escape hatches win.** Unchanged. In HTML the built-in values come before the theme's
+  entries, so a theme's CSS still wins over them (R13 D16); user-declared values keep their places
+  (§5.1).
+- **One resolver, no literals.** As in §0.2, and the backends hold no presentational literals;
+  a test checks it (T121).
+- **Deterministic.** As in §0.2, and independent of the fonts installed on the build machine
+  (T106).
+
+**What it replaces.** "Absent means unchanged" and "Unset means the backend's default" go;
+"Escape hatches win" stays; "One resolver" and "Deterministic" are strengthened. A design is
+then *user-declared* when a layer above the built-in one has a key, and that flag serves `writer
+check` and provenance only. §0.3's whole sentence "The model applies to a **declared** design
+only (§0.2): without one, the PDF keeps Typst's own leading and paragraph spacing and HTML keeps
+the theme's CSS." becomes "The model applies to every document (§0.2): without `[design]`, the
+built-in design applies (§0.4).", and its "Scope" paragraph grows as each element joins the
+model, ending with "§0.4 lists the residuals".
+
+**When, domain by domain.** T105 adds the built-in layer (`Origin::Builtin`), the
+`user_declared` flag and the view `Design::view(APPLIED)` that the backends read. `APPLIED` lists
+the domains whose built-in values reach the backends; T105 leaves it empty, so no output changes
+and §0.2 as written still describes every build. Each task below switches its domains on, and
+from its merge the old invariants no longer hold for them:
+
+| Task | Domains switched on | Old statements retired for them |
+|---|---|---|
+| T108 | text, fonts, page, colours; in the PDF, the line boxes and block spaces of §0.3 for every element (the package has one gate), so R12 §7's moves reach undeclared headings, quotes, code, figures, tables, equations and footnotes from here | §0.2's first two invariants; §0.3's restriction to a declared design; §6.2's no-design branch; §6.7's "An undeclared design reserves nothing and leaves the export byte-identical"; the introduction's last sentence |
+| T109 | headings, title block, abstract, contents | §8.7's "Absent means unchanged" |
+| T110 | captions, figures, images | image size from the engine's own DPI default |
+| T111 | links, the full colour palette | the backends' own colour literals |
+| T112 | lists, block quotes, rules, definitions | their exclusion from §0.3's Scope; open point 14; open point 16, with T113–T117 |
+| T113 | code, math, callouts, notebook cells | their exclusion from §0.3's Scope |
+| T114 | tables | the space around tables outside §0.3's Scope |
+| T115 | footnotes, bibliography | footnotes outside §0.3's Scope |
+| T116 | furniture, page numbers, page background | open point 3 (a background picture in Word); §9.3's "an undeclared design renders nothing, so the template's output is unchanged" |
+| T117 | div classes, weights, keep rules | open point 15 |
+| T118 | language, hyphenation, widows, inline details | the engines' own hyphenation and widow defaults |
+| T119 | HTML print | none; it decides how exception 11 is stated (R13 D18) |
+| T120 | LaTeX: text, fonts, page, colours, lang and metadata | LaTeX's independence of `[design]` |
+
+The new wording of §0.2 is written in before T105's hand-off, with the old invariants kept for
+the domains not yet in `APPLIED`, except the PDF's spacing, which T108 puts under §0.3 for every
+element; T118 is the last domain switch and the list of domains then goes. T102 (harness), T103
+(Word record), T104 (HTML paragraph rule), T106 (bundled line metrics), T107 (package `0.6.0`,
+R13 D14), T121 (guard test) and T122 (guide) change no default.
+
+**Spec edits at T105's hand-off** (the coordinator's, as for R12): §0.2 as above; §0.3's
+declared-design sentence and Scope paragraph; §1.1 (the built-in layer, below the theme chain);
+§3 (the view, em lengths, font sizes rounded to 0.5 pt if R13 D19 is accepted); §6.1
+(`writer-design` always inserted); §6.2 (the no-design branch); §6.7 ("An undeclared design
+reserves nothing"); §8.7 ("Absent means unchanged"); §9.1's sentence on "the line spacing Word
+adds above the text", which §0.3's line box makes stale; §9.3 ("an undeclared design renders
+nothing"); the introduction's last sentence. The byte-identity statements of §5.1, §6.2 and §7.1
+change with the domains they describe. Decisions D3 to D19 are the owner's (R13 §4.3, §4.6,
+§6.3); each task names those it needs.
+
+**Exceptions to the single source.** Each is a value a backend owns, or a residual the model
+names; R13 §5 gives the reasons and the measurements.
+1. **Footnotes in HTML** stay endnotes: a screen has no pages and Chrome has no CSS GCPM
+   footnotes. Size, gap and marker are shared (R13 §5 item 1).
+2. **Dark mode** is HTML's own; the design defines the light palette (open point 2; R13 §5
+   item 2).
+3. **Line and page breaks.** Chrome, Typst and Word break with different algorithms; the design
+   fixes the inputs, not the break points (R13 §5 item 3).
+4. **Fonts in Word** that cannot be embedded: a licence that forbids it, CFF-only families,
+   builds with embedding off (open point 1; R13 §5 item 4).
+5. **KaTeX.** Under `[math] html = "katex"` HTML keeps KaTeX's fonts and its 1.21em size; the
+   `mathml` and `image` modes follow `fonts.math` (T113; R13 §5 item 5).
+6. **Word runs** have no padding or corner radius: inline code and callout corners differ (R13 §5
+   item 6).
+7. **A nested quote's second border in Word**: one paragraph border per paragraph (R13 §5
+   item 7).
+8. **Overline in Word**: Word has no run property for it (R13 §5 item 8).
+9. **Per-line overrides in HTML margin boxes**: one string and one font per box; per-line
+   weights need `print = "fixed"` (§9.3; R13 §5 item 9).
+10. **Screen has no pages**: no page numbers, page margins, furniture positions or contents page
+    numbers on screen; Chrome's print has no `target-counter()` (R13 §5 item 10).
+11. **HTML line edges.** CSS centres the font in the line box (§0.3, "Agreement"), so each
+    style's baselines sit a constant c off Word's. A paint-time shift per style removes c in
+    screen layout if R13 D18 says so (T119); printed HTML keeps Chrome's 0.75 pt grid either way
+    (R13 §5 item 11, §3.2).
+12. **Auto-width tables**: CSS, Typst and Word size columns with three algorithms; tables whose
+    source gives column widths agree (R13 §5 item 12).
+13. **Frames and text wrap** (§8.6): Typst does not wrap text around floats (R13 §5 item 13).
+14. **Right-to-left details.** Direction follows `lang`; each engine's bidi details stay its own
+    (R13 §5 item 14).
+15. **Word half points**, only if R13 D19 is rejected: up to 0.25 pt per font size (R13 §5
+    item 15).
+16. **Syntax tokenisation.** HTML and Word share two_face 0.5.2's grammars, Typst 0.15.1 uses
+    two_face 0.4.5's. One `.tmTheme` and a new alias map in the Typst emitter close most of the
+    gap (T113); one two_face release for writer and Typst closes the rest (R13 §5 item 16).
 
 ## 1. Where `[design]` lives and how layers combine
 
