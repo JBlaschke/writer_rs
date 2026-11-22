@@ -1,7 +1,8 @@
 # T105 — Built-in defaults layer: the contract first, behind a switch
 
-**Status: brief, not ready for hand-off.** It needs decision D13 signed, the design.md edits of
-R13 §4.1 written and a prototype of the view (see "Before hand-off").
+**Status: done (PR #90, 2026-11-22; `ad01dc7b`, contract change `7832aadb`, `d6a21808`).** D13
+signed 2026-11-22. Layer 0 is in `src/design/defaults/` with `APPLIED` empty: no output changes.
+R13 §6.4 lists the values R13 does not give.
 
 | | |
 |---|---|

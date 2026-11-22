@@ -1,7 +1,8 @@
 # T102 — Cross-format measurement harness
 
-**Status: brief, not ready for hand-off.** The reference code, the expected tables and the
-runner's language are the coordinator's to supply first (see "Before hand-off").
+**Status: done (PR #90, 2026-11-22; `27773d91`, `136f3984`, `7c913996`, and `e404d1b5` for p7
+after T104).** `scripts/xfmt/run.py` and its guide `docs/dev/xfmt-harness.md`; nine expected
+tables in `tests/xfmt/expected/`. Two of R12 §8's HTML code-block values differ (R13 §2.5).
 
 | | |
 |---|---|

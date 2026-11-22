@@ -73,6 +73,17 @@ width, colour, gap), `fill` and `padding` as R13 §4.2 lists them.
 - In the PDF, a style's case and tracking go through `style-text` (`design.typ:142` at main).
 - `print.css:8` hides `nav.toc` in print today; D10 decides what replaces it.
 
+## Wave 26's results (coordinator, 2026-11-22)
+
+- T105 added the style keys `case`, `letter_spacing`, `indent`, `border`, `fill` and `padding`
+  to the schema and the resolver, so step 1 only switches `HEADINGS` on and step 2 renders them.
+- R13 gives no key or value for the title block's closing rule, and none for the Author name in
+  bold with its affiliation at 0.9em and muted: layer 0's Author sets only `size` and `align`
+  (`src/design/defaults/styles.toml:82-84`). Settle both with the owner before hand-off.
+- T102's baselines on R12's build: Word's built-in Title is 21.92 pt off in an ad hoc probe, and
+  in `tests/xfmt/expected/p10.txt` the printed title is 36.11 pt off and the contents 77.81 pt
+  on screen.
+
 ## Before hand-off
 - D10 (contents in printed HTML) and D12 (space above a heading: HTML's 2em or Word's 18 pt)
   decided.

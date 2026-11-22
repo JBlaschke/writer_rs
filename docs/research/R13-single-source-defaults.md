@@ -139,7 +139,8 @@ R13 uses R12's names (design.md §0.3, §7.4):
 - **†** A Word space taken as the larger of space after and space before.
   The draft inferred that rule; R12 §2.3 measured it.
 - **‡** A row R12 changes for declared designs. Recomputed with R12's line
-  box where R13 gives a value; otherwise T102 re-measures it.
+  box where R13 gives a value. T102 re-measured the HTML values on R12's
+  build (`ead21e88`) on 2026-11-22; the four that changed say so.
 
 ### 0.5 Files and counts
 
@@ -273,16 +274,23 @@ what it does:
   their alignment the same way.
 - It replaces the margins of `.subtitle` (:120), `.date` (its 1em top
   margin, :134) and `.toc-title` (:276).
-- It restores the last paragraph's margin in block quotes, abstracts,
-  table cells and callouts (theme.css:109, :143, :166, :250); the probe
-  measured 6 pt under the last quoted paragraph.
+- It restores the last paragraph's margin in block quotes and table cells
+  (theme.css:109, :166); the probe measured 6 pt under the last quoted
+  paragraph. (Corrected 2026-11-22 from T104's probe: in abstracts and
+  callouts, `.abstract > :last-child` and `.callout > :last-child` weigh
+  0,2,0 and already beat the rule. It also gave the callout title 6 pt
+  instead of the theme's 0.4em, 4.4 pt, and `.author` 6 pt instead of 0.)
 
 The abstract title and the contents title are not centred in the default theme
 (`.abstract` is left-aligned, theme.css:135), so for them only the margins
 change. `:where()` alone does not fix the alignment: any rule that matches the
 `p`, even at specificity 0, beats an inherited value. The fix (T104) writes
 `text-align` on `[data-writer-document]`, where it is inherited, and the
-paragraph margin under `:where()`. R12's T99 does not fix it. Its vocabulary
+paragraph margin under `:where()`. As merged (2026-11-22) the paragraph rule
+also carries `text-align:inherit`, so the design's alignment still beats a
+theme's bare `p { text-align }`, and under `justify = true` a rule
+`:where([data-writer-document]) pre{text-align:start}` keeps wrapped code
+unjustified (design.md §5.3). R12's T99 does not fix it. Its vocabulary
 rules give the title-block parts `Title`'s `align` when `Title` sets one and
 the part's own style does not, and its `[data-style=X]>:last-child` rules fix
 divs, but the `.center` divs, `.date`, `.toc-title`, quotes, cells, callouts
@@ -610,8 +618,11 @@ paragraph 19.80 / 34.65 / 40.43.
 | 3.45 | Spacing between cell parts | stacked paddings and margins | 17.2 pt baseline to baseline | 6 pt of space† | – | no | P | M |
 
 Code-block family (3.5) and code colour follow 3.0 and 3.4. R12 §8, Word /
-PDF / HTML in pt: paragraph → code 23.00 / 22.92 / 34.38; code line → line
-11.20 / 11.88 / 14.03; code → paragraph 19.20 / 24.22 / 34.11.
+PDF / HTML in pt: paragraph → code 23.00 / 22.92 / 33.63; code line → line
+11.20 / 11.88 / 14.03; code → paragraph 19.20 / 24.22 / 34.86. (T102's
+harness, 2026-11-22: R12 §8 gives HTML 34.38 and 34.11, because its reader
+took Source Sans 3's ascent for the code font too; Chrome's printed PDF,
+33.75 and 35.25, agrees with the harness.)
 
 One Word size rule is off today. docx/design.rs:126 scales styles.xml
 sizes by `text.size` with whole-point rounding (`(old * size / 11 / 2)
@@ -629,7 +640,7 @@ instead (M9).
 | 4.3 | Header vertical alignment | top | top | bottom | – | partly | none | E |
 | 4.4 | Row-header cells | bold | regular | bold | – | no | none | E |
 | 4.5 | Cell padding, x / y ‡ | 7.15 / 5.5 pt (.65em / .5em) [t] theme.css:164 | 5 / 5 pt [e]; R12 0.5.0: y from Compact's spaces | 5.4 / 0 pt, plus Compact 1.8 pt [w] | 6 pt / – | no | Compact: P (inset), W; H after R12 T99 | M |
-| 4.6 | Single-line row pitch ‡ | 28.6 pt [t] | 17.2 pt [e] | about 18.4 pt (u) | – | no | line_height: HW | M |
+| 4.6 | Single-line row pitch ‡ | 25.84 pt; 16.12 pt with a declared Compact (T102; the draft's 28.6 pt [t] was read from theme.css) | 17.2 pt [e] | about 18.4 pt (u) | – | no | line_height: HW | M |
 | 4.7 | Cell paragraph style ‡ | none at 0.4.0; R12 T99 applies a declared Compact to td | Compact only when declared [d] | always Compact [w] | – | partly | Compact: PW; H after R12 T99 | M |
 | 4.8 | Cell alignment in a captioned table | left | centred, inherited from the figure [e] | left | from colspec | no | none | E |
 | 4.9 | Justified cells | no | yes in (a) [w] | no, unless text.justify | – | partly | text.justify: PW | E |
@@ -669,7 +680,7 @@ grid. After a table the PDF leaves P where Word leaves none.
 | 4.25 | Marker colour | link colour | text | text | linkcolor | no | colors.link: H | E |
 | 4.26 | Separator | full width, 0.75 pt, #c8c9c3 | 30 % width, 0.55 pt, black [e] | Word built-in (u) | 0.4 pt × 40 % | no | none | M |
 | 4.27 | Note size | 0.9em = 9.9 pt | 0.85em = 9.35 pt [e] typst-library model/footnote.rs:324-331 | 9 pt [w] | \footnotesize | no | Footnote Text: W | E |
-| 4.28 | Note pitch ‡ | 15.84 pt | 10.8 pt: the built-in 0.5em leading beats writer's [e]; R12 0.5.0 with a declared design: 17.30 pt before R12 took R13's fix, 12.62 pt with it (§3.4 M12) | about 12.1 pt (u) | – | no | line_height: HW | E |
+| 4.28 | Note pitch ‡ | 13.36 pt (T102; the draft's 15.84 pt was before R12): a declared Footnote Text does not reach HTML footnotes | 10.8 pt: the built-in 0.5em leading beats writer's [e]; R12 0.5.0 with a declared design: 17.30 pt before R12 took R13's fix, 12.62 pt with it (§3.4 M12) | about 12.1 pt (u) | – | no | line_height: HW | E |
 | 4.29 | Gap between notes | 11.38 pt | 5.5 pt | 3 pt | – | no | P: H | E |
 | 4.30 | Number and indent | "1." list, 30 pt hanging | superscript, 1em first-line indent | superscript, flush | – | no | none | M |
 | 4.31 | Back-links | ↩︎ | the number links back | none | – | partly | none | E |
@@ -698,9 +709,11 @@ The probes use a 40 mm top margin, Libertinus Serif 11 pt at 1.35 (pitch
 14.85 pt, 9.83 pt above the baseline and 5.02 pt below in Word), P =
 10.205 pt (3.6 mm), and a div style on an exact 12.1 pt pitch (9.68 pt
 above, 2.42 pt below). The HTML and 0.4.0 PDF columns are the draft's
-measurements. ‡ Word values are recomputed with R12's line box; R12's
-0.5.0 PDF equals them by construction (R12 §6). Under R12, HTML's value is
-Word's gap − c(upper style) + c(lower style) (§3.2), not re-measured here.
+measurements, re-measured by T102 on R12's build on 2026-11-22 (Chrome's
+printed page, read by Ghostscript): all within 0.02 mm except 5.6, 5.17
+and 5.31, which say so. ‡ Word values are recomputed with R12's line box;
+R12's 0.5.0 PDF equals them by construction (R12 §6). Under R12, HTML's
+value is Word's gap − c(upper style) + c(lower style) (§3.2).
 
 | # | Property | HTML | PDF | Word | LaTeX | Agree | Reach | SS |
 |---|---|---|---|---|---|---|---|---|
@@ -710,7 +723,7 @@ Word's gap − c(upper style) + c(lower style) (§3.2), not re-measured here.
 | 5.3 | Div spacing 1 mm (smaller than P), Alpha to Bravo ‡ | the larger, P: 8.71 mm | 0.4.0: replaces P, 3.56 mm | max(P, 1 mm): 8.84 mm (u)† | – | 0.5.0: PW | HPW | M |
 | 5.4 | space_before at a page top: document start, after a forced break ‡ | kept, kept: 49.21 mm | 0.4.0: dropped, 42.54 mm; 0.5.0: kept at the start only | kept at the start, dropped after any break (R12 §2.4) | – | 0.5.0: PW; HTML keeps it after a forced break (T119) | none | M |
 | 5.5 | Exact line 12.1 pt | 12.1 pt | 12.1 pt | 12.1 pt | – | yes | line_height | E |
-| 5.6 | Line height 2.0: gaps at the paragraph's edges ‡ | half the extra on each side: 10.34 / 10.05 mm | 0.4.0: between lines only, 8.82 / 8.82 mm | box 22 pt, 9.83 pt above the baseline and 12.17 pt below: 8.84 / 11.36 mm (u) | – | 0.5.0: PW | – | M |
+| 5.6 | Line height 2.0: gaps at the paragraph's edges ‡ | half the extra on each side: 10.05 / 10.05 mm (T102; the draft read 10.34 for the first) | 0.4.0: between lines only, 8.82 / 8.82 mm | box 22 pt, 9.83 pt above the baseline and 12.17 pt below: 8.84 / 11.36 mm (u) | – | 0.5.0: PW | – | M |
 | 5.7 | First baseline in a 40 mm margin ‡ | 43.64 mm (half leading) | 0.4.0: 42.54 mm (cap height at the edge); 0.5.0: 43.47 mm | 40 mm + 9.83 pt = 43.47 mm (u) | – | 0.5.0: PW | none | H |
 | 5.8 | keep_with_next | `break-after: avoid` | sticky | keepNext on every paragraph, which also keeps the div together | – | partly | – | E |
 | 5.9 | keep_together | `break-inside: avoid` | unbreakable | keepLines per paragraph only | – | partly | – | E |
@@ -719,21 +732,21 @@ Word's gap − c(upper style) + c(lower style) (§3.2), not re-measured here.
 | 5.12 | size | 9 pt | 9 pt | half points: 8.25 pt becomes 8.5 pt | – | yes | – | E |
 | 5.13 | weight 600 | 600 | Semibold face | bold (open point 15; T117) | – | partly | – | M |
 | 5.14–16 | colour, italic, alignment | agree | agree | agree | – | yes | – | E |
-| 5.17 | Heading 2 given the div's keys ‡ | 0.4.0: h2 keeps the theme's margins, 18.27 mm; R12 T99 applies the keys | 0.4.0: §8.7 L + space, 10.27 mm | 10.27 mm (u)†, old line rule: recompute (T102) | – | 0.4.0: PW | PW; H after R12 T99 | M |
+| 5.17 | Heading 2 given the div's keys ‡ | 0.4.0: h2 keeps the theme's margins, 18.27 mm; R12 T99 applies the keys: 10.85 mm (T102) | 0.4.0: §8.7 L + space, 10.27 mm; 0.5.0: 11.18 mm (T102) | 11.18 mm (T102's model) | – | 0.4.0: PW | PW; H after R12 T99 | M |
 | 5.18 | Named div with no design (a) | 10.58 mm | 7.20 mm | basedOn Body Text 6/6 pt: 7.33 mm (u)† | children only | partly | none | M |
 | 5.19 | Built-in page number | 9 pt, from page 2, baseline 288.40 mm | 11 pt, every page, 282.05 mm | 9 pt #59636E, every page | every page | no | slots | E |
-| 5.20 | header_offset 12 mm, page-2 baseline ‡ | 15.59 mm | 0.4.0: 14.57 mm | about 16.28 mm (u), old line rule: recompute (T102) | – | partly | – | H |
-| 5.21 | footer_offset 10 mm, last baseline ‡ | 285.75 mm | 0.4.0: 287.02 mm | about 286.26 mm (u), old line rule: recompute (T102) | – | partly | – | H |
-| 5.22 | Offsets unset, header baseline ‡ | 3.70 mm | 0.4.0: 10.44 mm | 12.7 mm plus a line (u) | – | no | none | E |
+| 5.20 | header_offset 12 mm, page-2 baseline ‡ | 15.59 mm | 0.4.0: 14.57 mm; 0.5.0: 15.47 mm (T102) | about 16.28 mm (u), old line rule: recompute (T116) | – | partly | – | H |
+| 5.21 | footer_offset 10 mm, last baseline ‡ | 285.75 mm | 0.4.0: 287.02 mm; 0.5.0: 285.67 mm (T102) | about 286.26 mm (u), old line rule: recompute (T116) | – | partly | – | H |
+| 5.22 | Offsets unset, header baseline ‡ | 3.70 mm | 0.4.0: 10.44 mm; 0.5.0: 13.14 mm (T102) | 12.7 mm plus a line (u) | – | no | none | E |
 | 5.23 | Furniture pitch | with design tokens, within 0.1 mm in all three; without, 6.35 / 5.08 / about 5.21 mm | | | – | partly | line_height | E |
 | 5.24 | Furniture font | fonts.body, else Charter | body font | fonts.body, else Calibri | – | partly | fonts.body | E |
 | 5.25 | Footer size, 0.75 × body | 8.25 pt | 8.25 pt | 8.5 pt | – | partly | – | E |
 | 5.26 | Footer colour, unset | black | black | #59636E [w] | – | no | colors.muted | E |
 | 5.27 | Header and Footer named styles | none applied (R12 §8) | font and line height only | only the exact line survives | – | no | – | M |
-| 5.28 | Header rule position ‡ | 39.67 mm (margin-box border) | 0.4.0: 28.57 mm | about 31.0 mm (u), old line rule: recompute (T102) | – | no | – | M |
+| 5.28 | Header rule position ‡ | 39.67 to 39.96 mm (margin-box border; T102) | 0.4.0: 28.57 mm; 0.5.0: 31.28 mm (T102) | about 31.0 mm (u), old line rule: recompute (T116) | – | no | – | M |
 | 5.29 | Rule 0.5 pt | yes | yes | yes | – | partly | – | E |
 | 5.30 | Header image 400×100 px, natural size | 105.7 mm | 141.1 mm | 105.8 mm | – | no | image.width | E |
-| 5.31 | Image gap 3 mm, header baseline ‡ | 28.57 mm | 0.4.0: 27.52 mm | about 29.37 mm (u), old line rule: recompute (T102) | – | partly | – | H |
+| 5.31 | Image gap 3 mm, header baseline ‡ | 28.57 mm; 28.84 mm on R12's build, with a recreated logo.png (T102) | 0.4.0: 27.52 mm; 0.5.0: 28.47 mm (T102) | about 29.37 mm (u), old line rule: recompute (T116) | – | partly | – | H |
 | 5.32 | right_lines, vertical | beside the last line (print) | beside line 1 | line 1 | – | partly | – | E |
 | 5.33 | First and rest variants | margin boxes correct; fixed mode prints rest on page 1 | correct | titlePg | – | partly | – | M |
 | 5.34 | `print = "fixed"` origin | page area | [na] | [na] | – | no | – | M |
@@ -883,7 +896,7 @@ vocabulary styles. R13 extends the same model to every block element:
 | Definition list | `dl`, `dt`, `dd` | `terms` | Definition Term, Definition | rows 2.17–2.19 | T112 |
 | Block quote | `blockquote` | `quote` | Block Text | 25.20 / 41.25 / 27.79 in; 19.80 / 34.65 / 40.43 out | T112 |
 | Rule | `hr` | `line` | Horizontal Rule | row 2.31 | T112 |
-| Code block | `pre` | `raw` block | Source Code, one paragraph per line | 23.00 / 22.92 / 34.38 in; line 11.20 / 11.88 / 14.03; 19.20 / 24.22 / 34.11 out | T113 |
+| Code block | `pre` | `raw` block | Source Code, one paragraph per line | 23.00 / 22.92 / 33.63 in; line 11.20 / 11.88 / 14.03; 19.20 / 24.22 / 34.86 out (HTML re-measured, §2.5) | T113 |
 | Display math | `.math.display` | `math.equation` block | Equation | row 3.22 | T113 |
 | Callout | `.callout` | callout.typ | Callout | rows 3.33, 3.34 | T113 |
 | Notebook cell | cell parts | cells.typ | cell styles | row 3.45 | T113 |
@@ -1925,8 +1938,27 @@ list-item style), D18 (HTML line edges: stated or compensated) and D19
   PR #89; T96–T101 done). Where R13 cites R12's sections or values, or
   the files R12's tasks own, the coordinator re-checks them when PR #89
   merges.
-- **‡ rows in HTML.** The HTML values of rows changed by R12 were not
-  re-measured on R12's build; T102 re-measures them.
+- **‡ rows in HTML.** T102 re-measured them on R12's build on
+  2026-11-22: 4.6, 4.28, 5.6 and 5.17 changed and are corrected above;
+  5.31 is 0.27 mm off with a recreated logo.png (400×100 px, no pHYs),
+  so it stays open until the probe's image is found. The furniture rows'
+  Word values (5.20, 5.21, 5.28, 5.31) still use the old line rule:
+  T102's Word model reads no headers or footers, so T116 recomputes them.
+  The tables and notes probes were built without citations because the
+  notes' refs.bib is missing.
+- **Signed decisions.** The owner signed D13 (the built-in design applies
+  to every document) and D14 (`@writer/doc` 0.6.0) on 2026-11-22. D3–D12
+  and D15–D19 are open; each gates the tasks that name it, T108 first
+  (D3, D4, D5, D7, D8, D16, D19).
+- **Layer 0's values that R13 does not give.** §4.2 and §4.3 name no key
+  or value for the title block's closing rule, figure and table block
+  spacing, display math, inline code, superscripts, callout titles and
+  the link underline's thickness. T105 left them out of
+  `src/design/defaults/`, added Definition Term and Definition styles of
+  its own, and took the footnote gap and clearance from Typst. Nothing
+  changes output while `APPLIED` is empty; the domain task that switches
+  each group on (T109, T110, T111, T113, T114, T115, T118) settles its values
+  with the owner first.
 - **Calibri's A** is computed from the font tables (about 0.952), not
   measured in Word; T103 measures it with the other families.
 - **Chrome's floor rule** (§3.2) was seen only with negative

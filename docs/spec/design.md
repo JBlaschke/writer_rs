@@ -7,8 +7,9 @@ emitter's `writer-div`), T85 (§8 named styles in every backend), T86 (§9.3 HTM
 (§9.5 DOCX furniture), T88 (§9.4 Typst furniture), T89 (guide and the letter example), T93–T95
 (§8.7 vocabulary styles in the PDF, design tokens for templates, package `0.4.0`), T96–T101 (§0.3
 one spacing model for Word, PDF and HTML: §3.3 and §6.1 the `lines` key, §6.2 the PDF's line
-boxes, §8.8 vocabulary styles in HTML, §8.5 a Word div as one block, package `0.5.0`). Planned and
-not in force: T102–T122 (§0.4 one set of defaults, milestone M9, package `0.6.0`). Consumers:
+boxes, §8.8 vocabulary styles in HTML, §8.5 a Word div as one block, package `0.5.0`), M9's first
+wave T104, T105 and T107 (§5.3's paragraph rule, §1.1's built-in layer 0 with no domain applied,
+package `0.6.0`). Planned and not in force: T108–T122 (§0.4 one set of defaults). Consumers:
 `check` (§10, extends T71's passes), live reload (§12), T74's guide pages (T89 edits them).
 
 The design layer is one table, `[design]`, that describes a document's typography, colours, page
@@ -93,11 +94,12 @@ are not where package `0.4.0` had them (R12 §7), and footnotes and display equa
 of their own so that their lines keep a pitch (§6.2).
 
 ### 0.4 One set of defaults (planned, M9; T102–T122)
-**Planned, not in force.** This section records a contract change that milestone M9 proposes
-(`docs/research/R13-single-source-defaults.md`). Until the task named for a domain below has
-merged, §0.2's invariants and §0.3's restriction to a declared design hold for that domain as
-written, and no built-in design exists. The change needs the owner's sign-off (R13 decision D13)
-before T105 is handed off.
+**Planned, not in force.** This section records a contract change that milestone M9 makes
+(`docs/research/R13-single-source-defaults.md`). The owner signed it on 2026-11-22 (R13 decisions
+D13, the built-in design applies to every document, and D14, package `0.6.0`). T105 has added the
+built-in design as layer 0 (§1.1's contract-change box) with no domain applied, so it changes no
+output yet. Until the task named for a domain below has merged, §0.2's invariants and §0.3's
+restriction to a declared design hold for that domain as written.
 
 §0.3 gives a declared design one layout in Word, the PDF and HTML. A document without
 `[design]`, which is most documents, still gets each backend's own fonts, sizes, colours, margins
@@ -152,15 +154,18 @@ from its merge the old invariants no longer hold for them:
 | T119 | HTML print | none; it decides how exception 11 is stated (R13 D18) |
 | T120 | LaTeX: text, fonts, page, colours, lang and metadata | LaTeX's independence of `[design]` |
 
-The new wording of §0.2 is written in before T105's hand-off, with the old invariants kept for
+The new wording of §0.2 is written in before T108's hand-off, with the old invariants kept for
 the domains not yet in `APPLIED`, except the PDF's spacing, which T108 puts under §0.3 for every
-element; T118 is the last domain switch and the list of domains then goes. T102 (harness), T103
-(Word record), T104 (HTML paragraph rule), T106 (bundled line metrics), T107 (package `0.6.0`,
-R13 D14), T121 (guard test) and T122 (guide) change no default.
+element; T118 is the last domain switch and the list of domains then goes. (Planned for T105's
+hand-off; moved on 2026-11-22, because T105 merged with `APPLIED` empty and the old invariants
+still describe every build.) T102 (harness), T103 (Word record), T104 (HTML paragraph rule), T106
+(bundled line metrics), T107 (package `0.6.0`, R13 D14), T121 (guard test) and T122 (guide)
+change no default.
 
-**Spec edits at T105's hand-off** (the coordinator's, as for R12): §0.2 as above; §0.3's
-declared-design sentence and Scope paragraph; §1.1 (the built-in layer, below the theme chain);
-§3 (the view, em lengths, font sizes rounded to 0.5 pt if R13 D19 is accepted); §6.1
+**Spec edits at T108's hand-off** (the coordinator's, as for R12): §0.2 as above; §0.3's
+declared-design sentence and Scope paragraph; §1.1 (the built-in layer, below the theme chain;
+T105's box already describes it); §3 (the view, em lengths, font sizes rounded to 0.5 pt if R13
+D19 is accepted; T105's box describes the view and em lengths); §6.1
 (`writer-design` always inserted); §6.2 (the no-design branch); §6.7 ("An undeclared design
 reserves nothing"); §8.7 ("Absent means unchanged"); §9.1's sentence on "the line spacing Word
 adds above the text", which §0.3's line box makes stale; §9.3 ("an undeclared design renders
@@ -712,8 +717,15 @@ colours too.
 
 ### 5.3 `layout_css`
 In this order, each part only when its keys are set:
-1. `text.paragraph_spacing` → `[data-writer-document] p { margin-block: 0 <pt>pt; }`;
-   `text.justify` → `[data-writer-document] p { text-align: justify; }` (`false` → `start`).
+1. `text.justify` → `[data-writer-document] { text-align: justify; }` (`false` → `start`), which
+   every block inherits, headings and list items included, as in Word and the PDF; with `true`,
+   also `:where([data-writer-document]) pre { text-align: start; }`, so that wrapped code is
+   never justified. Then one paragraph rule, `:where([data-writer-document]) p { … }`, with
+   `margin-block: 0 <pt>pt` for `text.paragraph_spacing` and `text-align: inherit` when
+   `text.justify` is set. It has one element's specificity and comes after the theme, so it
+   replaces the theme's own `p` margin and alignment, while the theme's class rules (`.date`'s
+   top margin, the last child of a quote or a cell) and a container's alignment (`.title-block`,
+   `div.center`) still hold (T104; R13 §1.2).
 2. `page.paper`/`page.margin` → `@page { size: <css size>; margin: <top> <right> <bottom> <left>; }`
    with only the set descriptors; a partly set margin uses `margin-top:` etc. CSS size names:
    `a3` → `A3`, `a4` → `A4`, `a5` → `A5`, `iso-b4` → `B4`, `iso-b5` → `B5`, `jis-b4` → `JIS-B4`,
@@ -1439,7 +1451,7 @@ the arguments of `text(..)` that set its face; for an undeclared name every key 
 `text(..style-tokens(theme, "Title").text, meta.title)` is then plain text. A template's rules
 name these instead of repeating the theme's values:
 ```typst
-#import "@writer/doc:0.5.0" as base
+#import "@writer/doc:0.6.0" as base
 
 #let writer-doc(..args, body) = {
     let theme = base.design-tokens(..args)
@@ -1905,7 +1917,8 @@ and `letter.md` keeps its directives: `:::recipient {custom-style="Recipient"}` 
 - **HTML** (T81, T85, T86): `tokens_css` with four `@font-face` rules and `:root { --w-font-body:
   "Source Sans 3", …; --w-font-heading: …; --w-font-size: 11pt; --w-line-height: 1.35; --w-text:
   #242424; --w-muted: #575757; --w-accent: #a96d4b; --w-link: #a96d4b; }`; `layout_css` with
-  `[data-writer-document] p { margin-block: 0 10.205pt; text-align: start; }`, `@page { size: A4;
+  `[data-writer-document] { text-align: start; }` and `:where([data-writer-document]) p {
+  margin-block: 0 10.205pt; text-align: inherit; }` (T104), `@page { size: A4;
   margin: 141.732pt 62.362pt 107.717pt 62.362pt; }`, six `[data-style="…"]` rules, the screen
   furniture classes, `@page :first { @top-center { content: "Generative Biology Institute";
   background: url(asset:…) no-repeat top center / 141.732pt auto; … } }`, `@page { @top-center {

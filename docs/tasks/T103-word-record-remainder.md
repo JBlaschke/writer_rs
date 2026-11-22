@@ -1,7 +1,8 @@
 # T103 — Word record, the remainder (run by the owner)
 
-**Status: brief, not ready for hand-off.** The DOCX inputs, the predicted values and the reading
-sheet are the coordinator's to prepare first (see "Before hand-off").
+**Status: inputs ready, readings pending (PR #90, 2026-11-22; `4201ab79`, `420e78cf`).** The
+DOCX inputs, the predictions and the reading sheet are in `docs/dev/word-record/`. The owner takes
+the readings in Word; how (dark mode, `wordq.py` through osascript) is the owner's to decide.
 
 | | |
 |---|---|

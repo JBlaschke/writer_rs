@@ -60,6 +60,14 @@ Set at hand-off: `[design.table]` `rule`, `header_rule`, `inset_x`, `header_bold
 - `theme.css` at main: tables :154-169, cell padding `.5em .65em` (:164).
 - `src/html/emit.rs` writes `colgroup` widths (:1195-1210).
 
+## Wave 26's results (coordinator, 2026-11-22)
+
+- T105 named the table keys after R13 §4.2, not after this brief: `rules = {outer, header}`,
+  `rule_color`, `inset_x`, `header_weight`, `header_fill` and `width` (`full` or `content`),
+  in `src/design/defaults/table.toml`. Steps 2 to 4 render those names.
+- T102 re-measured R13 rows 4.5 to 4.7 on R12's build: the row pitch is 25.84 pt in HTML and
+  16.12 pt with a declared Compact, which reaches `td` (R13 §2.6).
+
 ## Before hand-off
 - D9 decided (full text width or content width).
 - T103's table readings in.

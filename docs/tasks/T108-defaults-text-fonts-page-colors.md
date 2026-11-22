@@ -90,6 +90,24 @@ not signature: `tokens_css` (`src/html/design.rs:15`), `compile_theme_css`
 - The default theme's CSS is 13,614 B today (theme.css 8,743 B, print.css 1,959 B,
   notebook.css 2,912 B), against the 24 KiB budget of html-output.md §6.3 (R13 §4.1).
 
+## Wave 26's results (coordinator, 2026-11-22)
+
+- T105 landed (PR #90). The switch is `APPLIED` in `src/design/defaults/mod.rs:20`; step 1
+  sets it to `TEXT | FONTS | COLORS | PAGE`, the first row of `TASKS` in
+  `tests/design_defaults.rs`, whose tests hold for any `APPLIED`. `PAGE` holds only
+  `page.paper` and `page.margin`: `header_offset`, `footer_offset` and `print` are in
+  `PAGE_NUMBERS` (T116).
+- Layer 0 uses Option B's fonts, 12 pt screen and 11 pt print, and no rounding, until D7, D8
+  and D19 are taken; step 1 sets the decided values in `src/design/defaults/`.
+- D16: HTML writes the rules whose keys `Design::is_builtin` reports (`src/design/mod.rs:1003`)
+  before the theme's entries and the rest after them.
+- With no margins in the design, Word's `pgMar` falls back to 1440 twips
+  (`src/docx/design.rs:438-441`) while the PDF uses 25 mm, so Word's page top is 1.13 pt lower
+  (T102). Layer 0's `page.margin` replaces both fallbacks.
+- T104 landed: the alignment rule is on `[data-writer-document]`, the paragraph margin under
+  `:where()`. T102's harness is `scripts/xfmt/run.py`; an intended move is recorded with
+  `--update` in the task's own commit, as `e404d1b5` did for p7 after T104.
+
 ## Before hand-off
 - Decisions D3 (body line height), D4 (paragraph spacing), D5 (margins), D7 (fonts), D8 (screen
   size), D13, D16 (built-in CSS before the theme) and D19 (rounding) are taken.

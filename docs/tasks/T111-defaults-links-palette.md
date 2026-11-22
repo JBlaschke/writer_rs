@@ -66,6 +66,13 @@ None beyond the keys of R13 §4.2: `colors.border`, `code_bg`, `highlight`, `err
   copy `print.css:20-30`. Under D16 the theme's tokens still win over the built-in values, so
   they go once the design carries the palette.
 
+## Wave 26's results (coordinator, 2026-11-22)
+
+- T105 added the palette keys and `colors.callout` to the schema and to layer 0
+  (`src/design/defaults/colors.toml`), so step 1 only switches `PALETTE` and `LINKS` on.
+- R13 gives no value for the link underline's thickness; settle it with the owner before
+  hand-off.
+
 ## Before hand-off
 - D11 decided (URLs printed after links in HTML print; proposed: no).
 - The coordinator lists every colour literal with its token, and the literals that stay (for

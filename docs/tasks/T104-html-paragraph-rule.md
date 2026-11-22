@@ -1,7 +1,7 @@
 # T104 — HTML paragraph rule: alignment on the document, margins under `:where()`
 
-**Status: brief, not ready for hand-off.** The CSS is the coordinator's to prototype in probe
-*center* first (see "Before hand-off").
+**Status: done (PR #90, 2026-11-22; `2b9ce15c`, `3750f8d5`).** design.md §5.3 item 1 states the
+rule; R13 §1.2 corrects which blocks the old rule reached.
 
 | | |
 |---|---|

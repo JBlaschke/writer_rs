@@ -1,7 +1,7 @@
 # T107 — `@writer/doc` 0.6.0: the package version wherever it is named; no behaviour change
 
-**Status: brief, not ready for hand-off.** It waits for decision D14; if D14 folds M9 into 0.5.0
-the task is dropped (see "Before hand-off").
+**Status: done (PR #90, 2026-11-22; `6649c87c`).** D14 signed 2026-11-22: `@writer/doc` 0.6.0,
+byte-identical to 0.5.0 (typst-dialect.md §4.2).
 
 | | |
 |---|---|

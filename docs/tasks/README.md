@@ -96,12 +96,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T99 | HTML: vocabulary styles, a div's spaces as its edges, empty table cells | M8 | S | T98 | done (PR #89) |
 | T100 | Word: a styled div is one block (decision D1) | M8 | S | T99 | done (PR #89) |
 | T101 | Guide: one spacing model in Word, the PDF and HTML | M8 | S | T98, T99, T100 | done (PR #89) |
-| T102 | Cross-format measurement harness | M9 | M | T101 | brief |
-| T103 | Word record, the remainder (run by the owner) | M9 | M | T101 | brief |
-| T104 | HTML paragraph rule: alignment on the document, margins under `:where()` | M9 | S | T101 | brief |
-| T105 | Built-in defaults layer behind a switch (`APPLIED` empty) | M9 | L | T101 | brief |
+| T102 | Cross-format measurement harness | M9 | M | T101 | done (PR #90) |
+| T103 | Word record, the remainder (run by the owner) | M9 | M | T101 | inputs ready, readings pending |
+| T104 | HTML paragraph rule: alignment on the document, margins under `:where()` | M9 | S | T101 | done (PR #90) |
+| T105 | Built-in defaults layer behind a switch (`APPLIED` empty) | M9 | L | T101 | done (PR #90) |
 | T106 | Bundled line metrics and a missing-family warning | M9 | M | T103, T105 | brief |
-| T107 | `@writer/doc` 0.6.0: the package version wherever it is named; no behaviour change | M9 | S | T101 | brief |
+| T107 | `@writer/doc` 0.6.0: the package version wherever it is named; no behaviour change | M9 | S | T101 | done (PR #90) |
 | T108 | Body text, fonts, page and colours: the first switch | M9 | L | T102, T104, T105, T106, T107 | brief |
 | T109 | Headings, title block and contents | M9 | M | T108 | brief |
 | T110 | Captions, figures and images | M9 | M | T109, T120 | brief |
@@ -796,3 +796,16 @@ Manual checks performed: …
   Typst line numbers in the briefs refer to the typst-library and typst-layout 0.15.1 crates in
   the cargo registry (`~/.cargo/registry/src/index.crates.io-*/`), which writer compiles
   against, not to a Typst checkout.
+
+- 2026-11-22, later: wave 26 is on `claude/single-source-defaults` (PR #90), after the owner
+  signed D13 (the built-in design applies to every document) and D14 (`@writer/doc` 0.6.0).
+  T102, T104, T105 and T107 are done. T103's inputs and reading sheet are in
+  `docs/dev/word-record/`; the readings are the owner's. Each task ran in its own worktree
+  through implementation, two reviews (acceptance and correctness) and a fix pass, and the
+  coordinator merged the five branches. Only T104 changes output: the HTML paragraph rule of
+  design.md §5.3 moves one gap of R12's probe p7, so `e404d1b5` records
+  `tests/xfmt/expected/p7.txt` again. T102's re-measurements corrected four of R13's ‡ rows and
+  two of R12 §8's HTML code-block values (R13 §2.5, §6.4). design.md §0.2's rewrite moves to
+  T108's hand-off, since layer 0 applies no domain yet. The briefs of T108, T109, T111, T114,
+  T116 and T118 gained a "Wave 26's results" section. T106 (wave 27) waits for T103's readings;
+  T108 waits for T106 and for D3, D4, D5, D7, D8, D16 and D19.

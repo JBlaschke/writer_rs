@@ -57,6 +57,18 @@ None beyond the built-in slot: the page number uses the slot keys of design.md �
 - `src/html/design.rs` at main: `furniture_html` (:400), `furniture_css` (:536),
   `background_css` (:654).
 
+## Wave 26's results (coordinator, 2026-11-22)
+
+- T105 put `page.header_offset`, `page.footer_offset` and `page.print` in `PAGE_NUMBERS` with
+  the footer slot and the Header and Footer styles: only the furniture code reads them.
+- When `PAGE_NUMBERS` is applied, a user's footer that sets `lines` but no `align` inherits
+  layer 0's `center`; an explicitly empty `[page.footer]` still clears it. D6 settles this.
+- T102 re-measured the HTML furniture rows; R13 §2.8 gives the 0.5.0 PDF values. The Word
+  values of 5.20, 5.21, 5.28 and 5.31 still use the old line rule, because T102's Word model
+  reads no headers or footers. Row 5.31's HTML value is 0.27 mm off with a recreated logo.png.
+- In printed HTML the footer's page number is 9 pt at 831.00 pt; the PDF's is 11 pt at
+  832.73 pt (T102, p5 and p6).
+
 ## Before hand-off
 - D6 decided (is page 1 numbered).
 - The coordinator prototypes the background picture and recomputes rows 5.20–5.22, 5.28 and

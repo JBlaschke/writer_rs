@@ -734,10 +734,17 @@ beside T109 because it touches none of those, and T110 waits for it because both
 T121 and T122 close the milestone in wave 40. Every brief is marked "brief, not ready for hand-off"
 and says what the coordinator prototypes and measures first and which of the decisions D3–D19 (R13
 §4.3, §4.6, §6.3) it needs; D13, the contract change itself, gates T105, and design.md §0.4 becomes
-§0.2 at T105's hand-off. `scripts/waves.py` does not run over `docs/tasks/` (the 2026-11-20 note),
+§0.2 before T108's hand-off (moved from T105's on 2026-11-22, since layer 0 applies no domain
+yet). `scripts/waves.py` does not run over `docs/tasks/` (the 2026-11-20 note),
 and its identifier pattern (`\bT[0-9A-F]{2}\b`) reads two characters after the T, so it cannot
 parse T100 onward either: these waves were computed by hand, each task one wave after its latest
 dependency.
+
+Wave 26 (coordinator, 2026-11-22, PR #90): the owner signed D13 and D14, and T102, T104, T105 and
+T107 are done; T103's inputs and reading sheet are in `docs/dev/word-record/`, and the readings are
+the owner's. Only T104 changes output, the HTML paragraph rule of design.md §5.3, which moves one
+gap of R12's probe p7 in `tests/xfmt/expected/p7.txt`. T106 (wave 27) waits for T103's readings,
+and T108 for T106 and decisions D3, D4, D5, D7, D8, D16 and D19.
 
 The hard integration points are T16 (everything of M1 meets), T32 (emitter, package and
 compiler meet) and T52 (the typst backend meets serve and the exports). The coordinator

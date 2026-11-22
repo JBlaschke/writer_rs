@@ -53,6 +53,14 @@ Set at hand-off: `hyphenate`, `widows`, `orphans`, `kerning`, `ligatures` (R13 Â
 - `theme.css:264`: `span.overline { text-decoration: overline; }`; print.css:7 sets
   `orphans: 3; widows: 3` for `p`.
 
+## Wave 26's results (coordinator, 2026-11-22)
+
+- T105 added the typography keys `text.hyphenate`, `widows`, `orphans`, `kerning` and
+  `ligatures` to the schema and to layer 0 (`src/design/defaults/text.toml`), so step 1 only
+  switches `TYPOGRAPHY` on.
+- R13 gives no value for superscripts and subscripts; settle them with the owner before
+  hand-off.
+
 ## Before hand-off
 - T103's widow reading in.
 - The coordinator names the files for direction, the inline model and the author's
