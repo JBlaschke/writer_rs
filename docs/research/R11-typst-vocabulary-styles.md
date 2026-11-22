@@ -155,9 +155,13 @@ contents page, as in the Word file.
   style.
 - **Sum or larger.** Between two styled blocks Typst and CSS use the larger of
   the first's space after and the second's space before; Word adds them.
+  *Correction (2026-11-21, R12 §2):* this was assumed, not measured. Word for
+  Mac 16 also takes the larger of the two, so the three outputs follow one
+  rule.
 - **Divs.** `writer-div` still passes `space_before`/`space_after` to its
   block as they are, one leading less than HTML and Word show (design.md §8.4).
-  Not changed here; see design.md's open points.
+  Not changed here; see design.md's open points. *Resolved by package `0.5.0`
+  (R12).*
 - **Not applied in the PDF**: `Body Text`, `First Paragraph`, `Block Text`,
   `Footnote Text`, `Abstract Title`, `Abstract`, `Bibliography`, `Definition
   Term`, `Definition`, `Source Code`, `Figure`, `Captioned Figure`; `Compact`

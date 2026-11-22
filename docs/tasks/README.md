@@ -87,9 +87,15 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T91 | Page background image (`[design.page.background]`) in HTML, Typst and DOCX | M8 | M | T86, T87, T88 | done (PR #66) |
 | T92 | Design styles restyle writer's Word definitions in place; `design-style-unused` exempts them | M8 | S | T85, T89 | done (PR #65) |
 | T90 | Furniture image `gap` | M8 | S | T89 | done (PR #64) |
-| T93 | `@writer/doc` 0.4.0: the package version wherever it is named; no behaviour change | M8 | S | T90, T91, T92 | ready for review (PR #88) |
-| T94 | Vocabulary styles in the PDF (`design.typ`), `title-block`, design tokens, starter template in override order | M8 | M | T92, T93 | ready for review (PR #88) |
-| T95 | Guide: named styles in the PDF, the PDF template as a list of overrides | M8 | S | T94 | ready for review (PR #88) |
+| T93 | `@writer/doc` 0.4.0: the package version wherever it is named; no behaviour change | M8 | S | T90, T91, T92 | done (PR #88) |
+| T94 | Vocabulary styles in the PDF (`design.typ`), `title-block`, design tokens, starter template in override order | M8 | M | T92, T93 | done (PR #88) |
+| T95 | Guide: named styles in the PDF, the PDF template as a list of overrides | M8 | S | T94 | done (PR #88) |
+| T96 | Font line metrics (`lines`) in the Typst design input and in exports | M8 | S | T92, T95 | todo |
+| T97 | `@writer/doc` 0.5.0: the package version wherever it is named; no behaviour change | M8 | S | T96 | todo |
+| T98 | `@writer/doc` 0.5.0: Word's line boxes and one rule for the space between blocks in the PDF | M8 | M | T96, T97 | todo |
+| T99 | HTML: vocabulary styles, a div's spaces as its edges, empty table cells | M8 | S | T98 | todo |
+| T100 | Word: a styled div is one block (decision D1) | M8 | S | T99 | todo |
+| T101 | Guide: one spacing model in Word, the PDF and HTML | M8 | S | T98, T99, T100 | todo |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -116,6 +122,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | 17 | T93 | 1 |
 | 18 | T94 | 1 |
 | 19 | T95 | 1 |
+| 20 | T96 | 1 |
+| 21 | T97 | 1 |
+| 22 | T98 | 1 |
+| 23 | T99 | 1 |
+| 24 | T100 | 1 |
+| 25 | T101 | 1 |
 
 ## Coordinator notes (2026-10-24)
 - T00 merged in [PR #1](https://github.com/JBlaschke/writer_rs/pull/1); all CI
@@ -689,3 +701,36 @@ Manual checks performed: …
   style names had the names in its first column, where `tests/guide.rs` reads every cell that
   holds one backticked name, between `## [design]` and `## Strictness`, as a configuration key;
   the PDF element comes first now.
+
+- 2026-11-21: T96–T101 (waves 20–25) follow from the same theme once more. Under package 0.4.0
+  its PDF was visibly tighter than its Word document and its HTML page; the three have to agree,
+  on the looser look. `docs/research/R12-spacing-model.md` measured what Word does: a line is a
+  box as tall as its pitch that hangs from the font's ascent, the larger of two adjacent blocks'
+  spaces holds between them (not their sum, as design.md said until then), and a block keeps its
+  space before at the top of page 1 only. design.md §0.3 states that as the model for all three
+  outputs; §6.2, §6.3, §8.3, §8.5 and §8.8 say how each backend reaches it. R12 §5 holds
+  reference code for the three backends. T96 gives Typst the fonts' line metrics, T97 moves the
+  package to `@writer/doc` 0.5.0 without changing it, T98 installs the line boxes and the block
+  rule in the package, T99 gives HTML the vocabulary styles and a div's outer spaces, T100 makes
+  a styled div one block in Word and T101 rewrites the guide's passages. The six run one after
+  the other: each installs its part of R12 §5 with `git apply` and checks itself against a state
+  of the tree it records first, so the tasks need no commit between them. Before they were
+  handed out, the whole sequence was run from a clean tree with each task file's own commands
+  and the four quality gates after every task. That run changed the plan three times
+  (2026-11-22). In HTML the subtitle, the authors and the date did not follow `Title`'s `align`,
+  as they do in Word and the PDF: T99's reference code and design.md §8.8 now say so. A heading
+  whose style sets no space stands about 8 pt further from the text around it in the PDF than
+  under 0.4.0, because Typst's own heading space now counts between line boxes: R12 §7 has the
+  numbers, and T101 tells the reader to set both keys on the heading styles. And Typst reads the
+  paragraph leading, now zero, in two more places: a footnote's lines stood 17.3 pt apart where
+  the body has 14.85 pt, and the rows of a display equation touched. The package code of R12
+  §5.3 gives both a rule of their own (design.md §6.2), T98 pins them with two more tests, and
+  R12 §7 has a table of every block outside the model that moved against 0.4.0, which T101
+  lists in the guide's troubleshooting entry.
+
+  Two decisions wait for the maintainer's sign-off at review (R12 §7). D1: Word writes a styled
+  div as one block (T100; the task can be dropped without touching the other five). D2: in HTML
+  a vocabulary rule beats a theme rule of the same specificity (T99). Outside the model for now,
+  each with its backend's own spacing: lists, block quotes, code blocks, the space around tables
+  and figures, footnotes, callouts, equations and headings no style declares. R12 §8 holds the
+  measurements a follow-up needs.

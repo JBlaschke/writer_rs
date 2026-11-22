@@ -292,7 +292,8 @@ path(\"refs.bib\")".
 `listing`, re-exports `callout`, `code-cell`, `include-notebook`); `callout.typ`; `numbering.typ`;
 `cells.typ`; `oracle.typ`; `template.typ` (the starter that `eject typst-template` writes, §4.6);
 from `0.4.0` `design.typ` (the design input, its conversion rules, the vocabulary styles and the
-tokens of design.md §8.7; `lib.typ` imports and re-exports all of it with `#import "design.typ": *`).
+tokens of design.md §8.7, and from `0.5.0` the line boxes of design.md §6.2; `lib.typ` imports and
+re-exports all of it with `#import "design.typ": *`).
 The package uses only typst built-ins (no `@preview` imports); LaTeX math needs the separate
 `#import "@preview/mitex:0.2.7": mi, mitex`. Versioning: `WRITER_DOC_VERSION` changes with any change
 of the argument vocabulary or output (minor before 1.0); emitted files import exactly it; `check`
@@ -365,6 +366,24 @@ citation-locale `title:` of the bibliography the package places.
 > `WRITER_DOC_VERSION` becomes `0.4.0`; a document or template that imports `@writer/doc:0.3.0`
 > gets `W-TYP-PACKAGE-VERSION` (native input) or a compile error that names the embedded version
 > (a `[pdf] template`), as at every bump.
+
+> **Contract change (2026-11-21, package `0.5.0`; T97, T98):** with an applied design,
+> `writer-doc` lays the document out in Word's line boxes (design.md §0.3, §6.2): `text.top-edge`
+> and `text.bottom-edge` are lengths that split the pitch at the baseline, `par.leading` is
+> `0pt`, every paragraph's spacing is carried by a block, and a style's `space_before` and
+> `space_after` are plain block spacing between line boxes, of which the larger holds where two
+> blocks meet. Gone: `line-box`, `design-leading`, `design-spacing`, `style-leading`. New in
+> `design.typ`: `cap-height(face)`, `font-lines(design, face)`, `line-edges(design, pitch,
+> face)`, `inherited-pitch()`, `line-trim(design, pitch, face)`, `spacing-model(settings)`,
+> `flow-mark(below)`, `par-end(it)`, `open-flow(mark, body)`, `empty-cell(it)` and the content
+> element names `styled-content`, `content-sequence` and `blank-content`. Changed: `style-rules`,
+> `vocabulary`, `cell-inset`, `vocabulary-layout` and `styled-title-block` take the document's
+> pitch where they took a leading; `writer-furniture(.., design: (:))`. The design input gains a
+> `lines` table (design.md §3.3). Without an applied design the output is byte-identical to
+> `0.4.0`'s. design.md §6.3 lists what a template author meets. `WRITER_DOC_VERSION` becomes
+> `0.5.0`; a document or template that imports `@writer/doc:0.4.0` gets `W-TYP-PACKAGE-VERSION`
+> (native input) or a compile error that names the embedded version (a `[pdf] template`), as at
+> every bump.
 
 ### 4.3 Callouts, numbering, figures
 - `callout(kind: "note", title: auto, body)`: `title: auto` → the dictionary word for the kind
@@ -452,6 +471,9 @@ body) }` with comments naming every argument.
 > this version on, to the design's vocabulary styles for the keys those set. A template passes
 > `title-block:` after `..args` (`base.writer-doc.with(..args, title-block: cover)`): a later
 > named argument replaces an earlier one of the same name.
+
+> **2026-11-21 (package `0.5.0`; T97):** the starter's import line is `#import
+> "@writer/doc:0.5.0" as base`; its rules and comments are unchanged.
 
 ## 5. IR → typst emitter (T30)
 
@@ -1015,6 +1037,10 @@ directory → exit 2, nothing written. `eject typst-template FILE` writes `templ
 >
 > **2026-11-19:** the package version is `0.4.0` (§4.2): exports import `@writer/doc:0.4.0` and
 > `eject typst-package DIR` writes `DIR/writer/doc/0.4.0/`, now with `design.typ`.
+>
+> **2026-11-21:** the package version is `0.5.0` (§4.2): exports import `@writer/doc:0.5.0`,
+> `eject typst-package DIR` writes `DIR/writer/doc/0.5.0/`, and an export's `writer-design.json`
+> holds the design's `lines` table (design.md §3.3, §6.7).
 
 ## 11. Verified API hints
 
