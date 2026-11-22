@@ -90,12 +90,12 @@ Generated from PLAN.md §5 (titles shortened); PLAN.md is authoritative.
 | T93 | `@writer/doc` 0.4.0: the package version wherever it is named; no behaviour change | M8 | S | T90, T91, T92 | done (PR #88) |
 | T94 | Vocabulary styles in the PDF (`design.typ`), `title-block`, design tokens, starter template in override order | M8 | M | T92, T93 | done (PR #88) |
 | T95 | Guide: named styles in the PDF, the PDF template as a list of overrides | M8 | S | T94 | done (PR #88) |
-| T96 | Font line metrics (`lines`) in the Typst design input and in exports | M8 | S | T92, T95 | todo |
-| T97 | `@writer/doc` 0.5.0: the package version wherever it is named; no behaviour change | M8 | S | T96 | todo |
-| T98 | `@writer/doc` 0.5.0: Word's line boxes and one rule for the space between blocks in the PDF | M8 | M | T96, T97 | todo |
-| T99 | HTML: vocabulary styles, a div's spaces as its edges, empty table cells | M8 | S | T98 | todo |
-| T100 | Word: a styled div is one block (decision D1) | M8 | S | T99 | todo |
-| T101 | Guide: one spacing model in Word, the PDF and HTML | M8 | S | T98, T99, T100 | todo |
+| T96 | Font line metrics (`lines`) in the Typst design input and in exports | M8 | S | T92, T95 | done (PR #89) |
+| T97 | `@writer/doc` 0.5.0: the package version wherever it is named; no behaviour change | M8 | S | T96 | done (PR #89) |
+| T98 | `@writer/doc` 0.5.0: Word's line boxes and one rule for the space between blocks in the PDF | M8 | M | T96, T97 | done (PR #89) |
+| T99 | HTML: vocabulary styles, a div's spaces as its edges, empty table cells | M8 | S | T98 | done (PR #89) |
+| T100 | Word: a styled div is one block (decision D1) | M8 | S | T99 | done (PR #89) |
+| T101 | Guide: one spacing model in Word, the PDF and HTML | M8 | S | T98, T99, T100 | done (PR #89) |
 
 ## Order of execution (waves, computed from the dependency column)
 
@@ -727,6 +727,14 @@ Manual checks performed: …
   §5.3 gives both a rule of their own (design.md §6.2), T98 pins them with two more tests, and
   R12 §7 has a table of every block outside the model that moved against 0.4.0, which T101
   lists in the guide's troubleshooting entry.
+
+  The six tasks ran on 2026-11-22 on branch `claude/spacing-model` (PR #89), one after the other,
+  each given to a cheaper model (T97 and T101 to the smallest one). After each task the tree was
+  compared with the rehearsal's: every file that a diff or a fixed text decides is the same byte
+  for byte, and the tests the workers wrote from their task's tables (T96's one in
+  `tests/typst_design.rs`, the ten of `tests/typst_spacing.rs`, T99's seven in
+  `tests/html_design.rs`) assert the same numbers and strings in other words. No task had to be
+  repeated or corrected, and the four quality gates pass on the result (2142 tests).
 
   Two decisions wait for the maintainer's sign-off at review (R12 §7). D1: Word writes a styled
   div as one block (T100; the task can be dropped without touching the other five). D2: in HTML
