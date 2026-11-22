@@ -220,6 +220,62 @@ names; R13 §5 gives the reasons and the measurements.
 CLI flags do not set design keys (no new flags). `#show: writer-doc.with(..)` arguments of a
 native Typst document are not a design source either (§6.6).
 
+> **Contract change (coordinator, 2026-11-22; T105, R13 §4.1–§4.3):** writer's built-in design
+> is **layer 0**, below source 1. While `APPLIED` (below) is empty no output changes, so §0.2
+> and §0.4's "planned" status stand as written.
+>
+> - **Layer 0.** `src/design/defaults/<domain>.toml` (text, fonts, colors, page, styles, lists,
+>   table, code, callout, image, footnotes, links), compiled into the binary, together form one
+>   `[design]` table with R13 §4.3's proposed values. Keys whose default is "none" stay unset:
+>   `page.columns`, `page.background`, `page.header`, `table.header_fill` and style frames.
+>   `with_design_layers` pushes layer 0 first; `merge` records `Origin::Builtin` for its keys.
+>   A built-in style takes the spelling of a user style with the same normalised name (§8.1), so
+>   `[design.styles.heading-1]` adds to the built-in `Heading 1` instead of colliding with it.
+> - **Schema additions (R13 §4.2).** `text.hyphenate`, `widows`, `orphans` (lines, ≥ 1),
+>   `kerning`, `ligatures`, `measure` (Length) and `screen_scale` (a number > 0);
+>   `fonts.math`; `colors.border`, `code_bg`, `highlight` and `error`, which are colour tokens
+>   too, and `colors.callout = { note, tip, important, warning, caution, other }`; the style keys
+>   `case` (`"upper"` or `"smallcaps"`), `letter_spacing` (signed Length), `indent` (a Length
+>   for both sides or `{ left, right }`), `border` (`{ side, width, color, gap }`, side `top`,
+>   `bottom`, `left`, `right` or `all`, the default), `fill` (Color) and `padding` (like
+>   `margin`); and the element tables `[design.lists]` (`tight_spacing`, `indent`, `marker_gap`,
+>   `bullets`), `[design.table]` (`rules = { outer, header }`, `rule_color`, `inset_x`,
+>   `header_weight`, `header_fill`, `width` = `"full"` or `"content"`), `[design.code]`
+>   (`background`, `padding`, `radius`, `line_height`, `theme`), `[design.callout]`
+>   (`border_width`, `fill` = a tint from 0 to 1, `padding`, `radius`), `[design.image]`
+>   (`dpi`), `[design.footnotes]` (`separator = { length = "<n>%", width, color }`, `gap`,
+>   `clearance`) and `[design.links]` (`underline`, `print_url`). `merge` validates and resolves
+>   them; no backend reads them before its domain task (§0.4). §3.3 leaves each of them out
+>   while it is unset, so the JSON of every design that does not set them is unchanged.
+> - **em lengths.** Every Length (§2.1) also takes `em`: inside a style, of the style's resolved
+>   size (a style's own `size` is of `text.size`); everywhere else, of `text.size`; where no
+>   layer sets `text.size`, of layer 0's 11 pt. `text.size` itself rejects em. Signed lengths
+>   (`frame.offset`, `letter_spacing`) take em too. Nothing is rounded (R13 D19 is open).
+> - **Groups and `APPLIED`.** Each leaf of layer 0 belongs to one key group, one bit of
+>   `Domains` each: `TEXT`, `FONTS`, `COLORS`, `PAGE` (T108), `HEADINGS` (T109), `CAPTIONS`,
+>   `IMAGES` (T110), `PALETTE`, `LINKS` (T111), `LISTS`, `QUOTES` (T112), `CODE`, `CALLOUTS`,
+>   `MATH_FONT` (T113), `TABLES` (T114), `FOOTNOTES` (T115), `PAGE_NUMBERS` (T116),
+>   `DIV_CLASSES` (T117) and `TYPOGRAPHY` (T118). `APPLIED: Domains` lists the groups whose
+>   built-in values the backends see, and T105 leaves it empty. Some groups' values name another
+>   group's colour tokens (`Domains::needs`); a test keeps `APPLIED` closed under them.
+> - **The view and two flags.** The design the pipeline resolves is the view
+>   `Design::view(APPLIED)`: layer 0 cut to the applied groups, under sources 1–3. Its
+>   `declared` is true when the view's merged table has a key; the backends,
+>   `src/typst/world.rs`, `src/assets/export.rs` and `to_json` read it. `user_declared` is true
+>   when a source above layer 0 has a key; `writer check` reads it (`src/check/design.rs`,
+>   `src/check/targets.rs`), and it is not part of §3.3. `writer check` also leaves a leaf that
+>   only layer 0 sets out of its findings: such a style is never unused, such a value never
+>   shadowed by a Word reference document. While `APPLIED` is empty the view
+>   equals the design merged without layer 0, `declared` included. The design also records the
+>   layer of each leaf (`Design::origins`, `Design::is_builtin`), which HTML needs from T108 to
+>   write the built-in rules before the theme and the user's after it (R13 D16), and keeps the
+>   sources above layer 0, so `Design::view` can merge them over any set of groups.
+> - **Ejection** (§4.2) writes the merged table of sources 1–3 only, never layer 0's keys.
+> - **`writer dump <INPUT> --design --defaults`** (§4.1; cli.md `dump`) prints `{"design": …,
+>   "origins": …}`: the §3.3 JSON of the view with every group applied, and the merged
+>   `[design]` table's shape with each leaf naming its layer (`builtin`, `theme <file>`,
+>   `project <file>` or `front matter`). `--design` alone prints what it printed before.
+
 ### 1.2 Merge
 Each source is read as a JSON object (`toml::Table` → `serde_json::Map`, the way `[vars]` is read).
 Path-valued keys (§1.3) are absolutised **per source before merging**, exactly as config.md §3's
