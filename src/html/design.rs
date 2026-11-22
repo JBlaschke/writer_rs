@@ -141,22 +141,18 @@ pub fn layout_css(
         return Ok(String::new());
     }
     let mut css = String::from("/* design: layout */\n");
-    let mut paragraph = Vec::new();
+    // The paragraph margin has one element's specificity: it replaces the
+    // theme's `p` margin, while the theme's class rules (`.date`, a quote's
+    // or a cell's last child) keep their own. The alignment is inherited
+    // from the document, so `.title-block` and `div.center` still align
+    // their paragraphs (R13 §1.2).
     if let Some(spacing) = design.text.paragraph_spacing {
-        paragraph.push(format!("margin-block:0 {}", css_pt(spacing)));
+        let margin = format!("margin-block:0 {}", css_pt(spacing));
+        push_rule(&mut css, &["p"], &[margin]);
     }
     if let Some(justify) = design.text.justify {
-        paragraph.push(format!(
-            "text-align:{}",
-            if justify { "justify" } else { "start" }
-        ));
-    }
-    if !paragraph.is_empty() {
-        let _ = writeln!(
-            css,
-            "[data-writer-document] p{{{}}}",
-            paragraph.join(";")
-        );
+        let align = if justify { "justify" } else { "start" };
+        let _ = writeln!(css, "[data-writer-document]{{text-align:{align}}}");
     }
     let mut page = Vec::new();
     if let Some(paper) = &design.page.paper {
