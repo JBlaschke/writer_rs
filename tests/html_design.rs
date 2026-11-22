@@ -56,8 +56,9 @@ fn letter_tokens_precede_theme_entries_and_layout_follows_them() {
     assert!(entries < layer && layer < dark && dark < layout);
     assert!(css[layer..dark].ends_with("}\n\n"));
     assert!(css[layout..].contains(concat!(
-        ":where([data-writer-document]) p{margin-block:0 10.205pt}\n",
         "[data-writer-document]{text-align:start}\n",
+        ":where([data-writer-document]) p{",
+        "margin-block:0 10.205pt;text-align:inherit}\n",
     )));
     assert!(css[layout..].contains(
         "@page{size:A4;margin:141.732pt 62.362pt 107.717pt 62.362pt}"
@@ -588,44 +589,38 @@ fn specificity(selector: &str) -> (u32, u32, u32) {
     (ids, classes, elements)
 }
 
-/// The selectors of a rule, split at the commas outside parentheses.
+#[path = "common/theme_css.rs"]
+mod theme_css;
+
+/// The selectors of one rule written as `selectors{declarations}`.
 fn selectors(rule: &str) -> Vec<&str> {
-    let list = &rule[..rule.find('{').unwrap()];
-    let mut parts = Vec::new();
-    let (mut depth, mut start) = (0, 0);
-    for (at, c) in list.char_indices() {
-        match c {
-            '(' => depth += 1,
-            ')' => depth -= 1,
-            ',' if depth == 0 => {
-                parts.push(&list[start..at]);
-                start = at + 1;
-            }
-            _ => {}
-        }
-    }
-    parts.push(&list[start..]);
-    parts
+    theme_css::complex_selectors(&rule[..rule.find('{').unwrap()])
 }
 
 #[test]
-fn the_paragraph_margin_is_scoped_and_the_alignment_inherited() {
+fn the_paragraph_rule_is_scoped_and_the_alignment_inherited() {
     let both = design(serde_json::json!({
         "text": {"paragraph_spacing": "6pt", "justify": true}
     }));
     let css = layout(&both);
     assert!(css.starts_with(concat!(
         "/* design: layout */\n",
-        ":where([data-writer-document]) p{margin-block:0 6pt}\n",
         "[data-writer-document]{text-align:justify}\n",
+        ":where([data-writer-document]) pre{text-align:start}\n",
+        ":where([data-writer-document]) p{",
+        "margin-block:0 6pt;text-align:inherit}\n",
     )));
     // No rule of the design's own gives every paragraph an alignment.
     assert!(!css.contains("[data-writer-document] p{"));
-    assert_eq!(css.matches("text-align").count(), 1);
+    assert_eq!(css.matches("text-align").count(), 3);
 
     let start =
         layout(&design(serde_json::json!({"text": {"justify": false}})));
-    assert!(start.contains("\n[data-writer-document]{text-align:start}\n"));
+    assert!(start.contains(concat!(
+        "\n[data-writer-document]{text-align:start}\n",
+        ":where([data-writer-document]) p{text-align:inherit}\n",
+    )));
+    assert!(!start.contains("pre{"));
     assert!(!start.contains("margin-block"));
 
     let spacing = layout(&design(serde_json::json!({
@@ -638,24 +633,30 @@ fn the_paragraph_margin_is_scoped_and_the_alignment_inherited() {
 }
 
 #[test]
-fn the_themes_class_rules_outrank_the_paragraph_margin() {
+fn the_themes_class_rules_outrank_the_paragraph_rule() {
     let css = layout(&design(serde_json::json!({
-        "text": {"paragraph_spacing": "6pt"}
+        "text": {"paragraph_spacing": "6pt", "justify": true}
     })));
-    let rule = css.lines().nth(1).unwrap();
-    let margin = specificity(selectors(rule)[0]);
-    assert_eq!(margin, (0, 0, 1));
-    // It comes after the theme, so it replaces the theme's `p` margin.
-    assert_eq!(specificity("p"), margin);
+    let rule = css.lines().find(|line| line.contains(" p{")).unwrap();
+    let paragraph = specificity(selectors(rule)[0]);
+    assert_eq!(paragraph, (0, 0, 1));
+    let code = css.lines().find(|line| line.contains(" pre{")).unwrap();
+    assert_eq!(specificity(selectors(code)[0]), paragraph);
+    // Both come after the theme and weigh as much as its `p` and `pre`, so
+    // they replace the theme's bare `p` margin and win over a theme's bare
+    // `p { text-align }`.
+    assert_eq!(specificity("p"), paragraph);
     // The default theme's own margins for these paragraphs win over it.
-    let theme = include_str!("../assets/themes/default/styles/theme.css");
+    let theme = theme_css::rules(&theme_css::css());
     for selector in [
         "blockquote > :last-child", ".subtitle", ".author", ".date",
         ".abstract > :last-child", "th > :last-child", "td > :last-child",
         ".callout-title", ".callout > :last-child", ".toc-title",
     ] {
-        assert!(theme.contains(selector), "{selector}");
-        assert!(specificity(selector) > margin, "{selector}");
+        let margins = ["margin", "margin-top", "margin-bottom"]
+            .map(|property| theme_css::decl(&theme, "", selector, property));
+        assert!(margins.iter().any(Option::is_some), "no margin: {selector}");
+        assert!(specificity(selector) > paragraph, "{selector}");
     }
 }
 
@@ -665,11 +666,12 @@ fn vocabulary_rules_follow_the_paragraph_rule_and_outrank_it() {
     full.text.paragraph_spacing = Some(writer::design::Pt(6.0));
     full.text.justify = Some(true);
     let css = layout(&full);
-    let margin = ":where([data-writer-document]) p{margin-block:0 6pt}\n";
-    let paragraph = css.find(margin).unwrap();
+    let rule = ":where([data-writer-document]) p{\
+                margin-block:0 6pt;text-align:inherit}\n";
+    let paragraph = css.find(rule).unwrap();
     let vocabulary = vocabulary_css(&full);
-    assert!(paragraph + margin.len() <= css.find(&vocabulary).unwrap());
-    let floor = specificity(selectors(margin)[0]);
+    assert!(paragraph + rule.len() <= css.find(&vocabulary).unwrap());
+    let floor = specificity(selectors(rule)[0]);
     for rule in vocabulary.lines() {
         for selector in selectors(rule) {
             assert!(specificity(selector) >= floor, "{selector}");
