@@ -1,4 +1,4 @@
-#import "@writer/doc:0.5.0": *
+#import "@writer/doc:0.6.0": *
 #show: writer-doc.with(title: [Native preview], date: "2026-10-29")
 
 = Native root <sec-native>

@@ -26,7 +26,7 @@
 // theme.page.margin.top, theme.styles. base.style-tokens(theme, "Title") is
 // one named style; its `text` field holds the arguments of text(..) for its
 // face.
-#import "@writer/doc:0.5.0" as base
+#import "@writer/doc:0.6.0" as base
 
 #let writer-doc(..args, body) = {
     let theme = base.design-tokens(..args)
