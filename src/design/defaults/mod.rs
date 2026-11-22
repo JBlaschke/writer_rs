@@ -34,8 +34,7 @@ impl Domains {
     /// `colors.text`, `accent`, `muted`, `link` and `background`. Switched
     /// on by T108.
     pub const COLORS: Self = Self(1 << 2);
-    /// `page.paper`, `margin`, `header_offset`, `footer_offset` and
-    /// `print`. Switched on by T108.
+    /// `page.paper` and `margin`. Switched on by T108.
     pub const PAGE: Self = Self(1 << 3);
     /// The heading, title block, abstract and contents styles. Switched on
     /// by T109.
@@ -66,8 +65,9 @@ impl Domains {
     /// `[design.footnotes]` and the Footnote Text and Bibliography styles.
     /// Switched on by T115.
     pub const FOOTNOTES: Self = Self(1 << 15);
-    /// The page-number footer slot and the Header and Footer styles.
-    /// Switched on by T116.
+    /// The page furniture: the page-number footer slot, `page.header_offset`,
+    /// `footer_offset` and `print`, which only the furniture code reads, and
+    /// the Header and Footer styles. Switched on by T116.
     pub const PAGE_NUMBERS: Self = Self(1 << 16);
     /// The center, left, right, small and large div styles. Switched on by
     /// T117.
@@ -161,8 +161,8 @@ pub fn group(path: &[&str]) -> Domains {
             ..,
         ] => Domains::PALETTE,
         ["colors", ..] => Domains::COLORS,
-        ["page", "footer", ..] => Domains::PAGE_NUMBERS,
-        ["page", ..] => Domains::PAGE,
+        ["page", "paper" | "margin", ..] => Domains::PAGE,
+        ["page", ..] => Domains::PAGE_NUMBERS,
         ["styles", name, ..] => style_group(name),
         ["lists", ..] => Domains::LISTS,
         ["table", ..] => Domains::TABLES,
@@ -365,10 +365,28 @@ mod tests {
         assert_eq!(text.keys().collect::<Vec<_>>(), ["text"]);
         assert!(text["text"].get("size").is_some());
         assert!(text["text"].get("widows").is_none());
-        let footer = layer(Domains::PAGE).table;
-        assert!(footer["page"].get("footer").is_none());
+        let page = layer(Domains::PAGE).table;
+        let mut keys: Vec<_> =
+            page["page"].as_object().unwrap().keys().collect();
+        keys.sort();
+        assert_eq!(keys, ["margin", "paper"]);
         assert_eq!(layer(Domains::ALL).origin, Origin::Builtin);
         assert_eq!(text_size(), Pt(11.0));
+    }
+
+    /// A layer above merges a side table into layer 0's key, but replaces
+    /// a string: layer 0 names every side it sets.
+    #[test]
+    fn per_side_keys_are_tables() {
+        for path in leaves(table()) {
+            let path = strs(&path);
+            let sides = match path.as_slice() {
+                ["styles", _, "indent"] => true,
+                [.., last] => matches!(*last, "margin" | "padding"),
+                [] => false,
+            };
+            assert!(!sides, "{path:?} is a shorthand, not a table");
+        }
     }
 
     #[test]

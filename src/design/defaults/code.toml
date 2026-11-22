@@ -1,9 +1,15 @@
 # Layer 0, code blocks (R13 §4.3). Group: CODE (T113), with the Source Code
-# style. em is of text.size: 0.85em is 1em of the code's own size.
+# style. em is of text.size: 0.85em is 1em of the code's own size. The
+# padding names each side, as page.margin does.
 
 [design.code]
 background  = "code_bg"
-padding     = "0.85em"
 radius      = "0.25em"
 line_height = 1.5
 theme       = "InspiredGitHub"
+
+[design.code.padding]
+top    = "0.85em"
+right  = "0.85em"
+bottom = "0.85em"
+left   = "0.85em"

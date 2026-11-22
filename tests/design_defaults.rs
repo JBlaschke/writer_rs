@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use assert_cmd::Command;
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use writer::design::{
     APPLIED, Border, BorderSide, Case, Design, Domains, Indent, Layer,
     LineHeight, Origin, PathMode, Pt, defaults, merge,
@@ -72,16 +72,17 @@ const TASKS: [(&str, Domains); 11] = [
 ];
 
 #[test]
-fn applied_is_empty_until_t108() {
-    assert_eq!(APPLIED, Domains::NONE);
+fn the_tasks_switch_on_every_group() {
     let all =
         TASKS.iter().fold(Domains::NONE, |all, (_, groups)| all | *groups);
     assert_eq!(all, Domains::ALL);
 }
 
-/// Criterion 2, documents: the pipeline's design (layer 0 under APPLIED,
-/// which is empty) and its view without any group both equal the design
-/// merged without layer 0, `declared` included.
+/// Criterion 2, documents: the pipeline's design is the view of `APPLIED`,
+/// and the view without any group equals the design merged without layer
+/// 0, `declared` included. While `APPLIED` is empty, the pipeline's design
+/// is that design too. The checks hold for any `APPLIED`, so the domain
+/// tasks keep them as they switch groups on.
 #[test]
 fn the_view_without_domains_is_the_design_without_layer_0() {
     let mut inputs = Vec::new();
@@ -94,14 +95,17 @@ fn the_view_without_domains_is_the_design_without_layer_0() {
             continue;
         };
         let design = &prepared.design;
+        let name = input.display();
         let without = merge(&design.layers()).unwrap();
-        assert_eq!(design, &without, "{}", input.display());
-        assert_eq!(design.declared, without.declared, "{}", input.display());
-        assert_eq!(design.user_declared, design.declared);
-        let view = design.view(Domains::NONE).unwrap();
-        assert_eq!(view, without, "{}", input.display());
-        assert!(design.origins.values().all(|o| *o != Origin::Builtin));
-        declared += usize::from(design.declared);
+        assert_eq!(design.view(Domains::NONE).unwrap(), without, "{name}");
+        assert_eq!(design.view(APPLIED).unwrap(), *design, "{name}");
+        assert_eq!(design.user_declared, without.declared, "{name}");
+        if APPLIED.is_empty() {
+            assert_eq!(design, &without, "{name}");
+            assert_eq!(design.declared, without.declared, "{name}");
+            assert!(design.origins.values().all(|o| *o != Origin::Builtin));
+        }
+        declared += usize::from(without.declared);
     }
     assert!(inputs.len() > 100, "{} inputs", inputs.len());
     assert!(declared >= 2, "{declared} declared designs");
@@ -217,6 +221,12 @@ fn layer_0_resolves_to_r13s_proposed_values() {
     assert_eq!(quote.indent, Some(Indent { left: zero, right: zero }));
     close(design.styles["toc 3"].indent.unwrap().left, 26.4);
     close(design.code.padding.unwrap().top, 9.35);
+    // Image and table captions are 0.6em of Caption's size from the body.
+    let caption = design.styles["Caption"].size.unwrap().0;
+    close(design.styles["Image Caption"].space_before, 0.6 * caption);
+    close(design.styles["Table Caption"].space_after, 0.6 * caption);
+    // No key holds R13's hanging indent yet, and a left indent is not one.
+    assert_eq!(design.styles["Bibliography"].indent, None);
     assert_eq!(design.code.background, design.colors.code_bg);
     assert_eq!(design.footnotes.separator.unwrap().length, Some(0.33));
     assert_eq!(design.image.dpi, Some(96.0));
@@ -232,6 +242,40 @@ fn layer_0_resolves_to_r13s_proposed_values() {
     );
     assert_eq!(json["styles"]["Abstract Title"]["case"], "upper");
     assert_eq!(json["table"]["width"], "full");
+}
+
+/// A layer above that sets one side of a margin, padding or indent keeps
+/// layer 0's other sides: layer 0 writes them as tables, which merge.
+#[test]
+fn a_users_side_keeps_layer_0s_other_sides() {
+    let design = merge(&[front(json!({
+        "page": {"margin": {"top": "50mm"}},
+        "code": {"padding": {"left": "2pt"}},
+        "styles": {"Abstract": {"indent": {"right": "1em"}},
+            "Block Text": {"indent": {"left": "1em"}}},
+    }))])
+    .unwrap()
+    .view(Domains::ALL)
+    .unwrap();
+    let margin = design.page.margin;
+    close(margin.top, 50.0 * 72.0 / 25.4);
+    for side in [margin.right, margin.bottom, margin.left] {
+        close(side, 25.0 * 72.0 / 25.4);
+    }
+    let padding = design.code.padding.unwrap();
+    close(padding.left, 2.0);
+    for side in [padding.top, padding.right, padding.bottom] {
+        close(side, 0.85 * 11.0);
+    }
+    let indent = design.styles["Abstract"].indent.unwrap();
+    close(indent.left, 3.5 * 11.0);
+    close(indent.right, 11.0);
+    let indent = design.styles["Block Text"].indent.unwrap();
+    close(indent.left, 11.0);
+    close(indent.right, 0.0);
+    let top = design.origin(&["page", "margin", "top"]);
+    assert_eq!(top, Some(&Origin::FrontMatter));
+    assert!(design.is_builtin(&["page", "margin", "left"]));
 }
 
 /// Criterion 4: em at the top level is of `text.size`, else of layer 0's.
@@ -452,7 +496,8 @@ fn dump_design_defaults_lists_every_key_with_its_origin() {
     }));
 }
 
-/// Criterion 3: without the flag, the dump is what it was.
+/// Criterion 3: without the flag, the dump is the view the backends read:
+/// `null` for an undeclared design while `APPLIED` is empty, as before.
 #[test]
 fn dump_design_without_defaults_is_unchanged() {
     let dir = tempfile::tempdir().unwrap();
@@ -466,7 +511,14 @@ fn dump_design_without_defaults_is_unchanged() {
         .get_output()
         .stdout
         .clone();
-    assert_eq!(String::from_utf8(output).unwrap(), "null\n");
+    let output = String::from_utf8(output).unwrap();
+    let design = pipeline::prepare(&BuildOptions::new(&input)).unwrap().design;
+    let json = design.to_json(PathMode::Real);
+    let expected = serde_json::to_string_pretty(&json).unwrap();
+    assert_eq!(output, format!("{expected}\n"));
+    if APPLIED.is_empty() {
+        assert_eq!(output, "null\n");
+    }
     writer().args(["dump", "--defaults"]).arg(&input).assert().code(2);
 }
 
@@ -520,8 +572,39 @@ fn ejection_leaves_layer_0_out() {
     .unwrap();
     assert_eq!(table["text"]["size"], "12pt");
     assert_eq!(table["text"]["line_height"], 1.6);
-    let empty: Map<String, Value> = defaults::layer(APPLIED).table;
-    assert!(empty.is_empty());
+}
+
+/// Ejection copies the files of every font role, `fonts.math` included,
+/// and points the ejected theme at the copies.
+#[test]
+fn ejection_rewrites_the_files_of_every_font_role() {
+    let dir = tempfile::tempdir().unwrap();
+    let roles = ["body", "heading", "mono", "math"];
+    let mut source = String::from("---\ndesign:\n  fonts:\n");
+    for role in roles {
+        std::fs::write(dir.path().join(format!("{role}.ttf")), role).unwrap();
+        source.push_str(&format!(
+            "    {role}:\n      family: X {role}\n      files: [{role}.ttf]\n"
+        ));
+    }
+    source.push_str("---\n# Test\n");
+    std::fs::write(dir.path().join("doc.md"), source).unwrap();
+    writer()
+        .current_dir(dir.path())
+        .args(["eject", "theme", "out", "--design", "doc.md"])
+        .assert()
+        .success();
+    let out = dir.path().join("out");
+    let theme = std::fs::read_to_string(out.join("theme.toml")).unwrap();
+    let theme: toml::Table = toml::from_str(&theme).unwrap();
+    let fonts = &theme["design"]["fonts"];
+    for role in roles {
+        let file = format!("assets/design/{role}.ttf");
+        let files = fonts[role]["files"].as_array().unwrap();
+        assert_eq!(files[0].as_str(), Some(file.as_str()), "{role}");
+        let copy = std::fs::read(out.join(&file)).unwrap();
+        assert_eq!(copy, role.as_bytes());
+    }
 }
 
 /// `writer check` reports what the user declared: layer 0's styles are

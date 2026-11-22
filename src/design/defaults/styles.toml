@@ -1,6 +1,7 @@
 # Layer 0, named styles (R13 §4.2 and §4.3). Inside a style, em is of the
 # style's own size; a style's size in em is of text.size. Each style belongs
-# to one group, named above it.
+# to one group, named above it. An indent names both sides, so that a layer
+# above that sets one side keeps layer 0's other.
 
 # HEADINGS (T109): headings, title block and contents.
 
@@ -76,6 +77,8 @@ size  = "1.2em"
 color = "muted"
 align = "center"
 
+# R13's bold name and 0.9em muted affiliation are runs inside the Author
+# paragraph, which no style key reaches yet (T109).
 [design.styles.Author]
 size  = "1em"
 align = "center"
@@ -92,7 +95,7 @@ case           = "upper"
 letter_spacing = "0.08em"
 
 [design.styles.Abstract]
-indent = "3.5em"
+indent = { left = "3.5em", right = "3.5em" }
 
 # TOC Heading is an unlisted Heading 1.
 [design.styles."TOC Heading"]
@@ -124,6 +127,8 @@ space_after = "0.25em"
 indent      = { left = "2.4em" }
 
 # CAPTIONS (T110). Image and table captions lay their keys over Caption's.
+# R13's bold label is a run, which no style key reaches yet. A style without
+# a size takes em of text.size, so their 0.54em is 0.6em of Caption's 0.9em.
 
 [design.styles.Caption]
 size   = "0.9em"
@@ -133,18 +138,18 @@ align  = "left"
 
 [design.styles."Image Caption"]
 align        = "center"
-space_before = "0.6em"
+space_before = "0.54em"
 
 [design.styles."Table Caption"]
 align       = "left"
-space_after = "0.6em"
+space_after = "0.54em"
 
 # QUOTES (T112): block quotes, rules and definition lists. Block Text keeps
 # the body's spaces.
 
 [design.styles."Block Text"]
 color  = "muted"
-indent = "0pt"
+indent = { left = "0pt", right = "0pt" }
 border = { side = "left", width = "1.5pt", color = "border", gap = "1.25em" }
 
 [design.styles."Horizontal Rule"]
@@ -173,7 +178,9 @@ line_height = 1.5
 space_before = "0.5em"
 space_after  = "0.5em"
 
-# FOOTNOTES (T115): footnotes and the bibliography.
+# FOOTNOTES (T115): footnotes and the bibliography. R13's 2em label column
+# and hanging indent need a first-line indent, which the schema lacks; a
+# left indent alone would move every entry right, so there is none (T115).
 
 [design.styles."Footnote Text"]
 size = "0.9em"
@@ -181,7 +188,6 @@ size = "0.9em"
 [design.styles.Bibliography]
 size        = "0.95em"
 space_after = "0.75em"
-indent      = { left = "2em" }
 
 # PAGE_NUMBERS (T116): Word's furniture paragraph styles.
 
