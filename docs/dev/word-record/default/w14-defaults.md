@@ -6,16 +6,18 @@ lang: en-GB
 values marked (u) are computed for. Calibri 11 pt at w:line 264, Body Text
 6 pt before and after. One block per R13 row; the reading sheet names
 the rows. Everything fits page 1 with the two notes at its foot; the
-table and the figure follow in w15-defaults-blocks.md. -->
+table and the figure follow in w15-defaults-blocks.md. Both note marks
+sit on HU2, a line no reading uses: a superscript mark can move its
+line's baseline. -->
 
 HA1 EFH\
 HA2 EFH
 
-HB1 EFH[^1]
+HB1 EFH
 
 # HC1 EFH
 
-HD1 EFH[^2]
+HD1 EFH
 
 - HE1 EFH\
   HE2 EFH
@@ -58,6 +60,8 @@ $$
 $$
 
 HU1 EFH
+
+HU2 EFH[^1] EFH[^2]
 
 [^1]: HN1 EFH\
 HN2 EFH\

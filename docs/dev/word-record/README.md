@@ -48,15 +48,15 @@ scripts.
 | w03-calibri.docx | design/w03-calibri.md | (b) | s and A of Calibri at 24 pt | T106 |
 | w04-calibri-light.docx | design/w04-calibri-light.md | (b) | s and A of Calibri Light | T106 |
 | w05-consolas.docx | design/w05-consolas.md | (b) | s and A of Consolas | T106 |
-| w06-cambria-math.docx | design/w06-cambria-math.md | (b) | s and A of Cambria Math | T106 |
+| w06-cambria-math.docx | design/w06-cambria-math.md | (b) | s and A of Cambria Math (captured at 200 %) | T106 |
 | w07-lists.docx | design/w07-lists.md | (b) | tight, loose and nested lists, definitions; R13 M4's item style (raw) | T112 |
 | w08-quotes-rules.docx | design/w08-quotes-rules.md | (b) | block quote, nested quote, rule | T112 |
 | w09-code.docx | design/w09-code.md | (b) | code today; one paragraph per line, three ways (raw) | T113 |
 | w10-equations.docx | design/w10-equations.md | (b) | unnumbered, numbered and fraction equations | T113 |
 | w11-tables.docx | design/w11-tables.md | (b) | rows and rules; two tables with today's and M10's separator; 3 pt rules (raw) | T114 |
 | w12-footnotes.docx | design/w12-footnotes.md | (b) | note pitch, gap between notes, last note, separator | T115 |
-| w13-captions.docx | design/w13-captions.md | (b) | figure, image caption, table caption | T110 |
-| w14-defaults.docx | default/w14-defaults.md | (a) | R13's (u) rows: body, heading, lists, quote, rule, code, equation, notes | T106, T112, T113, T115 |
+| w13-captions.docx | design/w13-captions.md | (b) | figure, image caption, table caption | T110, T114 |
+| w14-defaults.docx | default/w14-defaults.md | (a) | R13's (u) rows: body, heading, lists, quote, rule, code, equation, notes | T108, T109, T112, T113, T115 |
 | w15-defaults-blocks.docx | default/w15-defaults-blocks.md | (a) | R13's (u) rows: table, figure | T110, T114 |
 
 - **(b)**, design/writer.toml: R12's probe design (R12 §2.1), so that the
@@ -85,40 +85,68 @@ scripts.
 
 ## Methods
 
-The **Method** column names one or more:
+The **Method** column names one or more. Run the commands below from
+this folder (docs/dev/word-record) and keep their output outside the
+repository, here in ~/word-record-out.
 
 - **C**, baselines from window captures at 500 % (0.2 pt per pixel),
   R12 §2.1. With the scripts:
-  `python3 tools/wordrun.py w07-lists.docx out/w07 --captures 8` opens a
-  copy, reads Q, captures the window (`--captures` captures, each
+  `python3 tools/wordrun.py w07-lists.docx ~/word-record-out/w07 --captures 8`
+  opens a copy, reads Q, captures the window (`--captures` captures, each
   `--step` small scrolls further down), reads the baselines of page 1 and
-  prints both. By hand: open the DOCX in Print Layout at 500 %, scroll so
-  that the page's top edge shows, capture the document window
-  (Shift-Command-4, Space, click), scroll down keeping at least two lines
-  of the previous capture in view, capture again, and so on; then
+  prints both; it creates the output folder. By hand: open the DOCX in
+  Print Layout at 500 %, scroll fully left so that the page's left edge
+  shows and up so that its top edge shows, and capture the document
+  window without its shadow (`screencapture -i -w -o c0.png`, then click
+  the window; or Shift-Command-4, Space, then Option-click). Scroll down
+  keeping at least two lines of the previous capture in view, capture
+  again, and so on; then
   `python3 tools/wordcap.py c0.png c1.png ... --zoom 500` prints each
   baseline in pt from the page's top edge and the gap to the line above.
+  - wordcap.py takes a capture's left edge to be Word's canvas and the
+    first column that differs to be the page's left edge: a capture with
+    the window's shadow, or without the page's left edge, does not read.
   - wordcap.py looks for ink brighter than the paper: R12's Word showed a
     dark page with light text. With a white page, invert each capture
     first (`magick c0.png -negate c0.png`; not tried here). It needs
     ImageMagick's `magick` on the PATH.
-  - Page 1 only; the first capture must show the page's top edge.
+  - Page 1 only; the first capture must show the page's top edge, and
+    each further capture must share at least two baselines with the ones
+    before it.
+  - **w06** (Cambria Math): its lines stand up to 134 pt apart, so the
+    capture that adds HB2 must show HA2 to HB2, about 285 pt of page or
+    1430 pixels at 500 %, more than a window holds. Capture w06 at 200 %
+    and pass `--zoom 200` to wordcap.py. After wordq.py has opened it
+    (Q, below): `python3 tools/wordshot.py ~/word-record-out/w06/c0.png
+    --zoom 200 --up 60`; for each further capture the same command with
+    c1.png, c2.png, ... and `--down 5` in place of `--zoom 200 --up 60`;
+    then `python3 tools/wordcap.py ~/word-record-out/w06/c*.png --zoom
+    200`. At 0.5 pt per pixel this still tells 134.59 from 28.80 and
+    gives A to about 0.02; F11 also comes from Q at 500 %. wordrun.py
+    captures at 500 % only.
   - wordrun.py pairs Q's page-1 lines with the captured baselines in
-    order. A rule, a border, an image or a table row (two cells, one
-    captured line, two Q paragraphs) breaks that pairing, so for w08, w10,
-    w11, w13 and w15 read wordcap.py's own list and match it to the tags
-    by eye.
+    order. A rule, a border, an image, an equation or a table row (two
+    cells, one captured line, two Q paragraphs) breaks that pairing, and
+    the note lines at the page's foot, which Q leaves out, add baselines.
+    So first compare the number of wordcap.py's baselines with the tags.
+    For w08, w10, w11, w13, w14 and w15 read wordcap.py's own list and
+    match it to the tags by eye. In w14 the quote's left border, the
+    empty rule paragraph and the equation come before D19 to D21; D24 and
+    D25, like w12's N rows, are note lines that only wordcap.py lists.
   - Lines that do not start with an H cannot be read: caption labels,
     the equation number. A line with a footnote mark, and a note's first
-    line (the mark comes first), may read off; the sheet avoids them.
-- **Q**, Word's own line tops: `python3 tools/wordq.py w07-lists.docx
-  out/w07/word.json --zoom 500` copies the DOCX to
-  ~/Documents/writer-spacing-scratch (without `w:updateFields`), opens it,
-  and prints every line's page and `vertical position relative to page`
-  (pt from the page's top edge, on a 0.2 pt grid at 500 %) with the gap to
-  the line above. `python3 tools/wordtops.py out/*/word.json` reprints
-  them; `python3 tools/wordclose.py` closes the copies without saving and
-  empties the scratch folder.
+    line (the mark comes first), may read off; the sheet avoids them
+    (w12's HA1 and HB1 and w14's HU2 carry the marks).
+- **Q**, Word's own line tops: `mkdir -p ~/word-record-out/w07` (wordq.py
+  does not create the folder), then `python3 tools/wordq.py
+  w07-lists.docx ~/word-record-out/w07/word.json --zoom 500` copies the
+  DOCX to ~/Documents/writer-spacing-scratch (without `w:updateFields`),
+  opens it, and prints every line's page and `vertical position relative
+  to page` (pt from the page's top edge, on a 0.2 pt grid at 500 %) with
+  the gap to the line above. `python3 tools/wordtops.py
+  ~/word-record-out/*/word.json` reprints them; `python3
+  tools/wordclose.py` closes the copies without saving and empties the
+  scratch folder.
   - A line top leaves out the paragraph's space before, so the gap between
     two tops is the upper line's box + the space between (+ any border or
     rule). With equal boxes it equals the baseline gap; where it does not,
@@ -207,6 +235,12 @@ Readings the model does not settle:
   line's box; Q − 6 below an equation gives its box either way.
 - **Images (C2, D31).** The image line's box is outside the model; Q − 3
   gives it.
+- **Table edges (C5, T10, D29).** R12 §8's 27.67 pt shows that nothing
+  collapses between a paragraph and the table below it: the larger-of
+  rule falls about 3 pt short there. R12 read no table bottom edge with
+  space on both sides, and R13 4.20 takes the larger of a caption's 6 pt
+  after and the cell's 1.8 pt before. These rows give both values, the
+  second marked "larger of"; the reading decides for T110 and T114.
 - **Widows (W1, W2).** R13 0.25 says Word's default is likely on, about
   2 lines; the sheet gives the page each outcome predicts.
 
@@ -214,13 +248,16 @@ Readings the model does not settle:
 
 One table per input. Gaps are in pt, between baselines unless the row
 says line tops; "(Q x)" is the gap between the two lines' tops where it
-differs from the baseline gap. "From the model" adds up the terms (below,
-space, above: the parts of the two line boxes and what lies between). "R13,
-R12" quotes R13 §2's row for the case (its legend: (a) no design, (b) the
-probe design, (u) a Word value computed, not measured), or R12 §8's Word
-measurement of the same transition, "other cells" where R12's table cells
-had another style. Fill in **Word**; for a reading that could not be
-taken, say why.
+differs from the baseline gap, and "larger of: x" the gap if the spaces at
+a table edge collapse to the larger one. "From the model" adds up the
+terms (below, space, above: the parts of the two line boxes and what lies
+between). "R13, R12" quotes R13 §2's row for the case (its legend: (a) no
+design, (b) the probe design, (u) a Word value computed, not measured), or
+R12 §8's Word measurement of the same transition, "other cells" where
+R12's table cells had another style. Fill in **Word**; for a reading that
+could not be taken, say why. **Task** names the task whose acceptance
+compares against the reading (R13 §6.2): a difference over 0.3 pt is
+flagged for it.
 
 <!-- sheet:begin -->
 ### w01-atleast.docx
@@ -273,9 +310,9 @@ taken, say why.
 
 | # | Read | Method | Predicted (pt) | From the model | R13, R12 | Word | Task |
 |---|---|---|---|---|---|---|---|
-| F10 | Cambria Math: HA2 → HB1 baselines (gives A) | C | 134.59 | 6 below the exact 30 pt fence + 24 A (5.357910); with hhea metrics (as Cambria): 28.80 | – (R13 §3.1 M3: computed from the tables) |  | T106 |
-| F11 | Cambria Math: HB1 → HB2 (gives s) | C, Q | 133.92 | 24 s (5.580078); with hhea metrics (as Cambria): 28.14 | – (R13 §3.1 M3: computed from the tables) |  | T106 |
-| F12 | Cambria Math: HB2 → HC1 baselines (check) | C | 29.33 | 24 (s - A) = 5.33 + 24 above the fence; with hhea metrics (as Cambria): 29.33 | – (R13 §3.1 M3: computed from the tables) |  | T106 |
+| F10 | Cambria Math: HA2 → HB1 baselines (gives A) | C at 200 % | 134.59 | 6 below the exact 30 pt fence + 24 A (5.357910); with hhea metrics (as Cambria): 28.80 | – (R13 §3.1 M3: computed from the tables) |  | T106 |
+| F11 | Cambria Math: HB1 → HB2 (gives s) | C at 200 %, Q | 133.92 | 24 s (5.580078); with hhea metrics (as Cambria): 28.14 | – (R13 §3.1 M3: computed from the tables) |  | T106 |
+| F12 | Cambria Math: HB2 → HC1 baselines (check) | C at 200 % | 29.33 | 24 (s - A) = 5.33 + 24 above the fence; with hhea metrics (as Cambria): 29.33 | – (R13 §3.1 M3: computed from the tables) |  | T106 |
 
 ### w07-lists.docx
 
@@ -283,8 +320,8 @@ taken, say why.
 |---|---|---|---|---|---|---|---|
 | L1 | HA1 → HB1, paragraph → tight item | C, Q | 25.08 | 4.18 below + 10.20 P (Compact 1.8 before) + 10.70 above | R12 §8 Word 25.00 |  | T112 |
 | L2 | HB1 → HB2, tight item → item | C, Q | 16.68 | 4.18 below + 1.80 Compact + 10.70 above | R12 §8 Word 16.80 |  | T112 |
-| L3 | HB2 → HC1, item → nested item | C, Q | 16.68 | 4.18 below + 1.80 Compact + 10.70 above | – |  | T112 |
-| L4 | HC2 → HB3, nested item → next item | C, Q | 16.68 | 4.18 below + 1.80 Compact + 10.70 above | – |  | T112 |
+| L3 | HB2 → HC1, item → nested item | C, Q | 16.68 | 4.18 below + 1.80 Compact + 10.70 above | R13 2.6: 1.8 pt |  | T112 |
+| L4 | HC2 → HB3, nested item → next item | C, Q | 16.68 | 4.18 below + 1.80 Compact + 10.70 above | R13 2.7: 1.8 pt |  | T112 |
 | L5 | HB3 → HD1, tight list → paragraph | C, Q | 16.68 | 4.18 below + 1.80 Compact after (paragraph before 0) + 10.70 above | R12 §8 Word 16.60; R13 2.3 (b) |  | T112 |
 | L6 | HD1 → HE1, paragraph → loose item | C, Q | 25.08 | 4.18 below + 10.20 P + 10.70 above | – |  | T112 |
 | L7 | HE1 → HE2, loose item → item | C, Q | 25.08 | 4.18 below + 10.20 P + 10.70 above | R12 §8 Word 25.20; R13 2.4 (b) |  | T112 |
@@ -346,16 +383,16 @@ taken, say why.
 
 | # | Read | Method | Predicted (pt) | From the model | R13, R12 | Word | Task |
 |---|---|---|---|---|---|---|---|
-| T1 | HA1 → HB1, paragraph → header row | C, Q | 27.88 | 4.18 below + 10.20 P + 1.00 top rule + 1.80 cell before + 10.70 above | R12 §8 Word 27.67 (other cells) |  | T114 |
+| T1 | HA1 → HB1, paragraph → header row | C, Q | 27.88 | 4.18 below + 10.20 P + 1.00 top rule + 1.80 cell before + 10.70 above | R12 §8 Word 27.67 (other cells); R13 4.21: the paragraph's after |  | T114 |
 | T2 | HB1 → HC1, header row → row | C, Q | 18.98 | 4.18 below + 1.80 cell after + 0.50 header rule + 1.80 cell before + 10.70 above | – |  | T114 |
 | T3 | HC1 → HD1, row → row | C, Q | 18.48 | 4.18 below + 1.80 cell after + 1.80 cell before + 10.70 above | R13 4.6 (a) only |  | T114 |
-| T4 | HD1 → HE1, last row → paragraph | C, Q | 17.68 | 4.18 below + 1.80 cell after + 1.00 bottom rule + 10.70 above | R12 §8 Word 18.67 (other cells) |  | T114 |
+| T4 | HD1 → HE1, last row → paragraph | C, Q | 17.68 | 4.18 below + 1.80 cell after + 1.00 bottom rule + 10.70 above | R12 §8 Word 18.67 (other cells); R13 4.22 (b): 0 pt before |  | T114 |
 | T5 | HG1 → HH1, two tables, today's separator | C, Q | 45.56 | 4.18 below + 1.80 cell after + 1.00 rule + 14.88 `<w:p/>` line + 10.20 its after (docDefaults) + 1.00 rule + 1.80 cell before + 10.70 above | R13 M10: about 14.8 pt line |  | T114 |
 | T6 | HN1 → HP1, two tables, M10's 0.7 pt separator | C, Q | 30.68 | 4.18 below + 1.80 cell after + 1.00 rule + 9.50 before + 0.70 exact line + 1.00 rule + 1.80 cell before + 10.70 above | R13 M10 |  | T114 |
 | T7 | HR1 → HS1, paragraph → 3 pt top rule | C, Q | 29.88 | 4.18 below + 10.20 P + 3.00 top rule + 1.80 cell before + 10.70 above | R13 §3.3 rule 3: T1 + 2 |  | T114 |
 | T8 | HS1 → HT1, 1.5 pt header rule | C, Q | 19.98 | 4.18 below + 1.80 cell after + 1.50 header rule + 1.80 cell before + 10.70 above | R13 §3.3 rule 3: T2 + 1 |  | T114 |
 | T9 | HU1 → HV1, 3 pt bottom rule → paragraph | C, Q | 19.68 | 4.18 below + 1.80 cell after + 3.00 bottom rule + 10.70 above | R13 §3.3 rule 3: T4 + 2 |  | T114 |
-| T10 | HX1 → HY1, last row → paragraph with before 10.2 | C, Q | 27.88 | 4.18 below + 1.80 cell after + 1.00 bottom rule + 10.20 direct before + 10.70 above | R13 M10 |  | T114 |
+| T10 | HX1 → HY1, last row → paragraph with before 10.2 | C, Q | 27.88; larger of: 26.08 | 4.18 below + 1.80 cell after + 1.00 bottom rule + 10.20 direct before + 10.70 above; larger of: 4.18 below + 10.20 max(1.8, P) + 1.00 bottom rule + 10.70 above | R13 M10 |  | T114 |
 
 ### w12-footnotes.docx
 
@@ -375,17 +412,17 @@ taken, say why.
 | C2 | figure line → caption, line tops | Q | box + 3 | the 72 pt image's line box + 3 (3 after, 3 before): record the box (Q - 3); no model value | R13 1.35 (a): 3 pt |  | T110 |
 | C3 | caption → HB1, line tops | Q | 19.53 | 13.53 caption line (10 pt) + 6 max(6, 0) | R13 1.35 (a): 6 pt |  | T110 |
 | C4 | HB1 → table caption, line tops | Q | 25.08 | 14.88 + 10.20 max(P, 3) | – |  | T110 |
-| C5 | table caption → HS1, line tops | Q | 22.33 | 13.53 + 6 caption after + 1 top rule + 1.8 cell before | – |  | T110 |
-| C6 | HT1 → HC1, table → paragraph (as T4) | C, Q | 17.68 | 4.18 below + 1.80 cell after + 1.00 bottom rule + 10.70 above | – |  | T110 |
+| C5 | table caption → HS1, line tops | Q | 22.33; larger of: 20.53 | 13.53 + 6 caption after + 1 top rule + 1.8 cell before; larger of: 13.53 + 6 max(6, 1.8) + 1 top rule | R13 4.20: 6 pt, the larger of 6 and 1.8 |  | T110, T114 |
+| C6 | HT1 → HC1, table → paragraph (as T4) | C, Q | 17.68 | 4.18 below + 1.80 cell after + 1.00 bottom rule + 10.70 above | R13 4.22 (b): 0 pt before |  | T110 |
 
 ### w14-defaults.docx
 
 | # | Read | Method | Predicted (pt) | From the model | R13, R12 | Word | Task |
 |---|---|---|---|---|---|---|---|
-| D1 | HA1 → HA2, body line pitch | C, Q | 14.77 | 14.77 Calibri 11 pt at w:line 264 | R13 0.4: 14.77 (u) |  | T106 |
-| D2 | HA2 → HB1, paragraph → paragraph | C, Q | 20.77 | 4.30 below + 6.00 6 + 6 → 6 + 10.47 above | R13 0.5: 6 pt (u) |  | T106 |
-| D3 | HB1 → HC1, body → Heading 1 | C, Q | 39.44 (Q 32.77) | 4.30 below + 18.00 H1 before + 17.14 H1 above (18 pt); Q: 14.77 body line + 18.00 H1 before | R13 1.5: about 39.4 (u) |  | T106 |
-| D4 | HC1 → HD1, Heading 1 → body | C, Q | 23.50 (Q 30.17) | 7.03 H1 below + 6.00 6 + 6 → 6 + 10.47 above; Q: 24.17 H1 line + 6.00 6 + 6 → 6 | R13 1.6: 6 pt |  | T106 |
+| D1 | HA1 → HA2, body line pitch | C, Q | 14.77 | 14.77 Calibri 11 pt at w:line 264 | R13 0.4: 14.77 (u) |  | T108 |
+| D2 | HA2 → HB1, paragraph → paragraph | C, Q | 20.77 | 4.30 below + 6.00 6 + 6 → 6 + 10.47 above | R13 0.5: 6 pt (u) |  | T108 |
+| D3 | HB1 → HC1, body → Heading 1 | C, Q | 39.44 (Q 32.77) | 4.30 below + 18.00 H1 before + 17.14 H1 above (18 pt); Q: 14.77 body line + 18.00 H1 before | R13 1.5: about 39.4 (u) |  | T109 |
+| D4 | HC1 → HD1, Heading 1 → body | C, Q | 23.50 (Q 30.17) | 7.03 H1 below + 6.00 6 + 6 → 6 + 10.47 above; Q: 24.17 H1 line + 6.00 6 + 6 → 6 | R13 1.6: 6 pt |  | T109 |
 | D5 | HD1 → HE1, paragraph → tight list | C, Q | 20.77 | 4.30 below + 6.00 max(6, 1.8) + 10.47 above | R13 2.2: 20.77 (u) |  | T112 |
 | D6 | HE1 → HE2, line pitch in an item | C, Q | 14.77 | 14.77 w:line 264 | R13 2.0: 14.77 (u) |  | T112 |
 | D7 | HE2 → HE3, tight item → item | C, Q | 16.57 | 4.30 below + 1.80 Compact + 10.47 above | R13 2.1: 1.8 pt |  | T112 |
@@ -412,10 +449,10 @@ taken, say why.
 
 | # | Read | Method | Predicted (pt) | From the model | R13, R12 | Word | Task |
 |---|---|---|---|---|---|---|---|
-| D26 | HU1 → HV1, paragraph → header row | C, Q | 23.57 | 4.30 below + 6.00 after + 1.00 top rule + 1.80 cell before + 10.47 above | – |  | T114 |
+| D26 | HU1 → HV1, paragraph → header row | C, Q | 23.57 | 4.30 below + 6.00 after + 1.00 top rule + 1.80 cell before + 10.47 above | R13 4.21: the paragraph's 6 pt after |  | T114 |
 | D27 | HV1 → HW1, header row → row | C, Q | 18.87 | 4.30 below + 1.80 after + 0.50 header rule + 1.80 before + 10.47 above | – |  | T114 |
 | D28 | HW1 → HY1, row → row | C, Q | 18.37 | 4.30 below + 1.80 after + 1.80 before + 10.47 above | R13 4.6: about 18.4 (u) |  | T114 |
-| D29 | HY1 → HZ1, last row → paragraph | C, Q | 23.57 | 4.30 below + 1.80 cell after + 1.00 bottom rule + 6.00 paragraph before + 10.47 above | – |  | T114 |
+| D29 | HY1 → HZ1, last row → paragraph | C, Q | 23.57; larger of: 21.77 | 4.30 below + 1.80 cell after + 1.00 bottom rule + 6.00 paragraph before + 10.47 above; larger of: 4.30 below + 6.00 max(1.8, 6) + 1.00 bottom rule + 10.47 above | R13 4.22 (a): the paragraph's 6 pt before |  | T114 |
 | D30 | HZ1 → figure line, line tops | Q | 20.77 | 14.77 + 6 max(6, 6) | R13 1.37: 6 pt |  | T110 |
 | D31 | figure line → caption, line tops | Q | box + 3 | record the image line's box (Q - 3) | R13 1.35: 3 pt |  | T110 |
 | D32 | caption → HZ2, line tops | Q | 19.43 | 13.43 caption line + 6 | R13 1.35: 6 pt |  | T110 |
