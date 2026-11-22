@@ -13,12 +13,14 @@ import sys
 
 # s and A of families whose files may be missing on the machine, from R12
 # §2.1 and R13 §0.3. Calibri's A is computed from the font tables, not
-# measured (R13 §6.4).
+# measured (R13 §6.4); so are Consolas's (Consola.ttf, which comes with
+# Microsoft Word on macOS: win 1884 + 514, hhea descender 527, gap 350).
 KNOWN = {
     "source sans 3": (1.424, 1.024),
     "libertinus serif": (1.14, 0.894),
     "dejavu sans mono": (2384 / 2048, 1901 / 2048),
     "calibri": (2500 / 2048, 1950 / 2048),
+    "consolas": (2398 / 2048, 1871 / 2048),
 }
 
 
@@ -96,8 +98,11 @@ FONT_DIRS = (
     "/usr/share/fonts", "~/.local/share/fonts", "~/.fonts",
     "C:/Windows/Fonts",
 )
-STYLED = re.compile(r"bold|italic|light|black|medium|semi|extra|thin|heavy"
-                    r"|condensed|narrow|oblique|[a-z]b\.|[a-z][iz]\.", re.I)
+STYLED = re.compile(
+    r"bold|italic|light|black|medium|semi|extra|thin|heavy"
+    r"|condensed|narrow|oblique|[a-z]b\.|[a-z][iz]\.",
+    re.I
+)
 
 
 def family_of(path):
@@ -123,6 +128,11 @@ def family_of(path):
     return None
 
 
+def styled(path):
+    """Whether a font file's name marks a weight or a style."""
+    return bool(STYLED.search(os.path.basename(path)))
+
+
 def lookup(names, dirs=()):
     """s and A for each family in `names` (lower case): from the first font
     file of that family under `dirs` and then FONT_DIRS, preferring a file
@@ -136,10 +146,11 @@ def lookup(names, dirs=()):
             continue
         paths = []
         for folder, _, files in os.walk(root):
-            paths += [os.path.join(folder, name) for name in files
-                      if name.lower().endswith((".ttf", ".otf", ".ttc"))]
-        paths.sort(key=lambda path: (bool(STYLED.search(
-            os.path.basename(path))), path))
+            paths += [
+                os.path.join(folder, name) for name in files
+                if name.lower().endswith((".ttf", ".otf", ".ttc"))
+            ]
+        paths.sort(key=lambda path: (styled(path), path))
         for path in paths:
             try:
                 name = (family_of(path) or "").lower()
@@ -159,9 +170,13 @@ if __name__ == "__main__":
         m = read(path)
         extra = ""
         if "win" in m:
-            extra = (f" typo {m['typo'][0]} {m['typo'][1]} {m['typo'][2]}"
-                     f" win {m['win'][0]} {m['win'][1]}"
-                     f" useTypo {m['use_typo']}")
-        print(f"{path.split('/')[-1]}: {m['family']!r} upm {m['units']}"
-              f" hhea {m['hhea'][0]} {m['hhea'][1]} {m['hhea'][2]}{extra}"
-              f" s={m['single']:.4f} A={m['ascent']:.4f}")
+            extra = (
+                f" typo {m['typo'][0]} {m['typo'][1]} {m['typo'][2]}"
+                f" win {m['win'][0]} {m['win'][1]}"
+                f" useTypo {m['use_typo']}"
+            )
+        print(
+            f"{path.split('/')[-1]}: {m['family']!r} upm {m['units']}"
+            f" hhea {m['hhea'][0]} {m['hhea'][1]} {m['hhea'][2]}{extra}"
+            f" s={m['single']:.4f} A={m['ascent']:.4f}"
+        )

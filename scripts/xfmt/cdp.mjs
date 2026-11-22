@@ -65,8 +65,10 @@ function makeProfile(wanted) {
 // (the same calls on the browser target). Chrome is closed and its
 // profile removed however `body` ends.
 export async function withChrome(options, body) {
+    // Find the browser first: a missing one then leaves no profile behind.
+    const chrome = findChrome();
     const profile = makeProfile(options.profile);
-    const proc = spawn(findChrome(), [
+    const proc = spawn(chrome, [
         ...FLAGS, `--user-data-dir=${profile}`, "about:blank"
     ], { stdio: "ignore", detached: true });
     let exited = false;

@@ -58,16 +58,16 @@
     };
 
     const shifted = element => {
-        for (let node = element; node && node !== scope;
-             node = node.parentElement) {
+        let node = element;
+        while (node && node !== scope) {
             const style = getComputedStyle(node);
-            if (style.display.startsWith("inline")
-                && style.verticalAlign !== "baseline") {
-                return true;
-            }
             if (!style.display.startsWith("inline")) {
                 return false;
             }
+            if (style.verticalAlign !== "baseline") {
+                return true;
+            }
+            node = node.parentElement;
         }
         return false;
     };
@@ -103,10 +103,11 @@
                 range.setEnd(node, at + 1);
                 const char = range.getClientRects()[0];
                 if (char) {
-                    while (index + 1 < rects.length
-                           && Math.abs(char.top - rects[index].top) > 0.5
-                           && Math.abs(char.top - rects[index + 1].top)
-                              <= 0.5) {
+                    while (
+                        index + 1 < rects.length
+                        && Math.abs(char.top - rects[index].top) > 0.5
+                        && Math.abs(char.top - rects[index + 1].top) <= 0.5
+                    ) {
                         index++;
                     }
                 }

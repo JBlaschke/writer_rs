@@ -18,4 +18,4 @@
   26.59   26.61   26.19   26.61   26.25  ok                 HZ1 EFH → HZ2 EFH (Heading2)
   19.08   19.06   18.83   19.08   18.75  ok                 HZ2 EFH → HZZ1 EFH (FirstParagraph)
       -  832.73       -       -       -  -                  p1 at: 1
-xfmt result: p2: 17 gaps checked, 2 outside tolerance; print: 17 baselines, 0 off the 0.75 pt grid, mean gap after c +0.77 pt against the PDF over 16 gaps outside
+xfmt result: p2: 17 gaps checked, 3 outside tolerance; print: 17 baselines, 0 off the 0.75 pt grid, mean gap after c +0.77 pt against the PDF over 16 gaps outside

@@ -1,15 +1,16 @@
 // Reads the screen layout of HTML files and prints them to PDF, with one
 // headless Chrome driven over the DevTools protocol (cdp.mjs).
 //
-// usage: node cdp-print.mjs <jobs.json> [--profile <dir>]
+// usage: node cdp-print.mjs <jobs.json | -> [--profile <dir>]
 //
-// jobs.json is a list of jobs, each
+// jobs.json (or standard input, for "-") is a list of jobs, each
 //   { "html": file, "lines": out.json, "pdf": out.pdf or null,
 //     "media": "print" or "screen", "width": px, "height": px,
 //     "root": CSS selector }
-// For each job the page is loaded with the media emulated and the viewport
-// set to `width` (R13 §0.2), lines.js's rows are written to `lines`, and,
-// when `pdf` is set, Page.printToPDF's output to `pdf`. Prints Chrome's
+// For each job the page is loaded with `media` emulated and the viewport
+// set to `width` (R13 §0.2), and lines.js's rows are written to `lines`.
+// When `pdf` is set, the emulation is then cleared and Page.printToPDF's
+// output, always with print media, is written to `pdf`. Prints Chrome's
 // version on the first line of its output.
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -23,10 +24,12 @@ const args = process.argv.slice(2);
 const profileAt = args.indexOf("--profile");
 const profile = profileAt >= 0 ? args.splice(profileAt, 2)[1] : null;
 if (args.length !== 1) {
-    console.error("usage: node cdp-print.mjs <jobs.json> [--profile <dir>]");
+    console.error(
+        "usage: node cdp-print.mjs <jobs.json | -> [--profile <dir>]"
+    );
     process.exit(2);
 }
-const jobs = JSON.parse(readFileSync(args[0], "utf8"));
+const jobs = JSON.parse(readFileSync(args[0] === "-" ? 0 : args[0], "utf8"));
 
 async function run(page, job) {
     await page.send("Emulation.setEmulatedMedia", {
@@ -42,7 +45,11 @@ async function run(page, job) {
     const rows = await evaluate(page, `(${measure.trim()})(${root})`);
     writeFileSync(job.lines, JSON.stringify(rows, null, 1));
     if (job.pdf) {
+        // Chrome's own print: no viewport override and no emulated media,
+        // so that print media applies whatever `media` the job read the
+        // screen layout with.
         await page.send("Emulation.clearDeviceMetricsOverride");
+        await page.send("Emulation.setEmulatedMedia", { media: "" });
         const printed = await page.send("Page.printToPDF", {
             printBackground: true, preferCSSPageSize: true,
             displayHeaderFooter: false, scale: 1

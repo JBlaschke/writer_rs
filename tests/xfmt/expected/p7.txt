@@ -17,4 +17,4 @@
       -   17.26   25.84       -   25.50  -                  HX2 EFH → HX4 EFH (td)
       -   25.88   38.34       -   38.25  -                  HX4 EFH → HZ1 EFH (FirstParagraph)
       -  832.73       -       -       -  -                  p1 at: 1
-xfmt result: p7: 12 gaps checked, 8 outside tolerance; print: 16 baselines, 0 off the 0.75 pt grid, mean gap after c +2.13 pt against the PDF over 11 gaps outside
+xfmt result: p7: 12 gaps checked, 9 outside tolerance; print: 16 baselines, 0 off the 0.75 pt grid, mean gap after c +2.13 pt against the PDF over 11 gaps outside

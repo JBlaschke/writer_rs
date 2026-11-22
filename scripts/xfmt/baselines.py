@@ -23,10 +23,12 @@ MM = 25.4 / 72
 def spans(pdf):
     """Every text span: [page, baseline, left, right, size, font, text],
     with lengths in pt."""
+    command = [
+        "gs", "-q", "-dNOPAUSE", "-dBATCH", "-dSAFER", "-sDEVICE=txtwrite",
+        "-r7200", "-dTextFormat=0", "-sOutputFile=-", str(pdf)
+    ]
     out = subprocess.run(
-        ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-dSAFER", "-sDEVICE=txtwrite",
-         "-r7200", "-dTextFormat=0", "-sOutputFile=-", str(pdf)],
-        capture_output=True, text=True, check=True,
+        command, capture_output=True, text=True, check=True
     ).stdout
     page = 0
     found = []
@@ -59,8 +61,8 @@ def lines(pdf):
     the smaller one's height, so that a superscript or a subscript joins its
     line; the line's baseline is that of its largest span."""
     rows = []
-    for page, y, left, right, size, font, text in sorted(
-            spans(pdf), key=lambda span: (span[0], span[1], span[2])):
+    ordered = sorted(spans(pdf), key=lambda span: (span[0], span[1], span[2]))
+    for page, y, left, right, size, font, text in ordered:
         top, bottom = y - 0.75 * size, y + 0.25 * size
         row = rows[-1] if rows else None
         if row is not None and row["page"] == page:
@@ -68,8 +70,9 @@ def lines(pdf):
             if overlap >= 0.5 * min(size, row["size"]):
                 row["parts"].append((left, right, size, text))
                 if size > row["size"]:
-                    row.update(size=size, y=y, font=font, top=top,
-                               bottom=bottom)
+                    row.update(
+                        size=size, y=y, font=font, top=top, bottom=bottom
+                    )
                 continue
         rows.append({
             "page": page, "y": y, "size": size, "font": font, "top": top,
@@ -95,10 +98,13 @@ def lines(pdf):
 def show(rows):
     previous = None
     for page, y, x, size, font, text in rows:
-        gap = "" if previous is None or previous[0] != page else \
-            f"{y - previous[1]:6.2f}"
-        print(f"p{page} {y:8.2f}pt {y * MM:7.2f}mm {gap:>7} {size:5.1f}pt"
-              f"  {text[:44]}")
+        gap = ""
+        if previous is not None and previous[0] == page:
+            gap = f"{y - previous[1]:6.2f}"
+        print(
+            f"p{page} {y:8.2f}pt {y * MM:7.2f}mm {gap:>7} {size:5.1f}pt"
+            f"  {text[:44]}"
+        )
         previous = (page, y)
 
 
@@ -112,8 +118,10 @@ def compare(a, b):
                 used.add(index)
                 pairs.append((row, other))
                 break
-    print(f"{'A baseline':>12} {'A gap':>7} {'B baseline':>12} {'B gap':>7}"
-          f" {'B-A gap':>8}  text")
+    print(
+        f"{'A baseline':>12} {'A gap':>7} {'B baseline':>12} {'B gap':>7}"
+        f" {'B-A gap':>8}  text"
+    )
     last = None
     for row, other in pairs:
         if last is None or last[0][0] != row[0] or last[1][0] != other[0]:
@@ -122,8 +130,10 @@ def compare(a, b):
             ga = row[1] - last[0][1]
             gb = other[1] - last[1][1]
             gaps = (f"{ga:7.2f}", f"{gb:7.2f}", f"{gb - ga:+8.2f}")
-        print(f"p{row[0]} {row[1]:8.2f} {gaps[0]:>7} p{other[0]} {other[1]:8.2f}"
-              f" {gaps[1]:>7} {gaps[2]:>8}  {row[5][:40]}")
+        print(
+            f"p{row[0]} {row[1]:8.2f} {gaps[0]:>7} p{other[0]} "
+            f"{other[1]:8.2f} {gaps[1]:>7} {gaps[2]:>8}  {row[5][:40]}"
+        )
         last = (row, other)
 
 

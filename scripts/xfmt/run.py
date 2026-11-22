@@ -16,8 +16,12 @@ between consecutive PDF lines, and a summary line.
 
 --check compares each table with tests/xfmt/expected/<name>.txt and exits 1
 when one differs; --update writes them. Exit status 2: a document could not
-be built or measured. --strict also exits 1 when a gap is outside
-tolerance.
+be built or measured. --strict also exits 1 when a check is outside
+tolerance: a row, a printed baseline off the grid or the printed mean.
+
+Each document is built in <out>/<name>, a folder the harness marks as its
+own (BUILD_MARK). It empties that folder on each run and refuses to touch
+one there that it did not make.
 
 Python 3.11 or later, standard library only; Node 22 or later; Ghostscript;
 Google Chrome or Chromium (CHROME_PATH)."""
@@ -55,23 +59,51 @@ GRID_TOLERANCE = 0.01
 PROFILE_PREFIX = "xfmt-chrome-"
 DEFAULT_ROOT = "[data-writer-document]"
 CHROME_TIMEOUT = 300
+MANIFEST = ROOT / "tests" / "xfmt" / "xfmt.toml"
+RELEASE_WRITER = ROOT / "target" / "release" / "writer"
+BUILD_MARK = ".xfmt-build"
 
 
 class Failure(Exception):
     pass
 
 
+# What measuring a document can raise; the document then fails (exit 2).
+MEASURE_ERRORS = (
+    Failure, OSError, subprocess.CalledProcessError, ValueError, KeyError
+)
+
+
 # Sources ---------------------------------------------------------------
 
+def fresh(target):
+    """Makes `target` an empty folder of the harness's own. A folder that is
+    there already is removed only when the harness made it (it holds
+    BUILD_MARK) or when it is empty."""
+    if target.exists():
+        if not (target / BUILD_MARK).is_file() and any(target.iterdir()):
+            raise Failure(
+                f"{target} exists and run.py did not make it; remove it or "
+                "pass another --out"
+            )
+        shutil.rmtree(target)
+    target.mkdir(parents=True)
+    (target / BUILD_MARK).write_text(
+        "Made by scripts/xfmt/run.py, which empties this folder on each "
+        "run.\n"
+    )
+
+
 def build(doc, writer, out):
-    """Builds `doc` into `out`; returns the paths of its outputs."""
+    """Builds `doc` into the folder `out`; returns the paths of its
+    outputs."""
     if doc.get("html"):
         return {"html": doc["html"]}
     source = doc["source"]
-    if out.exists():
-        shutil.rmtree(out)
-    command = [str(writer), "--quiet", "build", str(source),
-               "--to", "html,pdf,docx,typst", "-o", str(out)]
+    command = [
+        str(writer), "--quiet", "build", str(source),
+        "--to", "html,pdf,docx,typst", "-o", str(out)
+    ]
     if doc.get("config"):
         command[3:3] = ["--config", str(doc["config"])]
     done = subprocess.run(command, capture_output=True, text=True)
@@ -110,8 +142,9 @@ def word_lines(doc, paths, reference):
             parts = [line["text"]]
             joined = line["full"]
             for other in reference[start + 1:]:
-                if joined == whole or not whole.startswith(
-                        joined + other["full"]):
+                if joined == whole:
+                    break
+                if not whole.startswith(joined + other["full"]):
                     break
                 parts.append(other["text"])
                 joined += other["full"]
@@ -144,8 +177,10 @@ def key(text):
 
 def pdf_lines(path):
     return [
-        {"page": page, "y": y, "text": text, "size": size,
-         "key": key(text), "full": squash(text)}
+        {
+            "page": page, "y": y, "text": text, "size": size,
+            "key": key(text), "full": squash(text)
+        }
         for page, y, _, size, _, text in baselines.lines(path)
     ]
 
@@ -153,35 +188,41 @@ def pdf_lines(path):
 def screen_lines(path):
     rows = json.loads(Path(path).read_text())
     return [
-        {"page": None, "y": row["baseline"] * PT_PER_PX, "text": row["text"],
-         "offset": row["offset"] * PT_PER_PX,
-         "style": row["style"] or row["className"] or row["block"],
-         "key": key(row["text"]), "full": squash(row["text"])}
+        {
+            "page": None, "y": row["baseline"] * PT_PER_PX,
+            "text": row["text"], "offset": row["offset"] * PT_PER_PX,
+            "style": row["style"] or row["className"] or row["block"],
+            "key": key(row["text"]), "full": squash(row["text"])
+        }
         for row in rows if row["text"]
     ]
 
 
 # Chrome ----------------------------------------------------------------
 
-def run_chrome(jobs, out, verbose):
-    """Runs cdp-print.mjs over `jobs` in one Chrome. However this ends (an
+def run_chrome(jobs, verbose):
+    """Runs cdp-print.mjs over `jobs` in one Chrome; returns Chrome's
+    version and what the client wrote to stderr. However this ends (an
     error, a timeout, Ctrl-C, SIGTERM), no process of this run's Chrome
     profile outlives it and the profile is removed."""
     if not jobs:
         return None, ""
-    jobs_file = out / "jobs.json"
-    jobs_file.write_text(json.dumps(jobs, indent=1))
-    profile = tempfile.mkdtemp(prefix=PROFILE_PREFIX)
-    command = ["node", str(HERE / "cdp-print.mjs"), str(jobs_file),
-               "--profile", profile]
     stdout = stderr = ""
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, text=True,
-                            start_new_session=True)
+    proc = None
+    profile = tempfile.mkdtemp(prefix=PROFILE_PREFIX)
     try:
-        stdout, stderr = proc.communicate(timeout=CHROME_TIMEOUT)
+        proc = subprocess.Popen(
+            ["node", str(HERE / "cdp-print.mjs"), "-", "--profile", profile],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True, start_new_session=True
+        )
+        stdout, stderr = proc.communicate(
+            json.dumps(jobs, indent=1), timeout=CHROME_TIMEOUT
+        )
     except subprocess.TimeoutExpired:
         stderr = f"cdp-print: no result in {CHROME_TIMEOUT} s"
+    except OSError as error:
+        stderr = f"cdp-print: cannot start node: {error}"
     finally:
         stop(proc, profile)
     version = stdout.splitlines()[0] if stdout else None
@@ -194,7 +235,7 @@ def stop(proc, profile):
     """Ends cdp-print (SIGTERM lets it close Chrome), then kills anything
     still running with the profile and removes it."""
     for sig, wait in ((signal.SIGTERM, 5), (signal.SIGKILL, 5)):
-        if proc.poll() is not None:
+        if proc is None or proc.poll() is not None:
             break
         try:
             os.killpg(proc.pid, sig)
@@ -202,8 +243,9 @@ def stop(proc, profile):
         except (ProcessLookupError, subprocess.TimeoutExpired):
             pass
     for _ in range(20):
-        found = subprocess.run(["pgrep", "-f", profile], capture_output=True,
-                               text=True).stdout.split()
+        found = subprocess.run(
+            ["pgrep", "-f", profile], capture_output=True, text=True
+        ).stdout.split()
         if not found:
             break
         for pid in found:
@@ -213,6 +255,15 @@ def stop(proc, profile):
                 pass
         time.sleep(0.1)
     shutil.rmtree(profile, ignore_errors=True)
+
+
+def chrome_failure(stderr, html):
+    """Why Chrome gave no layout of `html`: the client's line about it,
+    else its last line."""
+    lines = [line for line in stderr.splitlines() if line.strip()]
+    about = [line for line in lines if str(html) in line]
+    why = about[0] if about else (lines[-1] if lines else None)
+    return "Chrome did not measure the HTML" + (f": {why}" if why else "")
 
 
 # Matching and the table -------------------------------------------------
@@ -239,21 +290,32 @@ def short(text, width=22):
     return text if len(text) <= width else text[:width - 1] + "…"
 
 
+def off_grid(y):
+    return abs(y - GRID * round(y / GRID)) > GRID_TOLERANCE
+
+
 def table(name, sources):
-    """The rows and the summary of one document, as text lines, and the
-    numbers of gaps checked and outside tolerance.
+    """The rows and the summary of one document, as text lines, the number
+    of rows compared and the number of checks outside tolerance.
 
     The rows follow the reference flow, the PDF's lines (the screen
     layout's when there is no PDF). A line that neither the screen layout
     nor Word has, furniture of the PDF, is shown at its position from the
     page top. Every other line gets a row: its position from the page top
-    when it is the first on its page, else its gap to the line before."""
+    when it is the first on its page, else its gap to the line before.
+
+    Outside tolerance are each row with a fault, each printed baseline off
+    the 0.75 pt grid and the printed mean gap when it is outside."""
     pdf = sources.get("pdf") or []
     reference = pdf or sources.get("screen") or []
-    others = {kind: (lines, match(reference, lines))
-              for kind, lines in sources.items() if lines}
-    body = [found for kind, (lines, found) in others.items()
-            if kind in ("screen", "word") and lines is not reference]
+    others = {
+        kind: (lines, match(reference, lines))
+        for kind, lines in sources.items() if lines
+    }
+    body = [
+        found for kind, (lines, found) in others.items()
+        if kind in ("screen", "word") and lines is not reference
+    ]
 
     def get(kind, index):
         if kind not in others or index is None:
@@ -269,9 +331,11 @@ def table(name, sources):
             return None
         return screen["offset"] - model["above"]
 
-    out = [f"== {name}",
-           f"{'Word':>7} {'PDF':>7} {'screen':>7} {'scr+c':>7} "
-           f"{'print':>7}  {'verdict':<18} line"]
+    out = [
+        f"== {name}",
+        f"{'Word':>7} {'PDF':>7} {'screen':>7} {'scr+c':>7} "
+        f"{'print':>7}  {'verdict':<18} line"
+    ]
     checked = outside = 0
     print_gaps = []
     shift = 0
@@ -299,16 +363,19 @@ def table(name, sources):
             previous = reference[up] if up is not None else None
             model = get("word", index)
             c = residual(index)
-            top = previous is None or (line["page"] is not None
-                                       and previous["page"] != line["page"])
+            top = previous is None or (
+                line["page"] is not None and previous["page"] != line["page"]
+            )
             if top:
                 values["pdf"] = line["y"] if pdf else None
                 if model and model["anchored"] and model["first"]:
                     values["word"] = model["y"]
                 if printed:
                     values["print"] = printed["y"]
-                    if (pdf and c is not None
-                            and printed["page"] == line["page"]):
+                    if (
+                        pdf and c is not None
+                        and printed["page"] == line["page"]
+                    ):
                         compared = True
                         diff = printed["y"] - c - line["y"]
                         if abs(diff) > PRINT_TOLERANCE:
@@ -317,8 +384,10 @@ def table(name, sources):
             else:
                 values["pdf"] = line["y"] - previous["y"] if pdf else None
                 upper = get("word", up)
-                if (model and upper and model["segment"] == upper["segment"]
-                        and model["page"] == upper["page"]):
+                if (
+                    model and upper and model["segment"] == upper["segment"]
+                    and model["page"] == upper["page"]
+                ):
                     values["word"] = model["y"] - upper["y"]
                 screen, upper = get("screen", index), get("screen", up)
                 c_up = residual(up)
@@ -333,10 +402,9 @@ def table(name, sources):
                         print_gaps.append(
                             values["print"] - (c - c_up) - values["pdf"]
                         )
-                label = (f"{short(previous['text'])} → "
-                         f"{short(line['text'])}")
-            style = (model or {}).get("style") or (
-                get("screen", index) or {}).get("style")
+                label = f"{short(previous['text'])} → {short(line['text'])}"
+            shown = get("screen", index) or {}
+            style = (model or {}).get("style") or shown.get("style")
             if style:
                 label += f" ({style})"
             if pdf and values["word"] is not None:
@@ -357,26 +425,35 @@ def table(name, sources):
             f"{fmt(values['screen'])} {fmt(values['scr+c'])} "
             f"{fmt(values['print'])}  {verdict:<18} {label}"
         )
-    summary = f"{name}: {checked} gaps checked, {outside} outside tolerance"
+    notes = ""
     printed = sources.get("print") or []
     if printed:
-        off = [line for line in printed
-               if abs(line["y"] - GRID * round(line["y"] / GRID))
-               > GRID_TOLERANCE]
-        summary += (f"; print: {len(printed)} baselines, {len(off)} off the "
-                    f"{GRID} pt grid")
+        off = [line for line in printed if off_grid(line["y"])]
+        outside += len(off)
+        notes = (
+            f"; print: {len(printed)} baselines, {len(off)} off the "
+            f"{GRID} pt grid"
+        )
         for line in off:
-            out.append(f"off grid: p{line['page']} {line['y']:.2f} "
-                       f"{short(line['text'])}")
+            out.append(
+                f"off grid: p{line['page']} {line['y']:.2f} "
+                f"{short(line['text'])}"
+            )
         if print_gaps:
             mean = sum(print_gaps) / len(print_gaps)
             verdict = ""
             if len(print_gaps) >= MEAN_MINIMUM:
-                verdict = (" ok" if abs(mean) <= MEAN_TOLERANCE
-                           else " outside")
-            summary += (f", mean gap after c {mean:+.2f} pt against the PDF "
-                        f"over {len(print_gaps)} gaps{verdict}")
-    out.append(f"xfmt result: {summary}")
+                within = abs(mean) <= MEAN_TOLERANCE
+                verdict = " ok" if within else " outside"
+                outside += not within
+            notes += (
+                f", mean gap after c {mean:+.2f} pt against the PDF over "
+                f"{len(print_gaps)} gaps{verdict}"
+            )
+    out.append(
+        f"xfmt result: {name}: {checked} gaps checked, {outside} outside "
+        f"tolerance{notes}"
+    )
     return out, checked, outside
 
 
@@ -406,14 +483,17 @@ def main():
         description="Cross-format baseline tables (docs/dev/xfmt-harness.md)"
     )
     parser.add_argument("names", nargs="*", help="documents of the manifest")
-    parser.add_argument("--writer", default=os.environ.get(
-        "XFMT_WRITER", ROOT / "target" / "release" / "writer"))
+    parser.add_argument(
+        "--writer", default=os.environ.get("XFMT_WRITER", RELEASE_WRITER)
+    )
     parser.add_argument("--out", default=ROOT / "target" / "xfmt")
-    parser.add_argument("--manifest",
-                        default=ROOT / "tests" / "xfmt" / "xfmt.toml")
+    parser.add_argument("--manifest", default=MANIFEST)
     parser.add_argument("--doc", help="one document (.md, or .html as is)")
     parser.add_argument("--config", help="writer.toml for --doc")
-    parser.add_argument("--media", default="print")
+    parser.add_argument(
+        "--media", default="print",
+        help="CSS media of --doc's screen layout; the print is always print"
+    )
     parser.add_argument("--root", default=DEFAULT_ROOT)
     parser.add_argument("--width", type=float)
     parser.add_argument("--check", action="store_true")
@@ -421,6 +501,8 @@ def main():
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
+    if args.doc and (args.check or args.update or args.names):
+        parser.error("--doc takes no NAME, --check or --update")
     # Ctrl-C, SIGTERM and SIGHUP end the run through run_chrome's finally.
     for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
         signal.signal(sig, lambda number, _: sys.exit(128 + number))
@@ -429,8 +511,10 @@ def main():
     writer = Path(args.writer).resolve()
     if args.doc:
         path = Path(args.doc).resolve()
-        doc = {"name": path.stem, "dir": path.parent, "media": args.media,
-               "root": args.root, "width": args.width}
+        doc = {
+            "name": path.stem, "dir": path.parent, "media": args.media,
+            "root": args.root, "width": args.width
+        }
         doc["html" if path.suffix == ".html" else "source"] = path
         if args.config:
             doc["config"] = Path(args.config).resolve()
@@ -450,24 +534,20 @@ def main():
         target = out / name
         try:
             if doc.get("source") and not writer.exists():
-                raise Failure(f"no writer binary at {writer}; build it with "
-                              "`cargo build --release` or pass --writer")
+                raise Failure(
+                    f"no writer binary at {writer}; build it with "
+                    "`cargo build --release` or pass --writer"
+                )
+            fresh(target)
             paths = build(doc, writer, target)
         except (Failure, OSError) as error:
             errors[name] = str(error)
             continue
-        target.mkdir(parents=True, exist_ok=True)
         width = doc.get("width")
         if width is None and "docx" in paths:
-            page = word.section(word.ET.fromstring(
-                word.zipfile.ZipFile(paths["docx"]).read("word/document.xml")
-            ))
-            width = page["text_width"] / PT_PER_PX
+            width = word.geometry(paths["docx"])["text_width"] / PT_PER_PX
         paths["screen"] = target / "screen.json"
         paths["print"] = target / "print.pdf"
-        for kind in ("screen", "print"):
-            if paths[kind].exists():
-                paths[kind].unlink()
         jobs.append({
             "html": str(paths["html"]), "lines": str(paths["screen"]),
             "pdf": str(paths["print"]) if doc.get("print", True) else None,
@@ -476,7 +556,7 @@ def main():
             "width": round(width or 800),
         })
         built[name] = paths
-    version, stderr = run_chrome(jobs, out, args.verbose)
+    version, stderr = run_chrome(jobs, args.verbose)
     if version:
         print(version)
 
@@ -491,10 +571,7 @@ def main():
         paths = built[name]
         try:
             if not paths["screen"].exists():
-                why = [line for line in stderr.splitlines()
-                       if str(paths["html"]) in line]
-                raise Failure("Chrome did not measure the HTML"
-                              + (f": {why[0]}" if why else ""))
+                raise Failure(chrome_failure(stderr, paths["html"]))
             sources = {"screen": screen_lines(paths["screen"])}
             if "pdf" in paths:
                 sources["pdf"] = pdf_lines(paths["pdf"])
@@ -503,8 +580,7 @@ def main():
             reference = sources.get("pdf") or sources["screen"]
             sources["word"] = word_lines(doc, paths, reference)
             lines, checked, outside = table(name, sources)
-        except (Failure, OSError, subprocess.CalledProcessError,
-                ValueError, KeyError) as error:
+        except MEASURE_ERRORS as error:
             print(f"== {name}\nxfmt error: {error}")
             status = 2
             continue
@@ -536,8 +612,10 @@ def main():
             else:
                 print(f"xfmt check: {name}: as expected")
     elapsed = time.monotonic() - started
-    print(f"xfmt: {len(docs)} documents, {total_checked} gaps checked, "
-          f"{total_outside} outside tolerance, {elapsed:.1f} s")
+    print(
+        f"xfmt: {len(docs)} documents, {total_checked} gaps checked, "
+        f"{total_outside} outside tolerance, {elapsed:.1f} s"
+    )
     return status
 
 

@@ -22,6 +22,11 @@ tables again when a change is meant to move them.
 - A writer binary: `target/release/writer` by default, else `--writer` or
   `XFMT_WRITER`. The harness does not build it.
 
+The reference documents bring their own fonts. Word's model reads the
+metrics of the DOCX's fonts from the font files it finds, else from a short
+list in `metrics.py`, which covers Consolas (p7's code) on a machine
+without Microsoft Word.
+
 ## Running
 
 ```sh
@@ -33,16 +38,21 @@ python3 scripts/xfmt/run.py p3 p7 --check   # some documents of the manifest
 python3 scripts/xfmt/run.py --doc my.md --config writer.toml
 ```
 
-`--out` sets where the builds go (default `target/xfmt`). `--strict` also
-fails when a gap is outside tolerance. `--verbose` passes on what the
-DevTools client writes to stderr. With `--doc`, `--media`, `--root` and
-`--width` stand in for the manifest fields below; an `.html` file is measured
-as it is, in Chrome only.
+`--out` sets where the builds go (default `target/xfmt`). Each document is
+built in `<out>/<name>`, a folder that the harness marks as its own with a
+file `.xfmt-build` and empties on each run. It refuses to use a folder of
+that name that it did not make, unless the folder is empty. `--strict` also
+fails when a check is outside tolerance, that is when a result line counts
+one (see below). `--verbose` passes on what the DevTools client writes to
+stderr. With `--doc`, `--media`, `--root` and `--width` stand in for the
+manifest fields below; an `.html` file is measured as it is, in Chrome only.
+`--doc` has no expected table, so it takes no `--check` or `--update`.
 
 Exit status: 0 when every table was made (and, with `--check`, matches);
-1 when a table differs from its expected table, or with `--strict` when a gap
-is outside tolerance; 2 when a document could not be built or measured. A
-full run of the nine reference documents takes 6 to 9 s here.
+1 when a table differs from its expected table, or with `--strict` when a
+check is outside tolerance; 2 when a document could not be built or
+measured, Node or Chrome included. A full run of the nine reference
+documents takes 5 to 11 s here.
 
 ## What it measures
 
@@ -59,8 +69,10 @@ For each document of `tests/xfmt/xfmt.toml`:
    baseline is the fragment top plus the font's ascent, which is measured
    with a zero-size inline-block marker. It also reads the offset of each
    block's first baseline below its content top.
-4. **HTML printed.** The same Chrome prints the page with `Page.printToPDF`.
-   Ghostscript reads the baselines as for the PDF.
+4. **HTML printed.** The same Chrome then clears the emulation and prints
+   the page with `Page.printToPDF`, so the print always has print media,
+   whatever the screen layout used. Ghostscript reads the baselines as for
+   the PDF.
 5. **Word.** `word.py` lays the DOCX out from its XML with Word's model,
    R12 §2. An exact line height h puts 0.8 h above the baseline and 0.2 h
    below. An auto line L = `line`/240 makes a box of L times the font's
@@ -126,11 +138,17 @@ compared, else each fault:
 - `Pr page N`: the printed HTML puts this line on another page than the PDF
   does, relative to the lines before.
 
-The `xfmt result` line gives the number of rows compared and of rows with a
-fault. It also gives the number of printed baselines off the 0.75 pt grid by
-more than 0.01 pt; each one gets an `off grid:` line above it. Last comes
-the mean of (print gap minus the change in c minus the PDF gap). It is `ok`
-within 0.1 pt over at least 8 gaps, else `outside`.
+The `xfmt result` line gives the number of rows compared and the number of
+checks outside tolerance. It then gives the number of printed baselines off
+the 0.75 pt grid by more than 0.01 pt; each one gets an `off grid:` line
+above it. Last comes the mean of (print gap minus the change in c minus the
+PDF gap). It is `ok` within 0.1 pt over at least 8 gaps, else `outside`.
+
+The checks outside tolerance are every row with a fault, every printed
+baseline off the grid, and the printed mean when it is `outside`: all the
+tolerances below. A document passes them all when its result line says
+`0 outside tolerance`, and `--strict` fails otherwise. The last line of a
+run adds the documents' counts up.
 
 ## Tolerances
 
@@ -179,9 +197,10 @@ Each run uses a fresh profile directory whose name starts with
 process group. On every way out (success, a failed document, a timeout of
 300 s, Ctrl-C, SIGTERM or SIGHUP) it stops that group, kills anything still
 running with the profile, and removes the profile. After a run,
-`pgrep -fl xfmt-chrome` prints nothing. Only SIGKILL of `run.py` itself skips
-this. The client then finishes its jobs, closes Chrome and removes the
-profile by itself.
+`pgrep -fl xfmt-chrome` prints nothing. When Node or Chrome cannot be
+started, every document fails with exit status 2 and no profile is left.
+Only SIGKILL of `run.py` itself skips this. The client then finishes its
+jobs, closes Chrome and removes the profile by itself.
 
 `cdp-eval.mjs` uses the same client to evaluate one script in one page, for
 probes such as `scripts/xfmt/probes/residual` and `scripts/xfmt/probes/center`:
@@ -198,19 +217,20 @@ node scripts/xfmt/cdp-eval.mjs page.html out.json expr.js --media print --width 
   theme and Source Sans 3 in `r12/theme`.
 - `r12-vocab/p10.md`: the title block, the contents and tables. It uses a
   theme that extends R12's with the vocabulary styles. Its screen layout
-  uses screen media, because print media hides the contents.
+  uses screen media, because print media hides the contents. Its print has
+  print media like every other, so it has no contents.
 - `r13/residual.html`: R13 §3.2's plain-CSS probe, in Chrome only. Its
   screen column is R13's "Plain CSS" row.
 
 Each document's table is kept in `tests/xfmt/expected/<name>.txt`. The
 tables were recorded with writer at ead21e88 and Chrome 157.0.8103.79 on
-macOS: 9 tables, 223 lines in all, of which 196 are rows. Of 171 rows
-compared, 23 are outside tolerance. These are the differences M9 sets out
-to remove, such as lists, quotes and code blocks (p7), the title block
-container and contents (p10), and HTML's space before after a forced page
-break (p5, p6). Another Chrome version or other fonts may move the screen
-and print columns. Record the tables again (`--update`) and say so in the
-commit.
+macOS: 9 tables, 223 lines in all, of which 196 are rows. 170 rows are
+compared, and 25 checks are outside tolerance: 22 rows and the printed
+means of p2, p7 and p10. These are the differences M9 sets out to remove,
+such as lists, quotes and code blocks (p7), the contents and the captions
+(p10), and HTML's space before after a forced page break (p5, p6). Another
+Chrome version or other fonts may move the screen and print columns.
+Record the tables again (`--update`) and say so in the commit.
 
 To add a document, put it and its `writer.toml` under `tests/xfmt/`, add a
 `[[doc]]` entry, run `--update` and check the new table by hand before

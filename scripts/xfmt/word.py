@@ -31,8 +31,9 @@ import xml.etree.ElementTree as ET
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
 TWIP = 1 / 20
-OPAQUE = (W + "drawing", W + "pict", W + "object", M + "oMath",
-          M + "oMathPara")
+OPAQUE = (
+    W + "drawing", W + "pict", W + "object", M + "oMath", M + "oMathPara"
+)
 
 
 def attr(element, name):
@@ -75,8 +76,11 @@ class Props:
                 if value is not None:
                     setattr(self, name, int(value))
             self.rule = attr(spacing, "lineRule") or self.rule
-        for name, tag in (("contextual", "contextualSpacing"),
-                          ("break_before", "pageBreakBefore")):
+        toggles = (
+            ("contextual", "contextualSpacing"),
+            ("break_before", "pageBreakBefore"),
+        )
+        for name, tag in toggles:
             value = flag(ppr.find(W + tag))
             if value is not None:
                 setattr(self, name, value)
@@ -110,8 +114,10 @@ class Styles:
         for style in root.findall(W + "style"):
             sid = attr(style, "styleId")
             self.styles[sid] = style
-            if (attr(style, "type") == "paragraph"
-                    and attr(style, "default") in ("1", "true")):
+            if (
+                attr(style, "type") == "paragraph"
+                and attr(style, "default") in ("1", "true")
+            ):
                 self.default = sid
 
     def chain(self, sid):
@@ -145,8 +151,16 @@ def section(root):
     bottom = abs(int(attr(margin, "bottom") or 1440)) * TWIP
     left = int(attr(margin, "left") or 1440) * TWIP
     right = int(attr(margin, "right") or 1440) * TWIP
-    return {"height": height, "width": width, "top": top, "bottom": bottom,
-            "text_width": width - left - right}
+    return {
+        "height": height, "width": width, "top": top, "bottom": bottom,
+        "text_width": width - left - right
+    }
+
+
+def geometry(path):
+    """The page geometry of the DOCX at `path`, as `section` gives it."""
+    with zipfile.ZipFile(path) as archive:
+        return section(ET.fromstring(archive.read("word/document.xml")))
 
 
 def blocks(body):
@@ -166,8 +180,8 @@ def paragraph_lines(paragraph, styles):
     `fonts` (family, size in pt) and `page_break` (a forced break follows
     the line)."""
     ppr = paragraph.find(W + "pPr")
-    props = styles.paragraph(attr(ppr.find(W + "pStyle"), "val")
-                             if ppr is not None else None)
+    sid = attr(ppr.find(W + "pStyle"), "val") if ppr is not None else None
+    props = styles.paragraph(sid)
     props.apply_ppr(ppr)
     mark = props.copy()
     if ppr is not None:
@@ -197,8 +211,7 @@ def paragraph_lines(paragraph, styles):
                 if kind == "page":
                     line["page_break"] = True
                 if kind != "column":
-                    lines.append({"text": "", "fonts": [],
-                                  "page_break": False})
+                    lines.append({"text": "", "fonts": [], "page_break": False})
     lines[-1]["fonts"].append((mark.family, mark.size / 2))
     # A break that ends the paragraph leaves no line of its own after it.
     if len(lines) > 1 and not lines[-1]["text"].strip():
@@ -245,29 +258,38 @@ def model(path, metrics, wrap=None):
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
         document = ET.fromstring(archive.read("word/document.xml"))
-        styles = Styles(archive.read("word/styles.xml")
-                        if "word/styles.xml" in names else None)
+        xml = None
+        if "word/styles.xml" in names:
+            xml = archive.read("word/styles.xml")
+        styles = Styles(xml)
     page = section(document)
     bottom = page["height"] - page["bottom"]
     result = []
-    state = {"page": 1, "segment": 0, "y": page["top"], "anchored": True,
-             "fresh": True, "start": True}
+    state = {
+        "page": 1, "segment": 0, "y": page["top"], "anchored": True,
+        "fresh": True, "start": True
+    }
 
     def new_page():
-        state.update(page=state["page"] + 1, segment=state["segment"] + 1,
-                     y=page["top"], anchored=True, fresh=True)
+        state.update(
+            page=state["page"] + 1, segment=state["segment"] + 1,
+            y=page["top"], anchored=True, fresh=True
+        )
 
     def lose():
-        state.update(segment=state["segment"] + 1, y=0.0, anchored=False,
-                     fresh=False)
+        state.update(
+            segment=state["segment"] + 1, y=0.0, anchored=False, fresh=False
+        )
 
     def place(text, edges, sid, below, space):
         """Places one line; returns the part of its box below the
         baseline."""
         above, down = edges
         y = state["y"] + below + space + above
-        if (state["anchored"] and not state["fresh"]
-                and y + down > bottom + 0.01):
+        if (
+            state["anchored"] and not state["fresh"]
+            and y + down > bottom + 0.01
+        ):
             new_page()
             y = state["y"] + above
         result.append({
@@ -329,13 +351,17 @@ def model(path, metrics, wrap=None):
 def describe(path, metrics):
     """The model's lines as text, for checking it by hand."""
     page, lines = model(path, metrics)
-    out = [f"page {page['width']:.2f} x {page['height']:.2f} pt, "
-           f"margins {page['top']:.2f} / {page['bottom']:.2f}"]
+    out = [
+        f"page {page['width']:.2f} x {page['height']:.2f} pt, "
+        f"margins {page['top']:.2f} / {page['bottom']:.2f}"
+    ]
     for line in lines:
         where = "abs" if line["anchored"] else f"seg{line['segment']}"
-        out.append(f"p{line['page']} {where:>5} {line['y']:8.2f} "
-                   f"above {line['above']:5.2f}  {line['style'] or '':14} "
-                   f"{line['text'][:40]}")
+        out.append(
+            f"p{line['page']} {where:>5} {line['y']:8.2f} "
+            f"above {line['above']:5.2f}  {line['style'] or '':14} "
+            f"{line['text'][:40]}"
+        )
     return "\n".join(out)
 
 
