@@ -68,8 +68,8 @@ Each text line is `H<tag> EFH`: flat-footed capitals only, starting with an H.
   (0.01 pt), calibrated on a Typst page with text at known baselines.
 - **HTML**: Chrome's layout of the standalone page through the DevTools
   protocol: each text node's client rectangle, baseline = top + the rounded
-  ascent, CSS px × 0.75. Only gaps are comparable (the screen page has its own
-  top padding).
+  ascent of the line's font, CSS px × 0.75. Only gaps are comparable (the
+  screen page has its own top padding).
 - **Font metrics** are read from the font files (`hhea`, `OS/2`):
 
 | family | single line `s` (em) | ascent `A` (em) | cap height (em) |
@@ -3192,9 +3192,9 @@ probes (p7 for lists, quotes and code; p10 for tables):
 | loose item → item | 25.20 | 25.05 | 25.04 |
 | paragraph → block quote | 25.20 | 41.25 | 27.79 |
 | block quote → paragraph | 19.80 | 34.65 | 40.43 |
-| paragraph → code block | 23.00 | 22.92 | 34.38 |
+| paragraph → code block | 23.00 | 22.92 | 33.63 |
 | code line → line | 11.20 | 11.88 | 14.03 |
-| code block → paragraph | 19.20 | 24.22 | 34.11 |
+| code block → paragraph | 19.20 | 24.22 | 34.86 |
 | paragraph → first table row | 27.67 | 26.73 | 35.10 |
 | table row → row (`Compact` 10 pt at 1.3, 3 pt and 3 pt) | 19.67 | 19.00 | 19.73 |
 | table → paragraph | 18.67 | 27.53 | 34.73 |
@@ -3204,6 +3204,13 @@ probes (p7 for lists, quotes and code; p10 for tables):
   leaves the paragraph spacing where Word leaves none.
 - **Tight lists** are `Compact` paragraphs in Word; the PDF and HTML apply
   `Compact` to cells only (design.md open point 14).
+- **Code in HTML** is set in the theme's monospace stack (Menlo on the Mac
+  that measured), whose ascent is not the body font's. *Correction
+  (2026-11-22):* the two HTML gaps around the code block first read 34.38
+  and 34.11, taken with the body font's ascent for the code lines too. R13's
+  harness found it; Chrome's printed PDF of the same page agrees with the
+  corrected values on its 0.75 pt grid (33.75 and 35.25, with 13.50 between
+  the code lines). The sum of the three gaps is the same either way.
 - **Block quotes, code blocks, callouts, footnotes, equations, figures and
   captions' spaces** have built-in spacing per backend, none of it from the
   design. In the PDF those built-in spaces now lie between line boxes (§7's
