@@ -354,15 +354,29 @@ embedded fonts and, when `[pdf] system_fonts` is true, the installed fonts.
 A family it cannot find is assumed to have Calibri's single line. Declare the
 font files, or enable system fonts, for Word lines as high as HTML's.
 
-The PDF keeps the same geometry. Typst's own leading is the gap between one
-line's bottom edge and the next line's top edge, which sits at the cap
-height, so `writer-doc` measures the body font's cap height and sets the
-leading to the pitch less that box, and the paragraph spacing to the leading
-plus `text.paragraph_spacing`. Lines are then the multiple of the size apart
-and a paragraph break adds exactly the spacing, in all three formats; named
-styles and furniture lines follow the same rule at their own size. A Typst
-template that delegates to `writer-doc` inherits this, and one that sets
-`par(leading:)` itself overrides it.
+The PDF keeps the same geometry and builds it as Word does. A line is a box
+as tall as the line pitch, and the boxes of one paragraph stack with nothing
+between them. The box holds the font's ascent above the baseline (less when
+the line height is smaller than the font's own), or four fifths of the pitch
+when the line height is a length. For that, `writer-doc` sets the top and
+bottom edge of the text from the font's metrics and Typst's leading to zero.
+Lines are then the multiple of the size apart and a paragraph break adds
+exactly the spacing, in all three formats; named styles and furniture lines
+follow the same rule at their own size. A Typst template that delegates to
+`writer-doc` inherits this; [the PDF
+template](customization.md#generated-typst-pdf-template) lists what it means
+for a template's own rules.
+
+HTML has the same pitch and the same spaces. CSS centres the text in its line
+box, where Word and the PDF hang it from the font's ascent. A line whose size
+or line height differs from the body's can therefore sit a little higher or
+lower against the body text than in the other two outputs: under 1 pt for
+headings and title lines at usual line heights, and more only for large text
+on a line height far from the font's own.
+
+Each output keeps its own default for a key the design leaves unset, as the
+table shows. Set `text.size`, `text.line_height` and `text.paragraph_spacing`
+when the three outputs should agree.
 
 In Word, `text.paragraph_spacing` becomes the space after Body Text and First
 Paragraph and the document's default space after. Other Word styles keep their
@@ -526,10 +540,10 @@ style instead of adding one: the keys you set replace the built-in values and
 every other property, such as an outline level or a contents-list indent,
 keeps its built-in value. Word applies the result wherever writer uses the
 style, so `writer check` does not report such a name as unused. The same holds
-for `Header`, the style of the header lines. The PDF applies the same names to
-the elements listed below. HTML applies named styles to divs only.
+for `Header`, the style of the header lines. The PDF and HTML apply the same
+names to the elements listed below.
 
-| Element in the PDF | Style names |
+| Element | Style names |
 |---|---|
 | Headings of a level | `Heading 1` to `Heading 6` |
 | Headings left out of the contents list | `Heading 1 Unlisted` to `Heading 6 Unlisted`, laid over `Heading N` |
@@ -539,17 +553,24 @@ the elements listed below. HTML applies named styles to divs only.
 | Captions of tables and of images | `Table Caption` and `Image Caption`, laid over `Caption` |
 | Table cells | `Compact` |
 | The lines of the title block | `Title`, `Subtitle`, `Author`, `Date` |
-| Header and footer lines (font and line height) | `Header`, `footer` |
+| Header and footer lines in the PDF (font and line height) | `Header`, `footer` |
 
-In the PDF, `space_before` and `space_after` of these styles are added to a
-full line, as in Word: a heading with `space_before = "20pt"` starts 20 pt
-plus one line below the text above it. Where two styled blocks meet, the
-larger of the two spaces applies; Word adds them. The first line of the title
-block keeps its `space_before` at the top of the page. `Subtitle`, `Author`
-and `Date` follow `Title`'s `align`; set their other keys on each style.
-A caption uses the style's text keys, `align` and `line_height` only, and a
-table cell takes `space_before` and `space_after` as padding above and below
-its text.
+`space_before` and `space_after` are spaces between line boxes ([body
+text](#body-text)), in all three outputs: a heading with `space_before =
+"20pt"` has 20 pt between the last line box above it and its own first one.
+Where two blocks meet, the larger of the upper block's space after and the
+lower block's space before applies, never their sum. A body paragraph counts
+with `text.paragraph_spacing` after it and no space before, so a heading with
+`space_before = "4pt"` still stands the paragraph spacing below a paragraph.
+The first block of the document keeps its `space_before` at the top of the
+first page; a block that starts a later page of the PDF or of Word loses it.
+For a heading, a title line or a contents entry, a key that the style leaves
+unset keeps each output's built-in space, and the three differ: set both keys
+where the outputs should agree. `Subtitle`, `Author` and `Date` follow
+`Title`'s `align` unless they set their own; set their other keys on each
+style, because only Word hands `Title`'s down to them. A caption uses the
+style's text keys, `align` and `line_height` only, and a table cell takes
+`space_before` and `space_after` as padding above and below its text.
 
 A font name that ends in a weight, such as `Source Sans 3 SemiBold`, selects
 that face in both outputs: Word by the name, the PDF as the family `Source
@@ -558,14 +579,18 @@ Sans 3` at weight 600.
 These names restyle Word only: `Body Text`, `First Paragraph`, `Block Text`,
 `Footnote Text`, `Abstract Title`, `Abstract`, `Bibliography`, `Definition
 Term`, `Definition`, `Source Code`, `Figure` and `Captioned Figure`. A design
-that declares none of the names in the table leaves the PDF as it was.
+that declares none of the names in the table adds none of these rules to the
+PDF or to HTML.
 
-In Word, `space_before` and `space_after` of a div's style, of `Header` and of
-`footer` surround the whole block: Word drops them between consecutive
-paragraphs of the same style, as HTML and PDF space a div rather than the
-paragraphs inside it. Every other built-in name keeps them between
-consecutive paragraphs, because each body paragraph, heading or contents entry
-is a block of its own: `space_after` on `Body Text` separates body paragraphs.
+A div is one block in all three outputs: its style's `space_before` and
+`space_after` surround the whole div, and the paragraphs inside it keep the
+body's paragraph spacing between themselves. Two divs of the same style in a
+row are two blocks, with the larger of their two spaces between them. For
+lines that belong together without a gap, such as the lines of an address,
+use line breaks inside one paragraph. The lines of `Header` and of `footer`
+form one block with no space between them. Every other built-in name is a
+block per body paragraph, heading or contents entry: `space_after` on `Body
+Text` separates body paragraphs in Word.
 
 | Key | Type / unit | Default and effect |
 |---|---|---|

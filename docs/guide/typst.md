@@ -91,6 +91,12 @@ template](customization.md#generated-typst-pdf-template). `writer-doc` takes
 `title-block: none` to leave the title block out and a function `(meta, theme)
 => content` to draw another one.
 
+With a design, `writer-doc` sets the top and bottom edge of the text and a
+leading of zero, so that lines and the spaces between blocks match Word and
+HTML. A document that sets `par(leading:)`, `par(spacing:)` or a first-line
+indent of its own after the `writer-doc` line should read the notes on [the
+PDF template](customization.md#generated-typst-pdf-template) first.
+
 A template that does not import the package can read the raw values, where
 lengths are points, colors are lowercase hex strings and unset keys are
 `none`:
