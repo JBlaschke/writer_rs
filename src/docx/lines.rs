@@ -6,6 +6,10 @@
 //! 1.22, Source Sans 3 1.42). Writer divides the multiple by the single line
 //! of the font it applies to, so a Word line is `n × size` as in the other
 //! formats while still scaling with each paragraph's size.
+//!
+//! The PDF lays its lines out as Word's line box (design.md §6.2), so the
+//! Typst package gets the same single line and the part of it above the
+//! baseline for every family the design names ([`WordLines::to_json`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -21,11 +25,22 @@ use crate::design::{Design, FontRef, LineHeight};
 /// read.
 pub const DEFAULT_SINGLE_LINE: f64 = 2500.0 / 2048.0;
 
-/// Single lines of the design's font families, in ems.
+/// A font's line metrics in ems, as Word reads them.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LineMetrics {
+    /// The height of a single line.
+    pub single: f64,
+    /// The part of a single line above the baseline.
+    pub ascent: f64,
+}
+
+/// Line metrics of the design's font families, in ems.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct WordLines {
-    /// Keyed by lowercase family name.
+    /// Single lines, keyed by lowercase family name.
     single: BTreeMap<String, f64>,
+    /// Ascents of the families read from a font, keyed the same way.
+    ascent: BTreeMap<String, f64>,
 }
 
 impl WordLines {
@@ -39,17 +54,27 @@ impl WordLines {
     pub fn load(
         design: &Design, font_paths: &[PathBuf], system_fonts: bool,
     ) -> Self {
-        let mut lines = Self::default();
         let multiple = |height: Option<LineHeight>| {
             matches!(height, Some(LineHeight::Multiple(_)))
         };
-        if !design.declared
-            || !(multiple(design.text.line_height)
-                || design
-                    .styles
-                    .values()
-                    .any(|style| multiple(style.line_height)))
+        if multiple(design.text.line_height)
+            || design.styles.values().any(|style| multiple(style.line_height))
         {
+            Self::load_declared(design, font_paths, system_fonts)
+        } else {
+            Self::default()
+        }
+    }
+
+    /// Reads the line metrics of the families a declared design names,
+    /// whatever its line heights: the PDF lays every line of a declared
+    /// design out as Word's line box (design.md §6.2). The sources are
+    /// those of [`load`](Self::load).
+    pub fn load_declared(
+        design: &Design, font_paths: &[PathBuf], system_fonts: bool,
+    ) -> Self {
+        let mut lines = Self::default();
+        if !design.declared {
             return lines;
         }
         let mut missing = families(design);
@@ -106,7 +131,26 @@ impl WordLines {
         (n * 240.0 / self.single_line(family)).round() as u32
     }
 
-    /// Picks each missing family's regular face from one source.
+    /// The metrics as the Typst package reads them (design.md §6.2): one
+    /// `{"single": s, "ascent": a}` per family read from a font, under the
+    /// family in lower case and in family order.
+    pub fn to_json(&self) -> serde_json::Map<String, serde_json::Value> {
+        self.single
+            .iter()
+            .filter_map(|(family, single)| {
+                let ascent = self.ascent.get(family)?;
+                let metrics =
+                    serde_json::json!({"single": single, "ascent": ascent});
+                Some((family.clone(), metrics))
+            })
+            .collect()
+    }
+
+    /// Picks each missing family's regular face from one source. A family
+    /// that ends in a weight's name ("Source Sans 3 SemiBold", the name
+    /// Word selects that face by) may be filed under the family alone, so
+    /// it is also looked up without that word and recorded under both
+    /// names.
     fn resolve<'a>(
         &mut self, missing: &mut BTreeSet<String>,
         infos: impl Iterator<Item = &'a FontInfo>,
@@ -116,13 +160,20 @@ impl WordLines {
             return;
         }
         let book = FontBook::from_infos(infos.cloned());
-        missing.retain(|family| {
-            let found = book
-                .select(family, FontVariant::default())
+        let read = |family: &str| {
+            book.select(family, FontVariant::default())
                 .and_then(&load)
-                .and_then(|font| single_line(&font));
-            if let Some(value) = found {
-                self.single.insert(family.clone(), value);
+                .and_then(|font| line_metrics(&font))
+        };
+        missing.retain(|family| {
+            let base = base_family(family);
+            let found = read(family).or_else(|| base.and_then(read));
+            if let Some(metrics) = found {
+                for name in [Some(family.as_str()), base].into_iter().flatten()
+                {
+                    self.single.entry(name.into()).or_insert(metrics.single);
+                    self.ascent.entry(name.into()).or_insert(metrics.ascent);
+                }
             }
             found.is_none()
         });
@@ -144,12 +195,19 @@ impl WordLines {
 /// descent and the external leading, the part of the `hhea` line gap that
 /// exceeds their difference from the `hhea` ascent plus descent.
 pub fn single_line(font: &Font) -> Option<f64> {
-    sfnt_single_line(font.data(), font.index())
+    line_metrics(font).map(|metrics| metrics.single)
 }
 
-/// [`single_line`] read from the `head`, `hhea` and `OS/2` tables of face
+/// Word's line metrics of `font` in ems: its [`single_line`] and the part
+/// of it above the baseline. Word puts the `hhea` descent below the
+/// baseline and the rest of the single line above it.
+pub fn line_metrics(font: &Font) -> Option<LineMetrics> {
+    sfnt_line_metrics(font.data(), font.index())
+}
+
+/// [`line_metrics`] read from the `head`, `hhea` and `OS/2` tables of face
 /// `index` in an sfnt file or collection.
-fn sfnt_single_line(data: &[u8], index: u32) -> Option<f64> {
+fn sfnt_line_metrics(data: &[u8], index: u32) -> Option<LineMetrics> {
     let u16_at = |at: usize| {
         data.get(at..at + 2)
             .map(|bytes| u16::from_be_bytes([bytes[0], bytes[1]]))
@@ -186,8 +244,25 @@ fn sfnt_single_line(data: &[u8], index: u32) -> Option<f64> {
         }
         None => ascent + descent + gap,
     };
-    let value = height / units;
-    (value.is_finite() && value > 0.0).then_some(value)
+    let single = height / units;
+    let ascent = (height - descent) / units;
+    (single.is_finite() && single > 0.0)
+        .then_some(LineMetrics { single, ascent })
+}
+
+/// The words that name a face's weight at the end of a family name
+/// (design.md §8.7), in lower case and without hyphens.
+const WEIGHT_WORDS: [&str; 14] = [
+    "thin", "hairline", "extralight", "ultralight", "light", "regular",
+    "medium", "semibold", "demibold", "bold", "extrabold", "ultrabold",
+    "black", "heavy",
+];
+
+/// A lowercase family name without the weight's name it ends in, when one
+/// follows at least one other word.
+fn base_family(family: &str) -> Option<&str> {
+    let (base, last) = family.rsplit_once(' ')?;
+    WEIGHT_WORDS.contains(&last.replace('-', "").as_str()).then_some(base)
 }
 
 /// The design's font families, lowercase as [`FontBook::select`] expects.
@@ -235,6 +310,18 @@ mod tests {
     }
 
     #[test]
+    fn line_metrics_put_the_hhea_descent_below_the_baseline() {
+        // DejaVu Sans Mono: a single line of 2384 units with an hhea
+        // descent of 483. Libertinus Serif: 1140 with a descent of 246.
+        let mono = line_metrics(&embedded("DejaVu Sans Mono")).unwrap();
+        assert!((mono.single - 2384.0 / 2048.0).abs() < 1e-9, "{mono:?}");
+        assert!((mono.ascent - 1901.0 / 2048.0).abs() < 1e-9, "{mono:?}");
+        let serif = line_metrics(&embedded("Libertinus Serif")).unwrap();
+        assert!((serif.single - 1.14).abs() < 1e-9, "{serif:?}");
+        assert!((serif.ascent - 0.894).abs() < 1e-9, "{serif:?}");
+    }
+
+    #[test]
     fn auto_line_divides_the_multiple_by_the_single_line() {
         let lines = WordLines::default().with("Source Sans 3", 1.424);
         assert_eq!(lines.auto_line(1.35, Some("source sans 3")), 228);
@@ -262,6 +349,66 @@ mod tests {
                 < 1e-9
         );
         assert_eq!(lines.single_line(Some("Calibri")), DEFAULT_SINGLE_LINE);
+    }
+
+    #[test]
+    fn load_declared_reads_families_without_a_multiple() {
+        let mut design = Design { declared: true, ..Design::default() };
+        design.fonts.body = Some(DesignFont {
+            family: "DejaVu Sans Mono".into(),
+            files: Vec::new(),
+        });
+        design.fonts.heading = Some(DesignFont {
+            family: "No Such Family".into(),
+            files: Vec::new(),
+        });
+        let lines = WordLines::load_declared(&design, &[], false);
+        assert_eq!(
+            serde_json::Value::Object(lines.to_json()),
+            serde_json::json!({"dejavu sans mono": {
+                "single": 2384.0 / 2048.0, "ascent": 1901.0 / 2048.0,
+            }})
+        );
+        let undeclared = Design { declared: false, ..design };
+        assert_eq!(
+            WordLines::load_declared(&undeclared, &[], false),
+            WordLines::default()
+        );
+        // A single line recorded by hand has no ascent to send.
+        let by_hand = WordLines::default().with("Calibri", 1.25);
+        assert!(by_hand.to_json().is_empty());
+    }
+
+    #[test]
+    fn a_family_named_by_a_weight_takes_its_familys_lines() {
+        assert_eq!(
+            base_family("source sans 3 semibold"),
+            Some("source sans 3")
+        );
+        assert_eq!(base_family("inter extra-bold"), Some("inter"));
+        assert_eq!(base_family("source sans 3"), None);
+        assert_eq!(base_family("black"), None);
+        let mut design = Design { declared: true, ..Design::default() };
+        design.styles.insert(
+            "Heading 3".into(),
+            crate::design::Style {
+                font: Some(FontRef::Family("DejaVu Sans Mono Bold".into())),
+                line_height: Some(LineHeight::Multiple(1.2)),
+                ..Default::default()
+            },
+        );
+        let lines = WordLines::load(&design, &[], false);
+        let expected = 2384.0 / 2048.0;
+        for family in ["DejaVu Sans Mono Bold", "DejaVu Sans Mono"] {
+            assert!(
+                (lines.single_line(Some(family)) - expected).abs() < 1e-9,
+                "{family}"
+            );
+        }
+        assert_eq!(
+            lines.to_json().keys().collect::<Vec<_>>(),
+            ["dejavu sans mono", "dejavu sans mono bold"]
+        );
     }
 
     /// A copy of `font` whose OS/2 Windows ascent is `ascent`.

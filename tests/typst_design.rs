@@ -15,7 +15,7 @@ use writer::design::{Design, Layer, Origin, PathMode, merge};
 use writer::pipeline::{self, BuildOptions, WorldSlot};
 use writer::typst::compile::compile_document;
 use writer::typst::sourcemap::SourceMap;
-use writer::typst::world::{MainFile, WriterWorld, world_inputs};
+use writer::typst::world::{MainFile, WriterWorld, design_input, world_inputs};
 
 fn design(value: serde_json::Value, root: &Path) -> Design {
     merge(&[Layer {
@@ -42,7 +42,11 @@ fn inputs_are_absent_without_design_and_virtualize_furniture_images() {
     );
     let value: serde_json::Value =
         serde_json::from_str(&inputs["writer-design"]).unwrap();
-    assert_eq!(value, prepared.design.to_json(PathMode::Virtual(&assets)));
+    // The input is the design with the line metrics of its fonts on top
+    // (design.md §3.3); no font file here holds the fixture's family.
+    let mut expected = prepared.design.to_json(PathMode::Virtual(&assets));
+    expected["lines"] = serde_json::json!({});
+    assert_eq!(value, expected);
     assert!(
         value["page"]["header"]["first"]["image"]["path"]
             .as_str()
@@ -452,4 +456,57 @@ fn an_explicit_design_argument_beats_the_input_and_none_keeps_the_defaults() {
             "design: {argument}"
         );
     }
+}
+
+#[test]
+fn design_input_carries_the_line_metrics_of_the_designs_fonts() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let mut config = Config::default();
+    config.pdf.system_fonts = false;
+    let (font, _) = writer::typst::fonts::embedded()
+        .find(|(_, info)| info.family == "Libertinus Serif")
+        .unwrap();
+    let path = root.join("libertinus.otf");
+    std::fs::write(&path, font.data()).unwrap();
+    let named = design(
+        serde_json::json!({
+            "fonts": {
+                "body": "DejaVu Sans Mono",
+                "heading": {"family": "Libertinus Serif", "files": [path]},
+                "mono": "No Such Family",
+            },
+            "styles": {
+                "Heading 3": {"font": "DejaVu Sans Mono Bold"},
+                "Quote": {"font": "New Computer Modern"},
+            },
+        }),
+        root,
+    );
+    let assets = AssetRegistry::new();
+    let input = design_input(&config, &named, PathMode::Virtual(&assets));
+    assert_eq!(
+        input["lines"],
+        serde_json::json!({
+            "dejavu sans mono": {"single": 1.1640625, "ascent": 0.92822265625},
+            "dejavu sans mono bold": {
+                "single": 1.1640625, "ascent": 0.92822265625
+            },
+            "libertinus serif": {"single": 1.14, "ascent": 0.894},
+            "new computer modern": {"single": 1.417, "ascent": 1.127},
+        })
+    );
+    assert_eq!(
+        input.as_object().unwrap().keys().collect::<Vec<_>>(),
+        ["fonts", "text", "colors", "page", "styles", "lines"]
+    );
+    assert!(input["lines"].get("no such family").is_none());
+
+    let sized = design(serde_json::json!({"text": {"size": "11pt"}}), root);
+    let input = design_input(&config, &sized, PathMode::Virtual(&assets));
+    assert_eq!(input["lines"], serde_json::json!({}));
+
+    let input =
+        design_input(&config, &Design::default(), PathMode::Virtual(&assets));
+    assert!(input.is_null());
 }

@@ -18,7 +18,7 @@ use crate::markdown::frontmatter::split_front_matter;
 use crate::markdown::include::{include_path, raw_directive_info};
 use crate::notebook::nbformat::{self, CellType};
 use crate::typst::emit::{self, AssetPaths, EmitOptions, IncludeRun};
-use crate::typst::world::WriterWorld;
+use crate::typst::world::{WriterWorld, design_input};
 
 struct File {
     path: PathBuf,
@@ -148,7 +148,7 @@ fn design_files(
             paths.images.insert(source.clone(), path.clone());
         }
     }
-    let json = design.to_json(PathMode::Export(&paths));
+    let json = design_input(&prepared.config, design, PathMode::Export(&paths));
     let mut bytes = serde_json::to_vec_pretty(&json)?;
     bytes.push(b'\n');
     let mut files = vec![File {

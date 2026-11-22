@@ -18,6 +18,7 @@ use typst_kit::fonts::{FontPath, FontStore};
 use crate::assets::registry::{AssetData, AssetRegistry};
 use crate::config::{Config, Toc};
 use crate::design::{Design, PathMode};
+use crate::docx::lines::WordLines;
 use crate::error::{Diagnostics, Error, Result};
 
 use super::package::PackageStore;
@@ -621,10 +622,27 @@ pub fn world_inputs(
     if design.declared {
         inputs.insert(
             "writer-design".into(),
-            design.to_json(PathMode::Virtual(assets)).to_string(),
+            design_input(config, design, PathMode::Virtual(assets)).to_string(),
         );
     }
     inputs
+}
+
+/// The design as the Typst package reads it: the design's JSON (design.md
+/// §3.3) and, under `lines`, the line metrics of the font families it names
+/// (§6.2), read from the PDF's font sources. `null` for an undeclared
+/// design.
+pub fn design_input(
+    config: &Config, design: &Design, paths: PathMode<'_>,
+) -> serde_json::Value {
+    let mut json = design.to_json(paths);
+    if let Some(object) = json.as_object_mut() {
+        let lines = WordLines::load_declared(
+            design, &config.pdf.font_paths, config.pdf.system_fonts,
+        );
+        object.insert("lines".into(), lines.to_json().into());
+    }
+    json
 }
 
 fn libraries(

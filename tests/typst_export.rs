@@ -1107,6 +1107,12 @@ fn exported_designs_compile_with_their_copied_images_fonts_and_styles() {
     assert_eq!(design["page"]["paper"], json!("us-letter"));
     assert_eq!(design["styles"]["Recipient"]["size"], json!(15.0));
     assert!(design.get("declared").is_none());
+    // The line metrics of the design's fonts travel with the export
+    // (design.md §3.3): the renamed font keeps Libertinus Serif's.
+    assert_eq!(
+        design["lines"],
+        json!({"libertinus fixme": {"single": 1.14, "ascent": 0.894}})
+    );
     let main =
         String::from_utf8(files[Path::new("letter.typ")].clone()).unwrap();
     assert!(
