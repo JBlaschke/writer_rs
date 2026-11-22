@@ -1,0 +1,17 @@
+# Layer 0, page geometry (R13 §4.3). Groups: PAGE (T108); the footer slot is
+# PAGE_NUMBERS (T116). page.columns, page.background and page.header stay
+# unset: their default is "none", which a key cannot say.
+
+[design.page]
+paper         = "a4"
+margin        = "25mm"                    # D5
+header_offset = "12.5mm"
+footer_offset = "12.5mm"
+print         = "margin-boxes"
+
+# The page number on every page (D6 pending: is page 1 numbered?).
+[design.page.footer]
+lines = ["{page}"]
+align = "center"
+size  = "0.75em"
+color = "muted"

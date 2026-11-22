@@ -1,0 +1,4 @@
+# Layer 0, images (R13 §4.3 and M6). Group: IMAGES (T110).
+
+[design.image]
+dpi = 96.0

@@ -1,0 +1,7 @@
+# Layer 0, list geometry (R13 §4.3). Group: LISTS (T112). em is of text.size.
+
+[design.lists]
+tight_spacing = "0.25em"                  # D17
+indent        = "2.75em"
+marker_gap    = "0.75em"
+bullets       = ["•", "◦", "▪"]

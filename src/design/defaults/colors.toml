@@ -1,0 +1,22 @@
+# Layer 0, the palette (R13 §4.3 and M8; the default theme's light values).
+# Groups: COLORS (T108) for text to background; PALETTE (T111) for border,
+# code_bg, highlight, error and the callout colours.
+
+[design.colors]
+text       = "#23262b"
+accent     = "#366b76"
+muted      = "#5c626d"
+link       = "#235c93"
+background = "#ffffff"
+border     = "#c8c9c3"
+code_bg    = "#f2f1ec"
+highlight  = "#fff0b3"
+error      = "#cc0000"
+
+[design.colors.callout]
+note      = "#326b9a"
+tip       = "#2c7758"
+important = "#7954a1"
+warning   = "#946118"
+caution   = "#b24438"
+other     = "#5c626d"

@@ -1,0 +1,9 @@
+# Layer 0, font roles (R13 §4.3, D7 pending: these are the PDF's families,
+# R13 M7's Option B, until writer ships its own). Groups: FONTS (T108);
+# math is MATH_FONT (T113).
+
+[design.fonts]
+body    = "Libertinus Serif"
+heading = "Libertinus Serif"
+mono    = "DejaVu Sans Mono"
+math    = "New Computer Modern Math"

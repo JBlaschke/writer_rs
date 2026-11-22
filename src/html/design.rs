@@ -413,6 +413,12 @@ fn layered(base: Option<&Style>, top: Option<&Style>) -> Option<Style> {
         keep_together: top.keep_together || base.keep_together,
         keep_with_next: top.keep_with_next || base.keep_with_next,
         frame: None,
+        case: top.case.or(base.case),
+        letter_spacing: top.letter_spacing.or(base.letter_spacing),
+        indent: top.indent.or(base.indent),
+        border: top.border.or(base.border),
+        fill: top.fill.or(base.fill),
+        padding: top.padding.or(base.padding),
     })
 }
 

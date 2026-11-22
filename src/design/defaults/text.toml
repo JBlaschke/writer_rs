@@ -1,0 +1,15 @@
+# Layer 0, body text (R13 §4.3). Groups: TEXT (T108); the typography keys
+# hyphenate to ligatures are TYPOGRAPHY (T118). em is of text.size.
+
+[design.text]
+size              = "11pt"
+line_height       = 1.6                   # D3
+paragraph_spacing = "1.15em"              # D4
+justify           = false
+measure           = "42em"                # the screen line length
+screen_scale      = 1.0909090909090908    # 12/11: HTML on screen at 12pt (D8)
+hyphenate         = false
+widows            = 2
+orphans           = 2
+kerning           = true
+ligatures         = true

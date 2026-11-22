@@ -8,6 +8,13 @@ use crate::error::{Error, Result};
 pub(crate) const LENGTH: &str =
     "expected a length with a unit such as \"11pt\" or \"22mm\"";
 
+/// The colour tokens, in resolution order: `[design.colors]` without
+/// `callout`.
+pub(crate) const TOKENS: [&str; 9] = [
+    "text", "accent", "muted", "link", "background", "border", "code_bg",
+    "highlight", "error",
+];
+
 /// Parses a non-negative finite length in pt, mm, cm, or in.
 pub fn parse_length(text: &str) -> Result<Pt> {
     let text = text.trim();
@@ -26,11 +33,26 @@ pub fn parse_length(text: &str) -> Result<Pt> {
     Err(Error::Config(format!("{LENGTH}, got {text:?}")))
 }
 
-/// Parses a length that may be negative, such as a frame's `offset`.
-pub(crate) fn parse_signed_length(text: &str) -> Result<Pt> {
+/// Parses a non-negative length in pt, mm, cm, in, or em, where one em is
+/// `em`. The error is [`parse_length`]'s.
+pub(crate) fn parse_length_em(text: &str, em: Pt) -> Result<Pt> {
+    if let Some(number) = text.trim().strip_suffix("em")
+        && let Ok(number) = number.trim().parse::<f64>()
+        && number.is_finite()
+        && number >= 0.0
+        && (number * em.0).is_finite()
+    {
+        return Ok(Pt(number * em.0));
+    }
+    parse_length(text)
+}
+
+/// Parses a length that may be negative, such as a frame's `offset`; one
+/// em is `em`.
+pub(crate) fn parse_signed_length(text: &str, em: Pt) -> Result<Pt> {
     match text.trim().strip_prefix('-') {
-        Some(rest) => parse_length(rest).map(|length| Pt(-length.0)),
-        None => parse_length(text),
+        Some(rest) => parse_length_em(rest, em).map(|length| Pt(-length.0)),
+        None => parse_length_em(text, em),
     }
     .map_err(|_| {
         Error::Config(format!(
@@ -61,12 +83,16 @@ pub fn parse_color(text: &str, colors: &Colors) -> Result<Color> {
             "muted" => colors.muted,
             "link" => colors.link,
             "background" => colors.background,
+            "border" => colors.border,
+            "code_bg" => colors.code_bg,
+            "highlight" => colors.highlight,
+            "error" => colors.error,
             _ => None,
         };
         if let Some(color) = color {
             return Ok(color);
         }
-        if ["text", "accent", "muted", "link", "background"].contains(&text) {
+        if TOKENS.contains(&text) {
             return Err(Error::Config(format!(
                 "colour token {text:?} is unset"
             )));
@@ -107,9 +133,10 @@ pub fn parse_align(text: &str) -> Result<Align> {
     }
 }
 
-pub(crate) fn line_height(value: &Value) -> Result<LineHeight> {
+/// A multiple, or an exact length where one em is `em`.
+pub(crate) fn line_height(value: &Value, em: Pt) -> Result<LineHeight> {
     match value {
-        Value::String(text) => parse_length(text).map(LineHeight::Exact),
+        Value::String(text) => parse_length_em(text, em).map(LineHeight::Exact),
         _ => value.as_f64().filter(|n| n.is_finite() && *n > 0.0)
             .map(LineHeight::Multiple).ok_or_else(|| Error::Config(format!(
                 "expected a positive line-height multiple or a length, got {value}"
@@ -159,15 +186,41 @@ mod tests {
         for value in [json!(50), json!(550), json!(1000), json!(400.0)] {
             assert!(parse_weight(&value).is_err());
         }
-        assert!(line_height(&json!(0)).is_err());
-        assert_eq!(parse_signed_length("-1in").unwrap(), Pt(-72.0));
-        assert_eq!(parse_signed_length("2pt").unwrap(), Pt(2.0));
+        let em = Pt(10.0);
+        assert!(line_height(&json!(0), em).is_err());
+        assert_eq!(parse_signed_length("-1in", em).unwrap(), Pt(-72.0));
+        assert_eq!(parse_signed_length("2pt", em).unwrap(), Pt(2.0));
         for input in ["--1pt", "-", "-12px", "1pt-"] {
-            assert!(parse_signed_length(input).is_err(), "{input}");
+            assert!(parse_signed_length(input, em).is_err(), "{input}");
         }
         assert_eq!(
-            line_height(&json!("12.1pt")).unwrap(),
+            line_height(&json!("12.1pt"), em).unwrap(),
             LineHeight::Exact(Pt(12.1))
+        );
+    }
+
+    #[test]
+    fn em_lengths_are_of_the_given_size() {
+        let em = Pt(12.0);
+        for (input, points) in
+            [("1.5em", 18.0), ("0em", 0.0), (" 2 em ", 24.0), ("3pt", 3.0)]
+        {
+            assert_eq!(parse_length_em(input, em).unwrap(), Pt(points));
+        }
+        assert_eq!(parse_signed_length("-0.5em", em).unwrap(), Pt(-6.0));
+        assert_eq!(
+            line_height(&json!("1.25em"), em).unwrap(),
+            LineHeight::Exact(Pt(15.0))
+        );
+        for input in ["-1em", "1rem", "em", "NaNem", "1e999em"] {
+            let error = parse_length_em(input, em).unwrap_err().to_string();
+            assert!(error.contains(LENGTH), "{input}: {error}");
+        }
+        // parse_length itself keeps rejecting em.
+        assert!(parse_length("1em").is_err());
+        assert_eq!(
+            parse_color("code_bg", &Colors::default()).unwrap_err().to_string(),
+            "config: colour token \"code_bg\" is unset"
         );
     }
 }

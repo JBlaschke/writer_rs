@@ -2,6 +2,7 @@
 
 use serde_json::{Map, Value};
 
+use super::parse::TOKENS;
 use super::*;
 use crate::error::{Error, Result};
 
@@ -12,110 +13,36 @@ const FURNITURE: &[&str] = &[
 const STYLE: &[&str] = &[
     "font", "size", "line_height", "color", "weight", "italic", "align",
     "space_before", "space_after", "keep_together", "keep_with_next", "frame",
+    "case", "letter_spacing", "indent", "border", "fill", "padding",
+];
+const TOP: &[&str] = &[
+    "fonts", "text", "colors", "page", "styles", "lists", "table", "code",
+    "callout", "image", "footnotes", "links",
+];
+const TEXT: &[&str] = &[
+    "size", "line_height", "paragraph_spacing", "justify", "hyphenate",
+    "widows", "orphans", "kerning", "ligatures", "measure", "screen_scale",
 ];
 
+/// Resolves a merged table; em lengths are of the style's size inside a
+/// style, else of `text.size`, else of layer 0's `text.size`.
 pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
-    keys(table, "design", &["fonts", "text", "colors", "page", "styles"])?;
+    keys(table, "design", TOP)?;
+    let declared = !table.is_empty();
     let mut design =
-        Design { declared: !table.is_empty(), ..Design::default() };
+        Design { declared, user_declared: declared, ..Design::default() };
     if let Some(value) = table.get("fonts") {
-        let map = object(value, "design.fonts")?;
-        keys(map, "design.fonts", &["body", "heading", "mono"])?;
-        design.fonts = Fonts {
-            body: map
-                .get("body")
-                .map(|v| font(v, "design.fonts.body"))
-                .transpose()?,
-            heading: map
-                .get("heading")
-                .map(|v| font(v, "design.fonts.heading"))
-                .transpose()?,
-            mono: map
-                .get("mono")
-                .map(|v| font(v, "design.fonts.mono"))
-                .transpose()?,
-        };
+        design.fonts = fonts(value)?;
     }
     if let Some(value) = table.get("text") {
-        let map = object(value, "design.text")?;
-        keys(
-            map,
-            "design.text",
-            &["size", "line_height", "paragraph_spacing", "justify"],
-        )?;
-        design.text = Text {
-            size: length(map, "size", "design.text")?,
-            line_height: optional(
-                map,
-                "line_height",
-                "design.text",
-                parse::line_height,
-            )?,
-            paragraph_spacing: length(map, "paragraph_spacing", "design.text")?,
-            justify: boolean(map, "justify", "design.text")?,
-        };
+        design.text = text_table(value)?;
     }
+    let body = design.text.size.unwrap_or_else(defaults::text_size);
     if let Some(value) = table.get("colors") {
-        let map = object(value, "design.colors")?;
-        let names = ["text", "accent", "muted", "link", "background"];
-        keys(map, "design.colors", &names)?;
-        for name in names {
-            let color = color_token(map, name, &mut Vec::new())?;
-            match name {
-                "text" => design.colors.text = color,
-                "accent" => design.colors.accent = color,
-                "muted" => design.colors.muted = color,
-                "link" => design.colors.link = color,
-                "background" => design.colors.background = color,
-                _ => unreachable!(),
-            }
-        }
+        design.colors = colors(value)?;
     }
     if let Some(value) = table.get("page") {
-        let map = object(value, "design.page")?;
-        keys(
-            map,
-            "design.page",
-            &[
-                "paper", "margin", "header_offset", "footer_offset", "print",
-                "columns", "background", "header", "footer",
-            ],
-        )?;
-        let print = match string(map, "print", "design.page")?.as_deref() {
-            None | Some("margin-boxes") => PrintMode::MarginBoxes,
-            Some("fixed") => PrintMode::Fixed,
-            Some(other) => {
-                return bad(
-                    "design.page.print",
-                    &format!("expected margin-boxes or fixed, got {other:?}"),
-                );
-            }
-        };
-        design.page = Page {
-            paper: string(map, "paper", "design.page")?,
-            margin: map
-                .get("margin")
-                .map(margin)
-                .transpose()?
-                .unwrap_or_default(),
-            header_offset: length(map, "header_offset", "design.page")?,
-            footer_offset: length(map, "footer_offset", "design.page")?,
-            print,
-            columns: map.get("columns").map(columns).transpose()?,
-            background: map
-                .get("background")
-                .map(background)
-                .transpose()?
-                .flatten(),
-            header: map
-                .get("header")
-                .map(|v| slot(v, true, &design))
-                .transpose()?,
-            footer: map
-                .get("footer")
-                .map(|v| slot(v, false, &design))
-                .transpose()?,
-        };
+        design.page = page(value, &design, body)?;
     }
     if let Some(value) = table.get("styles") {
         let map = object(value, "design.styles")?;
@@ -133,47 +60,270 @@ pub(crate) fn resolve(table: &Map<String, Value>) -> Result<Design> {
                     ),
                 );
             }
-            let path = format!("design.styles.{name}");
-            let map = object(value, &path)?;
-            keys(map, &path, STYLE)?;
-            let font = string(map, "font", &path)?.map(|family| {
-                match family.as_str() {
-                    "body" => FontRef::Body,
-                    "heading" => FontRef::Heading,
-                    "mono" => FontRef::Mono,
-                    _ => FontRef::Family(family),
-                }
-            });
-            design.styles.insert(
-                name.clone(),
-                Style {
-                    font,
-                    size: length(map, "size", &path)?,
-                    line_height: optional(
-                        map,
-                        "line_height",
-                        &path,
-                        parse::line_height,
-                    )?,
-                    color: color(map, "color", &path, &design.colors)?,
-                    weight: optional(map, "weight", &path, parse_weight)?,
-                    italic: boolean(map, "italic", &path)?,
-                    align: alignment(map, "align", &path, false)?,
-                    space_before: length(map, "space_before", &path)?,
-                    space_after: length(map, "space_after", &path)?,
-                    keep_together: boolean(map, "keep_together", &path)?
-                        .unwrap_or(false),
-                    keep_with_next: boolean(map, "keep_with_next", &path)?
-                        .unwrap_or(false),
-                    frame: map
-                        .get("frame")
-                        .map(|value| frame(value, name, &path))
-                        .transpose()?,
-                },
-            );
+            let style = style(name, value, &design.colors, body)?;
+            design.styles.insert(name.clone(), style);
         }
     }
+    super::elements::resolve(table, &mut design, body)?;
     Ok(design)
+}
+
+fn fonts(value: &Value) -> Result<Fonts> {
+    let map = object(value, "design.fonts")?;
+    keys(map, "design.fonts", &["body", "heading", "mono", "math"])?;
+    let role = |name: &str| {
+        map.get(name)
+            .map(|value| font(value, &format!("design.fonts.{name}")))
+            .transpose()
+    };
+    Ok(Fonts {
+        body: role("body")?,
+        heading: role("heading")?,
+        mono: role("mono")?,
+        math: role("math")?,
+    })
+}
+
+fn text_table(value: &Value) -> Result<Text> {
+    let path = "design.text";
+    let map = object(value, path)?;
+    keys(map, path, TEXT)?;
+    if let Some(size) = map.get("size").and_then(Value::as_str)
+        && size.trim().ends_with("em")
+    {
+        return bad(
+            "design.text.size",
+            &format!(
+                "em is relative to text.size; expected a length with an \
+                 absolute unit such as \"11pt\", got {size:?}"
+            ),
+        );
+    }
+    let size = length(map, "size", path, Pt(0.0))?;
+    let em = size.unwrap_or_else(defaults::text_size);
+    let lines = |key: &str| {
+        optional(map, key, path, |value| {
+            value
+                .as_u64()
+                .filter(|lines| *lines >= 1)
+                .and_then(|lines| u8::try_from(lines).ok())
+                .ok_or_else(|| {
+                    Error::Config(format!(
+                        "expected a number of lines from 1 to 255, got {value}"
+                    ))
+                })
+        })
+    };
+    Ok(Text {
+        size,
+        line_height: optional(map, "line_height", path, |value| {
+            parse::line_height(value, em)
+        })?,
+        paragraph_spacing: length(map, "paragraph_spacing", path, em)?,
+        justify: boolean(map, "justify", path)?,
+        hyphenate: boolean(map, "hyphenate", path)?,
+        widows: lines("widows")?,
+        orphans: lines("orphans")?,
+        kerning: boolean(map, "kerning", path)?,
+        ligatures: boolean(map, "ligatures", path)?,
+        measure: length(map, "measure", path, em)?,
+        screen_scale: super::elements::positive(map, "screen_scale", path)?,
+    })
+}
+
+fn colors(value: &Value) -> Result<Colors> {
+    let path = "design.colors";
+    let map = object(value, path)?;
+    let mut names = TOKENS.to_vec();
+    names.push("callout");
+    keys(map, path, &names)?;
+    let mut colors = Colors::default();
+    for name in TOKENS {
+        let color = color_token(map, name, &mut Vec::new())?;
+        match name {
+            "text" => colors.text = color,
+            "accent" => colors.accent = color,
+            "muted" => colors.muted = color,
+            "link" => colors.link = color,
+            "background" => colors.background = color,
+            "border" => colors.border = color,
+            "code_bg" => colors.code_bg = color,
+            "highlight" => colors.highlight = color,
+            "error" => colors.error = color,
+            _ => unreachable!(),
+        }
+    }
+    if let Some(value) = map.get("callout") {
+        let path = "design.colors.callout";
+        let map = object(value, path)?;
+        keys(
+            map,
+            path,
+            &["note", "tip", "important", "warning", "caution", "other"],
+        )?;
+        colors.callout = CalloutColors {
+            note: color(map, "note", path, &colors)?,
+            tip: color(map, "tip", path, &colors)?,
+            important: color(map, "important", path, &colors)?,
+            warning: color(map, "warning", path, &colors)?,
+            caution: color(map, "caution", path, &colors)?,
+            other: color(map, "other", path, &colors)?,
+        };
+    }
+    Ok(colors)
+}
+
+fn page(value: &Value, design: &Design, em: Pt) -> Result<Page> {
+    let map = object(value, "design.page")?;
+    keys(
+        map,
+        "design.page",
+        &[
+            "paper", "margin", "header_offset", "footer_offset", "print",
+            "columns", "background", "header", "footer",
+        ],
+    )?;
+    let print = match string(map, "print", "design.page")?.as_deref() {
+        None | Some("margin-boxes") => PrintMode::MarginBoxes,
+        Some("fixed") => PrintMode::Fixed,
+        Some(other) => {
+            return bad(
+                "design.page.print",
+                &format!("expected margin-boxes or fixed, got {other:?}"),
+            );
+        }
+    };
+    Ok(Page {
+        paper: string(map, "paper", "design.page")?,
+        margin: map
+            .get("margin")
+            .map(|value| sides(value, "design.page.margin", em))
+            .transpose()?
+            .unwrap_or_default(),
+        header_offset: length(map, "header_offset", "design.page", em)?,
+        footer_offset: length(map, "footer_offset", "design.page", em)?,
+        print,
+        columns: map.get("columns").map(|v| columns(v, em)).transpose()?,
+        background: map
+            .get("background")
+            .map(background)
+            .transpose()?
+            .flatten(),
+        header: map
+            .get("header")
+            .map(|v| slot(v, true, design, em))
+            .transpose()?,
+        footer: map
+            .get("footer")
+            .map(|v| slot(v, false, design, em))
+            .transpose()?,
+    })
+}
+
+/// One named style; `body` is the body size, what the style's own `size`
+/// is relative to. Its other em lengths are of the style's size.
+fn style(
+    name: &str, value: &Value, colors: &Colors, body: Pt,
+) -> Result<Style> {
+    let path = format!("design.styles.{name}");
+    let map = object(value, &path)?;
+    keys(map, &path, STYLE)?;
+    let font =
+        string(map, "font", &path)?.map(|family| match family.as_str() {
+            "body" => FontRef::Body,
+            "heading" => FontRef::Heading,
+            "mono" => FontRef::Mono,
+            _ => FontRef::Family(family),
+        });
+    let size = length(map, "size", &path, body)?;
+    let em = size.unwrap_or(body);
+    let case = match string(map, "case", &path)?.as_deref() {
+        None => None,
+        Some("upper") => Some(Case::Upper),
+        Some("smallcaps") => Some(Case::SmallCaps),
+        Some(other) => {
+            return bad(
+                &format!("{path}.case"),
+                &format!("expected upper or smallcaps, got {other:?}"),
+            );
+        }
+    };
+    Ok(Style {
+        font,
+        size,
+        line_height: optional(map, "line_height", &path, |value| {
+            parse::line_height(value, em)
+        })?,
+        color: color(map, "color", &path, colors)?,
+        weight: optional(map, "weight", &path, parse_weight)?,
+        italic: boolean(map, "italic", &path)?,
+        align: alignment(map, "align", &path, false)?,
+        space_before: length(map, "space_before", &path, em)?,
+        space_after: length(map, "space_after", &path, em)?,
+        keep_together: boolean(map, "keep_together", &path)?.unwrap_or(false),
+        keep_with_next: boolean(map, "keep_with_next", &path)?.unwrap_or(false),
+        frame: map
+            .get("frame")
+            .map(|value| frame(value, name, &path, em))
+            .transpose()?,
+        case,
+        letter_spacing: signed_length(map, "letter_spacing", &path, em)?,
+        indent: map
+            .get("indent")
+            .map(|value| indent(value, &format!("{path}.indent"), em))
+            .transpose()?,
+        border: map
+            .get("border")
+            .map(|value| border(value, &format!("{path}.border"), colors, em))
+            .transpose()?,
+        fill: color(map, "fill", &path, colors)?,
+        padding: map
+            .get("padding")
+            .map(|value| sides(value, &format!("{path}.padding"), em))
+            .transpose()?,
+    })
+}
+
+/// One length for both sides, or a table with `left` and `right`.
+fn indent(value: &Value, path: &str, em: Pt) -> Result<Indent> {
+    if let Value::String(text) = value {
+        let both = Some(context(parse::parse_length_em(text, em), path)?);
+        return Ok(Indent { left: both, right: both });
+    }
+    let map = object(value, path)?;
+    keys(map, path, &["left", "right"])?;
+    Ok(Indent {
+        left: length(map, "left", path, em)?,
+        right: length(map, "right", path, em)?,
+    })
+}
+
+fn border(
+    value: &Value, path: &str, colors: &Colors, em: Pt,
+) -> Result<Border> {
+    let map = object(value, path)?;
+    keys(map, path, &["side", "width", "color", "gap"])?;
+    let side = match string(map, "side", path)?.as_deref() {
+        None | Some("all") => BorderSide::All,
+        Some("top") => BorderSide::Top,
+        Some("bottom") => BorderSide::Bottom,
+        Some("left") => BorderSide::Left,
+        Some("right") => BorderSide::Right,
+        Some(other) => {
+            return bad(
+                &format!("{path}.side"),
+                &format!(
+                    "expected top, bottom, left, right or all, got {other:?}"
+                ),
+            );
+        }
+    };
+    Ok(Border {
+        side,
+        width: length(map, "width", path, em)?,
+        color: color(map, "color", path, colors)?,
+        gap: length(map, "gap", path, em)?,
+    })
 }
 
 fn font(value: &Value, path: &str) -> Result<Font> {
@@ -221,7 +371,7 @@ fn color_token(
         return bad(&path, "cyclic colour token reference");
     }
     visiting.push(name.into());
-    if !["text", "accent", "muted", "link", "background"].contains(&value) {
+    if !TOKENS.contains(&value) {
         return context(parse_color(value, &Colors::default()), &path)
             .map(Some);
     }
@@ -232,9 +382,11 @@ fn color_token(
     })
 }
 
-fn margin(value: &Value) -> Result<Margin> {
+/// One length for every side, or a table of optional sides: a page margin
+/// or a padding.
+pub(super) fn sides(value: &Value, path: &str, em: Pt) -> Result<Margin> {
     if let Value::String(value) = value {
-        let value = Some(context(parse_length(value), "design.page.margin")?);
+        let value = Some(context(parse::parse_length_em(value, em), path)?);
         return Ok(Margin {
             top: value,
             right: value,
@@ -242,19 +394,18 @@ fn margin(value: &Value) -> Result<Margin> {
             left: value,
         });
     }
-    let path = "design.page.margin";
     let map = object(value, path)?;
     keys(map, path, &["top", "right", "bottom", "left"])?;
     Ok(Margin {
-        top: length(map, "top", path)?,
-        right: length(map, "right", path)?,
-        bottom: length(map, "bottom", path)?,
-        left: length(map, "left", path)?,
+        top: length(map, "top", path, em)?,
+        right: length(map, "right", path, em)?,
+        bottom: length(map, "bottom", path, em)?,
+        left: length(map, "left", path, em)?,
     })
 }
 
 /// A bare count keeps the default gap and starts at the body.
-fn columns(value: &Value) -> Result<Columns> {
+fn columns(value: &Value, em: Pt) -> Result<Columns> {
     let path = "design.page.columns";
     if !value.is_object() {
         return Ok(Columns {
@@ -281,10 +432,10 @@ fn columns(value: &Value) -> Result<Columns> {
             );
         }
     };
-    Ok(Columns { count, gap: length(map, "gap", path)?, start })
+    Ok(Columns { count, gap: length(map, "gap", path, em)?, start })
 }
 
-fn frame(value: &Value, name: &str, path: &str) -> Result<Frame> {
+fn frame(value: &Value, name: &str, path: &str, em: Pt) -> Result<Frame> {
     let path = format!("{path}.frame");
     // Frames hold a div's paragraphs. A style that writer selects for its own
     // paragraphs is the base of others or recurs on every page in Word.
@@ -322,18 +473,11 @@ fn frame(value: &Value, name: &str, path: &str) -> Result<Frame> {
             );
         }
     };
-    let offset = optional(map, "offset", &path, |value| {
-        match value.as_str() {
-            Some(text) => parse::parse_signed_length(text),
-            None => Err(Error::Config(format!(
-                "expected a length with a unit, such as \"4mm\" or \"-9mm\", got {value}"
-            ))),
-        }
-    })?;
+    let offset = signed_length(map, "offset", &path, em)?;
     Ok(Frame {
-        width: length(map, "width", &path)?,
+        width: length(map, "width", &path, em)?,
         align,
-        gap: length(map, "gap", &path)?,
+        gap: length(map, "gap", &path, em)?,
         anchor,
         offset: offset.unwrap_or(Pt(0.0)),
     })
@@ -351,7 +495,7 @@ fn column_count(value: &Value, path: &str) -> Result<u8> {
         })
 }
 
-fn slot(value: &Value, header: bool, design: &Design) -> Result<Slot> {
+fn slot(value: &Value, header: bool, design: &Design, em: Pt) -> Result<Slot> {
     let path = if header {
         "design.page.header"
     } else {
@@ -360,7 +504,7 @@ fn slot(value: &Value, header: bool, design: &Design) -> Result<Slot> {
     let map = object(value, path)?;
     keys(map, path, FURNITURE)?;
     // Validate the base even when both explicit variants replace it.
-    let base = furniture(map, path, header, design)?;
+    let base = furniture(map, path, header, design, em)?;
     let variant = |name: &str| -> Result<Option<Furniture>> {
         let Some(value) = map.get(name) else {
             return Ok(base.clone());
@@ -368,20 +512,20 @@ fn slot(value: &Value, header: bool, design: &Design) -> Result<Slot> {
         let path = format!("{path}.{name}");
         let map = object(value, &path)?;
         keys(map, &path, &FURNITURE[..FURNITURE.len() - 2])?;
-        furniture(map, &path, header, design)
+        furniture(map, &path, header, design, em)
     };
     Ok(Slot { first: variant("first")?, rest: variant("rest")? })
 }
 
 fn furniture(
-    map: &Map<String, Value>, path: &str, header: bool, design: &Design,
+    map: &Map<String, Value>, path: &str, header: bool, design: &Design, em: Pt,
 ) -> Result<Option<Furniture>> {
     let align = alignment(map, "align", path, true)?.unwrap_or(if header {
         Align::Center
     } else {
         Align::Left
     });
-    let size = length(map, "size", path)?.or_else(|| {
+    let size = length(map, "size", path, em)?.or_else(|| {
         design.text.size.map(
             |size| {
                 if header { size } else { Pt(size.0 * 0.75) }
@@ -399,14 +543,15 @@ fn furniture(
     let image = map
         .get("image")
         .map(|v| {
-            image(v, &format!("{path}.image"), design.text.paragraph_spacing)
+            let spacing = design.text.paragraph_spacing;
+            image(v, &format!("{path}.image"), spacing, em)
         })
         .transpose()?;
-    let right_lines = lines(map, "right_lines", path, &design.colors)?;
-    let lines = lines(map, "lines", path, &design.colors)?;
+    let right_lines = lines(map, "right_lines", path, &design.colors, em)?;
+    let lines = lines(map, "lines", path, &design.colors, em)?;
     let rule = map
         .get("rule")
-        .map(|v| rule(v, &format!("{path}.rule"), header, &design.colors))
+        .map(|v| rule(v, &format!("{path}.rule"), header, &design.colors, em))
         .transpose()?
         .flatten();
     if image.is_none()
@@ -522,7 +667,7 @@ fn background_align(text: &str) -> Result<BackgroundAlign> {
 // `spacing` is the design's paragraph spacing, the default gap between the
 // image and the lines below it so that they are spaced like two paragraphs.
 fn image(
-    value: &Value, path: &str, spacing: Option<Pt>,
+    value: &Value, path: &str, spacing: Option<Pt>, em: Pt,
 ) -> Result<FurnitureImage> {
     if let Value::String(value) = value {
         return Ok(FurnitureImage {
@@ -539,14 +684,14 @@ fn image(
     })?;
     Ok(FurnitureImage {
         path: source.into(),
-        width: length(map, "width", path)?,
+        width: length(map, "width", path, em)?,
         align: alignment(map, "align", path, true)?,
-        gap: length(map, "gap", path)?.or(spacing),
+        gap: length(map, "gap", path, em)?.or(spacing),
     })
 }
 
 fn lines(
-    map: &Map<String, Value>, key: &str, path: &str, colors: &Colors,
+    map: &Map<String, Value>, key: &str, path: &str, colors: &Colors, em: Pt,
 ) -> Result<Vec<Line>> {
     let path = format!("{path}.{key}");
     let Some(value) = map.get(key) else {
@@ -580,7 +725,7 @@ fn lines(
                 text,
                 weight: optional(map, "weight", &path, parse_weight)?,
                 italic: boolean(map, "italic", &path)?,
-                size: length(map, "size", &path)?,
+                size: length(map, "size", &path, em)?,
                 color: color(map, "color", &path, colors)?,
             })
         })
@@ -588,7 +733,7 @@ fn lines(
 }
 
 fn rule(
-    value: &Value, path: &str, header: bool, colors: &Colors,
+    value: &Value, path: &str, header: bool, colors: &Colors, em: Pt,
 ) -> Result<Option<Rule>> {
     if value == &Value::Bool(false) {
         return Ok(None);
@@ -622,7 +767,7 @@ fn rule(
     if let Some(value) = color(map, "color", path, colors)? {
         result.color = value;
     }
-    if let Some(value) = length(map, "width", path)? {
+    if let Some(value) = length(map, "width", path, em)? {
         result.width = value;
     }
     Ok(Some(result))
@@ -654,7 +799,9 @@ pub(crate) fn keys(
     Ok(())
 }
 
-fn object<'a>(value: &'a Value, path: &str) -> Result<&'a Map<String, Value>> {
+pub(super) fn object<'a>(
+    value: &'a Value, path: &str,
+) -> Result<&'a Map<String, Value>> {
     value.as_object().ok_or_else(|| {
         Error::Config(format!("{path}: expected a table, got {value}"))
     })
@@ -666,7 +813,7 @@ fn text<'a>(value: &'a Value, path: &str) -> Result<&'a str> {
     })
 }
 
-fn optional<T>(
+pub(super) fn optional<T>(
     map: &Map<String, Value>, key: &str, path: &str,
     parse: impl FnOnce(&Value) -> Result<T>,
 ) -> Result<Option<T>> {
@@ -675,7 +822,7 @@ fn optional<T>(
         .transpose()
 }
 
-fn string(
+pub(super) fn string(
     map: &Map<String, Value>, key: &str, path: &str,
 ) -> Result<Option<String>> {
     map.get(key)
@@ -683,16 +830,29 @@ fn string(
         .transpose()
 }
 
-fn length(
-    map: &Map<String, Value>, key: &str, path: &str,
+/// A non-negative length; `em` is what one em is.
+pub(super) fn length(
+    map: &Map<String, Value>, key: &str, path: &str, em: Pt,
 ) -> Result<Option<Pt>> {
     optional(map, key, path, |value| match value.as_str() {
-        Some(value) => parse_length(value),
+        Some(value) => parse::parse_length_em(value, em),
         None => Err(Error::Config(format!("{}, got {value}", parse::LENGTH))),
     })
 }
 
-fn boolean(
+/// A length that may be negative; `em` is what one em is.
+fn signed_length(
+    map: &Map<String, Value>, key: &str, path: &str, em: Pt,
+) -> Result<Option<Pt>> {
+    optional(map, key, path, |value| match value.as_str() {
+        Some(text) => parse::parse_signed_length(text, em),
+        None => Err(Error::Config(format!(
+            "expected a length with a unit, such as \"4mm\" or \"-9mm\", got {value}"
+        ))),
+    })
+}
+
+pub(super) fn boolean(
     map: &Map<String, Value>, key: &str, path: &str,
 ) -> Result<Option<bool>> {
     optional(map, key, path, |value| {
@@ -702,7 +862,7 @@ fn boolean(
     })
 }
 
-fn color(
+pub(super) fn color(
     map: &Map<String, Value>, key: &str, path: &str, colors: &Colors,
 ) -> Result<Option<Color>> {
     map.get(key)
@@ -735,6 +895,6 @@ fn context<T>(result: Result<T>, path: &str) -> Result<T> {
     })
 }
 
-fn bad<T>(path: &str, message: &str) -> Result<T> {
+pub(super) fn bad<T>(path: &str, message: &str) -> Result<T> {
     Err(Error::Config(format!("{path}: {message}")))
 }

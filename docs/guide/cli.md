@@ -269,6 +269,7 @@ Options:
       --context         Print the HTML template context as JSON
       --licenses        Print notices for embedded third-party files and data
       --design          Print the resolved design as JSON
+      --defaults        With --design: include every built-in default and each key's origin
       --no-resolve      Print the parsed IR before reference resolution
       --default-config  Print the built-in default writer.toml (takes no INPUT)
   -h, --help            Print help

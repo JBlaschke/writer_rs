@@ -1,0 +1,9 @@
+# Layer 0, code blocks (R13 §4.3). Group: CODE (T113), with the Source Code
+# style. em is of text.size: 0.85em is 1em of the code's own size.
+
+[design.code]
+background  = "code_bg"
+padding     = "0.85em"
+radius      = "0.25em"
+line_height = 1.5
+theme       = "InspiredGitHub"
