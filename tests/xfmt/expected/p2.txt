@@ -1,0 +1,21 @@
+== p2
+   Word     PDF  screen   scr+c   print  verdict            line
+  42.14   42.15       -       -   42.75  ok                 p1 top: HA1 EFH (S16)
+  19.18   19.20   19.20   19.20   19.50  ok                 HA1 EFH → HA2 EFH (S16)
+  19.18   19.20   19.20   19.20   18.75  ok                 HA2 EFH → HA4 EFH (S16)
+  21.39   21.40   19.20   21.41   19.50  ok                 HA4 EFH → HE1 EFH (S16X)
+  20.00   20.00   20.00   20.00   19.50  ok                 HE1 EFH → HE2 EFH (S16X)
+  11.20   11.20   13.25   11.20   13.50  ok                 HE2 EFH → HF1 EFH (X09)
+   9.00    9.00    9.00    9.00    9.00  ok                 HF1 EFH → HF2 EFH (X09)
+   9.00    9.00    9.00    9.00    9.00  ok                 HF2 EFH → HF4 EFH (X09)
+  12.50   12.47   12.00   12.50   12.00  ok                 HF4 EFH → HK1 EFH (FirstParagraph)
+  29.97   29.98   30.60   29.94   30.75  ok                 HK1 EFH → HL1 EFH (Heading1)
+  22.09   22.07   21.45   22.11   21.75  ok                 HL1 EFH → HM1 EFH (FirstParagraph)
+  25.58   25.60   25.79   25.55   25.50  ok                 HM1 EFH → HN1 EFH (Heading2)
+  29.02   30.90   42.73   43.42   42.75  W-1.88 H+12.52     HN1 EFH → HT1 EFH (Heading3)
+  18.64   23.10   23.57   23.12   23.25  W-4.46             HT1 EFH → HX1 EFH (FirstParagraph)
+  29.97   29.98   30.60   29.94   30.75  ok                 HX1 EFH → HZ1 EFH (Heading1)
+  26.59   26.61   26.19   26.61   26.25  ok                 HZ1 EFH → HZ2 EFH (Heading2)
+  19.08   19.06   18.83   19.08   18.75  ok                 HZ2 EFH → HZZ1 EFH (FirstParagraph)
+      -  832.73       -       -       -  -                  p1 at: 1
+xfmt result: p2: 17 gaps checked, 2 outside tolerance; print: 17 baselines, 0 off the 0.75 pt grid, mean gap after c +0.77 pt against the PDF over 16 gaps outside

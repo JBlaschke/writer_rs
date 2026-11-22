@@ -1,0 +1,23 @@
+[document]
+lang = "en-GB"
+toc = false
+
+[build]
+targets = ["html", "pdf", "docx"]
+out_dir = "dist"
+
+[markdown]
+references = false
+
+[numbering]
+headings = false
+
+[html]
+theme = "theme"
+standalone = true
+
+[pdf]
+system_fonts = false
+
+[docx]
+update_fields = false

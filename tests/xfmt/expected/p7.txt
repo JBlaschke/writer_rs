@@ -1,0 +1,20 @@
+== p7
+   Word     PDF  screen   scr+c   print  verdict            line
+  39.05   39.02       -       -   39.00  ok                 p1 top: HA1 EFH (FirstParagraph)
+  25.08   25.06   25.04   25.04   24.75  ok                 HA1 EFH → • HE1 EFH (Compact)
+  16.68   14.85   17.59   17.59   18.00  W+1.83 H+2.74      • HE1 EFH → • HE2 EFH (Compact)
+  16.68   25.05   27.49   27.49   27.75  W-8.37 H+2.44      • HE2 EFH → HF1 EFH (FirstParagraph)
+  25.08   25.06   25.04   25.04   24.75  ok                 HF1 EFH → 1. HH1 EFH (FirstParagraph)
+  25.08   25.05   25.04   25.04   24.75  ok                 1. HH1 EFH → 2. HH2 EFH (FirstParagraph)
+  25.08   25.06   27.49   27.49   27.75  H+2.43             2. HH2 EFH → HK1 EFH (FirstParagraph)
+  25.08   41.25   27.79   27.79   27.75  W-16.17 H-13.46    HK1 EFH → HL1 EFH (BlockText)
+  19.88   34.65   40.43   40.43   40.50  W-14.77 H+5.78     HL1 EFH → HM1 EFH (FirstParagraph)
+  23.06   22.92   33.63   32.36   33.75  H+9.44             HM1 EFH → HN1 EFH (SourceCode)
+  11.12   11.88   14.03   14.03   13.50  W-0.76 H+2.15      HN1 EFH → HN2 EFH (SourceCode)
+  19.15   24.22   34.86   36.14   35.25  W-5.07 H+11.92     HN2 EFH → HT1 EFH (FirstParagraph)
+      -   26.64   38.34       -   38.25  -                  HT1 EFH → HX1 EFH (th)
+      -   17.26   26.59       -   27.00  -                  HX1 EFH → HX2 EFH (td)
+      -   17.26   25.84       -   25.50  -                  HX2 EFH → HX4 EFH (td)
+      -   25.88   38.34       -   38.25  -                  HX4 EFH → HZ1 EFH (FirstParagraph)
+      -  832.73       -       -       -  -                  p1 at: 1
+xfmt result: p7: 12 gaps checked, 8 outside tolerance; print: 16 baselines, 0 off the 0.75 pt grid, mean gap after c +2.13 pt against the PDF over 11 gaps outside

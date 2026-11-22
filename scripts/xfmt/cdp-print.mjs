@@ -1,103 +1,72 @@
-// Print an HTML file to PDF with headless Chrome over the DevTools protocol
-// and report the screen layout's text-line rectangles of the document body.
-// usage: node cdp-print.mjs <in.html> <out.pdf> <lines.json>
-import { spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+// Reads the screen layout of HTML files and prints them to PDF, with one
+// headless Chrome driven over the DevTools protocol (cdp.mjs).
+//
+// usage: node cdp-print.mjs <jobs.json> [--profile <dir>]
+//
+// jobs.json is a list of jobs, each
+//   { "html": file, "lines": out.json, "pdf": out.pdf or null,
+//     "media": "print" or "screen", "width": px, "height": px,
+//     "root": CSS selector }
+// For each job the page is loaded with the media emulated and the viewport
+// set to `width` (R13 §0.2), lines.js's rows are written to `lines`, and,
+// when `pdf` is set, Page.printToPDF's output to `pdf`. Prints Chrome's
+// version on the first line of its output.
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { evaluate, load, withChrome } from "./cdp.mjs";
 
-const [input, output, linesOut] = process.argv.slice(2);
-const chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const profile = mkdtempSync(join(process.env.SCRATCH ?? tmpdir(), "chrome-"));
-const proc = spawn(chrome, [
-    "--headless=new", "--remote-debugging-port=0", `--user-data-dir=${profile}`,
-    "--no-first-run", "--no-default-browser-check", "--disable-gpu",
-    "about:blank"
-], { stdio: "ignore" });
+const here = dirname(fileURLToPath(import.meta.url));
+const measure = readFileSync(join(here, "lines.js"), "utf8");
 
-const sleep = ms => new Promise(done => setTimeout(done, ms));
-const portFile = join(profile, "DevToolsActivePort");
-let port = null;
-for (let tries = 0; tries < 200 && port === null; tries++) {
-    if (existsSync(portFile)) {
-        port = readFileSync(portFile, "utf8").split("\n")[0];
-    } else {
-        await sleep(100);
-    }
+const args = process.argv.slice(2);
+const profileAt = args.indexOf("--profile");
+const profile = profileAt >= 0 ? args.splice(profileAt, 2)[1] : null;
+if (args.length !== 1) {
+    console.error("usage: node cdp-print.mjs <jobs.json> [--profile <dir>]");
+    process.exit(2);
 }
-if (port === null) {
-    proc.kill("SIGKILL");
-    throw new Error("Chrome did not open a DevTools port");
-}
+const jobs = JSON.parse(readFileSync(args[0], "utf8"));
 
-const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-const page = targets.find(target => target.type === "page");
-const socket = new WebSocket(page.webSocketDebuggerUrl);
-await new Promise(done => socket.addEventListener("open", done));
-let nextId = 1;
-const pending = new Map();
-const events = [];
-socket.addEventListener("message", message => {
-    const data = JSON.parse(message.data);
-    if (data.id && pending.has(data.id)) {
-        pending.get(data.id)(data);
-        pending.delete(data.id);
-    } else if (data.method) {
-        events.push(data.method);
-    }
-});
-const send = (method, params = {}) => new Promise((done, fail) => {
-    const id = nextId++;
-    pending.set(id, data => data.error ? fail(new Error(
-        `${method}: ${JSON.stringify(data.error)}`
-    )) : done(data.result));
-    socket.send(JSON.stringify({ id, method, params }));
-});
-
-try {
-    await send("Page.enable");
-    await send("Page.navigate", { url: "file://" + resolve(input) });
-    for (let tries = 0; tries < 300; tries++) {
-        if (events.includes("Page.loadEventFired")) break;
-        await sleep(50);
-    }
-    await send("Runtime.evaluate", {
-        expression: "document.fonts.ready.then(() => true)",
-        awaitPromise: true
+async function run(page, job) {
+    await page.send("Emulation.setEmulatedMedia", {
+        media: job.media ?? "print"
     });
+    await page.send("Emulation.setDeviceMetricsOverride", {
+        width: Math.round(job.width ?? 800),
+        height: Math.round(job.height ?? 1100),
+        deviceScaleFactor: 1, mobile: false
+    });
+    await load(page, pathToFileURL(resolve(job.html)).href);
+    const root = JSON.stringify(job.root ?? "[data-writer-document]");
+    const rows = await evaluate(page, `(${measure.trim()})(${root})`);
+    writeFileSync(job.lines, JSON.stringify(rows, null, 1));
+    if (job.pdf) {
+        await page.send("Emulation.clearDeviceMetricsOverride");
+        const printed = await page.send("Page.printToPDF", {
+            printBackground: true, preferCSSPageSize: true,
+            displayHeaderFooter: false, scale: 1
+        }, 120000);
+        writeFileSync(job.pdf, Buffer.from(printed.data, "base64"));
+    }
+}
 
-    // Screen layout: one entry per text line in the document body.
-    const measure = `(() => {
-        const root = document.querySelector("[data-writer-document]");
-        const rows = [];
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        while (walker.nextNode()) {
-            const node = walker.currentNode;
-            if (!node.textContent.trim()) continue;
-            const range = document.createRange();
-            range.selectNodeContents(node);
-            const style = getComputedStyle(node.parentElement);
-            for (const rect of range.getClientRects()) {
-                rows.push({
-                    top: rect.top + scrollY, bottom: rect.bottom + scrollY,
-                    size: parseFloat(style.fontSize),
-                    text: node.textContent.trim().slice(0, 40)
-                });
+// A job that fails is reported and the next one runs; the exit status is
+// 1 when any failed.
+try {
+    await withChrome({ profile }, async page => {
+        const version = await page.browser.send("Browser.getVersion");
+        console.log(`chrome: ${version.product}`);
+        for (const job of jobs) {
+            try {
+                await run(page, job);
+            } catch (error) {
+                console.error(`cdp-print: ${job.html}: ${error.message}`);
+                process.exitCode = 1;
             }
         }
-        return JSON.stringify(rows);
-    })()`;
-    const screen = await send("Runtime.evaluate", {
-        expression: measure, returnByValue: true
     });
-    writeFileSync(linesOut, screen.result.value);
-
-    const pdf = await send("Page.printToPDF", {
-        printBackground: true, preferCSSPageSize: true,
-        displayHeaderFooter: false, scale: 1
-    });
-    writeFileSync(output, Buffer.from(pdf.data, "base64"));
-} finally {
-    socket.close();
-    proc.kill("SIGKILL");
+} catch (error) {
+    console.error(`cdp-print: ${error.message}`);
+    process.exitCode = 1;
 }

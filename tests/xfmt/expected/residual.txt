@@ -1,0 +1,10 @@
+== residual
+   Word     PDF  screen   scr+c   print  verdict            line
+      -       -       -       -   58.50  -                  p1 top: Hbody EFH (body)
+      -       -   30.60       -   30.00  -                  Hbody EFH → Hh1 EFH (h1)
+      -       -   21.45       -   21.75  -                  Hh1 EFH → Hbody EFH (body)
+      -       -   25.79       -   25.50  -                  Hbody EFH → Hh2 EFH (h2)
+      -       -   18.83       -   19.50  -                  Hh2 EFH → Hbody EFH (body)
+      -       -   28.79       -   28.50  -                  Hbody EFH → Hx20 EFH (x20)
+      -       -   26.45       -   26.25  -                  Hx20 EFH → Hbody EFH (body)
+xfmt result: residual: 0 gaps checked, 0 outside tolerance; print: 7 baselines, 0 off the 0.75 pt grid

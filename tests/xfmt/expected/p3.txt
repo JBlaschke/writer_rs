@@ -1,0 +1,19 @@
+== p3
+   Word     PDF  screen   scr+c   print  verdict            line
+  39.05   39.02       -       -   39.00  ok                 p1 top: HA1 EFH (FirstParagraph)
+  25.08   25.06   25.04   25.04   24.75  ok                 HA1 EFH → HA2 EFH (BodyText)
+  25.08   25.05   25.04   25.04   25.50  ok                 HA2 EFH → HE1 EFH (A6)
+  31.88   31.86   31.85   31.85   31.50  ok                 HE1 EFH → HF1 EFH (FirstParagraph)
+  25.08   25.06   25.04   25.04   25.50  ok                 HF1 EFH → HH1 EFH (A6)
+  37.58   37.52   37.52   37.52   37.50  ok                 HH1 EFH → HK1 EFH (B8)
+  14.88   14.85   14.85   14.85   14.25  ok                 HK1 EFH → HL1 EFH (FirstParagraph)
+  25.08   25.06   25.04   25.04   25.50  ok                 HL1 EFH → HM1 EFH (B2)
+  20.53   20.52   20.51   20.51   20.25  ok                 HM1 EFH → HN1 EFH (B2)
+  14.88   14.85   14.85   14.85   15.00  ok                 HN1 EFH → HT1 EFH (Z0)
+  14.88   14.85   14.85   14.85   15.00  ok                 HT1 EFH → HX1 EFH (Z0)
+  14.88   14.85   14.85   14.85   15.00  ok                 HX1 EFH → HZ1 EFH (FirstParagraph)
+  31.88   31.86   31.85   31.85   31.50  ok                 HZ1 EFH → HAA1 EFH (BA)
+  37.58   37.52   37.52   37.52   37.50  ok                 HAA1 EFH → HAE1 EFH (BA)
+  37.58   37.53   37.52   37.52   37.50  ok                 HAE1 EFH → HAF1 EFH (FirstParagraph)
+      -  832.73       -       -       -  -                  p1 at: 1
+xfmt result: p3: 15 gaps checked, 0 outside tolerance; print: 15 baselines, 0 off the 0.75 pt grid, mean gap after c -0.01 pt against the PDF over 14 gaps ok

@@ -1,0 +1,113 @@
+name = "spacing-probe"
+description = "Spacing probe: one design, measured in HTML, PDF and Word"
+extends = "default"
+
+[styles]
+code_theme = "none"
+
+[design.fonts]
+body = { family = "Source Sans 3", files = [
+    "assets/fonts/SourceSans3-Regular.ttf",
+    "assets/fonts/SourceSans3-Italic.ttf",
+    "assets/fonts/SourceSans3-SemiBold.ttf",
+    "assets/fonts/SourceSans3-Bold.ttf",
+] }
+heading = "Source Sans 3"
+
+[design.text]
+size = "11pt"
+line_height = 1.35
+paragraph_spacing = "3.6mm"
+justify = false
+
+[design.colors]
+text = "#000000"
+background = "#ffffff"
+
+[design.page]
+paper = "a4"
+margin = { top = "10mm", right = "20mm", bottom = "10mm", left = "20mm" }
+
+# Line models: no space around, one line rule each.
+[design.styles.M100]
+line_height = 1.0
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.M142]
+line_height = 1.424
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.M200]
+line_height = 2.0
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.X12]
+line_height = "12.1pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.X20]
+line_height = "20pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.X09]
+line_height = "9pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.S16]
+size = "16pt"
+line_height = 1.2
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.S16X]
+size = "16pt"
+line_height = "20pt"
+space_before = "0mm"
+space_after = "0mm"
+
+# Spacing rules: the body's line height, one space rule each.
+[design.styles.A6]
+space_before = "0mm"
+space_after = "6mm"
+
+[design.styles.B8]
+space_before = "8mm"
+space_after = "0mm"
+
+[design.styles.B2]
+space_before = "2mm"
+space_after = "0mm"
+
+[design.styles.Z0]
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.BA]
+space_before = "6mm"
+space_after = "8mm"
+
+# No space keys at all: the spacing is whatever each format inherits.
+[design.styles.N]
+line_height = "12.1pt"
+
+[design.styles."Heading 1"]
+font = "heading"
+size = "16pt"
+line_height = 1.2
+weight = "bold"
+space_before = "12pt"
+space_after = "6pt"
+
+[design.styles."Heading 2"]
+font = "heading"
+size = "13pt"
+line_height = 1.2
+weight = "bold"
+space_before = "10pt"
+space_after = "4pt"
