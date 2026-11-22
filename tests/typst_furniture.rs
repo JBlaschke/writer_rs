@@ -45,13 +45,16 @@ fn geometry(
                 let transform = transform.pre_concat(group.transform);
                 geometry(&group.frame, transform, images, footer_bottoms);
             }
-            // The fixture's final footer line uses Typst's default baseline
-            // bottom edge, so its baseline is the furniture's bottom edge.
+            // The furniture's bottom edge is the bottom of the fixture's
+            // final footer line (design.md §6.2): its box is 1.35 lines
+            // high, and what the ascent leaves of it is below the baseline.
             FrameItem::Text(run)
                 if run.text.contains("Company No. 13773507") =>
             {
-                footer_bottoms
-                    .push(Point::zero().transform(transform).y.to_pt());
+                let size = run.size.to_pt();
+                let ascent = run.font.metrics().ascender.at(run.size).to_pt();
+                let baseline = Point::zero().transform(transform).y.to_pt();
+                footer_bottoms.push(baseline + 1.35 * size - ascent);
             }
             FrameItem::Image(_, size, _) => images
                 .push((Point::zero().transform(transform), size.x.to_pt())),
@@ -253,7 +256,7 @@ fn unset_offsets_use_thirty_percent_of_the_matching_margin() {
 }
 
 #[test]
-fn image_gap_separates_the_image_from_the_first_line_cap_height() {
+fn image_gap_separates_the_image_from_the_first_line_box() {
     let directory = tempfile::tempdir().unwrap();
     std::fs::write(directory.path().join("logo.svg"),
         "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><rect width='10' height='10'/></svg>",
@@ -297,9 +300,10 @@ fn image_gap_separates_the_image_from_the_first_line_cap_height() {
         let bottom = images[0].0.y.to_pt() + images[0].1;
         let (origin, run) =
             find_run(frame, Transform::identity(), "GAPLINE").unwrap();
-        // Typst's default top edge is the cap height, so the gap ends there.
-        let top = origin.y.to_pt()
-            - run.font.metrics().cap_height.at(run.size).to_pt();
+        // The gap ends at the top of the first line's box, the font's
+        // ascent above the baseline (design.md §6.2).
+        let top =
+            origin.y.to_pt() - run.font.metrics().ascender.at(run.size).to_pt();
         let gap = top - bottom;
         assert!(
             (gap - expected).abs() < 0.3,

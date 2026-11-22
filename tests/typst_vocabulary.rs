@@ -280,7 +280,7 @@ fn vocabulary_styles_set_writers_elements() {
     expect(
         &p,
         "heading:[First]",
-        &[("size", 14.0), ("above", 29.1), ("below", 15.1)],
+        &[("size", 14.0), ("above", 20.0), ("below", 6.0)],
         &[("weight", "bold"), ("fill", "#0a2f41"), ("align", "left + top")],
     );
     assert!(!p["heading:[First]"]["justify"].as_bool().unwrap());
@@ -306,27 +306,27 @@ fn vocabulary_styles_set_writers_elements() {
     expect(
         &p,
         "heading:[Unlisted]",
-        &[("size", 18.0), ("above", 31.7), ("below", 17.7)],
+        &[("size", 18.0), ("above", 20.0), ("below", 6.0)],
         &[("weight", "bold"), ("fill", "#a96d4b")],
     );
     assert!(!flag(&p, "heading:[Unlisted]", "justify"));
     expect(
         &p,
         "heading:[Contents]",
-        &[("size", 16.0), ("above", 30.4), ("below", 16.4)],
+        &[("size", 16.0), ("above", 20.0), ("below", 6.0)],
         &[("weight", "regular"), ("fill", "#0a2f41")],
     );
     assert!(!flag(&p, "heading:[Contents]", "justify"));
     expect(
         &p,
         "entry:1",
-        &[("size", 11.0), ("above", 13.15)],
+        &[("size", 11.0), ("above", 6.0)],
         &[("weight", "bold")],
     );
     expect(
         &p,
         "entry:2",
-        &[("size", 11.0), ("above", 7.15)],
+        &[("size", 11.0), ("above", 0.0)],
         &[("weight", "regular")],
     );
     expect(
@@ -355,12 +355,7 @@ fn vocabulary_styles_set_writers_elements() {
         &[("weight", "regular"), ("fill", "#000000")],
     );
     assert!(flag(&p, "body", "justify"));
-    expect(
-        &p,
-        "table",
-        &[("top", 5.575), ("bottom", 6.575), ("left", 5.0)],
-        &[],
-    );
+    expect(&p, "table", &[("top", 2.0), ("bottom", 3.0), ("left", 5.0)], &[]);
 }
 
 #[test]
@@ -403,8 +398,8 @@ fn first_title_part_keeps_its_space_before() {
         &titled_document(),
         &tags,
     );
-    assert_close(far[0], 132.119, "title y with 40pt");
-    assert_close(close[0], 102.119, "title y with 10pt");
+    assert_close(far[0], 125.039, "title y with 40pt");
+    assert_close(close[0], 95.039, "title y with 10pt");
     for (tag, (a, b)) in tags.iter().zip(far.iter().zip(&close)) {
         assert_close(a - b, 30.0, &format!("{tag} moves by"));
     }
@@ -428,21 +423,28 @@ fn last_title_part_space_after_replaces_the_closing_gap() {
     };
     let short = with_after("10pt");
     let long = with_after("40pt");
-    assert_close(short[1], 250.507, "body y with 10pt");
-    assert_close(long[1], 280.507, "body y with 40pt");
+    assert_close(short[1], 232.977, "body y with 10pt");
+    assert_close(long[1], 262.977, "body y with 40pt");
     assert_close(long[1] - short[1], 30.0, "body difference");
-    assert_close(short[0], 228.735, "date y with 10pt");
-    assert_close(long[0], 228.735, "date y with 40pt");
+    assert_close(short[0], 211.205, "date y with 10pt");
+    assert_close(long[0], 211.205, "date y with 40pt");
     let default =
         positions(root, &styled(root, &[]), &titled_document(), &tags);
-    assert_close(default[1], 264.357, "body y without space_after");
+    assert_close(default[1], 245.527, "body y without space_after");
 }
 
 #[test]
 fn designs_without_vocabulary_names_change_nothing() {
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path();
-    for design in [plain(root, &[]), Design::default()] {
+    // A declared design lays its lines out in Word's line boxes (design.md
+    // §6.2): no leading comes above a contents entry, and a cell's inset is
+    // Typst's 5pt less what the box adds above the capitals and below the
+    // baseline. A document without a design keeps Typst's own layout.
+    for (design, entry, inset) in [
+        (plain(root, &[]), 0.0, [2.404, 0.446]),
+        (Design::default(), 7.15, [5.0, 5.0]),
+    ] {
         let p = probes(&compile(root, &design, &main_document()));
         for tag in
             ["heading:[First]", "heading:[Unlisted]", "heading:[Contents]"]
@@ -468,7 +470,7 @@ fn designs_without_vocabulary_names_change_nothing() {
         );
         for tag in ["entry:1", "entry:2", "entry:3"] {
             if p.contains_key(tag) {
-                expect(&p, tag, &[("above", 7.15)], &[("weight", "regular")]);
+                expect(&p, tag, &[("above", entry)], &[("weight", "regular")]);
             }
         }
         assert!(p.contains_key("entry:1") && p.contains_key("entry:2"));
@@ -483,7 +485,7 @@ fn designs_without_vocabulary_names_change_nothing() {
         expect(
             &p,
             "table",
-            &[("top", 5.0), ("bottom", 5.0), ("left", 5.0)],
+            &[("top", inset[0]), ("bottom", inset[1]), ("left", 5.0)],
             &[],
         );
         expect(
@@ -507,7 +509,7 @@ fn a_title_style_without_keys_keeps_the_plain_title_block() {
         &plain(root, &[("Date", keep)]),
         &titled_document(),
     ));
-    let expected = [85.039, 116.404, 157.28, 194.218];
+    let expected = [85.039, 113.325, 154.201, 191.139];
     for (tag, y) in tags.iter().zip(expected) {
         assert_close(number(&base, tag, "y"), y, &format!("{tag} y"));
         assert_close(
@@ -536,13 +538,13 @@ fn template_rules_after_writer_doc_override_the_design() {
     expect(
         &p,
         "heading:[First]",
-        &[("size", 14.0), ("above", 29.1)],
+        &[("size", 14.0), ("above", 20.0)],
         &[("weight", "bold"), ("fill", "#ff4136")],
     );
     expect(
         &p,
         "heading:[Unlisted]",
-        &[("size", 18.0), ("above", 31.7)],
+        &[("size", 18.0), ("above", 20.0)],
         &[("weight", "bold"), ("fill", "#ff4136")],
     );
     expect(&p, "heading:[Contents]", &[], &[("fill", "#0a2f41")]);

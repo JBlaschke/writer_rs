@@ -4,10 +4,6 @@ use std::path::Path;
 
 use typst::foundations::{Datetime, Label, Value};
 use typst::introspection::{Introspector, MetadataElem};
-use typst::layout::Abs;
-use typst::text::{
-    FontStretch, FontStyle, FontVariant, FontVariations, FontWeight,
-};
 use typst::utils::PicoStr;
 use writer::assets::registry::AssetRegistry;
 use writer::config::{Config, Target};
@@ -122,6 +118,8 @@ fn delegating_template_receives_design_defaults_and_explicit_arguments_win() {
     #context [#metadata((
         size: text.size.pt(), font: text.font,
         leading: par.leading.to-absolute().pt(),
+        top: text.top-edge.to-absolute().pt(),
+        bottom: text.bottom-edge.to-absolute().pt(),
         justify: par.justify,
     )) <design-settings>]
     #body
@@ -164,27 +162,21 @@ fn delegating_template_receives_design_defaults_and_explicit_arguments_win() {
     };
     assert_eq!(settings.get("size").unwrap(), &Value::Float(11.0));
     assert_eq!(settings.get("justify").unwrap(), &Value::Bool(false));
-    let Value::Float(leading) = settings.get("leading").unwrap() else {
-        panic!("expected an absolute leading value")
-    };
-    // 1.35 lines of 11pt less the line box Typst lays the body font out
-    // with (design.md §6.2): DejaVu Sans Mono has no OS/2 cap height, so
-    // that box is its ascender, which `cap_height` then reports.
-    let (font, _) = writer::typst::fonts::embedded()
-        .find(|(_, info)| info.family == "DejaVu Sans Mono")
-        .unwrap();
-    let regular = FontVariant::new(
-        FontStyle::Normal,
-        FontWeight::REGULAR,
-        FontStretch::NORMAL,
-    );
-    let instance =
-        font.instantiate(regular, Abs::pt(11.0), &FontVariations::default());
-    let expected = 1.35 * 11.0 - instance.metrics().cap_height.get() * 11.0;
-    assert!(
-        (leading - expected).abs() < 0.01,
-        "leading {leading}, expected {expected}"
-    );
+    // Word's line box (design.md §6.2): no leading, and 1.35 lines of 11pt
+    // split at the baseline by the body font's ascent. DejaVu Sans Mono's
+    // `hhea` ascender is 1901 of 2048 units.
+    let ascent = 1901.0 / 2048.0 * 11.0;
+    for (key, expected) in
+        [("leading", 0.0), ("top", ascent), ("bottom", ascent - 1.35 * 11.0)]
+    {
+        let Value::Float(value) = settings.get(key).unwrap() else {
+            panic!("expected an absolute {key} value")
+        };
+        assert!(
+            (value - expected).abs() < 0.01,
+            "{key} {value}, expected {expected}"
+        );
+    }
     let matches_family = |family: &Value| {
         matches!(family,
             Value::Str(family) if family.as_str().eq_ignore_ascii_case("DejaVu Sans Mono")

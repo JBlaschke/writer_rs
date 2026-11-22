@@ -88,7 +88,7 @@
 // `Title`, `Subtitle`, `Author` and `Date` over each part's built-in look.
 // Word bases the last three on `Title`, so they follow its alignment. Needs
 // context.
-#let styled-title-block(meta, design, leading) = {
+#let styled-title-block(meta, design, pitch) = {
     let parts = ()
     if meta.title != none {
         parts.push(("Title", (size: 17pt, weight: "bold"), meta.title))
@@ -114,7 +114,7 @@
         } else { meta.date }))
     }
     if parts.len() == 0 { return }
-    let rules(name) = style-rules(design, design-style(design, name), leading)
+    let rules(name) = style-rules(design, design-style(design, name), pitch)
     let base = rules("Title").align.at(0, default: center)
     for (index, (name, defaults, body)) in parts.enumerate() {
         let part = rules(name)
@@ -122,19 +122,11 @@
         let spacing = part.block
         if index == 0 and "above" in spacing {
             // Typst drops a block's space above at the top of a page, where
-            // Word keeps the first paragraph's. Word's line starts at the
-            // font's ascender, Typst's at its cap height.
-            let before = style-value(design-style(design, name), "space_before")
-            let rise = (
-                measure(text(..face, top-edge: "ascender")[H]).height
-                    - measure(text(..face)[H]).height
-            )
-            v(before * 1pt + rise, weak: false)
-            let _ = spacing.remove("above")
+            // Word keeps the first paragraph's.
+            v(spacing.remove("above"), weak: false)
         }
-        // The face is set around the block, so that the block's spacing is in
-        // ems of the part's own size: an unset space is then the paragraph
-        // spacing at that size, as it is for the plain title block's lines.
+        // An unset space is the document's: none above, the paragraph
+        // spacing below.
         {
             set text(..face)
             block(width: 100%, ..spacing, {
@@ -165,22 +157,36 @@
 
 #let numbered-layout(meta, settings, body) = {
     show: writer-numbering.with(..settings.numbering)
-    if type(settings.title-block) == function {
-        // The typed tokens are built here, for the function that asked for
-        // them: a document without one never converts its design.
-        (settings.title-block)(meta, design-tokens(design: settings.design))
-    } else if settings.title-block == auto {
-        if title-styles.any(name => (
-            design-style(settings.design, name) != none
-        )) {
-            styled-title-block(meta, settings.design, settings.leading)
-        } else { title-block(meta) }
+    let custom = type(settings.title-block) == function
+    let front = {
+        if custom {
+            // The typed tokens are built here, for the function that asked
+            // for them: a document without one never converts its design.
+            (settings.title-block)(meta, design-tokens(design: settings.design))
+        } else if settings.title-block == auto {
+            if title-styles.any(name => (
+                design-style(settings.design, name) != none
+            )) {
+                styled-title-block(meta, settings.design, settings.pitch)
+            } else { title-block(meta) }
+        }
+        abstract-block(meta.abstract, title: settings.abstract-title)
+        if settings.toc != false and settings.toc != 0 {
+            outline(depth: if settings.toc == true { 3 } else { settings.toc })
+        }
     }
-    abstract-block(meta.abstract, title: settings.abstract-title)
-    if settings.toc != false and settings.toc != 0 {
-        outline(depth: if settings.toc == true { 3 } else { settings.toc })
+    // The line-box model opens the document with a mark (design.md §6.2):
+    // before what the package draws first, else inside the body. A
+    // `title-block` function lays its own page out and gets none.
+    let mark = settings.at("opening", default: none)
+    if mark == none or custom {
+        front
+        body
+    } else if front == none { open-flow(mark, body) } else {
+        mark
+        front
+        body
     }
-    body
     if settings.bibliography != none {
         std.bibliography(settings.bibliography, style: settings.style)
     }
@@ -250,21 +256,25 @@
 }
 
 // `spacing` is the document's paragraph spacing: the default gap between an
-// image and the lines below it (design.md §9.1); `line-height` is the
-// design's `text.line_height`, which sets the lines' leading at their size.
+// image and the lines below it (design.md §9.1); `line-height` is the pitch
+// of the lines, which take the line box of their own font and size (§6.2),
+// `design` the design whose `lines` table holds that font's metrics.
 #let writer-furniture(
-            spec, text-width, spacing: 1.2em, line-height: none, font: none
+            spec, text-width, spacing: 1.2em, line-height: none, font: none,
+            design: (:)
         ) = context {
     if spec == none { return none }
     let size = if spec.size == none { text.size } else { spec.size * 1pt }
     let fill = if spec.color == none { text.fill } else { rgb(spec.color) }
-    set text(..if font == none { (:) } else { (font: font) })
-    set text(size: size, fill: fill, weight: spec.weight,
+    let face = (size: size, ..if font == none { (:) } else { (font: font) })
+    set text(..face, ..line-edges(design, line-height, face))
+    set text(fill: fill, weight: spec.weight,
         style: if spec.italic { "italic" } else { "normal" })
     set par(
-        first-line-indent: 0pt, spacing: 0pt, justify: false,
-        leading: design-leading(line-height, size),
+        first-line-indent: 0pt, spacing: 0pt, justify: false, leading: 0pt,
     )
+    // The parts below set their own spacing; nothing inherits the body's.
+    set block(above: 0pt, below: 0pt)
     block(width: text-width, above: 0pt, below: 0pt)[
         #if spec.rule != none and spec.rule.position == "above" {
             furniture-rule(spec.rule)
@@ -274,10 +284,9 @@
             let alignment = if img.align == none { spec.align }
                 else { img.align }
             // The lines are a paragraph of their own below the image: its
-            // `gap` (the paragraph spacing unless set) separates them. The
-            // text box starts at the cap height, so the gap runs from the
-            // image's bottom edge to the first line's capitals. The block
-            // spans the text width so that `align` can place the image.
+            // `gap` (the paragraph spacing unless set) separates the image's
+            // bottom edge from the first line's box. The block spans the
+            // text width so that `align` can place the image.
             let gap = img.at("gap", default: none)
             block(width: 100%,
                 below: if gap == none { spacing } else { gap * 1pt },
@@ -365,7 +374,7 @@
             chosen, text-width, spacing: furniture-gap(settings),
             line-height: if pitch == none { settings.line-height }
                 else { pitch },
-            font: style-face(design, style).font,
+            font: style-face(design, style).font, design: design,
         )
     }
     let header = design-get(design, "page.header", none)
@@ -394,22 +403,60 @@
     }
 }
 
-// Leading and paragraph spacing (design.md §6.2): explicit arguments as
-// given, the design's through `design-leading`, which measures the body
-// font's line box and so needs a context block. The page set-up of `layout`
-// and `furniture-layout` stays outside it.
+// Lines and paragraphs (design.md §6.2). Without a design they are Typst's
+// own: its leading and paragraph spacing, or the explicit arguments. With one
+// every line is a line box as Word and HTML lay it out, with no leading
+// between two of them, and every space is a block's, so that the larger of
+// two adjacent spaces holds. The model measures the body font and so needs a
+// context block; the page set-up of `layout` and `furniture-layout` stays
+// outside it.
 #let paragraph-layout(meta, settings, body) = context {
-    let leading = if settings.leading == auto {
-        design-leading(settings.line-height, text.size)
-    } else { settings.leading }
-    set par(
-        leading: leading,
-        spacing: if settings.spacing == auto {
-            design-spacing(leading, settings.paragraph-spacing)
-        } else { settings.spacing },
-    )
-    show: vocabulary-layout.with(settings.design, leading)
-    reference-layout(meta, (..settings, leading: leading), body)
+    if settings.design.len() == 0 {
+        set par(
+            leading: if settings.leading == auto { 0.65em }
+                else { settings.leading },
+            spacing: if settings.spacing == auto { 1.2em }
+                else { settings.spacing },
+        )
+        reference-layout(meta, settings, body)
+    } else {
+        let model = spacing-model(settings)
+        set text(..model.edges)
+        set par(leading: 0pt, spacing: model.gap)
+        set block(above: 0pt, below: model.gap)
+        show par: par-end
+        // A tight list keeps its items together: a nested list or another
+        // block sits right under its item's text, where Typst attaches it.
+        // A loose list inside it has the document's paragraphs again.
+        show list.where(tight: true): set par(spacing: 0pt)
+        show enum.where(tight: true): set par(spacing: 0pt)
+        show terms.where(tight: true): set par(spacing: 0pt)
+        show list.where(tight: false): set par(spacing: model.gap)
+        show enum.where(tight: false): set par(spacing: model.gap)
+        show terms.where(tight: false): set par(spacing: model.gap)
+        show table.cell.where(body: []): empty-cell
+        // Typst reads the leading in two more places. A footnote sets its
+        // own, which would come on top of its lines' boxes, and keeps a gap
+        // to the next note of which the box holds a part. A display equation
+        // puts the leading between its rows: it keeps Typst's for this pitch.
+        show footnote.entry: set par(leading: 0pt)
+        set footnote.entry(gap: model.note-gap)
+        show math.equation.where(block: true): set par(leading: model.leading)
+        // Headings in their own font take that font's line box.
+        show heading: set text(..if settings.heading-font == none { (:) } else {
+            line-edges(
+                settings.design, model.pitch, (font: settings.heading-font)
+            )
+        })
+        show: vocabulary-layout.with(settings.design, model.pitch)
+        // Typst drops the space above the first block of a page. Word and
+        // HTML keep it on the first page, so a block without height opens
+        // the document there (`numbered-layout` places it).
+        reference-layout(
+            meta, (..settings, pitch: model.pitch, opening: flow-mark(0pt)),
+            body
+        )
+    }
 }
 
 #let furniture-layout(meta, settings, body) = {
@@ -659,39 +706,31 @@
 #let writer-styled(design, style, body) = {
     let spec = design-get(design, "styles", (:)).at(style, default: none)
     if spec == none { return body }
-    let text-opts = style-text(design, spec)
-    let par-opts = (:)
-    if spec.align != none {
-        par-opts.insert("justify", spec.align == "justify")
-    }
-    let aligned = if spec.align in ("left", "center", "right") {
-        align((left: left, center: center, right: right).at(spec.align), body)
-    } else { body }
-    let inner = {
-        set text(..text-opts)
-        set par(..par-opts)
-        if spec.line_height == none { aligned } else {
-            // The style's pitch, measured on its own font and size (§6.2),
-            // with the design's paragraph spacing on top of it between the
-            // block's paragraphs; an unset spacing stays inherited.
-            context {
-                let leading = design-leading(spec.line_height, text.size)
-                let spacing = design-get(design, "text.paragraph_spacing", none)
-                set par(leading: leading, ..if spacing == none { (:) }
-                    else { (spacing: design-spacing(leading, spacing)) })
-                aligned
+    context {
+        let rules = style-rules(design, spec, inherited-pitch())
+        // Inside `writer-doc`'s line-box model an unset space is the body
+        // paragraph's, as in Word, whose custom styles are based on the
+        // body's: none above, the paragraph spacing below.
+        let modelled = type(text.top-edge) == length
+        block(
+            above: if spec.space_before != none { spec.space_before * 1pt }
+                else if modelled { 0pt } else { auto },
+            below: if spec.space_after != none { spec.space_after * 1pt }
+                else if modelled { par.spacing } else { auto },
+            breakable: not spec.keep_together,
+            sticky: spec.keep_with_next,
+            width: 100%,
+            {
+                set text(..rules.text)
+                // A line box of its own has no leading between its lines.
+                set par(..rules.par, ..if "top-edge" in rules.text {
+                    (leading: 0pt)
+                })
+                if rules.align.len() == 0 { body }
+                else { align(rules.align.first(), body) }
             }
-        }
+        )
     }
-    block(
-        above: if spec.space_before != none { spec.space_before * 1pt }
-            else { auto },
-        below: if spec.space_after != none { spec.space_after * 1pt }
-            else { auto },
-        breakable: not spec.keep_together,
-        sticky: spec.keep_with_next,
-        width: 100%, inner
-    )
 }
 
 // Preserve div semantics for templates; named design styles are applied in T85.

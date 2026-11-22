@@ -4,10 +4,7 @@ use std::path::Path;
 
 use typst::foundations::{Datetime, Label, Value};
 use typst::introspection::{Introspector, MetadataElem};
-use typst::layout::{Abs, Frame, FrameItem, Point, Transform};
-use typst::text::{
-    FontStretch, FontStyle, FontVariant, FontVariations, FontWeight,
-};
+use typst::layout::{Frame, FrameItem, Point, Transform};
 use typst::utils::PicoStr;
 use typst_layout::PagedDocument;
 use writer::assets::registry::AssetRegistry;
@@ -96,7 +93,11 @@ fn recipient_uses_exact_leading_and_six_mm_of_following_space() {
     let directory = tempfile::tempdir().unwrap();
     let design = letter_styles(directory.path());
     let body = r#"#writer-div(style: "Recipient")[
-#context [#metadata(par.leading.to-absolute().pt()) <recipient-leading>]
+#context [#metadata((
+    par.leading.to-absolute().pt(),
+    text.top-edge.to-absolute().pt(),
+    text.bottom-edge.to-absolute().pt(),
+)) <recipient-lines>]
 RECIPIENTFIRST\
 RECIPIENTLAST
 ]
@@ -105,29 +106,25 @@ AFTERRECIPIENT
     let with_spacing = compile(directory.path(), &design, body);
     let content = with_spacing
         .introspector()
-        .query_label(Label::new(PicoStr::intern("recipient-leading")).unwrap())
+        .query_label(Label::new(PicoStr::intern("recipient-lines")).unwrap())
         .unwrap();
     let metadata = content.to_packed::<MetadataElem>().unwrap();
-    let Value::Float(leading) = &metadata.value else {
-        panic!("expected resolved leading metadata")
+    let Value::Array(lines) = &metadata.value else {
+        panic!("expected resolved line box metadata")
     };
-    // The exact 12.1pt pitch less the line box of the default body font
-    // (design.md §6.2): Libertinus Serif's cap height at 11pt.
-    let (font, _) = writer::typst::fonts::embedded()
-        .find(|(_, info)| info.family == "Libertinus Serif")
-        .unwrap();
-    let regular = FontVariant::new(
-        FontStyle::Normal,
-        FontWeight::REGULAR,
-        FontStretch::NORMAL,
-    );
-    let instance =
-        font.instantiate(regular, Abs::pt(11.0), &FontVariations::default());
-    let expected = 12.1 - instance.metrics().cap_height.get() * 11.0;
-    assert!(
-        (leading - expected).abs() < 0.001,
-        "leading {leading}, expected {expected}"
-    );
+    // An exact 12.1pt pitch is a line box of that height with no leading,
+    // four fifths of it above the baseline as in Word (design.md §6.2).
+    let expected = [0.0, 0.8 * 12.1, -0.2 * 12.1];
+    assert_eq!(lines.len(), expected.len());
+    for (value, expected) in lines.iter().zip(expected) {
+        let Value::Float(value) = value else {
+            panic!("expected a length in pt, got {value:?}")
+        };
+        assert!(
+            (value - expected).abs() < 0.001,
+            "line box {lines:?}, expected {expected}"
+        );
+    }
     let mut no_spacing = design.clone();
     no_spacing.styles.get_mut("Recipient").unwrap().space_after = Some(Pt(0.0));
     let without_spacing = compile(directory.path(), &no_spacing, body);
