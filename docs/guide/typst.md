@@ -18,7 +18,7 @@ notebook input and rejects a native Typst source.
 ## Start a document
 
 ```typst
-#import "@writer/doc:0.4.0": *
+#import "@writer/doc:0.5.0": *
 
 #show: writer-doc.with(
     title: [My report],
@@ -68,7 +68,7 @@ resolved values in `sys.inputs` when Writer compiles a PDF. A template or a
 native document reads them as Typst values through the package:
 
 ```typst
-#import "@writer/doc:0.4.0": *
+#import "@writer/doc:0.5.0": *
 
 #let theme = design-tokens()
 #let title = style-tokens(theme, "Title")
