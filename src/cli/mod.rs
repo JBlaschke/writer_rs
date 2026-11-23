@@ -311,6 +311,9 @@ pub struct DumpArgs {
     /// Print the resolved design as JSON.
     #[arg(long, conflicts_with = "no_resolve")]
     pub design: bool,
+    /// With --design: include every built-in default and each key's origin.
+    #[arg(long, requires = "design")]
+    pub defaults: bool,
     /// Print the parsed IR before reference resolution.
     #[arg(long)]
     pub no_resolve: bool,

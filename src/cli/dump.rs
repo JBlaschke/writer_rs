@@ -27,7 +27,19 @@ pub fn run(args: &DumpArgs, global: &GlobalArgs) -> anyhow::Result<ExitCode> {
     opts.config_path = global.config.clone();
     let prepared = prepared(&opts, args.no_resolve, global)?;
     let mut diagnostics = prepared.diagnostics.clone();
-    let text = if args.design {
+    let text = if args.design && args.defaults {
+        let design = prepared
+            .design
+            .view(crate::design::Domains::ALL)
+            .map_err(|error| {
+                report_diagnostics(&diagnostics, global);
+                locate(error, input)
+            })?;
+        serde_json::to_string_pretty(&serde_json::json!({
+            "design": design.to_json(crate::design::PathMode::Real),
+            "origins": design.origins_json(),
+        }))?
+    } else if args.design {
         serde_json::to_string_pretty(
             &prepared.design.to_json(crate::design::PathMode::Real),
         )?

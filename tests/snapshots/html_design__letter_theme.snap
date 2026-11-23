@@ -461,7 +461,8 @@ nav.toc {
 /* design: print colors */
 @media print{:root{--w-text:#242424;--w-muted:#575757;--w-accent:#a96d4b;--w-link:#a96d4b}body{color:var(--w-text)}}
 /* design: layout */
-[data-writer-document] p{margin-block:0 10.205pt;text-align:start}
+[data-writer-document]{text-align:start}
+:where([data-writer-document]) p{margin-block:0 10.205pt;text-align:inherit}
 @page{size:A4;margin:141.732pt 62.362pt 107.717pt 62.362pt}
 [data-style="Closing"]{margin-top:17.008pt;margin-bottom:22.677pt;break-after:avoid}
 [data-style="Closing"]>:first-child{margin-top:0}

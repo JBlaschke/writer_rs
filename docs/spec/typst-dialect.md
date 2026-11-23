@@ -385,6 +385,13 @@ citation-locale `title:` of the bibliography the package places.
 > (native input) or a compile error that names the embedded version (a `[pdf] template`), as at
 > every bump.
 
+> **Contract change (coordinator, 2026-11-22, package `0.6.0`; T107, R13 D14):**
+> `WRITER_DOC_VERSION` becomes `0.6.0` before milestone M9's defaults reach the package (design.md
+> §0.4; T108 onward). Only the version changes: the output is byte-identical to `0.5.0`'s. A
+> document or template that imports `@writer/doc:0.5.0` gets `W-TYP-PACKAGE-VERSION` (native
+> input) or a compile error that names the embedded version (a `[pdf] template`), as at every
+> bump.
+
 ### 4.3 Callouts, numbering, figures
 - `callout(kind: "note", title: auto, body)`: `title: auto` → the dictionary word for the kind
   (below; "Note", "Tip", "Important", "Warning", "Caution" in English; other kinds: the kind with
@@ -474,6 +481,9 @@ body) }` with comments naming every argument.
 
 > **2026-11-21 (package `0.5.0`; T97):** the starter's import line is `#import
 > "@writer/doc:0.5.0" as base`; its rules and comments are unchanged.
+
+> **2026-11-22 (package `0.6.0`; T107):** the starter's import line is `#import
+> "@writer/doc:0.6.0" as base`; its rules and comments are unchanged.
 
 ## 5. IR → typst emitter (T30)
 
@@ -1041,6 +1051,9 @@ directory → exit 2, nothing written. `eject typst-template FILE` writes `templ
 > **2026-11-21:** the package version is `0.5.0` (§4.2): exports import `@writer/doc:0.5.0`,
 > `eject typst-package DIR` writes `DIR/writer/doc/0.5.0/`, and an export's `writer-design.json`
 > holds the design's `lines` table (design.md §3.3, §6.7).
+>
+> **2026-11-22:** the package version is `0.6.0` (§4.2): exports import `@writer/doc:0.6.0` and
+> `eject typst-package DIR` writes `DIR/writer/doc/0.6.0/`; nothing else changes.
 
 ## 11. Verified API hints
 

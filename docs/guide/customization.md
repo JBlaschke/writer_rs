@@ -242,7 +242,7 @@ comes from `[design]`; the template holds what the design has no key for, and
 overrides for the PDF alone. The exported file is the smallest such template:
 
 ```typst
-#import "@writer/doc:0.5.0" as base
+#import "@writer/doc:0.6.0" as base
 
 #let writer-doc(..args, body) = {
     let theme = base.design-tokens(..args)
@@ -274,7 +274,7 @@ header row in the accent colour and sets second-level headings in italics in
 the PDF only:
 
 ```typst
-#import "@writer/doc:0.5.0" as base
+#import "@writer/doc:0.6.0" as base
 
 #let cover(meta, theme) = {
     let face(name) = base.style-tokens(theme, name).text

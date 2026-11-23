@@ -8,7 +8,8 @@ use crate::error::Diagnostic;
 pub fn problems(design: &Design, _targets: &[Target]) -> Vec<Diagnostic> {
     let mut findings = Vec::new();
     let mut fonts = std::collections::BTreeSet::new();
-    for font in [&design.fonts.body, &design.fonts.heading, &design.fonts.mono]
+    let roles = &design.fonts;
+    for font in [&roles.body, &roles.heading, &roles.mono, &roles.math]
         .into_iter()
         .flatten()
     {
@@ -40,7 +41,8 @@ pub fn pdf_problems(
     world: &crate::typst::world::WriterWorld,
 ) -> Vec<Diagnostic> {
     use typst::World;
-    if !prepared.design.declared
+    // Checks follow what the user declared, not layer 0 (R13 §1.4).
+    if !prepared.design.user_declared
         || prepared.document.source.kind == crate::ir::SourceKind::Typst
     {
         return Vec::new();
@@ -48,7 +50,7 @@ pub fn pdf_problems(
     let mut findings = Vec::new();
     let fonts = [
         &prepared.design.fonts.body, &prepared.design.fonts.heading,
-        &prepared.design.fonts.mono,
+        &prepared.design.fonts.mono, &prepared.design.fonts.math,
     ];
     let mut seen = std::collections::BTreeSet::new();
     for font in fonts.into_iter().flatten() {
@@ -92,16 +94,24 @@ fn imports_writer_doc(node: &typst_syntax::SyntaxNode) -> bool {
 pub fn docx_shadowed(
     design: &Design, path: &std::path::Path,
 ) -> Vec<Diagnostic> {
-    if !design.declared || path.as_os_str().is_empty() {
+    // What the user declared, not layer 0 (R13 §1.4).
+    if !design.user_declared || path.as_os_str().is_empty() {
         return Vec::new();
     }
     let Ok(reference) = crate::docx::reference::Reference::load(path) else {
         return Vec::new();
     };
+    // A value layer 0 alone sets overrides nothing the user declared.
+    let user = |path: &[&str]| !design.is_builtin(path);
     let mut parts = Vec::new();
-    if reference.sect_pr.is_some() && design.page != Default::default() {
+    if reference.sect_pr.is_some()
+        && design.page != Default::default()
+        && user(&["page"])
+    {
         parts.push("page setup".to_string());
-        if design.page.header.is_some() || design.page.footer.is_some() {
+        if (design.page.header.is_some() && user(&["page", "header"]))
+            || (design.page.footer.is_some() && user(&["page", "footer"]))
+        {
             parts.push("header/footer".to_string());
         }
     }
@@ -109,15 +119,15 @@ pub fn docx_shadowed(
     else {
         return Vec::new();
     };
-    let tokens = design.fonts != Default::default()
-        || design.text != Default::default()
-        || design.colors.text.is_some()
-        || design.colors.link.is_some();
+    let tokens = (design.fonts != Default::default() && user(&["fonts"]))
+        || (design.text != Default::default() && user(&["text"]))
+        || (design.colors.text.is_some() && user(&["colors", "text"]))
+        || (design.colors.link.is_some() && user(&["colors", "link"]));
     if tokens && tree.children.iter().any(|node| node.name == "w:docDefaults") {
         parts.push("document defaults".to_string());
     }
     let mut names = Vec::new();
-    for name in design.styles.keys() {
+    for name in design.styles.keys().filter(|name| user(&["styles", name])) {
         if tree
             .children
             .iter()
@@ -154,7 +164,8 @@ pub fn docx_shadowed(
 /// Reports declared styles which no div in the resolved document selects.
 ///
 /// Names writer's own paragraphs select are exempt: the Word vocabulary's
-/// paragraph names and the header furniture's `Header`.
+/// paragraph names and the header furniture's `Header`. So are layer 0's
+/// own styles, which the user did not declare (R13 §1.4).
 pub fn unused_styles(
     design: &Design, document: &crate::ir::Document,
 ) -> Vec<Diagnostic> {
@@ -175,6 +186,7 @@ pub fn unused_styles(
         .filter(|name| {
             !selected.contains(*name)
                 && !crate::docx::styles::writer_selects(name)
+                && !design.is_builtin(&["styles", name])
         })
         .map(|name| {
             Diagnostic::warning(

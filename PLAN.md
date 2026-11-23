@@ -325,6 +325,7 @@ writer_rs/                                                                    ow
 ├── src/theme/{mod,manifest,resolve,templates}.rs                               T15
 ├── src/design/{mod,parse,merge,resolve,json}.rs: T80   src/html/design.rs: T81 → T85 → T86 → T99   src/docx/design.rs: T83 → T87 (T85 additive; T100)   src/check/design.rs: T80 (T82, T83, T85 additive)   examples/letter/: T89   (design layer, docs/spec/design.md; M8)
 ├── spacing model (design.md §0.3; M8, 2026-11-21): src/docx/lines.rs, `design_input` in src/typst/world.rs, src/pipeline/typst.rs: T96   src/docx/{body,columns,styles}.rs (a div's inner spacing): T100   docs/guide/*.md, examples/letter/README.md (the model's passages): T101
+├── one set of defaults (design.md §0.4; M9, planned 2026-11-22): scripts/xfmt/, tests/xfmt/, docs/dev/xfmt-harness.md: T102   docs/dev/word-record/ (and a dated record in docs/dev/docx-validation.md): T103   src/design/defaults/*.toml, tests/design_defaults.rs: T105 (each domain's file: T108–T118)   src/design/{metrics.toml,metrics.rs}, tests/design_metrics.rs: T106   assets/typst/writer-doc/writer-defaults.json: T108   the natural-size module moved out of src/docx/images.rs: T110   assets/typst/writer-doc/writer.tmTheme: T113   tests/no_presentational_literals.rs: T121
 ├── src/docx/{mod,package,styles,numbering,reference,validate}.rs: T04   {body,inline,footnotes}.rs: T40   {tables,images,fields,toc}.rs: T41   math.rs: T42   custom_style.rs: T43
 ├── src/latex/{emit,escape}.rs: T60   {mod,template,assets,preamble}.rs: T61
 ├── src/pipeline/mod.rs (dispatch, every arm): T16   html.rs: T16   pdf.rs: T32   typst.rs (export): T34   docx.rs: T41   latex.rs: T61   typst_source.rs (.typ inputs): T52
@@ -512,6 +513,31 @@ presenter_rs per R8 §10.
 | T100 | One spacing model in Word: a styled div is one block (decision D1): `w:contextualSpacing` on `Header` and `footer` alone, direct spacing between a div's paragraphs written when the div ends; `tests/docx_div_spacing.rs` (R12 §5.6 to §5.8; added 2026-11-21) | S | T99 |
 | T101 | Guide: lines and block spaces in the three outputs, vocabulary styles in HTML, a div as one block, what a Typst template meets under 0.5.0 (added 2026-11-21) | S | T98, T99, T100 |
 
+### M9 — One set of defaults (`docs/research/R13-single-source-defaults.md`, design.md §0.4; added 2026-11-22, planned)
+| ID | Task | Size | Depends on |
+|---|---|---|---|
+| T102 | Cross-format measurement harness: builds reference documents as DOCX, PDF and HTML, reads PDF baselines (Ghostscript), HTML screen layout and printed-HTML positions over the DevTools protocol, and prints one table per document with design.md §0.4's tolerances; `scripts/xfmt/`, `tests/xfmt/` (R13 §6.2) | M | T101 |
+| T103 | Word record, the remainder (run by the owner): `atLeast` lines, widow control, s and A of Calibri, Calibri Light, Consolas and Cambria Math, lists, quotes, code, tables, footnotes, captions and equations, each against R13's prediction | M | T101 |
+| T104 | HTML paragraph rule: `text-align` on `[data-writer-document]`, the paragraph margin under `:where()` with last-child resets, so a centred title part or `.center` div stays centred (R13 §1.2) | S | T101 |
+| T105 | Built-in defaults layer behind a switch: `src/design/defaults/`, layer 0 with `Origin::Builtin`, em lengths, `user_declared` and `Design::view(APPLIED)` with `APPLIED` empty, `dump --design --defaults`; no output changes (decision D13) | L | T101 |
+| T106 | Bundled line metrics: s and A per family from `src/design/metrics.toml` before any font file, one warning per family nothing resolves, so output no longer depends on the installed fonts | M | T103, T105 |
+| T107 | `@writer/doc` 0.6.0: the package version wherever T97 set 0.5.0; no behaviour change; dropped if decision D14 folds M9 into 0.5.0 | S | T101 |
+| T108 | The first switch: body text, fonts, page and colours from the built-in design in all three formats; built-in CSS before the theme's entries, `writer-defaults.json` in the package, font sizes on a 0.5 pt grid (decisions D3–D5, D7, D8, D13, D16, D19) | L | T102, T104, T105, T106, T107 |
+| T109 | Headings, title block, abstract and contents from the built-in design; the `case` and `letter_spacing` style keys (decisions D10, D12) | M | T108 |
+| T110 | Captions, figures and images: one natural-size function (the file's DPI, else 96) for HTML, Typst, Word and LaTeX; the caption styles | M | T109, T120 |
+| T111 | Links and the colour palette: every colour literal of `styles.xml`, `lib.typ` and `callout.typ` becomes a token; links coloured and underlined in all three (decision D11) | M | T110 |
+| T112 | Lists, block quotes, rules and definitions join §0.3's model; indent, marker gap and bullets from `[design.lists]` (decision D17) | M | T103, T111 |
+| T113 | Code, math, callouts and notebook cells: one Word paragraph per code line, one `.tmTheme` for all three, a new Typst alias map, `fonts.math` | L | T103, T112 |
+| T114 | Tables: three rules, an x inset, the space around a Word table as direct spacing and an exact separator (decision D9) | M | T103, T113 |
+| T115 | Footnotes and bibliography: Typst footnote entries from the design, the PDF's bibliography written by writer as content | L | T103, T114 |
+| T116 | Furniture, page numbers and page background: a default page-number slot, offsets to the line box, `colors.background` as a page picture in Word (decision D6) | M | T115 |
+| T117 | Div-class styles (`center`, `left`, `right`, `small`, `large`) in the built-in design, Word's keep rules, a Word face chosen from `font` plus `weight` | M | T116 |
+| T118 | Language, hyphenation, widows and inline details: direction from `lang`, the `hyphenate`, `widows`, `orphans`, `kerning` and `ligatures` keys, superscript and subscript | M | T103, T117 |
+| T119 | HTML print: no space before the first block after a forced break; the per-style line-edge shift if decision D18 compensates (then M) | S | T118 |
+| T120 | LaTeX consumes the design for T108's domains (text, fonts, page, colours), language and metadata: class options, geometry, fonts, the callout colours, `hypersetup` and caption labels through the template's variables | M | T108 |
+| T121 | Guard test: no colour or length literal in backend sources and assets outside the defaults and an allowlist | S | T119, T120 |
+| T122 | Guide: one set of defaults, the built-in design and design.md §0.4's exceptions | S | T119, T120 |
+
 ### Dependency graph (what each task unblocks; derived from the dependency column)
 
 ```
@@ -559,6 +585,24 @@ w21 T97 ─► T98
 w22 T98 ─► T99, T101
 w23 T99 ─► T100, T101
 w24 T100 ─► T101
+
+M9 (one set of defaults, 2026-11-22, planned; every task waits for R12's T101):
+w25 T101 ─► T102, T103, T104, T105, T107
+w26 T102 ─► T108      T103 ─► T106, T112, T113, T114, T115, T118
+    T104 ─► T108      T105 ─► T106, T108      T107 ─► T108
+w27 T106 ─► T108
+w28 T108 ─► T109, T120
+w29 T109 ─► T110      T120 ─► T110, T121, T122
+w30 T110 ─► T111
+w31 T111 ─► T112
+w32 T112 ─► T113
+w33 T113 ─► T114
+w34 T114 ─► T115
+w35 T115 ─► T116
+w36 T116 ─► T117
+w37 T117 ─► T118
+w38 T118 ─► T119
+w39 T119 ─► T121, T122
 ```
 
 ### Waves (computed from the dependency column; no task depends on a task in its own wave)
@@ -592,6 +636,21 @@ w24 T100 ─► T101
 | 23 | T99 | 1 |
 | 24 | T100 | 1 |
 | 25 | T101 | 1 |
+| 26 | T102, T103, T104, T105, T107 | 5 |
+| 27 | T106 | 1 |
+| 28 | T108 | 1 |
+| 29 | T109, T120 | 2 |
+| 30 | T110 | 1 |
+| 31 | T111 | 1 |
+| 32 | T112 | 1 |
+| 33 | T113 | 1 |
+| 34 | T114 | 1 |
+| 35 | T115 | 1 |
+| 36 | T116 | 1 |
+| 37 | T117 | 1 |
+| 38 | T118 | 1 |
+| 39 | T119 | 1 |
+| 40 | T121, T122 | 2 |
 
 Edges added after the first plan (`A → B`: B depends on A). Requested in the specs' Deviations:
 T03 → T15, T14 → T12, T13 → T18, T13 → T60, T30 → T1A, T16 → T1A (html-output.md, math.md);
@@ -658,6 +717,34 @@ key a declared style leaves unset, which keeps each backend's built-in value: a 
 `space_before` or `space_after` has Word's, Typst's and the theme CSS's own space (in the PDF
 about 8 pt more than under 0.4.0, R12 §7), and the title block's parts inherit `Title`'s
 alignment in all three outputs but its other keys in Word alone.
+M9 (coordinator, 2026-11-22, `docs/research/R13-single-source-defaults.md`; design.md §0.4, planned
+and not in force): T102–T122 make writer's built-in defaults a design that every backend renders, so
+that a document without `[design]` looks the same in Word, the PDF and HTML, and bring the blocks
+R12 left outside §0.3's model into it. Every task depends on R12's T101, directly or through another
+task, and owns a file of R12's only after the R12 task that owned it. Wave 26 changes no output:
+T102 builds the harness that every later acceptance uses, T103 is the owner's Word readings, T104
+fixes the HTML paragraph rule that R12 §8 leaves to it, T105 adds layer 0 and
+`Design::view(APPLIED)` with `APPLIED` empty, and T107 moves the package to 0.6.0 (dropped if
+decision D14 folds M9 into 0.5.0). T106 follows T105 because its module joins `src/design/` (an
+additive `mod metrics;` in T105's `src/design/mod.rs`), and T103 because its table stores Calibri's
+A as T103 reads it. T108 is the first switch and needs all five of T102, T104, T105, T106 and T107.
+The domain tasks T109–T118 each edit `theme.css`, `lib.typ`, `styles.xml` and shared snapshots, and
+T119 edits `src/html/design.rs` after them, so they run one per wave (29–39); T120 (LaTeX) runs
+beside T109 because it touches none of those, and T110 waits for it because both edit `src/latex/`.
+T121 and T122 close the milestone in wave 40. Every brief is marked "brief, not ready for hand-off"
+and says what the coordinator prototypes and measures first and which of the decisions D3–D19 (R13
+§4.3, §4.6, §6.3) it needs; D13, the contract change itself, gates T105, and design.md §0.4 becomes
+§0.2 before T108's hand-off (moved from T105's on 2026-11-22, since layer 0 applies no domain
+yet). `scripts/waves.py` does not run over `docs/tasks/` (the 2026-11-20 note),
+and its identifier pattern (`\bT[0-9A-F]{2}\b`) reads two characters after the T, so it cannot
+parse T100 onward either: these waves were computed by hand, each task one wave after its latest
+dependency.
+
+Wave 26 (coordinator, 2026-11-22, PR #90): the owner signed D13 and D14, and T102, T104, T105 and
+T107 are done; T103's inputs and reading sheet are in `docs/dev/word-record/`, and the readings are
+the owner's. Only T104 changes output, the HTML paragraph rule of design.md §5.3, which moves one
+gap of R12's probe p7 in `tests/xfmt/expected/p7.txt`. T106 (wave 27) waits for T103's readings,
+and T108 for T106 and decisions D3, D4, D5, D7, D8, D16 and D19.
 
 The hard integration points are T16 (everything of M1 meets), T32 (emitter, package and
 compiler meet) and T52 (the typst backend meets serve and the exports). The coordinator
@@ -877,3 +964,17 @@ No `writer.toml` may live in an ancestor of the fixture directories.
   `first-line-indent` then needs `all: true`. CSS collapses adjacent margins to the larger one
   but centres the text in its line box, which leaves under 1 pt between HTML and Word at usual
   line heights. R12 §5 holds the reference code T96 to T100 install, §6 the agreement measured.
+- **Measuring across formats; Typst's own defaults** (R13, 2026-11-22): Chrome's screen layout
+  puts a baseline round(ascent) + floor(half-leading) CSS px below its line box's top (the floor
+  seen with a negative half-leading only), so HTML's offset per style is not the half-leading
+  theory's; `Page.printToPDF` snaps every baseline to a whole CSS px (0.75 pt), so printed HTML is
+  compared by absolute positions within 0.5 pt or by means over at least eight gaps. In Typst
+  0.15.1, `footnote.entry` carries a show-set of a 0.5em leading and a 0.85em size that
+  document-level set rules do not reach (typst-library `model/footnote.rs`, `ShowSet for
+  Packed<FootnoteEntry>`); a bibliography with labels is a grid with auto columns and a fixed
+  0.65em gutter (typst-layout `rules.rs`, `COLUMN_GUTTER`); an image's DPI comes from EXIF, then
+  JPEG or PNG metadata (`determine_dpi`, typst-library `visualize/image/raster.rs`), else 72
+  (`Image::DEFAULT_DPI`), where writer's HTML and Word take 96; raw blocks use two_face 0.4.5's
+  `extra_no_newlines` grammars (`RAW_SYNTAXES`, typst-library `text/raw.rs`), writer's HTML and
+  Word two_face 0.5.2's `extra_newlines` (`src/html/highlight.rs`). R13 §3.2, §3.4 and §5 hold
+  the probes.

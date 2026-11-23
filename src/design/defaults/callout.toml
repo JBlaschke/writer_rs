@@ -1,0 +1,13 @@
+# Layer 0, callouts (R13 §4.3). Group: CALLOUTS (T113); the kind colours are
+# colors.callout. em is of text.size.
+
+[design.callout]
+border_width = "0.25em"
+fill         = 0.0                        # the tint of the kind colour
+radius       = "0pt"
+
+[design.callout.padding]
+top    = "0.85em"
+right  = "1.15em"
+bottom = "0.85em"
+left   = "1.15em"

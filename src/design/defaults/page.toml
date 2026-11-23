@@ -1,0 +1,26 @@
+# Layer 0, page geometry (R13 §4.3). Groups: PAGE (T108) for paper and
+# margin; PAGE_NUMBERS (T116) for the furniture: the footer slot, the
+# header and footer offsets and the print mode, which only the furniture
+# code reads (design.md §9.4; R13 §6.2 gives that code to T116).
+# page.columns, page.background and page.header stay unset: their default
+# is "none", which a key cannot say. The margin names each side, so that a
+# layer above that sets one side keeps layer 0's other three.
+
+[design.page]
+paper         = "a4"
+header_offset = "12.5mm"
+footer_offset = "12.5mm"
+print         = "margin-boxes"
+
+[design.page.margin]                      # D5
+top    = "25mm"
+right  = "25mm"
+bottom = "25mm"
+left   = "25mm"
+
+# The page number on every page (D6 pending: is page 1 numbered?).
+[design.page.footer]
+lines = ["{page}"]
+align = "center"
+size  = "0.75em"
+color = "muted"

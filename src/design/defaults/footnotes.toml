@@ -1,0 +1,9 @@
+# Layer 0, footnotes in paged output (R13 §4.3). Group: FOOTNOTES (T115),
+# with the Footnote Text and Bibliography styles. R13 gives no gap or
+# clearance; these are Typst's, the PDF's today. R13's marker, 0.75em in the
+# link colour, has no key yet (T115). em is of text.size.
+
+[design.footnotes]
+separator = { length = "33%", width = "0.5pt", color = "border" }
+gap       = "0.5em"
+clearance = "1em"

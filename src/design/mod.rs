@@ -1,5 +1,7 @@
 //! The cross-format design schema and its single, backend-independent resolver.
 
+pub mod defaults;
+mod elements;
 mod json;
 mod merge;
 mod parse;
@@ -7,6 +9,7 @@ mod resolve;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -14,39 +17,70 @@ use serde_json::{Map, Value};
 use crate::assets::registry::AssetRegistry;
 use crate::ir::Attrs;
 
+pub use defaults::{APPLIED, Domains};
+pub use elements::{
+    Callouts, Code, Footnotes, Images, Links, Lists, Separator, TableRules,
+    TableWidth, Tables,
+};
 pub use json::{ExportPaths, PathMode};
 pub use merge::{absolutise_paths, merge, merged_table};
 pub use parse::{parse_align, parse_color, parse_length, parse_weight};
 
 // The unresolved serde schema mirrors the source syntax. Resolution is a
 // separate pass so malformed scalars can report their complete key path.
+// Keys added for the built-in design (R13 §4.2) follow a `;` and serialize
+// only when set: the guide's schema test (tests/guide.rs) asks for a row
+// per serialized key, and T122 writes those rows.
 macro_rules! spec {
-    ($name:ident { $($field:ident: $ty:ty),* $(,)? }) => {
+    (
+        $name:ident {
+            $($field:ident: $ty:ty),* $(,)?
+            $(; $($added:ident: $added_ty:ty),* $(,)?)?
+        }
+    ) => {
         #[doc = concat!("Unresolved `", stringify!($name), "` design table.")]
         #[derive(Debug, Clone, Default, Serialize, Deserialize)]
         #[serde(default, deny_unknown_fields)]
         pub struct $name {
             $(#[doc = concat!("The optional `", stringify!($field), "` setting.")]
             pub $field: $ty,)*
+            $($(#[doc = concat!("The optional `", stringify!($added), "` setting.")]
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub $added: $added_ty,)*)?
         }
     };
 }
 
 spec!(DesignSpec {
     fonts: FontsSpec, text: TextSpec, colors: ColorsSpec,
-    page: PageSpec, styles: BTreeMap<String, StyleSpec>,
+    page: PageSpec, styles: BTreeMap<String, StyleSpec>;
+    lists: Option<ListsSpec>, table: Option<TablesSpec>,
+    code: Option<CodeSpec>, callout: Option<CalloutsSpec>,
+    image: Option<ImagesSpec>, footnotes: Option<FootnotesSpec>,
+    links: Option<LinksSpec>,
 });
 spec!(FontsSpec {
-    body: Option<FontSpec>, heading: Option<FontSpec>, mono: Option<FontSpec>,
+    body: Option<FontSpec>, heading: Option<FontSpec>, mono: Option<FontSpec>;
+    math: Option<FontSpec>,
 });
 spec!(FontDetailsSpec { family: String, files: Vec<PathBuf> });
 spec!(TextSpec {
     size: Option<String>, line_height: Option<LineHeightSpec>,
-    paragraph_spacing: Option<String>, justify: Option<bool>,
+    paragraph_spacing: Option<String>, justify: Option<bool>;
+    hyphenate: Option<bool>, widows: Option<u8>, orphans: Option<u8>,
+    kerning: Option<bool>, ligatures: Option<bool>,
+    measure: Option<String>, screen_scale: Option<f64>,
 });
 spec!(ColorsSpec {
     text: Option<String>, accent: Option<String>, muted: Option<String>,
-    link: Option<String>, background: Option<String>,
+    link: Option<String>, background: Option<String>;
+    border: Option<String>, code_bg: Option<String>,
+    highlight: Option<String>, error: Option<String>,
+    callout: Option<CalloutColorsSpec>,
+});
+spec!(CalloutColorsSpec {
+    note: Option<String>, tip: Option<String>, important: Option<String>,
+    warning: Option<String>, caution: Option<String>, other: Option<String>,
 });
 spec!(PageSpec {
     paper: Option<String>, margin: Option<MarginSpec>,
@@ -90,12 +124,48 @@ spec!(StyleSpec {
     color: Option<String>, weight: Option<WeightSpec>, italic: Option<bool>,
     align: Option<String>, space_before: Option<String>, space_after: Option<String>,
     keep_together: Option<bool>, keep_with_next: Option<bool>,
-    frame: Option<FrameSpec>,
+    frame: Option<FrameSpec>;
+    case: Option<String>, letter_spacing: Option<String>,
+    indent: Option<IndentSpec>, border: Option<BorderSpec>,
+    fill: Option<String>, padding: Option<MarginSpec>,
 });
 spec!(FrameSpec {
     width: Option<String>, align: Option<String>, gap: Option<String>,
     anchor: Option<FrameAnchor>, offset: Option<String>,
 });
+spec!(IndentSidesSpec { left: Option<String>, right: Option<String> });
+spec!(BorderSpec {
+    side: Option<String>, width: Option<String>, color: Option<String>,
+    gap: Option<String>,
+});
+spec!(ListsSpec {
+    tight_spacing: Option<String>, indent: Option<String>,
+    marker_gap: Option<String>, bullets: Option<Vec<String>>,
+});
+spec!(TableRulesSpec { outer: Option<String>, header: Option<String> });
+spec!(TablesSpec {
+    rules: Option<TableRulesSpec>, rule_color: Option<String>,
+    inset_x: Option<String>, header_weight: Option<WeightSpec>,
+    header_fill: Option<String>, width: Option<String>,
+});
+spec!(CodeSpec {
+    background: Option<String>, padding: Option<MarginSpec>,
+    radius: Option<String>, line_height: Option<LineHeightSpec>,
+    theme: Option<String>,
+});
+spec!(CalloutsSpec {
+    border_width: Option<String>, fill: Option<f64>,
+    padding: Option<MarginSpec>, radius: Option<String>,
+});
+spec!(ImagesSpec { dpi: Option<f64> });
+spec!(SeparatorSpec {
+    length: Option<String>, width: Option<String>, color: Option<String>,
+});
+spec!(FootnotesSpec {
+    separator: Option<SeparatorSpec>, gap: Option<String>,
+    clearance: Option<String>,
+});
+spec!(LinksSpec { underline: Option<bool>, print_url: Option<bool> });
 
 /// A font role's family string or file-bearing table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,6 +175,16 @@ pub enum FontSpec {
     Family(String),
     /// A family and its source files.
     Details(FontDetailsSpec),
+}
+
+/// A style's indent: one length for both sides, or each side.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum IndentSpec {
+    /// The same indent on the left and the right.
+    Both(String),
+    /// Independent sides.
+    Sides(IndentSidesSpec),
 }
 
 /// A line pitch written as a number or a unit-bearing length.
@@ -188,10 +268,21 @@ pub enum RuleSpec {
 }
 
 /// Resolved design, with lengths in points and colours in RGB.
+///
+/// What the pipeline resolves is the view of the merged layers that keeps
+/// layer 0's keys of the groups in [`APPLIED`] only (design.md §1.1).
 #[derive(Debug, Clone, Default, PartialEq, Serialize)]
 pub struct Design {
-    /// Whether the merged design table has any keys.
+    /// Whether the view's merged table has any keys. The backends,
+    /// `src/typst/world.rs`, `src/assets/export.rs` and [`Design::to_json`]
+    /// read this flag (R13 §1.4); while [`APPLIED`] is empty it equals
+    /// [`Design::user_declared`].
     pub declared: bool,
+    /// Whether a layer above layer 0 has a key. `writer check` reads this
+    /// flag (`src/check/design.rs`, `src/check/targets.rs`), no backend does
+    /// (R13 §1.4). Not part of the JSON.
+    #[serde(skip)]
+    pub user_declared: bool,
     /// Independent optional font roles.
     pub fonts: Fonts,
     /// Body typography.
@@ -202,6 +293,51 @@ pub struct Design {
     pub page: Page,
     /// Styles keyed by their original declared names.
     pub styles: BTreeMap<String, Style>,
+    /// List geometry (`[design.lists]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub lists: Lists,
+    /// Table rules and insets (`[design.table]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub table: Tables,
+    /// Code blocks (`[design.code]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub code: Code,
+    /// Callout boxes (`[design.callout]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub callout: Callouts,
+    /// Image sizing (`[design.image]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub image: Images,
+    /// Footnotes in paged output (`[design.footnotes]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub footnotes: Footnotes,
+    /// Links (`[design.links]`).
+    #[serde(skip_serializing_if = "is_unset")]
+    pub links: Links,
+    /// The layer that set each leaf of the merged table, keyed by its key
+    /// path below `[design]`. A leaf is a value that is not a table, or an
+    /// empty table. Tells built-in values from the user's.
+    #[serde(skip)]
+    pub origins: BTreeMap<Vec<String>, Origin>,
+    /// The layers above layer 0, as given, so that [`Design::view`] can
+    /// merge them again under another part of layer 0.
+    #[serde(skip)]
+    pub sources: Sources,
+}
+
+/// The layers above layer 0 that a [`Design`] was merged from.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Sources(Arc<Vec<Source>>);
+
+#[derive(Debug, Clone, PartialEq)]
+struct Source {
+    table: Map<String, Value>,
+    base_dir: PathBuf,
+    origin: Origin,
+}
+
+fn is_unset<T: Default + PartialEq>(value: &T) -> bool {
+    *value == T::default()
 }
 
 /// A length in points; serialization rounds to three decimal places.
@@ -258,6 +394,9 @@ pub struct Fonts {
     pub heading: Option<Font>,
     /// Monospaced family.
     pub mono: Option<Font>,
+    /// Math family.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub math: Option<Font>,
 }
 
 /// Optional body typography settings.
@@ -271,6 +410,27 @@ pub struct Text {
     pub paragraph_spacing: Option<Pt>,
     /// Whether body paragraphs are justified.
     pub justify: Option<bool>,
+    /// Whether words are hyphenated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hyphenate: Option<bool>,
+    /// Fewest lines of a paragraph left alone at the top of a page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub widows: Option<u8>,
+    /// Fewest lines of a paragraph left alone at the foot of a page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub orphans: Option<u8>,
+    /// Whether the font's kerning applies.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kerning: Option<bool>,
+    /// Whether the font's standard ligatures apply.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ligatures: Option<bool>,
+    /// The longest screen line.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub measure: Option<Pt>,
+    /// How much larger HTML sets text on screen than in print.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub screen_scale: Option<f64>,
 }
 
 /// Resolved colour tokens; unset tokens remain unset.
@@ -286,6 +446,38 @@ pub struct Colors {
     pub link: Option<Color>,
     /// Page background colour.
     pub background: Option<Color>,
+    /// Rules and borders.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub border: Option<Color>,
+    /// Code block background.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code_bg: Option<Color>,
+    /// Highlighted text and code lines.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub highlight: Option<Color>,
+    /// Errors such as unresolved references.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<Color>,
+    /// One colour per callout kind.
+    #[serde(skip_serializing_if = "is_unset")]
+    pub callout: CalloutColors,
+}
+
+/// Callout colours by kind; unset kinds remain unset.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]
+pub struct CalloutColors {
+    /// Note callouts.
+    pub note: Option<Color>,
+    /// Tip callouts.
+    pub tip: Option<Color>,
+    /// Important callouts.
+    pub important: Option<Color>,
+    /// Warning callouts.
+    pub warning: Option<Color>,
+    /// Caution callouts.
+    pub caution: Option<Color>,
+    /// Callouts of any other kind.
+    pub other: Option<Color>,
 }
 
 /// Page geometry and optional header and footer slots.
@@ -560,6 +752,73 @@ pub struct Style {
     pub keep_with_next: bool,
     /// A floating frame for the div; applied by the DOCX backend only.
     pub frame: Option<Frame>,
+    /// Letter case.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub case: Option<Case>,
+    /// Extra space between letters; negative tightens.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub letter_spacing: Option<Pt>,
+    /// Left and right indents of the paragraphs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub indent: Option<Indent>,
+    /// A border on one side or all four.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub border: Option<Border>,
+    /// Background colour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill: Option<Color>,
+    /// Space between the border or fill and the text.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub padding: Option<Margin>,
+}
+
+/// A style's letter case.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Case {
+    /// All capitals.
+    Upper,
+    /// Small capitals.
+    SmallCaps,
+}
+
+/// A style's left and right indents.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]
+pub struct Indent {
+    /// Left indent.
+    pub left: Option<Pt>,
+    /// Right indent.
+    pub right: Option<Pt>,
+}
+
+/// A style's border.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub struct Border {
+    /// Which side has the border.
+    pub side: BorderSide,
+    /// Stroke width.
+    pub width: Option<Pt>,
+    /// Stroke colour.
+    pub color: Option<Color>,
+    /// Space between the border and the text.
+    pub gap: Option<Pt>,
+}
+
+/// The side of a style's border.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum BorderSide {
+    /// Above the paragraphs.
+    Top,
+    /// Below the paragraphs.
+    Bottom,
+    /// Left of the paragraphs.
+    Left,
+    /// Right of the paragraphs.
+    Right,
+    /// All four sides.
+    #[default]
+    All,
 }
 
 /// A div style's floating frame (`styles.<Name>.frame`, design.md §8.6).
@@ -603,8 +862,10 @@ pub struct Layer<'a> {
 }
 
 /// Source owning a design setting.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Origin {
+    /// writer's built-in design, layer 0 (`src/design/defaults/`).
+    Builtin,
     /// Theme manifest.
     Theme {
         /// Absolute manifest filename.
@@ -614,6 +875,19 @@ pub enum Origin {
     ProjectFile(PathBuf),
     /// Document or notebook metadata.
     FrontMatter,
+}
+
+impl Origin {
+    /// A short name for dumps: `builtin`, `theme <file>`, `project <file>`
+    /// or `front matter`.
+    pub fn label(&self) -> String {
+        match self {
+            Self::Builtin => "builtin".into(),
+            Self::Theme { file } => format!("theme {}", file.display()),
+            Self::ProjectFile(file) => format!("project {}", file.display()),
+            Self::FrontMatter => "front matter".into(),
+        }
+    }
 }
 
 /// A fragment of plain furniture text.
@@ -669,7 +943,8 @@ impl Design {
     /// Font files in role/declaration order, with duplicates omitted.
     pub fn font_files(&self) -> Vec<PathBuf> {
         let mut seen = BTreeSet::new();
-        [&self.fonts.body, &self.fonts.heading, &self.fonts.mono]
+        let fonts = &self.fonts;
+        [&fonts.body, &fonts.heading, &fonts.mono, &fonts.math]
             .into_iter()
             .flatten()
             .flat_map(|font| font.files.iter())
@@ -694,6 +969,74 @@ impl Design {
         for path in self.images() {
             registry.register_file(path);
         }
+    }
+
+    /// This design's layers above layer 0, in merge order.
+    pub fn layers(&self) -> Vec<Layer<'_>> {
+        self.sources
+            .0
+            .iter()
+            .map(|source| Layer {
+                table: source.table.clone(),
+                base_dir: &source.base_dir,
+                origin: source.origin.clone(),
+            })
+            .collect()
+    }
+
+    /// The layers above layer 0 merged again over layer 0's `applied`
+    /// groups. `view(APPLIED)` is what the pipeline resolves, and
+    /// `view(Domains::NONE)` equals the design without layer 0.
+    pub fn view(&self, applied: Domains) -> crate::error::Result<Design> {
+        let mut layers = vec![defaults::layer(applied)];
+        layers.extend(self.layers());
+        merge(&layers)
+    }
+
+    /// The layer that set the leaf at `path` below `[design]`.
+    pub fn origin(&self, path: &[&str]) -> Option<&Origin> {
+        let path: Vec<String> = path.iter().map(|&key| key.into()).collect();
+        self.origins.get(&path)
+    }
+
+    /// Whether the keys at and below `path` exist and all come from layer 0.
+    pub fn is_builtin(&self, path: &[&str]) -> bool {
+        let mut found = false;
+        for (key, origin) in &self.origins {
+            if key.len() >= path.len()
+                && key.iter().zip(path).all(|(key, part)| key == part)
+            {
+                if *origin != Origin::Builtin {
+                    return false;
+                }
+                found = true;
+            }
+        }
+        found
+    }
+
+    /// The origin of every leaf, nested like the `[design]` table, each
+    /// leaf an [`Origin::label`].
+    pub fn origins_json(&self) -> Value {
+        let mut root = Map::new();
+        for (path, origin) in &self.origins {
+            let Some((last, parents)) = path.split_last() else {
+                continue;
+            };
+            let mut node = &mut root;
+            for key in parents {
+                // A leaf is a value that is not a non-empty table, so no
+                // leaf's path is a prefix of another's: each parent is a
+                // table this loop inserted.
+                node = node
+                    .entry(key.clone())
+                    .or_insert_with(|| Value::Object(Map::new()))
+                    .as_object_mut()
+                    .expect("leaves are never parents of other leaves");
+            }
+            node.insert(last.clone(), Value::String(origin.label()));
+        }
+        Value::Object(root)
     }
 }
 

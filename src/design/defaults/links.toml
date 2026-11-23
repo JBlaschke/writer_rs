@@ -1,0 +1,5 @@
+# Layer 0, links (R13 §4.3). Group: LINKS (T111).
+
+[design.links]
+underline = true
+print_url = false                         # D11

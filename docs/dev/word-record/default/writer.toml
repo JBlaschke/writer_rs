@@ -1,0 +1,23 @@
+# The Word record's input without a design (T103): writer's built-in Word
+# styles (assets/docx/styles.xml), the case R13's Word predictions (u) are
+# computed for. Calibri, Calibri Light and Consolas are Word's own fonts.
+
+[document]
+lang = "en-GB"
+toc = false
+
+[build]
+targets = ["docx"]
+out_dir = "dist"
+
+[markdown]
+references = false
+
+[numbering]
+headings = false
+
+[pdf]
+system_fonts = false
+
+[docx]
+update_fields = false

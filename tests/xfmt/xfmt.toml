@@ -1,0 +1,56 @@
+# Reference documents of the cross-format harness (scripts/xfmt/run.py,
+# docs/dev/xfmt-harness.md). Each [[doc]] has
+#   source  a writer document, built as HTML, PDF, DOCX and Typst, or
+#   html    an HTML file measured as it is (no PDF, no Word);
+#   config  the writer.toml to build with (optional);
+#   media   the CSS media Chrome emulates for the screen layout: "print"
+#           (default) or "screen"; the printed PDF always uses print;
+#   print   false to leave out Chrome's printed PDF (default true);
+#   root    the element whose text is measured (default
+#           "[data-writer-document]");
+#   width   the viewport in CSS px (default: the DOCX's text width);
+#   name    the table's name (default: the file's stem).
+# Each document's table is kept in expected/<name>.txt.
+
+# R12's probes (R12 §2 and §6 to §8).
+[[doc]]
+source = "r12/p1.md"
+config = "r12/writer.toml"
+
+[[doc]]
+source = "r12/p2.md"
+config = "r12/writer.toml"
+
+[[doc]]
+source = "r12/p3.md"
+config = "r12/writer.toml"
+
+[[doc]]
+source = "r12/p4.md"
+config = "r12/writer.toml"
+
+[[doc]]
+source = "r12/p5.md"
+config = "r12/writer.toml"
+
+[[doc]]
+source = "r12/p6.md"
+config = "r12/writer.toml"
+
+[[doc]]
+source = "r12/p7.md"
+config = "r12/writer.toml"
+
+# The title block and the contents list: print media hides the contents
+# (print.css), so the screen layout is read with screen media, as R12 did.
+# The printed PDF has print media and no contents.
+[[doc]]
+source = "r12-vocab/p10.md"
+config = "r12-vocab/writer.toml"
+media = "screen"
+
+# R13 §3.2's probe "residual": plain CSS, Chrome only.
+[[doc]]
+html = "r13/residual.html"
+root = "#doc"
+width = 600

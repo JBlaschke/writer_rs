@@ -159,7 +159,7 @@ fn rewrite_paths(
         }
     }
     if let Some(fonts) = table.get_mut("fonts").and_then(Value::as_object_mut) {
-        for role in ["body", "heading", "mono"] {
+        for role in ["body", "heading", "mono", "math"] {
             if let Some(files) = fonts
                 .get_mut(role)
                 .and_then(|font| font.get_mut("files"))

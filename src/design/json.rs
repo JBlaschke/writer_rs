@@ -125,7 +125,7 @@ fn rewrite_images(
 
 /// Rewrites every font file that `fonts` maps; others keep their real path.
 fn rewrite_fonts(value: &mut Value, fonts: &BTreeMap<PathBuf, String>) {
-    for role in ["body", "heading", "mono"] {
+    for role in ["body", "heading", "mono", "math"] {
         let files = object_at(value, &format!("fonts.{role}"))
             .and_then(|font| font.get_mut("files"))
             .and_then(Value::as_array_mut);

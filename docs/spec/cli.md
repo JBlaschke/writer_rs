@@ -129,6 +129,14 @@ writer dump --default-config
 > resolved design as pretty JSON (design.md §3.3 with real paths) or `null` when none is declared;
 > it conflicts with the other dump flags like `--context` (design.md §4.1, T80).
 
+> **Contract change (coordinator, 2026-11-22; T105):** `writer dump <INPUT> --design --defaults`
+> prints one JSON object with two keys. `design` is the design resolved over all of writer's
+> built-in layer 0, every group applied whatever `APPLIED` holds (design.md §1.1; the §3.3 JSON
+> with real paths). `origins` mirrors the merged `[design]` table, and each leaf names the layer
+> that set it: `builtin`, `theme <file>`, `project <file>` or `front matter`. `--defaults`
+> requires `--design` (exit 2 otherwise). Without it, `--design` prints what it printed before:
+> the view the backends see, `null` when nothing is declared.
+
 ## init
 ```
 writer init [DIR] [--typst] [--bib] [--force]

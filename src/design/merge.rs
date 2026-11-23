@@ -2,10 +2,13 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use serde_json::{Map, Value};
 
-use super::{Design, DesignSpec, Layer, Origin};
+use super::{
+    Design, DesignSpec, Layer, Origin, Source, Sources, normalise_style_key,
+};
 use crate::assets::registry::normalize_lexically;
 use crate::error::{Error, Result};
 
@@ -15,7 +18,7 @@ pub fn absolutise_paths(
     table: &mut Map<String, Value>, base_dir: &Path, origin: &Origin,
 ) -> Result<()> {
     if let Some(fonts) = table.get_mut("fonts").and_then(Value::as_object_mut) {
-        for role in ["body", "heading", "mono"] {
+        for role in ["body", "heading", "mono", "math"] {
             if let Some(files) = fonts
                 .get_mut(role)
                 .and_then(Value::as_object_mut)
@@ -108,12 +111,14 @@ fn absolute(path: &Path) -> Result<PathBuf> {
 /// An explicitly empty furniture slot or page background replaces an
 /// inherited one.
 pub fn merged_table(layers: &[Layer<'_>]) -> Result<Map<String, Value>> {
-    collect(layers).map(|(table, _)| table)
+    collect(layers).map(|collected| collected.table)
 }
 
-/// Deep-merges, validates, and resolves ordered design sources.
+/// Deep-merges, validates, and resolves ordered design sources. The result
+/// records the origin of each leaf and keeps the layers above layer 0 for
+/// [`Design::view`]; `user_declared` is true when one of them has a key.
 pub fn merge(layers: &[Layer<'_>]) -> Result<Design> {
-    let (table, origins) = collect(layers)?;
+    let Collected { table, errors, leaves } = collect(layers)?;
     let result = super::resolve::resolve(&table).and_then(|design| {
         // Keep the public serde schema authoritative too. The contextual pass
         // runs first so untagged forms never erase a useful key-path error.
@@ -121,27 +126,113 @@ pub fn merge(layers: &[Layer<'_>]) -> Result<Design> {
             .map_err(|error| Error::Config(format!("design: {error}")))?;
         Ok(design)
     });
-    result.map_err(|error| contextualize(error, &origins))
+    let mut design = result.map_err(|error| contextualize(error, &errors))?;
+    let users = layers.iter().filter(|layer| layer.origin != Origin::Builtin);
+    let sources: Vec<Source> = users
+        .map(|layer| Source {
+            table: layer.table.clone(),
+            base_dir: layer.base_dir.to_path_buf(),
+            origin: layer.origin.clone(),
+        })
+        .collect();
+    design.user_declared =
+        sources.iter().any(|source| !source.table.is_empty());
+    design.origins = leaves;
+    design.sources = Sources(Arc::new(sources));
+    Ok(design)
 }
 
 type Origins = BTreeMap<String, Origin>;
 
-fn collect(layers: &[Layer<'_>]) -> Result<(Map<String, Value>, Origins)> {
+struct Collected {
+    table: Map<String, Value>,
+    /// Dotted paths, tables included, for error context.
+    errors: Origins,
+    /// The origin of each leaf of `table`.
+    leaves: BTreeMap<Vec<String>, Origin>,
+}
+
+fn collect(layers: &[Layer<'_>]) -> Result<Collected> {
+    let spellings = style_spellings(layers);
     let mut table = Map::new();
-    let mut origins = Origins::new();
+    let mut errors = Origins::new();
+    let mut merged = Vec::new();
     for layer in layers {
         let mut over = layer.table.clone();
+        if layer.origin == Origin::Builtin {
+            respell_styles(&mut over, &spellings);
+        }
         absolutise_paths(&mut over, layer.base_dir, &layer.origin)?;
         clear_empty_furniture(&mut table, &over);
         remember(
             &Value::Object(over.clone()),
             "design",
             &layer.origin,
-            &mut origins,
+            &mut errors,
         );
         crate::theme::deep_merge(&mut table, &over);
+        merged.push((over, &layer.origin));
     }
-    Ok((table, origins))
+    // A leaf comes from the last layer that holds its path: a later table
+    // over an earlier value, or an earlier table under a later value, would
+    // have replaced it.
+    let leaves = super::defaults::leaves(&table)
+        .into_iter()
+        .filter_map(|path| {
+            let (_, origin) =
+                merged.iter().rev().find(|(over, _)| holds(over, &path))?;
+            Some((path, (*origin).clone()))
+        })
+        .collect();
+    Ok(Collected { table, errors, leaves })
+}
+
+fn holds(map: &Map<String, Value>, path: &[String]) -> bool {
+    let Some((first, rest)) = path.split_first() else {
+        return true;
+    };
+    match map.get(first) {
+        Some(Value::Object(child)) => holds(child, rest),
+        Some(_) => rest.is_empty(),
+        None => false,
+    }
+}
+
+/// How the layers above layer 0 spell each style, by normalised name: the
+/// first spelling wins.
+fn style_spellings(layers: &[Layer<'_>]) -> BTreeMap<String, String> {
+    let mut spellings = BTreeMap::new();
+    for layer in layers {
+        if layer.origin == Origin::Builtin {
+            continue;
+        }
+        let styles = layer.table.get("styles").and_then(Value::as_object);
+        for name in styles.into_iter().flat_map(Map::keys) {
+            spellings
+                .entry(normalise_style_key(name))
+                .or_insert_with(|| name.clone());
+        }
+    }
+    spellings
+}
+
+/// Renames layer 0's styles to the user's spelling of the same name, so
+/// that the user's keys merge into the built-in style instead of
+/// colliding with it.
+fn respell_styles(
+    table: &mut Map<String, Value>, spellings: &BTreeMap<String, String>,
+) {
+    let Some(Value::Object(styles)) = table.get_mut("styles") else {
+        return;
+    };
+    let renamed = std::mem::take(styles)
+        .into_iter()
+        .map(|(name, style)| {
+            let spelling = spellings.get(&normalise_style_key(&name));
+            (spelling.cloned().unwrap_or(name), style)
+        })
+        .collect();
+    *styles = renamed;
 }
 
 fn clear_empty_furniture(

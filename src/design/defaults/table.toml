@@ -1,0 +1,10 @@
+# Layer 0, table geometry (R13 §4.3). Group: TABLES (T114), with the
+# Compact style, whose spaces are the cells' y inset. header_fill stays
+# unset: no fill. em is of text.size.
+
+[design.table]
+rules         = { outer = "1.5pt", header = "0.75pt" }
+rule_color    = "text"
+inset_x       = "0.65em"
+header_weight = "bold"
+width         = "full"                    # D9

@@ -459,7 +459,7 @@ fn with_design_layers<T>(
     prepared: &Prepared, opts: &BuildOptions,
     consume: impl FnOnce(&[crate::design::Layer<'_>]) -> Result<T>,
 ) -> Result<(T, Diagnostics)> {
-    use crate::design::{Layer, Origin};
+    use crate::design::{APPLIED, Layer, Origin};
     let mut diagnostics = Diagnostics::new();
     let theme = match resolve_theme_source(prepared, opts, true) {
         Ok(theme) => Some(theme),
@@ -477,8 +477,9 @@ fn with_design_layers<T>(
             None
         }
     };
-    let mut layers =
-        theme.as_ref().map(Theme::design_layers).unwrap_or_default();
+    // Layer 0 first: writer's built-in design, the groups in APPLIED only.
+    let mut layers = vec![crate::design::defaults::layer(APPLIED)];
+    layers.extend(theme.as_ref().map(Theme::design_layers).unwrap_or_default());
     if let Some(path) = &prepared.config_path {
         layers.push(Layer {
             table: Config::load(path)?.design,
@@ -502,7 +503,8 @@ fn with_design_layers<T>(
     Ok((consume(&layers)?, diagnostics))
 }
 
-/// Resolves theme, project and document design sources once.
+/// Resolves theme, project and document design sources once: the view of
+/// layer 0's applied groups under them (design.md §1.1).
 pub fn resolve_design(
     prepared: &Prepared, opts: &BuildOptions,
 ) -> Result<(crate::design::Design, Diagnostics)> {
@@ -510,11 +512,19 @@ pub fn resolve_design(
 }
 
 /// The validated design table with paths resolved per contributing source.
+/// Layer 0 stays out: ejection writes the user's own design.
 pub fn merged_design_table(
     prepared: &Prepared, opts: &BuildOptions,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
-    with_design_layers(prepared, opts, crate::design::merged_table)
-        .map(|(table, _)| table)
+    with_design_layers(prepared, opts, |layers| {
+        let own: Vec<_> = layers
+            .iter()
+            .filter(|layer| layer.origin != crate::design::Origin::Builtin)
+            .cloned()
+            .collect();
+        crate::design::merged_table(&own)
+    })
+    .map(|(table, _)| table)
 }
 
 /// Every source, resource and theme directory to watch, in first-use order.

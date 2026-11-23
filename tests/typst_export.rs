@@ -23,7 +23,7 @@ use writer::typst::world::{MainFile, WriterWorld, world_inputs};
 const SVG: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="12"><rect width="24" height="12" fill="#526d82"/></svg>"##;
 const CONFIG: &str = "[build]\nout_dir='out'\ntargets=['typst']\n[pdf]\nsystem_fonts=false\nallow_packages=false\ntimestamp='2026-10-29T00:00:00Z'\n";
 const TEMPLATE: &str = concat!(
-    "#import \"@writer/doc:0.5.0\" as base\n",
+    "#import \"@writer/doc:0.6.0\" as base\n",
     "#let writer-doc(..args, body) = {\n",
     "  [TEMPLATE-MARKER]\n",
     "  base.writer-doc(..args, body)\n",
@@ -153,7 +153,7 @@ fn compile_export(root: &Path, main: &str, fonts: &[PathBuf]) -> PagedDocument {
     if !root.join("packages").exists() {
         package::eject(&root.join("packages")).unwrap();
     }
-    assert!(root.join("packages/writer/doc/0.5.0/typst.toml").is_file());
+    assert!(root.join("packages/writer/doc/0.6.0/typst.toml").is_file());
     assert!(root.join("packages/preview/mitex/0.2.7/typst.toml").is_file());
     let mut world = export_world(root, MainFile::Path(root.join(main)), fonts);
     let mut inputs = world_inputs(

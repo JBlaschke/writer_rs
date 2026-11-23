@@ -1,0 +1,123 @@
+# The Word record's inputs with a declared design (T103): R12's probe design
+# (R12 §2.1), so that today's readings sit next to R12 §2 and §8.
+# build.sh copies Source Sans 3 into ./fonts before building; without it
+# writer assumes Calibri's single line and every `w:line` changes.
+
+[document]
+lang = "en-GB"
+toc = false
+
+[build]
+targets = ["docx"]
+out_dir = "dist"
+
+[markdown]
+references = false
+
+[numbering]
+headings = false
+
+[pdf]
+system_fonts = false
+font_paths = ["fonts"]
+
+[docx]
+update_fields = false
+
+[design.fonts]
+body = "Source Sans 3"
+heading = "Source Sans 3"
+
+[design.text]
+size = "11pt"
+line_height = 1.35
+paragraph_spacing = "3.6mm"
+justify = false
+
+[design.colors]
+text = "#000000"
+background = "#ffffff"
+
+# A 30 mm bottom margin keeps Word's footer (720 twips plus one line) inside
+# the margin, so it never pushes the body up (R12 §8, "Pagination").
+[design.page]
+paper = "a4"
+margin = { top = "10mm", right = "20mm", bottom = "30mm", left = "20mm" }
+
+# Exact fences around the lines under test: 0.8 h above the baseline,
+# 0.2 h below (design.md §0.3).
+[design.styles.X12]
+line_height = "12.1pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.X20]
+line_height = "20pt"
+space_before = "0mm"
+space_after = "0mm"
+
+# One family each at 24 pt. writer reads none of these fonts (they are not
+# in ./fonts), so it divides by Calibri's single line, 2500/2048, and a
+# line_height of exactly that writes `w:line="240"`: one single line of the
+# family in Word, whatever the family.
+[design.styles.FCalibri]
+font = "Calibri"
+size = "24pt"
+line_height = 1.220703125
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FCalibriX]
+font = "Calibri"
+size = "24pt"
+line_height = "30pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FCalibriLight]
+font = "Calibri Light"
+size = "24pt"
+line_height = 1.220703125
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FCalibriLightX]
+font = "Calibri Light"
+size = "24pt"
+line_height = "30pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FConsolas]
+font = "Consolas"
+size = "24pt"
+line_height = 1.220703125
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FConsolasX]
+font = "Consolas"
+size = "24pt"
+line_height = "30pt"
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FCambriaMath]
+font = "Cambria Math"
+size = "24pt"
+line_height = 1.220703125
+space_before = "0mm"
+space_after = "0mm"
+
+[design.styles.FCambriaMathX]
+font = "Cambria Math"
+size = "24pt"
+line_height = "30pt"
+space_before = "0mm"
+space_after = "0mm"
+
+# R13 §3.4 M4's list-item style: before 0, after S = 0.25 em = 2.75 pt
+# (55 twips). The items that use it are raw OpenXML in w07-lists.md.
+[design.styles.LI]
+space_before = "0mm"
+space_after = "2.75pt"

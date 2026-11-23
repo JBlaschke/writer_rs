@@ -1,0 +1,66 @@
+name = "spacing-probe-vocab"
+description = "R12 spacing probe with the vocabulary styles of p10"
+extends = "../../r12/theme"
+
+
+[design.styles.Title]
+size = "24pt"
+line_height = 1.1
+weight = "bold"
+space_before = "0pt"
+space_after = "8pt"
+
+[design.styles.Subtitle]
+size = "14pt"
+line_height = 1.2
+space_before = "0pt"
+space_after = "6pt"
+
+[design.styles.Author]
+size = "11pt"
+line_height = 1.35
+space_before = "4pt"
+space_after = "2pt"
+
+[design.styles.Date]
+size = "10pt"
+line_height = 1.35
+space_before = "0pt"
+space_after = "14pt"
+
+[design.styles."Heading 1 Unlisted"]
+size = "18pt"
+space_before = "20pt"
+
+[design.styles."TOC Heading"]
+size = "14pt"
+line_height = 1.2
+space_before = "10pt"
+space_after = "6pt"
+
+[design.styles."toc 1"]
+size = "11pt"
+line_height = 1.35
+weight = "bold"
+space_before = "6pt"
+space_after = "0pt"
+
+[design.styles."toc 2"]
+size = "10pt"
+line_height = 1.35
+space_before = "2pt"
+space_after = "0pt"
+
+[design.styles.Caption]
+size = "9pt"
+line_height = 1.3
+italic = true
+
+[design.styles."Table Caption"]
+align = "left"
+
+[design.styles.Compact]
+size = "10pt"
+line_height = 1.3
+space_before = "3pt"
+space_after = "3pt"

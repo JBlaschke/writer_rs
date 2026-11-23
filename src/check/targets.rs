@@ -39,7 +39,8 @@ pub(super) fn run(prepared: &Prepared, opts: &BuildOptions) -> Vec<Diagnostic> {
                 true
             }
             Target::Pdf => {
-                if prepared.design.declared
+                // What the user declared, not layer 0 (R13 §1.4).
+                if prepared.design.user_declared
                     && prepared.document.source.kind != SourceKind::Typst
                 {
                     match world.get(prepared, opts) {

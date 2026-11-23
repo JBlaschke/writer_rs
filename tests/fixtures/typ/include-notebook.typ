@@ -1,4 +1,4 @@
-#import "@writer/doc:0.5.0": *
+#import "@writer/doc:0.6.0": *
 #show: writer-doc.with(title: [Selected notebook outputs])
 
 #include-notebook(path("include/cells.ipynb"), cells: (1, "plot"), hide-input: true)

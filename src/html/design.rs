@@ -141,23 +141,26 @@ pub fn layout_css(
         return Ok(String::new());
     }
     let mut css = String::from("/* design: layout */\n");
+    // The alignment sits on the document and is inherited, so `.title-block`
+    // and `div.center` still align their paragraphs. The paragraph rule has
+    // one element's specificity and follows the theme: it replaces the
+    // theme's `p` margin and beats a theme's bare `p { text-align }` by
+    // asking for the container's value, while the theme's class rules
+    // (`.date`, a quote's or a cell's last child) keep their own (R13 §1.2).
+    // Code keeps its spaces where print wraps it (`pre-wrap`).
     let mut paragraph = Vec::new();
     if let Some(spacing) = design.text.paragraph_spacing {
         paragraph.push(format!("margin-block:0 {}", css_pt(spacing)));
     }
     if let Some(justify) = design.text.justify {
-        paragraph.push(format!(
-            "text-align:{}",
-            if justify { "justify" } else { "start" }
-        ));
+        let align = if justify { "justify" } else { "start" };
+        let _ = writeln!(css, "[data-writer-document]{{text-align:{align}}}");
+        if justify {
+            push_rule(&mut css, &["pre"], &["text-align:start".into()]);
+        }
+        paragraph.push("text-align:inherit".into());
     }
-    if !paragraph.is_empty() {
-        let _ = writeln!(
-            css,
-            "[data-writer-document] p{{{}}}",
-            paragraph.join(";")
-        );
-    }
+    push_rule(&mut css, &["p"], &paragraph);
     let mut page = Vec::new();
     if let Some(paper) = &design.page.paper {
         page.push(format!("size:{}", css_size(paper)));
@@ -410,6 +413,12 @@ fn layered(base: Option<&Style>, top: Option<&Style>) -> Option<Style> {
         keep_together: top.keep_together || base.keep_together,
         keep_with_next: top.keep_with_next || base.keep_with_next,
         frame: None,
+        case: top.case.or(base.case),
+        letter_spacing: top.letter_spacing.or(base.letter_spacing),
+        indent: top.indent.or(base.indent),
+        border: top.border.or(base.border),
+        fill: top.fill.or(base.fill),
+        padding: top.padding.or(base.padding),
     })
 }
 
